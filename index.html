@@ -222,6 +222,20 @@ tr.row-unmatched td{opacity:.35}
 /* ===== SNAPSHOT TABLE ===== */
 .snap-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
 .snap-row:last-child{border-bottom:none}
+.batch-row{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:12px 0;border-bottom:1px solid var(--border);
+}
+.batch-row:last-child{border-bottom:none}
+.batch-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.batch-meta{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5}
+.batch-badge{
+  display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;
+  border:1px solid var(--border);background:var(--overlay);font-size:10px;color:var(--muted);
+}
+.batch-badge.merge{border-color:rgba(52,211,153,.24);background:var(--green-dim);color:var(--green)}
+.batch-badge.overwrite{border-color:rgba(248,113,113,.24);background:var(--red-dim);color:var(--red)}
+.batch-badge.undone{border-color:var(--border);background:var(--overlay);color:var(--dim)}
 
 /* ===== INLINE SELECT ===== */
 .inline-select{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
@@ -248,6 +262,51 @@ tr.row-unmatched td{opacity:.35}
 .modal-close{width:32px;height:32px;border-radius:50%;background:var(--card);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:18px}
 .modal-body{padding:0 20px 20px}
 .modal-foot{padding:12px 20px 24px;display:flex;gap:8px}
+
+/* ===== IMPORT PREVIEW ===== */
+.import-preview-mask{align-items:center;padding:20px}
+.import-preview-box{max-width:760px;border-radius:18px;max-height:88vh}
+.import-summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}
+.import-summary-cell{
+  border:1px solid var(--border);border-radius:10px;background:var(--card);
+  padding:10px 12px;min-width:0;
+}
+.import-summary-cell p{margin:0;font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.import-summary-cell strong{display:block;margin-top:4px;font-size:18px;font-variant-numeric:tabular-nums}
+.import-impact{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  border:1px solid var(--border);border-radius:12px;background:linear-gradient(135deg,var(--blue-dim),transparent);
+  padding:12px;margin-bottom:12px;
+}
+.import-impact p{margin:0;font-size:10px;color:var(--muted)}
+.import-impact strong{display:block;margin-top:4px;font-size:15px;font-variant-numeric:tabular-nums}
+.import-option{
+  display:flex;align-items:flex-start;gap:8px;padding:10px 12px;margin-bottom:12px;
+  border:1px solid rgba(240,168,32,.24);border-radius:10px;background:var(--accent-dim);
+  color:var(--text);font-size:12px;line-height:1.5;
+}
+.import-option input{margin-top:2px;accent-color:var(--accent)}
+.import-preview-list{
+  border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--card);
+  max-height:260px;overflow-y:auto;
+}
+.import-preview-row{
+  display:grid;grid-template-columns:82px minmax(0,1fr) minmax(120px,.6fr);
+  gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);
+}
+.import-preview-row:last-child{border-bottom:none}
+.import-preview-main{min-width:0}
+.import-preview-title{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.import-preview-sub{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.import-status{
+  display:inline-flex;justify-content:center;align-items:center;padding:4px 9px;border-radius:999px;
+  font-size:11px;font-weight:700;border:1px solid var(--border);white-space:nowrap;
+}
+.import-status.new{background:var(--green-dim);color:var(--green);border-color:rgba(52,211,153,.24)}
+.import-status.duplicate{background:var(--overlay);color:var(--muted)}
+.import-status.similar{background:var(--accent-dim);color:var(--accent);border-color:rgba(240,168,32,.24)}
+.import-reason{font-size:11px;color:var(--muted);text-align:right;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.import-empty{padding:18px;text-align:center;color:var(--muted);font-size:12px}
 
 /* ===== MOBILE FAB ===== */
 .fab{
@@ -304,6 +363,30 @@ tr.row-unmatched td{opacity:.35}
   transition:color .15s,background .15s;flex-shrink:0;
 }
 .record-card-del:active{color:var(--red);background:var(--red-dim)}
+
+/* ===== TAGS & RECORD DETAIL ===== */
+.tag-strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tag-chip{
+  display:inline-flex;align-items:center;max-width:120px;padding:2px 7px;border-radius:999px;
+  background:var(--purple-dim);border:1px solid rgba(90,123,255,.22);color:#c6d3ff;
+  font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+[data-theme="light"] .tag-chip{color:var(--purple)}
+.detail-hero{
+  border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;
+  background:linear-gradient(135deg,var(--accent-dim),transparent);
+}
+.detail-amount{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+.detail-meta{font-size:12px;color:var(--muted);margin-top:4px}
+.detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.detail-cell{border:1px solid var(--border);border-radius:10px;background:var(--card);padding:10px;min-width:0}
+.detail-cell p{margin:0;font-size:10px;color:var(--muted)}
+.detail-cell strong{display:block;margin-top:4px;font-size:14px;font-variant-numeric:tabular-nums}
+.related-list{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--card);margin-bottom:12px}
+.related-row{display:flex;justify-content:space-between;gap:10px;padding:9px 11px;border-bottom:1px solid var(--border);font-size:12px}
+.related-row:last-child{border-bottom:none}
+.related-row span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.related-row strong{font-variant-numeric:tabular-nums;white-space:nowrap}
 
 /* ===== MOBILE FILTER TOGGLE ===== */
 .filter-toggle-btn{display:none}
@@ -481,6 +564,14 @@ tr.row-unmatched td{opacity:.35}
   .modal-body .form-group{margin-bottom:12px}
   .modal-body .form-input{padding:12px;font-size:15px;border-radius:12px}
   .modal-body label{margin-bottom:6px}
+  .import-preview-mask{align-items:flex-end;padding:0}
+  .import-preview-box{border-radius:20px 20px 0 0;max-height:88vh}
+  .import-summary-grid{grid-template-columns:repeat(2,1fr)}
+  .import-impact{grid-template-columns:repeat(2,1fr)}
+  .import-preview-row{grid-template-columns:72px minmax(0,1fr);gap:8px}
+  .import-reason{grid-column:1/3;text-align:left}
+  .batch-row{align-items:flex-start;flex-direction:column}
+  .detail-grid{grid-template-columns:repeat(2,1fr)}
   /* hide sections based on mobile tab */
   .app.mob-tab-records .section-not-records,
   .app.mob-tab-stats .section-not-stats,
@@ -598,6 +689,7 @@ tr.row-unmatched td{opacity:.35}
         <p class="rate-hint" v-if="form.currency!=='CNY'&&form.rate&&form.amount">本笔 ≈ {{ fmt(form.amount*Number(form.rate)) }} 元（1 {{ form.currency }} = {{ form.rate }} CNY）</p>
       </div>
       <div class="form-group"><label>{{ form.type==='入金'?'投入理由':'出金备注' }}</label><input class="form-input" v-model="form.note" :placeholder="form.type==='入金'?'为什么要入这笔？如：定投/补仓/看好行情':'收款渠道/备注'"></div>
+      <div class="form-group"><label>标签</label><input class="form-input" v-model="form.tagText" list="dl-tags" placeholder="定投，补仓，FOMO"><datalist id="dl-tags"><option v-for="t in allTags" :key="t" :value="t"></option></datalist></div>
       <div class="form-group"><label>类型</label><select class="form-input" v-model="form.type"><option value="入金">入金</option><option value="出金">出金</option></select></div>
       <button class="btn btn-primary" @click="addEntry">添加记录</button>
       <button class="btn btn-ghost" @click="copyLast" :disabled="!entries.length">复制上一笔</button>
@@ -649,13 +741,17 @@ tr.row-unmatched td{opacity:.35}
         <div class="form-group" style="grid-column:span 2"><label>关键词</label><input class="form-input" v-model="filters.keyword" placeholder="交易所/备注关键词"></div>
         <div class="form-group"><label>起始日期</label><input class="form-input" type="date" v-model="filters.dateFrom"></div>
         <div class="form-group"><label>结束日期</label><input class="form-input" type="date" v-model="filters.dateTo"></div>
-        <div class="form-group"><label>最小金额</label><input class="form-input" type="number" v-model.number="filters.amountMin" placeholder=">= 0" inputmode="numeric"></div>
-        <div class="form-group"><label>最大金额</label><input class="form-input" type="number" v-model.number="filters.amountMax" placeholder="不限" inputmode="numeric"></div>
+        <div class="form-group"><label>最小金额(CNY)</label><input class="form-input" type="number" v-model.number="filters.amountMin" placeholder=">= 0" inputmode="numeric"></div>
+        <div class="form-group"><label>最大金额(CNY)</label><input class="form-input" type="number" v-model.number="filters.amountMax" placeholder="不限" inputmode="numeric"></div>
         <button class="btn btn-ghost btn-sm" @click="clearFilters">清空筛选</button>
       </div>
       <div class="filter-exchange" v-if="allAssetTypes.length">
         <span class="filter-title">资产类型</span>
         <span v-for="at in allAssetTypes" :key="at" :class="['chip',{active:filters.assetTypes.includes(at)}]" @click="toggleAssetType(at)">{{ at }}</span>
+      </div>
+      <div class="filter-exchange" v-if="allTags.length">
+        <span class="filter-title">标签</span>
+        <span v-for="tag in allTags" :key="tag" :class="['chip',{active:filters.tags.includes(tag)}]" @click="toggleTag(tag)">#{{ tag }}</span>
       </div>
       <div class="filter-exchange" v-if="allExchanges.length">
         <span class="filter-title">账户/平台</span>
@@ -683,7 +779,7 @@ tr.row-unmatched td{opacity:.35}
           <div class="month-group-left">
             <span :class="['arrow',{open:isMonthOpen(g.key)}]">&#9654;</span>
             <span class="month-group-key">{{ g.key }}</span>
-            <span class="month-group-count">{{ g.entries.length }} 笔</span>
+            <span class="month-group-count">{{ hasActiveFilter ? g.matchedCount+'/'+g.entries.length : g.entries.length }} 笔</span>
           </div>
           <div class="month-group-stats">
             <span>入 <span class="val" style="color:var(--red)">{{ fmt(g.inTotal) }}</span></span>
@@ -710,7 +806,10 @@ tr.row-unmatched td{opacity:.35}
                   <span v-if="e.rate">≈ {{ fmt(amountCNY(e)) }} CNY</span>
                 </div>
               </td>
-              <td><input type="text" :value="e.note" @change="updateField(e.id,'note',$event.target.value)" style="min-width:100px"></td>
+              <td>
+                <input type="text" :value="e.note" @change="updateField(e.id,'note',$event.target.value)" style="min-width:100px">
+                <div class="tag-strip" v-if="parseTags(e.tags).length"><span v-for="tag in parseTags(e.tags)" :key="tag" class="tag-chip">#{{ tag }}</span></div>
+              </td>
               <td><select :value="e.type" @change="updateField(e.id,'type',$event.target.value)"><option value="入金">入金</option><option value="出金">出金</option></select></td>
               <td><span class="action-link del" @click="removeEntry(e.id)">删除</span></td>
             </tr>
@@ -727,7 +826,7 @@ tr.row-unmatched td{opacity:.35}
             <div style="display:flex;align-items:center;gap:8px">
               <span :class="['arrow',{open:isMonthOpen(g.key)}]" style="font-size:10px;color:var(--muted);display:inline-block;transition:transform .2s">&#9654;</span>
               <span style="font-weight:700;font-size:15px">{{ g.key }}</span>
-              <span style="font-size:11px;color:var(--dim)">{{ g.entries.length }} 笔</span>
+              <span style="font-size:11px;color:var(--dim)">{{ hasActiveFilter ? g.matchedCount+'/'+g.entries.length : g.entries.length }} 笔</span>
             </div>
             <div class="month-group-sub">入 {{ fmt(g.inTotal) }} · 出 {{ fmt(g.outTotal) }}</div>
           </div>
@@ -747,6 +846,7 @@ tr.row-unmatched td{opacity:.35}
               <span v-if="e.assetType" style="background:var(--accent-dim);color:var(--accent);padding:1px 7px;border-radius:5px;font-size:10px;font-weight:700;margin-right:6px">{{ e.assetType }}</span>
               <span v-if="e.exchange">{{ e.exchange }}</span>
             </div>
+            <div class="tag-strip" v-if="parseTags(e.tags).length"><span v-for="tag in parseTags(e.tags)" :key="tag" class="tag-chip">#{{ tag }}</span></div>
             <div class="record-card-bottom">
               <div class="record-card-meta">
                 <span v-if="e.note" style="color:var(--dim)">{{ e.note }}</span>
@@ -766,7 +866,7 @@ tr.row-unmatched td{opacity:.35}
       <div>
         <div style="display:flex;gap:8px;margin-bottom:12px">
           <button :class="['btn btn-sm',pieMode==='in'?'btn-primary':'btn-ghost']" @click="pieMode='in'">投入分布</button>
-          <button :class="['btn btn-sm',pieMode==='net'?'btn-primary':'btn-ghost']" @click="pieMode='net'">净值分布</button>
+          <button :class="['btn btn-sm',pieMode==='net'?'btn-primary':'btn-ghost']" @click="pieMode='net'">取出分布</button>
         </div>
         <div class="chart-wrap" style="max-height:280px"><canvas ref="pieChart"></canvas></div>
       </div>
@@ -859,6 +959,35 @@ tr.row-unmatched td{opacity:.35}
             <div class="stat-card-row"><span>取出</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
           </div>
         </div>
+        <!-- Tag stats -->
+        <template v-if="tagRows.length">
+          <h4 style="font-size:12px;color:var(--muted);margin:18px 0 10px;text-transform:uppercase;letter-spacing:.3px">标签盈亏（折CNY）</h4>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>标签</th><th style="text-align:right">笔数</th><th style="text-align:right">投入合计</th><th style="text-align:right">取出合计</th><th style="text-align:right">净盈亏</th></tr></thead>
+              <tbody>
+                <tr v-for="row in tagRows" :key="row.tag">
+                  <td style="font-weight:600">#{{ row.tag }}</td>
+                  <td class="mono" style="text-align:right">{{ row.count }}</td>
+                  <td class="mono" style="text-align:right;color:var(--red)">{{ fmt(row.inTotal) }}</td>
+                  <td class="mono" style="text-align:right;color:var(--green)">{{ fmt(row.outTotal) }}</td>
+                  <td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="stats-cards">
+            <div v-for="row in tagRows" :key="row.tag" class="stat-card">
+              <div class="stat-card-header">
+                <span class="stat-card-key">#{{ row.tag }}</span>
+                <span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span>
+              </div>
+              <div class="stat-card-row"><span>笔数</span><span>{{ row.count }}</span></div>
+              <div class="stat-card-row"><span>投入</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div>
+              <div class="stat-card-row"><span>取出</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
+            </div>
+          </div>
+        </template>
         <!-- Account/Exchange stats -->
         <h4 style="font-size:12px;color:var(--muted);margin:18px 0 10px;text-transform:uppercase;letter-spacing:.3px">账户/平台盈亏（折CNY）</h4>
         <div class="table-wrap">
@@ -972,6 +1101,7 @@ tr.row-unmatched td{opacity:.35}
       <div class="panel-actions">
         <button class="btn btn-ghost btn-sm" @click="createSnap">手动快照</button>
         <button class="btn btn-danger btn-sm" @click="clearSnaps" v-if="snapshots.length">清空快照</button>
+        <button class="btn btn-ghost btn-sm" @click="clearImportBatches" v-if="importBatches.length">清空导入历史</button>
       </div>
     </div>
     <p class="hint mb-12">每次修改自动保存快照，最多 10 份。</p>
@@ -980,7 +1110,79 @@ tr.row-unmatched td{opacity:.35}
       <div><div style="font-size:13px;font-weight:600">{{ s.at }}</div><div style="font-size:11px;color:var(--muted)">{{ (s.entries||[]).length }} 条记录</div></div>
       <button class="btn btn-ghost btn-xs" @click="restoreSnap(i)">恢复</button>
     </div>
+    <h4 style="font-size:12px;color:var(--muted);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.3px">导入历史</h4>
+    <p class="hint mb-12">合并导入可删除本批新增记录；覆盖导入可恢复导入前账本。</p>
+    <div v-if="!importBatches.length" style="color:var(--muted);font-size:12px;padding:12px 0;text-align:center">暂无导入历史</div>
+    <div v-for="b in importBatches" :key="b.id" class="batch-row">
+      <div>
+        <div class="batch-title">
+          <span :class="['batch-badge',b.mode]">{{ b.mode==='overwrite'?'覆盖':'合并' }}</span>
+          <span>{{ b.fileName||'未知文件' }}</span>
+          <span v-if="b.undone" class="batch-badge undone">已撤销</span>
+        </div>
+        <div class="batch-meta">
+          {{ b.at }} · {{ b.source }} · 导入 {{ b.importedCount||0 }} 条
+          <span v-if="b.skippedCount"> · 跳过 {{ b.skippedCount }} 条</span>
+          <span v-if="b.duplicateCount"> · 重复 {{ b.duplicateCount }} 条</span>
+          <span v-if="b.invalidCount"> · 无效 {{ b.invalidCount }} 行</span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-xs" @click="undoImportBatch(b)" :disabled="b.undone">撤销导入</button>
+    </div>
   </section>
+
+  <!-- ===== IMPORT PREVIEW MODAL ===== -->
+  <div v-if="importPreview" class="modal-mask import-preview-mask" @click.self="cancelImportPreview">
+    <div class="modal-box import-preview-box">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">导入预览</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">{{ importPreview.fileName }} · {{ importPreview.source }}</div>
+        </div>
+        <button class="modal-close" @click="cancelImportPreview">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="import-summary-grid">
+          <div class="import-summary-cell"><p>有效记录</p><strong>{{ importPreview.validRows.length }}</strong></div>
+          <div class="import-summary-cell"><p>新增</p><strong class="text-green">{{ importPreview.newRows.length }}</strong></div>
+          <div class="import-summary-cell"><p>完全重复</p><strong>{{ importPreview.duplicateRows.length }}</strong></div>
+          <div class="import-summary-cell"><p>疑似重复</p><strong style="color:var(--accent)">{{ importPreview.similarRows.length }}</strong></div>
+          <div class="import-summary-cell"><p>无效行</p><strong class="text-red">{{ importPreview.invalidCount }}</strong></div>
+        </div>
+
+        <div class="import-impact">
+          <div><p>合并后记录数</p><strong>{{ importAfterStats.count }}</strong></div>
+          <div><p>合并后总入金</p><strong class="text-red">{{ fmt(importAfterStats.inTotal) }}</strong></div>
+          <div><p>合并后总出金</p><strong class="text-green">{{ fmt(importAfterStats.outTotal) }}</strong></div>
+          <div><p>合并后净盈亏</p><strong :style="{color:importAfterStats.net>=0?'var(--blue)':'var(--red)'}">{{ (importAfterStats.net>=0?'+':'')+fmt(importAfterStats.net) }}</strong></div>
+        </div>
+
+        <label class="import-option" v-if="importPreview.similarRows.length">
+          <input type="checkbox" v-model="importPreview.includeSimilar">
+          <span>导入疑似重复记录。默认跳过它们，避免同一笔因为备注、汇率或金额细微差异被记两次。</span>
+        </label>
+
+        <div class="import-preview-list">
+          <div v-if="!importPreviewRows.length" class="import-empty">没有可预览的记录</div>
+          <div v-for="row in importPreviewRows" :key="row.key" class="import-preview-row">
+            <span :class="['import-status',row.status]">{{ row.label }}</span>
+            <div class="import-preview-main">
+              <div class="import-preview-title">{{ row.entry.date }} · {{ row.entry.type }} · {{ fmt(row.entry.amount) }} {{ row.entry.currency||'CNY' }}</div>
+              <div class="import-preview-sub">{{ row.entry.assetType||'未分类' }} · {{ row.entry.exchange||'未知平台' }}{{ row.entry.note?' · '+row.entry.note:'' }}</div>
+            </div>
+            <div class="import-reason">{{ row.reason }}</div>
+          </div>
+        </div>
+
+        <p class="hint mt-12">确认后会生成导入历史，可在数据安全里一键撤销。覆盖导入会用本文件的有效记录替换当前账本。</p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" style="flex:1" @click="cancelImportPreview">取消</button>
+        <button class="btn btn-danger" style="flex:1" @click="confirmImportOverwrite" :disabled="!importPreview.validRows.length">覆盖导入</button>
+        <button class="btn btn-primary" style="flex:2" @click="confirmImportMerge" :disabled="!importMergeRows.length">合并导入 {{ importMergeRows.length }} 条</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ===== MOBILE ADD MODAL ===== -->
   <div v-if="showMobileAdd" class="modal-mask" @click.self="showMobileAdd=false">
@@ -1006,6 +1208,7 @@ tr.row-unmatched td{opacity:.35}
           <p class="rate-hint" v-if="form.currency!=='CNY'&&form.rate&&form.amount">本笔 ≈ {{ fmt(form.amount*Number(form.rate)) }} 元（1 {{ form.currency }} = {{ form.rate }} CNY）</p>
         </div>
         <div class="form-group"><label>{{ form.type==='入金'?'投入理由':'出金备注' }}</label><input class="form-input" v-model="form.note" :placeholder="form.type==='入金'?'为什么要投入这笔？':'收款渠道/备注'"></div>
+        <div class="form-group"><label>标签</label><input class="form-input" v-model="form.tagText" list="dl-tags2" placeholder="定投，补仓，FOMO"><datalist id="dl-tags2"><option v-for="t in allTags" :key="t" :value="t"></option></datalist></div>
       </div>
       <div class="modal-foot">
         <button class="btn btn-ghost" style="flex:1" @click="copyLast">复制上一笔</button>
@@ -1018,8 +1221,29 @@ tr.row-unmatched td{opacity:.35}
   <div v-if="editingEntry" class="modal-mask" @click.self="editingEntry=null">
     <div class="modal-box">
       <div class="modal-handle"></div>
-      <div class="modal-head"><div class="modal-title">编辑记录</div><button class="modal-close" @click="editingEntry=null">&times;</button></div>
+      <div class="modal-head"><div class="modal-title">记录详情</div><button class="modal-close" @click="editingEntry=null">&times;</button></div>
       <div class="modal-body">
+        <div class="detail-hero" v-if="editingDetail">
+          <div class="detail-amount" :style="{color:editingEntry.type==='入金'?'var(--red)':'var(--green)'}">{{ fmt(editingEntry.amount) }} {{ editingEntry.currency&&editingEntry.currency!=='CNY'?editingEntry.currency:'元' }}</div>
+          <div class="detail-meta">
+            折合 {{ fmt(editingDetail.cny) }} CNY · {{ editingEntry.assetType||'未分类' }} · {{ editingEntry.exchange||'未知平台' }}
+          </div>
+          <div class="tag-strip" v-if="parseTags(editingEntry.tagText||editingEntry.tags).length">
+            <span v-for="tag in parseTags(editingEntry.tagText||editingEntry.tags)" :key="tag" class="tag-chip">#{{ tag }}</span>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-cell"><p>同平台净盈亏</p><strong :style="{color:editingDetail.platformNet>=0?'var(--blue)':'var(--red)'}">{{ (editingDetail.platformNet>=0?'+':'')+fmt(editingDetail.platformNet) }}</strong></div>
+            <div class="detail-cell"><p>同资产净盈亏</p><strong :style="{color:editingDetail.assetNet>=0?'var(--blue)':'var(--red)'}">{{ (editingDetail.assetNet>=0?'+':'')+fmt(editingDetail.assetNet) }}</strong></div>
+            <div class="detail-cell"><p>本月相关记录</p><strong>{{ editingDetail.monthCount }} 笔</strong></div>
+          </div>
+        </div>
+        <h4 v-if="editingDetail&&editingDetail.related.length" style="font-size:12px;color:var(--muted);margin:0 0 8px;text-transform:uppercase;letter-spacing:.3px">相关记录</h4>
+        <div class="related-list" v-if="editingDetail&&editingDetail.related.length">
+          <div v-for="r in editingDetail.related" :key="r.id" class="related-row">
+            <span>{{ r.date }} · {{ r.assetType||'未分类' }} · {{ r.exchange||'未知平台' }}</span>
+            <strong :style="{color:r.type==='入金'?'var(--red)':'var(--green)'}">{{ r.type==='入金'?'-':'+' }}{{ fmt(amountCNY(r)) }}</strong>
+          </div>
+        </div>
         <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type"><option value="入金">入金</option><option value="出金">出金</option></select></div>
         <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="editingEntry.date"></div>
         <div class="form-group"><label>资产类型</label><select class="form-input" v-model="editingEntry.assetType"><option value="">未分类</option><option value="大A">大A</option><option value="美股">美股</option><option value="港股">港股</option><option value="加密货币">加密货币</option><option value="基金">基金</option><option value="黄金">黄金</option><option value="期货">期货</option><option value="其他">其他</option></select></div>
@@ -1038,6 +1262,7 @@ tr.row-unmatched td{opacity:.35}
           <p class="rate-hint" v-if="editingEntry.currency&&editingEntry.currency!=='CNY'&&editingEntry.rate&&editingEntry.amount">本笔 ≈ {{ fmt(amountCNY(editingEntry)) }} 元（1 {{ editingEntry.currency }} = {{ editingEntry.rate }} CNY）</p>
         </div>
         <div class="form-group"><label>{{ editingEntry.type==='入金'?'投入理由':'出金备注' }}</label><input class="form-input" v-model="editingEntry.note" :placeholder="editingEntry.type==='入金'?'为什么要投入这笔？':'收款渠道/备注'"></div>
+        <div class="form-group"><label>标签</label><input class="form-input" v-model="editingEntry.tagText" list="dl-tags3" placeholder="定投，补仓，FOMO"><datalist id="dl-tags3"><option v-for="t in allTags" :key="t" :value="t"></option></datalist></div>
       </div>
       <div class="modal-foot">
         <button class="btn btn-danger" style="flex:1" @click="removeEntry(editingEntry.id);editingEntry=null">删除</button>
@@ -1058,7 +1283,7 @@ tr.row-unmatched td{opacity:.35}
 <script>
 dayjs.extend(dayjs_plugin_isoWeek);dayjs.extend(dayjs_plugin_weekOfYear);dayjs.locale('zh-cn')
 
-const SK='flowledger_entries_v1',SNAP_K='flowledger_snapshots_v1',RULES_K='flowledger_rules_v1',REVIEW_K='flowledger_reviews_v1',SYNC_K='flowledger_sync_v1'
+const SK='flowledger_entries_v1',SNAP_K='flowledger_snapshots_v1',RULES_K='flowledger_rules_v1',REVIEW_K='flowledger_reviews_v1',SYNC_K='flowledger_sync_v1',IMPORT_K='flowledger_import_batches_v1'
 // Migrate from old CryptoFlow keys (backward compat)
 ;(()=>{const OLD='crypto_cashflow_entries_v1';if(!localStorage.getItem(SK)&&localStorage.getItem(OLD)){localStorage.setItem(SK,localStorage.getItem(OLD))}})()
 const genId=()=>crypto.randomUUID?crypto.randomUUID():('r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6))
@@ -1085,22 +1310,47 @@ const PRELOADED=[
 ]
 
 function normDate(s){
+  if(s instanceof Date&&!isNaN(s))return s.toISOString().slice(0,10)
+  if(typeof s==='number'&&isFinite(s)){
+    if(s>30000&&s<80000){
+      const d=new Date(Math.round((s-25569)*864e5))
+      return d.toISOString().slice(0,10)
+    }
+    s=String(Math.trunc(s))
+  }
   if(!s)return'';s=String(s).trim()
-  let m=s.match(/^(\d{4})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);if(m)return`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`
+  let m=s.match(/^(\d{4})(\d{2})(\d{2})$/);if(m)return`${m[1]}-${m[2]}-${m[3]}`
+  m=s.match(/^(\d{4})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);if(m)return`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`
   m=s.match(/^(\d{4})年(\d{1,2})月(\d{1,2})日?$/);if(m)return`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`
   if(s.length===10&&s.includes('-'))return s;return''
 }
+function normNum(v){
+  if(v==null||v==='')return 0
+  if(typeof v==='number')return isFinite(v)?v:0
+  const n=Number(String(v).replace(/,/g,'').trim())
+  return isFinite(n)?n:0
+}
+function normType(v){
+  const s=String(v||'入金').trim()
+  return ['出金','取出','提现','赎回'].includes(s)?'出金':'入金'
+}
+function parseTags(v){
+  if(Array.isArray(v))return[...new Set(v.map(t=>String(t||'').trim()).filter(Boolean))].slice(0,8)
+  return[...new Set(String(v||'').split(/[,\uFF0C\u3001;；\s]+/).map(t=>t.trim()).filter(Boolean))].slice(0,8)
+}
+function tagsText(tags){return parseTags(tags).join('，')}
 function normRow(row){
   let date=normDate(row.date||row['日期']||row['入金时间']||row['时间'])
-  const amt=row.amount||row['金额（元）']||row['金额']||0
+  const amt=normNum(row.amount||row['金额（元）']||row['金额']||0)
   let rate=row.rate??row['汇率']??'';if(rate==='-')rate=''
   const exchange=row.exchange||row['交易所']||row['账户/平台']||row['账户']||''
   const note=row.note||row['备注']||row['理由/备注']||''
-  const type=row.type||row['类型']||'入金'
+  const type=normType(row.type||row['类型']||'入金')
   const assetType=row.assetType||row['资产类型']||''
-  const currency=row.currency||row['货币']||'CNY'
-  if(!date||!Number(amt))return null
-  return{id:genId(),date,amount:Number(amt),rate:rate===''?'':Number(rate),exchange,note,type,assetType,currency}
+  const currency=String(row.currency||row['货币']||'CNY').trim().toUpperCase()
+  const tags=parseTags(row.tags||row['标签']||row.tagText||row['Tag']||row['Tags'])
+  if(!date||!amt)return null
+  return{id:row.id||genId(),date,amount:amt,rate:rate===''?'':normNum(rate),exchange,note,type,assetType,currency,tags}
 }
 
 function defRules(){return{lossWarn:3000,lossCritical:5000,roiWarn:0.6,inflowRatio:1.8,largeTx:5000,lossStreak:2}}
@@ -1121,6 +1371,7 @@ createApp({
 setup(){
   const entries=ref([])
   const snapshots=ref([])
+  const importBatches=ref([])
   const period=ref('month')
   const mobileTab=ref('records')
   const showMobileAdd=ref(false)
@@ -1153,23 +1404,25 @@ setup(){
     theme.value=theme.value==='dark'?'light':'dark'
     applyTheme(theme.value)
     localStorage.setItem(THEME_K,theme.value)
-    Vue.nextTick(()=>{renderChart();renderPieChart()})
+    Vue.nextTick(()=>{renderChart();renderWeekdayChart();renderPieChart()})
   }
   const toast=reactive({show:false,message:'',type:'info'})
-  const form=reactive({date:dayjs().format('YYYY-MM-DD'),amount:'',rate:'',exchange:'',note:'',type:'入金',assetType:'',currency:'CNY'})
-  const filters=reactive({month:'',type:'',keyword:'',dateFrom:'',dateTo:'',amountMin:'',amountMax:'',exchanges:[],assetTypes:[]})
+  const form=reactive({date:dayjs().format('YYYY-MM-DD'),amount:'',rate:'',exchange:'',note:'',type:'入金',assetType:'',currency:'CNY',tagText:''})
+  const filters=reactive({month:'',type:'',keyword:'',dateFrom:'',dateTo:'',amountMin:'',amountMax:'',exchanges:[],assetTypes:[],tags:[]})
   const rules=reactive(defRules())
   const syncCfg=reactive({url:'',user:'',pass:''})
   const syncStatus=ref('未配置')
   const reviewNote=ref('')
   const reviewSavedAt=ref('')
+  const importPreview=ref(null)
   let toastT=null
 
   // Persistence
   function load(){
-    try{const r=localStorage.getItem(SK);if(r)entries.value=JSON.parse(r)}catch(e){}
+    try{const r=localStorage.getItem(SK);if(r)entries.value=JSON.parse(r).map(e=>({...e,tags:parseTags(e.tags||e.tagText||e['标签'])}))}catch(e){}
     if(!entries.value.length){entries.value=PRELOADED.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1);save()}
     try{const r=localStorage.getItem(SNAP_K);if(r)snapshots.value=JSON.parse(r)}catch(e){}
+    try{const r=localStorage.getItem(IMPORT_K);if(r)importBatches.value=JSON.parse(r)}catch(e){}
     try{const r=localStorage.getItem(RULES_K);if(r)Object.assign(rules,{...defRules(),...JSON.parse(r)})}catch(e){}
     try{const r=localStorage.getItem(SYNC_K);if(r)Object.assign(syncCfg,JSON.parse(r));syncStatus.value=syncCfg.url?'已配置':'未配置'}catch(e){}
     loadReview()
@@ -1180,17 +1433,24 @@ setup(){
     snapshots.value.unshift(s);if(snapshots.value.length>10)snapshots.value=snapshots.value.slice(0,10)
     localStorage.setItem(SNAP_K,JSON.stringify(snapshots.value))
   }
+  function saveImportBatches(){localStorage.setItem(IMPORT_K,JSON.stringify(importBatches.value))}
+  function recordImportBatch(batch){
+    importBatches.value.unshift({id:genId(),at:new Date().toISOString(),undone:false,...batch})
+    if(importBatches.value.length>20)importBatches.value=importBatches.value.slice(0,20)
+    saveImportBatches()
+  }
 
   function showToast(msg,type='info'){toast.message=msg;toast.type=type;toast.show=true;if(toastT)clearTimeout(toastT);toastT=setTimeout(()=>toast.show=false,2500)}
   function fmt(v){if(v==null||isNaN(v))return'-';return Number(v).toLocaleString('zh-CN',{maximumFractionDigits:2})}
   // Convert entry amount to CNY (for non-CNY currencies with rate)
-  function amountCNY(e){const cur=e.currency||'CNY';if(cur!=='CNY'&&e.rate&&Number(e.rate)>0)return(e.amount||0)*Number(e.rate);return e.amount||0}
+  function amountCNY(e){const amt=Number(e.amount)||0;const cur=e.currency||'CNY';if(cur!=='CNY'&&e.rate&&Number(e.rate)>0)return amt*Number(e.rate);return amt}
 
   // Computed
   const sortedEntries=computed(()=>[...entries.value].sort((a,b)=>a.date<b.date?1:-1))
   const allExchanges=computed(()=>[...new Set(entries.value.map(e=>e.exchange).filter(Boolean))].sort())
   const allMonths=computed(()=>[...new Set(entries.value.map(e=>e.date?e.date.slice(0,7):'').filter(Boolean))].sort())
   const allAssetTypes=computed(()=>{const ORDER=['大A','美股','港股','加密货币','基金','黄金','期货','其他'];const present=new Set(entries.value.map(e=>e.assetType).filter(Boolean));return ORDER.filter(t=>present.has(t))})
+  const allTags=computed(()=>[...new Set(entries.value.flatMap(e=>parseTags(e.tags)))].sort((a,b)=>a.localeCompare(b,'zh-CN')))
 
   // 平台建议：按资产类型预设 + 历史用过的
   const ASSET_PLATFORMS={'大A':['招商证券','华泰证券','东方财富','国泰君安','中信证券','平安证券','广发证券','中金财富'],'美股':['富途牛牛','老虎证券','盈透证券','Robinhood','Charles Schwab','嘉信理财'],'港股':['富途牛牛','老虎证券','盈透证券','中银国际','耀才证券'],'加密货币':['币安','欧易','Coinbase','Bybit','Bitget','Gate.io','抹茶'],'基金':['支付宝','天天基金','招商银行','微信理财通','蛋卷基金','雪球'],'黄金':['招商银行','工商银行','中国银行','建设银行','国泰君安','中国黄金'],'期货':['中信期货','国泰君安期货','华泰期货','永安期货','南华期货'],'其他':[]}
@@ -1257,13 +1517,15 @@ setup(){
   function matchEntry(e){
     if(filters.month&&e.date&&e.date.slice(0,7)!==filters.month)return false
     if(filters.type&&e.type!==filters.type)return false
-    if(filters.keyword){const k=filters.keyword.toLowerCase();if(!(`${e.exchange} ${e.note} ${e.assetType||''}`).toLowerCase().includes(k))return false}
+    if(filters.keyword){const k=filters.keyword.toLowerCase();if(!(`${e.exchange} ${e.note} ${e.assetType||''} ${parseTags(e.tags).join(' ')}`).toLowerCase().includes(k))return false}
     if(filters.dateFrom&&e.date<filters.dateFrom)return false
     if(filters.dateTo&&e.date>filters.dateTo)return false
-    if(filters.amountMin&&e.amount<filters.amountMin)return false
-    if(filters.amountMax&&e.amount>filters.amountMax)return false
+    const amt=amountCNY(e)
+    if(filters.amountMin!==''&&amt<Number(filters.amountMin))return false
+    if(filters.amountMax!==''&&amt>Number(filters.amountMax))return false
     if(filters.exchanges.length&&!filters.exchanges.includes(e.exchange))return false
     if(filters.assetTypes.length&&!filters.assetTypes.includes(e.assetType||''))return false
+    if(filters.tags.length){const ts=parseTags(e.tags);if(!filters.tags.every(t=>ts.includes(t)))return false}
     return true
   }
   const matchedIds=computed(()=>new Set(entries.value.filter(matchEntry).map(e=>e.id)))
@@ -1275,42 +1537,74 @@ setup(){
     const dates=matched.map(e=>e.date).filter(Boolean).sort()
     return{inTotal,outTotal,net:outTotal-inTotal,count:matched.length,firstDate:dates[0]||'',lastDate:dates[dates.length-1]||''}
   })
-  function rowClass(e){const hasFilter=filters.month||filters.type||filters.keyword||filters.dateFrom||filters.dateTo||filters.amountMin||filters.amountMax||filters.exchanges.length;if(!hasFilter)return'';return matchedIds.value.has(e.id)?'row-matched':'row-unmatched'}
+  function rowClass(e){if(!hasActiveFilter.value)return'';return matchedIds.value.has(e.id)?'row-matched':'row-unmatched'}
   function toggleEx(ex){const i=filters.exchanges.indexOf(ex);i>=0?filters.exchanges.splice(i,1):filters.exchanges.push(ex)}
   function toggleAssetType(at){const i=filters.assetTypes.indexOf(at);i>=0?filters.assetTypes.splice(i,1):filters.assetTypes.push(at)}
-  function clearFilters(){filters.month='';filters.type='';filters.keyword='';filters.dateFrom='';filters.dateTo='';filters.amountMin='';filters.amountMax='';filters.exchanges=[];filters.assetTypes=[]}
-  function scrollToFirstMatch(){const id=[...matchedIds.value][0];if(!id){showToast('无匹配','info');return};const el=document.getElementById('row-'+id);if(el)el.scrollIntoView({behavior:'smooth',block:'center'})}
+  function toggleTag(tag){const i=filters.tags.indexOf(tag);i>=0?filters.tags.splice(i,1):filters.tags.push(tag)}
+  function clearFilters(){filters.month='';filters.type='';filters.keyword='';filters.dateFrom='';filters.dateTo='';filters.amountMin='';filters.amountMax='';filters.exchanges=[];filters.assetTypes=[];filters.tags=[]}
+  function scrollToFirstMatch(){
+    const first=sortedEntries.value.find(e=>matchedIds.value.has(e.id))
+    if(!first){showToast('无匹配','info');return}
+    const y=first.date?first.date.slice(0,4):'未知'
+    const s=new Set(expandedMonths.value);s.add(y);expandedMonths.value=s
+    Vue.nextTick(()=>{const el=document.getElementById('row-'+first.id);if(el)el.scrollIntoView({behavior:'smooth',block:'center'})})
+  }
   // Month groups for flow records
   const expandedMonths=ref(new Set())
-  const hasActiveFilter=computed(()=>!!(filters.month||filters.type||filters.keyword||filters.dateFrom||filters.dateTo||filters.amountMin||filters.amountMax||filters.exchanges.length||filters.assetTypes.length))
+  const hasActiveFilter=computed(()=>!!(filters.month||filters.type||filters.keyword||filters.dateFrom||filters.dateTo||filters.amountMin||filters.amountMax||filters.exchanges.length||filters.assetTypes.length||filters.tags.length))
   const groupedEntries=computed(()=>{
     const map=new Map()
     const filtering=hasActiveFilter.value
-    const source=filtering?sortedEntries.value.filter(e=>matchedIds.value.has(e.id)):sortedEntries.value
-    source.forEach(e=>{
+    sortedEntries.value.forEach(e=>{
       const m=e.date?e.date.slice(0,4):'未知'
-      if(!map.has(m))map.set(m,{key:m,entries:[],inTotal:0,outTotal:0})
+      if(!map.has(m))map.set(m,{key:m,entries:[],inTotal:0,outTotal:0,matchedCount:0})
       const g=map.get(m);g.entries.push(e)
-      if(e.type==='入金')g.inTotal+=amountCNY(e);else g.outTotal+=amountCNY(e)
+      const matched=!filtering||matchedIds.value.has(e.id)
+      if(matched){
+        g.matchedCount++
+        if(e.type==='入金')g.inTotal+=amountCNY(e);else g.outTotal+=amountCNY(e)
+      }
     })
-    return[...map.values()].sort((a,b)=>b.key.localeCompare(a.key)).map(g=>({...g,net:g.outTotal-g.inTotal}))
+    return[...map.values()].filter(g=>!filtering||g.matchedCount>0).sort((a,b)=>b.key.localeCompare(a.key)).map(g=>({...g,net:g.outTotal-g.inTotal}))
   })
   function toggleMonth(m){const s=expandedMonths.value;if(s.has(m))s.delete(m);else s.add(m);expandedMonths.value=new Set(s)}
   function isMonthOpen(m){return expandedMonths.value.has(m)}
   function expandAllMonths(){expandedMonths.value=new Set(groupedEntries.value.map(g=>g.key))}
   function collapseAllMonths(){expandedMonths.value=new Set()}
 
-  const activeFilterCount=computed(()=>{let n=0;if(filters.month)n++;if(filters.type)n++;if(filters.keyword)n++;if(filters.dateFrom)n++;if(filters.dateTo)n++;if(filters.amountMin)n++;if(filters.amountMax)n++;if(filters.exchanges.length)n++;if(filters.assetTypes.length)n++;return n})
-  function openEditModal(e){editingEntry.value={...e}}
+  const activeFilterCount=computed(()=>{let n=0;if(filters.month)n++;if(filters.type)n++;if(filters.keyword)n++;if(filters.dateFrom)n++;if(filters.dateTo)n++;if(filters.amountMin)n++;if(filters.amountMax)n++;if(filters.exchanges.length)n++;if(filters.assetTypes.length)n++;if(filters.tags.length)n++;return n})
+  function netOf(list){return list.reduce((s,e)=>s+(e.type==='出金'?amountCNY(e):-amountCNY(e)),0)}
+  const editingDetail=computed(()=>{
+    const cur=editingEntry.value;if(!cur)return null
+    const curTags=parseTags(cur.tagText||cur.tags)
+    const samePlatform=entries.value.filter(e=>cur.exchange&&e.exchange===cur.exchange)
+    const sameAsset=entries.value.filter(e=>(cur.assetType||'')===(e.assetType||''))
+    const sameMonth=entries.value.filter(e=>e.date&&cur.date&&e.date.slice(0,7)===cur.date.slice(0,7))
+    const related=sortedEntries.value.filter(e=>{
+      if(e.id===cur.id)return false
+      const tagHit=curTags.length&&parseTags(e.tags).some(t=>curTags.includes(t))
+      return tagHit||(cur.exchange&&e.exchange===cur.exchange)||(cur.assetType&&e.assetType===cur.assetType)
+    }).slice(0,4)
+    return{
+      cny:amountCNY(cur),
+      platformCount:samePlatform.length,platformNet:netOf(samePlatform),
+      assetCount:sameAsset.length,assetNet:netOf(sameAsset),
+      monthCount:sameMonth.length,monthNet:netOf(sameMonth),
+      related
+    }
+  })
+  function openEditModal(e){editingEntry.value={...e,tags:parseTags(e.tags),tagText:tagsText(e.tags)}}
   function saveEditEntry(){
     if(!editingEntry.value)return
     const e=entries.value.find(x=>x.id===editingEntry.value.id)
     if(!e){editingEntry.value=null;return}
+    snap()
     e.date=editingEntry.value.date;e.amount=Number(editingEntry.value.amount)||0
     e.rate=editingEntry.value.rate===''?'':Number(editingEntry.value.rate)
     e.exchange=(editingEntry.value.exchange||'').trim();e.note=(editingEntry.value.note||'').trim()
     e.type=editingEntry.value.type;e.assetType=editingEntry.value.assetType||'';e.currency=editingEntry.value.currency||'CNY'
-    snap();save();editingEntry.value=null;showToast('已保存','success')
+    e.tags=parseTags(editingEntry.value.tagText||editingEntry.value.tags)
+    save();editingEntry.value=null;showToast('已保存','success')
   }
 
   // CRUD
@@ -1336,18 +1630,19 @@ setup(){
 
     // Check this month vs budget
     const monthKey=now.format('YYYY-MM')
-    const monthIn=entries.value.filter(e=>e.type==='入金'&&e.date&&e.date.startsWith(monthKey)).reduce((s,e)=>s+(e.amount||0),0)
+    const formCNY=amountCNY({amount:Number(form.amount||0),rate:form.rate,currency:form.currency})
+    const monthIn=entries.value.filter(e=>e.type==='入金'&&e.date&&e.date.startsWith(monthKey)).reduce((s,e)=>s+amountCNY(e),0)
     const budget=monthlyBudget.value
     if(budget>0){
-      const afterAdd=monthIn+Number(form.amount||0)
+      const afterAdd=monthIn+formCNY
       if(afterAdd>budget)warnings.push('本月投入将达 '+fmt(afterAdd)+'，超出预算 '+fmt(budget))
       else if(afterAdd>budget*0.8)warnings.push('本月投入将达 '+fmt(afterAdd)+'，接近预算上限 '+fmt(budget))
     }
 
     // Check amount vs average
     if(recent.length>=3){
-      const avg=recent.slice(0,10).reduce((s,e)=>s+(e.amount||0),0)/Math.min(recent.length,10)
-      if(Number(form.amount)>avg*2)warnings.push('本笔金额 '+fmt(form.amount)+' '+( form.currency!=='CNY'?form.currency:'元')+' 是近期均值的 '+(form.amount/avg).toFixed(1)+' 倍，是否冲动操作？')
+      const avg=recent.slice(0,10).reduce((s,e)=>s+amountCNY(e),0)/Math.min(recent.length,10)
+      if(formCNY>avg*2)warnings.push('本笔折合 '+fmt(formCNY)+' 元，是近期均值的 '+(formCNY/avg).toFixed(1)+' 倍，是否冲动操作？')
     }
 
     return warnings
@@ -1361,13 +1656,19 @@ setup(){
       const msg='⚠️ 冷静提醒\n\n'+warns.map(w=>'• '+w).join('\n')+'\n\n确定要继续投入吗？'
       if(!confirm(msg))return
     }
-    entries.value.unshift({id:genId(),date:form.date||dayjs().format('YYYY-MM-DD'),amount:Number(form.amount),rate:form.rate?Number(form.rate):'',exchange:form.exchange.trim(),note:form.note.trim(),type:form.type,assetType:form.assetType,currency:form.currency||'CNY'})
-    snap();save();form.amount='';form.note='';showToast('已添加','success')
+    snap()
+    entries.value.unshift({id:genId(),date:form.date||dayjs().format('YYYY-MM-DD'),amount:Number(form.amount),rate:form.rate?Number(form.rate):'',exchange:form.exchange.trim(),note:form.note.trim(),type:form.type,assetType:form.assetType,currency:form.currency||'CNY',tags:parseTags(form.tagText)})
+    save();form.amount='';form.note='';form.tagText='';showToast('已添加','success')
   }
   function mobileAddEntry(){const before=entries.value.length;addEntry();if(entries.value.length>before)showMobileAdd.value=false}
-  function copyLast(){const e=sortedEntries.value[0];if(!e)return;form.date=e.date;form.amount=e.amount;form.rate=e.rate||'';form.exchange=e.exchange;form.note='';form.type=e.type;form.assetType=e.assetType||'';form.currency=e.currency||'CNY';showToast('已复制','info')}
-  function removeEntry(id){if(!confirm('确认删除？'))return;entries.value=entries.value.filter(e=>e.id!==id);snap();save();showToast('已删除','success')}
-  function updateField(id,key,val){const e=entries.value.find(x=>x.id===id);if(!e)return;if(key==='amount'||key==='rate')e[key]=val===''?'':Number(val);else e[key]=val;save()}
+  function copyLast(){const e=sortedEntries.value[0];if(!e)return;form.date=e.date;form.amount=e.amount;form.rate=e.rate||'';form.exchange=e.exchange;form.note='';form.type=e.type;form.assetType=e.assetType||'';form.currency=e.currency||'CNY';form.tagText=tagsText(e.tags);showToast('已复制','info')}
+  function removeEntry(id){if(!confirm('确认删除？'))return;snap();entries.value=entries.value.filter(e=>e.id!==id);save();showToast('已删除','success')}
+  function updateField(id,key,val){
+    const e=entries.value.find(x=>x.id===id);if(!e)return
+    const next=(key==='amount'||key==='rate')?(val===''?'':Number(val)):val
+    if(e[key]===next)return
+    snap();e[key]=next;save()
+  }
   function clearData(){if(!confirm('确认清空所有记录？'))return;snap();entries.value=[];save();showToast('已清空','success')}
 
   // Period Stats
@@ -1390,6 +1691,17 @@ setup(){
     const rows=[...map.values()].map(r=>({...r,net:r.outTotal-r.inTotal}))
     return rows.sort((a,b)=>{const ia=ORDER.indexOf(a.assetType),ib=ORDER.indexOf(b.assetType);return(ia<0?99:ia)-(ib<0?99:ib)})
   })
+  const tagRows=computed(()=>{
+    const map=new Map()
+    entries.value.forEach(e=>{
+      parseTags(e.tags).forEach(tag=>{
+        if(!map.has(tag))map.set(tag,{tag,count:0,inTotal:0,outTotal:0})
+        const r=map.get(tag);r.count++
+        if(e.type==='入金')r.inTotal+=amountCNY(e);else r.outTotal+=amountCNY(e)
+      })
+    })
+    return[...map.values()].map(r=>({...r,net:r.outTotal-r.inTotal})).sort((a,b)=>Math.abs(b.net)-Math.abs(a.net))
+  })
 
   const periodCompare=computed(()=>{
     const ck=todayKey(period.value),pk=prevKey(period.value,ck)
@@ -1401,7 +1713,10 @@ setup(){
 
   const largeTxList=computed(()=>{
     const th=rules.largeTx||5000
-    return entries.value.filter(e=>e.amount>=th).sort((a,b)=>b.amount-a.amount).slice(0,6).map(e=>`${e.date} ${e.exchange||''} ${e.type} ${fmt(e.amount)}`)
+    return entries.value.filter(e=>amountCNY(e)>=th).sort((a,b)=>amountCNY(b)-amountCNY(a)).slice(0,6).map(e=>{
+      const original=e.currency&&e.currency!=='CNY'?`（${fmt(e.amount)} ${e.currency}）`:''
+      return`${e.date} ${e.exchange||''} ${e.type} ${fmt(amountCNY(e))}元${original}`
+    })
   })
 
   // Behavior Analysis
@@ -1416,12 +1731,12 @@ setup(){
     inEntries.forEach(e=>{
       if(!e.date)return
       const d=new Date(e.date).getDay()
-      dayDist[d].count++;dayDist[d].total+=e.amount||0
+      dayDist[d].count++;dayDist[d].total+=amountCNY(e)
     })
 
     // Amount ranges
     const ranges=[{label:'<500',min:0,max:500},{label:'500-1k',min:500,max:1000},{label:'1k-3k',min:1000,max:3000},{label:'3k-1w',min:3000,max:10000},{label:'>1w',min:10000,max:Infinity}]
-    ranges.forEach(r=>{r.count=inEntries.filter(e=>e.amount>=r.min&&e.amount<r.max).length})
+    ranges.forEach(r=>{r.count=inEntries.filter(e=>amountCNY(e)>=r.min&&amountCNY(e)<r.max).length})
 
     // Interval analysis
     const intervals=[]
@@ -1436,7 +1751,7 @@ setup(){
     const intervalStdDev=intervals.length>1?Math.sqrt(intervals.reduce((s,v)=>s+Math.pow(v-avgInterval,2),0)/intervals.length):0
 
     // Amount stats
-    const amounts=inEntries.map(e=>e.amount)
+    const amounts=inEntries.map(e=>amountCNY(e))
     const avgAmount=amounts.reduce((s,v)=>s+v,0)/amounts.length
     const maxAmount=Math.max(...amounts)
     const amountStdDev=Math.sqrt(amounts.reduce((s,v)=>s+Math.pow(v-avgAmount,2),0)/amounts.length)
@@ -1446,7 +1761,7 @@ setup(){
     for(let i=1;i<allSorted.length;i++){
       if(allSorted[i].type==='入金'&&allSorted[i-1].type==='出金'){
         escalationChecks++
-        if(allSorted[i].amount>avgAmount*1.3)escalationCount++
+        if(amountCNY(allSorted[i])>avgAmount*1.3)escalationCount++
       }
     }
 
@@ -1546,34 +1861,168 @@ setup(){
 
   // Snapshots
   function createSnap(){snap();showToast('快照已创建','success')}
-  function restoreSnap(i){const s=snapshots.value[i];if(!s||!confirm('确认恢复？当前数据会被覆盖。'))return;entries.value=s.entries||[];save();showToast('已恢复','success')}
+  function restoreSnap(i){const s=snapshots.value[i];if(!s||!confirm('确认恢复？当前数据会被覆盖。'))return;snap();entries.value=s.entries||[];save();showToast('已恢复','success')}
   function clearSnaps(){if(!confirm('清空所有快照？'))return;snapshots.value=[];localStorage.removeItem(SNAP_K);showToast('已清空','success')}
+  function undoImportBatch(batch){
+    if(!batch||batch.undone)return
+    const msg=batch.mode==='overwrite'
+      ?'撤销覆盖导入会恢复到该次导入前的完整账本，并覆盖之后的记录改动。继续吗？'
+      :'撤销合并导入会删除该批次新增的记录。继续吗？'
+    if(!confirm(msg))return
+    if(batch.mode==='overwrite'){
+      if(!Array.isArray(batch.beforeEntries)){showToast('缺少导入前备份，无法撤销','error');return}
+      snap()
+      entries.value=clone(batch.beforeEntries).sort((a,b)=>a.date<b.date?1:-1)
+    }else{
+      snap()
+      const ids=new Set(batch.importedIds||[])
+      entries.value=entries.value.filter(e=>!ids.has(e.id)).sort((a,b)=>a.date<b.date?1:-1)
+    }
+    batch.undone=true;batch.undoneAt=new Date().toISOString()
+    save();saveImportBatches();showToast('已撤销该次导入','success')
+  }
+  function clearImportBatches(){if(!confirm('清空导入历史？不会删除账本记录。'))return;importBatches.value=[];localStorage.removeItem(IMPORT_K);showToast('导入历史已清空','success')}
 
   // Sync
   function buildAuth(){return'Basic '+btoa(`${syncCfg.user}:${syncCfg.pass}`)}
-  function saveSyncConfig(){const cfg={url:(syncCfg.url||'').replace(/\/$/,''),user:syncCfg.user,pass:syncCfg.pass};localStorage.setItem(SYNC_K,JSON.stringify(cfg));syncStatus.value=cfg.url?'已配置':'未配置';showToast('同步配置已保存','success')}
+  function saveSyncConfig(){const cfg={url:(syncCfg.url||'').replace(/\/$/,''),user:syncCfg.user,pass:syncCfg.pass};Object.assign(syncCfg,cfg);localStorage.setItem(SYNC_K,JSON.stringify(cfg));syncStatus.value=cfg.url?'已配置':'未配置';showToast('同步配置已保存','success')}
   async function syncPush(){
     if(!syncCfg.url||!syncCfg.user||!syncCfg.pass){syncStatus.value='未配置';return}
     syncStatus.value='上传中…'
-    try{const r=await fetch(`${syncCfg.url}/sync`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:buildAuth()},body:JSON.stringify({entries:entries.value})});if(!r.ok)throw new Error();const d=await r.json();syncStatus.value=`已上传 ${entries.value.length} 条`;showToast('上传成功','success')}catch(e){syncStatus.value='上传失败';showToast('上传失败','error')}
+    try{const base=(syncCfg.url||'').replace(/\/$/,'');const r=await fetch(`${base}/sync`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:buildAuth()},body:JSON.stringify({entries:entries.value})});if(!r.ok)throw new Error();const d=await r.json();syncStatus.value=`已上传 ${entries.value.length} 条`;showToast('上传成功','success')}catch(e){syncStatus.value='上传失败';showToast('上传失败','error')}
   }
   async function syncPull(){
     if(!syncCfg.url||!syncCfg.user||!syncCfg.pass){syncStatus.value='未配置';return}
     syncStatus.value='拉取中…'
-    try{const r=await fetch(`${syncCfg.url}/sync`,{headers:{Authorization:buildAuth()}});if(!r.ok)throw new Error();const d=await r.json();const list=Array.isArray(d.entries)?d.entries:[];entries.value=list.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1);save();syncStatus.value=`已拉取 ${list.length} 条`;showToast('拉取成功','success')}catch(e){syncStatus.value='拉取失败';showToast('拉取失败','error')}
+    try{const base=(syncCfg.url||'').replace(/\/$/,'');const r=await fetch(`${base}/sync`,{headers:{Authorization:buildAuth()}});if(!r.ok)throw new Error();const d=await r.json();const list=Array.isArray(d.entries)?d.entries:[];snap();entries.value=list.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1);save();syncStatus.value=`已拉取 ${list.length} 条`;showToast('拉取成功','success')}catch(e){syncStatus.value='拉取失败';showToast('拉取失败','error')}
   }
 
   // Import/Export
+  function summarizeEntries(list){
+    const inTotal=list.filter(e=>e.type==='入金').reduce((s,e)=>s+amountCNY(e),0)
+    const outTotal=list.filter(e=>e.type==='出金').reduce((s,e)=>s+amountCNY(e),0)
+    return{count:list.length,inTotal,outTotal,net:outTotal-inTotal}
+  }
+  function importTextKey(v){return String(v||'').trim().toLowerCase()}
+  function importNumKey(v,scale=100){return String(Math.round(normNum(v)*scale)/scale)}
+  function importEntryKey(e){
+    return[e.date,e.type,importTextKey(e.assetType),importTextKey(e.exchange),String(e.currency||'CNY').toUpperCase(),importNumKey(e.amount),importNumKey(e.rate||'',10000),parseTags(e.tags).join(',')].join('|')
+  }
+  function isLikelyDuplicate(a,b){
+    if(a.date!==b.date||a.type!==b.type)return false
+    if(importTextKey(a.exchange)!==importTextKey(b.exchange))return false
+    if(importTextKey(a.assetType)!==importTextKey(b.assetType))return false
+    if(String(a.currency||'CNY').toUpperCase()!==String(b.currency||'CNY').toUpperCase())return false
+    const av=amountCNY(a),bv=amountCNY(b)
+    return Math.abs(av-bv)<=Math.max(1,Math.abs(bv)*0.001)
+  }
+  function normalizeImportRows(rawRows){
+    const valid=[],invalid=[]
+    rawRows.forEach((item,i)=>{
+      const row=item.row||item
+      const forcedType=item.type||row.type||row['类型']
+      const entry=normRow({...row,type:forcedType})
+      if(entry)valid.push(entry);else invalid.push({row,index:i+1})
+    })
+    return{valid,invalidCount:invalid.length}
+  }
+  function workbookRows(wb){
+    const rows=[]
+    const appendSheet=(name,type)=>{
+      XLSX.utils.sheet_to_json(wb.Sheets[name],{defval:''}).forEach(row=>rows.push({row,type}))
+    }
+    const flowName=['全部流水','流水记录','全部记录'].find(n=>wb.SheetNames.includes(n))
+    if(flowName)appendSheet(flowName,'')
+    else{
+      const inName=['投入记录','入金记录'].find(n=>wb.SheetNames.includes(n))
+      const outName=['取出记录','出金记录'].find(n=>wb.SheetNames.includes(n))
+      if(inName)appendSheet(inName,'入金')
+      if(outName)appendSheet(outName,'出金')
+    }
+    if(!rows.length&&wb.SheetNames[0])appendSheet(wb.SheetNames[0],'')
+    return rows
+  }
+  function buildImportPreview(source,fileName,validRows,invalidCount){
+    if(!validRows.length&&!invalidCount){showToast('未识别到有效数据','error');return}
+    const exactKeys=new Set(entries.value.map(importEntryKey))
+    const compareEntries=[...entries.value]
+    const rows=[],newRows=[],duplicateRows=[],similarRows=[]
+    validRows.forEach((entry,i)=>{
+      const key=importEntryKey(entry)
+      let row
+      if(exactKeys.has(key)){
+        row={key:`dup-${i}-${entry.id}`,entry,status:'duplicate',label:'重复',reason:'字段完全一致，将跳过'}
+        duplicateRows.push(row)
+      }else{
+        const similar=compareEntries.find(e=>isLikelyDuplicate(e,entry))
+        if(similar){
+          row={key:`sim-${i}-${entry.id}`,entry,status:'similar',label:'疑似',reason:'同日同平台金额接近，默认跳过',match:similar}
+          similarRows.push(row)
+        }else{
+          row={key:`new-${i}-${entry.id}`,entry,status:'new',label:'新增',reason:'合并导入会追加'}
+          newRows.push(row);exactKeys.add(key);compareEntries.push(entry)
+        }
+      }
+      rows.push(row)
+    })
+    importPreview.value={source,fileName,validRows:rows,newRows,duplicateRows,similarRows,invalidCount,includeSimilar:false}
+  }
+  function freshImportEntries(rows){return rows.map(r=>({...r.entry,id:genId()}))}
+  const importMergeRows=computed(()=>{
+    if(!importPreview.value)return[]
+    return[...importPreview.value.newRows,...(importPreview.value.includeSimilar?importPreview.value.similarRows:[])]
+  })
+  const importAfterStats=computed(()=>{
+    if(!importPreview.value)return summarizeEntries(entries.value)
+    return summarizeEntries([...entries.value,...importMergeRows.value.map(r=>r.entry)])
+  })
+  const importPreviewRows=computed(()=>{
+    if(!importPreview.value)return[]
+    return importPreview.value.validRows.slice(0,30)
+  })
+  function cancelImportPreview(){importPreview.value=null}
+  function confirmImportMerge(){
+    if(!importPreview.value)return
+    const rows=freshImportEntries(importMergeRows.value)
+    if(!rows.length){showToast('没有可合并的新记录','info');return}
+    snap();entries.value=[...entries.value,...rows].sort((a,b)=>a.date<b.date?1:-1);save()
+    const skipped=importPreview.value.duplicateRows.length+(importPreview.value.includeSimilar?0:importPreview.value.similarRows.length)
+    recordImportBatch({
+      mode:'merge',source:importPreview.value.source,fileName:importPreview.value.fileName,
+      importedCount:rows.length,skippedCount:skipped,duplicateCount:importPreview.value.duplicateRows.length,
+      similarSkippedCount:importPreview.value.includeSimilar?0:importPreview.value.similarRows.length,
+      invalidCount:importPreview.value.invalidCount,includeSimilar:importPreview.value.includeSimilar,
+      importedIds:rows.map(e=>e.id)
+    })
+    showToast(`已合并 ${rows.length} 条，跳过 ${skipped} 条`,'success')
+    cancelImportPreview()
+  }
+  function confirmImportOverwrite(){
+    if(!importPreview.value||!importPreview.value.validRows.length)return
+    if(!confirm('覆盖导入会替换当前所有记录。继续吗？'))return
+    const rows=freshImportEntries(importPreview.value.validRows)
+    const beforeEntries=clone(entries.value)
+    snap();entries.value=rows.sort((a,b)=>a.date<b.date?1:-1);save()
+    recordImportBatch({
+      mode:'overwrite',source:importPreview.value.source,fileName:importPreview.value.fileName,
+      importedCount:rows.length,skippedCount:importPreview.value.invalidCount,
+      duplicateCount:importPreview.value.duplicateRows.length,similarSkippedCount:0,
+      invalidCount:importPreview.value.invalidCount,includeSimilar:true,
+      importedIds:rows.map(e=>e.id),beforeEntries
+    })
+    showToast(`已覆盖导入 ${rows.length} 条`,'success')
+    cancelImportPreview()
+  }
   function exportExcel(){
     if(!entries.value.length){showToast('无数据','info');return}
     const inR=[],outR=[],flowR=[]
     sortedEntries.value.forEach(e=>{
-      const base={'日期':e.date,'资产类型':e.assetType||'','账户/平台':e.exchange,'货币':e.currency||'CNY','金额':e.amount,'汇率':e.rate||'','折合CNY':amountCNY(e),'类型':e.type}
+      const base={'日期':e.date,'资产类型':e.assetType||'','账户/平台':e.exchange,'货币':e.currency||'CNY','金额':e.amount,'汇率':e.rate||'','折合CNY':amountCNY(e),'类型':e.type,'标签':tagsText(e.tags)}
       flowR.push({...base,'备注':e.note,'月份(yyyy-MM)':e.date?e.date.slice(0,7):''})
       if(e.type==='入金')inR.push({...base,'投入理由':e.note});else outR.push({...base,'备注':e.note})
     })
     let cum=0;const mRows=[];const mm=new Map()
-    entries.value.forEach(e=>{const k=e.date?e.date.slice(0,7):'';if(!k)return;if(!mm.has(k))mm.set(k,{m:k,i:0,o:0});const r=mm.get(k);e.type==='入金'?r.i+=e.amount||0:r.o+=e.amount||0})
+    entries.value.forEach(e=>{const k=e.date?e.date.slice(0,7):'';if(!k)return;if(!mm.has(k))mm.set(k,{m:k,i:0,o:0});const r=mm.get(k);e.type==='入金'?r.i+=amountCNY(e):r.o+=amountCNY(e)})
     ;[...mm.values()].sort((a,b)=>a.m<b.m?-1:1).forEach(r=>{const n=r.o-r.i;cum+=n;mRows.push({'月份':r.m,'入金合计':r.i,'出金合计':r.o,'月度盈亏':n,'累计盈亏':cum})})
     const statR=[{'统计项':'总入金','金额（元）':totalIn.value},{'统计项':'总出金','金额（元）':totalOut.value},{'统计项':'净盈亏','金额（元）':netPL.value},{'统计项':'回本比例','金额（元）':roi.value}]
     const wb=XLSX.utils.book_new()
@@ -1588,19 +2037,21 @@ setup(){
     const b=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),entries:entries.value},null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='FlowLedger备份_'+dayjs().format('YYYYMMDD_HHmm')+'.json';a.click();URL.revokeObjectURL(u);showToast('已导出','success')
   }
   function importExcel(ev){
-    const f=ev.target.files[0];if(!f)return;snap();const rd=new FileReader()
+    const f=ev.target.files[0];if(!f)return;const rd=new FileReader()
     rd.onload=e=>{try{
-      const wb=XLSX.read(e.target.result,{type:'array'});const list=[]
-      const tryAdd=(row,tf)=>{const en=normRow({...row,type:row['类型']||tf});if(en)list.push(en)}
-      if(wb.SheetNames.includes('流水记录')){XLSX.utils.sheet_to_json(wb.Sheets['流水记录'],{defval:''}).forEach(r=>tryAdd(r,r['类型']))}
-      else{if(wb.SheetNames.includes('入金记录'))XLSX.utils.sheet_to_json(wb.Sheets['入金记录'],{defval:''}).forEach(r=>tryAdd(r,'入金'));if(wb.SheetNames.includes('出金记录'))XLSX.utils.sheet_to_json(wb.Sheets['出金记录'],{defval:''}).forEach(r=>tryAdd(r,'出金'))}
-      if(!list.length){const ws=wb.Sheets[wb.SheetNames[0]];XLSX.utils.sheet_to_json(ws,{defval:''}).forEach(r=>tryAdd(r,r['类型']||'入金'))}
-      if(list.length){entries.value=list.sort((a,b)=>a.date<b.date?1:-1);save();showToast(`导入 ${list.length} 条`,'success')}else showToast('未识别到有效数据','error')
+      const wb=XLSX.read(e.target.result,{type:'array'})
+      const parsed=normalizeImportRows(workbookRows(wb))
+      buildImportPreview('Excel',f.name,parsed.valid,parsed.invalidCount)
     }catch(err){showToast('导入失败','error')}};rd.readAsArrayBuffer(f);ev.target.value=''
   }
   function importJSON(ev){
-    const f=ev.target.files[0];if(!f)return;snap();const rd=new FileReader()
-    rd.onload=e=>{try{const d=JSON.parse(e.target.result);const list=Array.isArray(d)?d:(d.entries||[]);entries.value=list.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1);save();showToast(`导入 ${entries.value.length} 条`,'success')}catch(err){showToast('JSON格式错误','error')}};rd.readAsText(f);ev.target.value=''
+    const f=ev.target.files[0];if(!f)return;const rd=new FileReader()
+    rd.onload=e=>{try{
+      const d=JSON.parse(e.target.result)
+      const list=Array.isArray(d)?d:(d.entries||[])
+      const parsed=normalizeImportRows(list.map(row=>({row,type:row.type||row['类型']})))
+      buildImportPreview('JSON',f.name,parsed.valid,parsed.invalidCount)
+    }catch(err){showToast('JSON格式错误','error')}};rd.readAsText(f);ev.target.value=''
   }
 
   // Chart
@@ -1705,7 +2156,7 @@ setup(){
       data:{
         labels:rows.map(r=>r.assetType||'未分类'),
         datasets:[{
-          data:rows.map(r=>pieMode.value==='in'?r.inTotal:Math.max(r.inTotal+r.net,0)),
+          data:rows.map(r=>pieMode.value==='in'?r.inTotal:r.outTotal),
           backgroundColor:rows.map(r=>assetColor(r.assetType)),
           borderWidth:2,
           borderColor:isLight?'rgba(255,255,255,.8)':'rgba(18,22,30,.8)',
@@ -1753,15 +2204,16 @@ setup(){
     watch(()=>form.currency,cur=>{if(cur!=='CNY'&&!form.rate)fetchRate(cur,'form')})
   })
 
-  return{entries,sortedEntries,snapshots,period,mobileTab,showMobileAdd,showFilters,editingEntry,showSync,theme,toggleTheme,trendChart,weekdayChart,pieChart,pieMode,assetColor,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,
-    totalIn,totalOut,netPL,roi,allExchanges,allAssetTypes,allMonths,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,exchangeRows,assetTypeRows,periodCompare,largeTxList,insightSummary,insightAdvice,
+  return{entries,sortedEntries,snapshots,importBatches,period,mobileTab,showMobileAdd,showFilters,editingEntry,showSync,theme,toggleTheme,trendChart,weekdayChart,pieChart,pieMode,assetColor,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,
+    importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
+    totalIn,totalOut,netPL,roi,allExchanges,allAssetTypes,allTags,allMonths,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,exchangeRows,assetTypeRows,tagRows,periodCompare,largeTxList,insightSummary,insightAdvice,
     behaviorAnalysis,psychoTags,behaviorAdvice,
     monthlyBudget,saveBudget,curMonthIn,budgetRatio,
-    fmt,amountCNY,rowClass,toggleEx,toggleAssetType,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,
+    fmt,amountCNY,parseTags,rowClass,toggleEx,toggleAssetType,toggleTag,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,editingDetail,
     platformSuggestions,editPlatformSuggestions,rateLoading,fetchRate,
     groupedEntries,expandedMonths,toggleMonth,isMonthOpen,expandAllMonths,collapseAllMonths,
     addEntry,mobileAddEntry,copyLast,removeEntry,updateField,clearData,
-    createSnap,restoreSnap,clearSnaps,
+    createSnap,restoreSnap,clearSnaps,undoImportBatch,clearImportBatches,
     saveSyncConfig,syncPush,syncPull,saveRules,saveReviewNote,saveChecklist,loadReview,
     exportExcel,exportJSON,importExcel,importJSON,showToast,dayjs}
 }
