@@ -615,6 +615,34 @@ tr.row-unmatched td{opacity:.35}
 /* ===== ASSET CARD ===== */
 .asset-card{min-width:120px}
 
+/* ===== ONBOARDING ===== */
+.onboard-overlay{
+  position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.65);
+  transition:opacity .3s;
+}
+.onboard-spotlight{
+  position:absolute;border-radius:16px;
+  box-shadow:0 0 0 9999px rgba(0,0,0,.65);
+  pointer-events:none;transition:all .35s cubic-bezier(.16,1,.3,1);
+  z-index:301;
+}
+.onboard-tooltip{
+  position:fixed;z-index:302;background:var(--panel);border:1px solid var(--border-light);
+  border-radius:18px;padding:24px;max-width:360px;width:calc(100vw - 40px);
+  box-shadow:0 20px 60px rgba(0,0,0,.5);transition:all .35s cubic-bezier(.16,1,.3,1);
+}
+.onboard-step-title{font-size:18px;font-weight:800;margin-bottom:8px;color:var(--text)}
+.onboard-step-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px}
+.onboard-step-actions{display:flex;gap:8px;align-items:center}
+.onboard-step-actions .btn{min-height:40px;font-size:13px;font-weight:600}
+.onboard-dots{display:flex;gap:6px;justify-content:center;margin-top:14px}
+.onboard-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background .3s}
+.onboard-dot.active{background:var(--accent)}
+@media(max-width:680px){
+  .onboard-tooltip{max-width:100vw;border-radius:20px 20px 0 0;bottom:0!important;left:0!important;right:0!important;top:auto!important;padding:20px 20px calc(20px + env(safe-area-inset-bottom))}
+  .onboard-spotlight{border-radius:12px}
+}
+
 /* ===== RATE INPUT ===== */
 .rate-input-wrap{display:flex;gap:6px;align-items:center}
 .rate-input-wrap .form-input{flex:1;min-width:0}
@@ -637,17 +665,18 @@ tr.row-unmatched td{opacity:.35}
   <!-- ===== HERO ===== -->
   <header class="hero section-records section-stats section-data">
     <div class="hero-info">
-      <p class="kicker">FlowLedger · 投记</p>
-      <h1>个人投资出入金记账</h1>
-      <p class="sub">记录大A、美股、港股、加密货币等全渠道投资出入金，追踪真实盈亏、分析行为习惯，用数据代替感觉。</p>
+      <p class="kicker">{{ t('appKicker') }}</p>
+      <h1>{{ t('appKicker') }}</h1>
+      <p class="sub">{{ t('appDesc') }}</p>
       <blockquote class="hero-quote" id="heroQuote"></blockquote>
     </div>
     <div class="hero-actions">
-      <button class="theme-toggle" @click="toggleTheme" :title="theme==='dark'?'切换到白天模式':'切换到夜间模式'">{{ theme==='dark'?'☀️':'🌙' }}</button>
-      <button class="btn btn-primary" @click="$refs.xlsxFile.click()">导入 Excel</button>
-      <button class="btn btn-ghost" @click="$refs.jsonFile.click()">导入 JSON</button>
-      <button class="btn btn-ghost" @click="exportExcel">导出 Excel</button>
-      <button class="btn btn-ghost" @click="exportJSON">备份 JSON</button>
+      <button class="theme-toggle" @click="toggleTheme" :title="t('themeToggle')">{{ theme==='dark'?'☀️':'🌙' }}</button>
+      <button class="btn btn-ghost btn-sm" @click="lang=lang==='zh'?'en':'zh';localStorage.setItem('flowledger_lang',lang)" style="font-size:14px;min-width:38px;min-height:38px;display:inline-flex;align-items:center;justify-content:center;background:var(--overlay);border:1px solid var(--border);border-radius:50%">{{ lang==='zh'?'EN':'中' }}</button>
+      <button class="btn btn-primary" @click="$refs.xlsxFile.click()">{{ t('importExcel') }}</button>
+      <button class="btn btn-ghost" @click="$refs.jsonFile.click()">{{ t('importJSON') }}</button>
+      <button class="btn btn-ghost" @click="exportExcel">{{ t('exportExcel') }}</button>
+      <button class="btn btn-ghost" @click="exportJSON">{{ t('exportJSON') }}</button>
       <input ref="xlsxFile" type="file" accept=".xlsx,.xls,.csv" hidden @change="importExcel">
       <input ref="jsonFile" type="file" accept=".json" hidden @change="importJSON">
     </div>
@@ -655,10 +684,10 @@ tr.row-unmatched td{opacity:.35}
 
   <!-- ===== SUMMARY ===== -->
   <div class="summary-grid section-records section-stats section-data">
-    <div class="summary-card"><p class="label">总入金</p><p class="value text-red">{{ fmt(totalIn) }}</p></div>
-    <div class="summary-card"><p class="label">总出金</p><p class="value text-green">{{ fmt(totalOut) }}</p></div>
+    <div class="summary-card"><p class="label">{{ t('totalIn') }}</p><p class="value text-red">{{ fmt(totalIn) }}</p></div>
+    <div class="summary-card"><p class="label">{{ t('totalOut') }}</p><p class="value text-green">{{ fmt(totalOut) }}</p></div>
     <div class="summary-card"><p class="label">净盈亏</p><p :class="['value', netPL>=0?'text-green':'text-red']">{{ (netPL>=0?'+':'')+fmt(netPL) }}</p></div>
-    <div class="summary-card"><p class="label">回本比例</p><p :class="['value', roi>=1?'text-green':'text-red']">{{ (roi*100).toFixed(1) }}%</p></div>
+    <div class="summary-card"><p class="label">{{ t('roi') }}</p><p :class="['value', roi>=1?'text-green':'text-red']">{{ (roi*100).toFixed(1) }}%</p></div>
   </div>
 
   <!-- ===== BUDGET BAR ===== -->
@@ -672,8 +701,8 @@ tr.row-unmatched td{opacity:.35}
     </div>
     <div class="budget-set">
       <input class="form-input" type="number" v-model.number="monthlyBudget" style="width:120px" placeholder="月预算">
-      <button class="btn btn-ghost btn-xs" @click="saveBudget">保存</button>
-      <button class="btn btn-ghost btn-xs" @click="monthlyBudget=0;saveBudget()">关闭预算</button>
+      <button class="btn btn-ghost btn-xs" @click="saveBudget">{{ t('save') }}</button>
+      <button class="btn btn-ghost btn-xs" @click="monthlyBudget=0;saveBudget()">{{ t('closeBudget') }}</button>
     </div>
   </div>
   <div v-else class="section-records section-stats section-data" style="margin-bottom:14px">
@@ -682,29 +711,29 @@ tr.row-unmatched td{opacity:.35}
 
   <!-- ===== QUICK ADD ===== -->
   <section class="panel section-records section-not-stats section-not-data quick-add-panel">
-    <h2 style="margin-bottom:14px">快速录入</h2>
+    <h2 style="margin-bottom:14px">{{ t('quickAdd') }}</h2>
     <div class="form-grid">
-      <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="form.date"></div>
-      <div class="form-group"><label>资产类型</label><select class="form-input" v-model="form.assetType"><option value="">未分类</option><option value="大A">大A</option><option value="美股">美股</option><option value="港股">港股</option><option value="加密货币">加密货币</option><option value="基金">基金</option><option value="黄金">黄金</option><option value="期货">期货</option><option value="其他">其他</option></select></div>
+      <div class="form-group"><label>{{ t('date') }}</label><input class="form-input" type="date" v-model="form.date"></div>
+      <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="form.assetType"><option value="">其他</option><option value="大A">大A</option><option value="美股">美股</option><option value="港股">港股</option><option value="加密货币">加密货币</option><option value="基金">基金</option><option value="黄金">黄金</option><option value="期货">期货</option><option value="其他">其他</option></select></div>
       <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="form.exchange" placeholder="选择或输入" list="dl-ex"><datalist id="dl-ex"><option v-for="ex in platformSuggestions" :key="ex" :value="ex"></option></datalist></div>
       <div class="form-group">
-        <label>金额</label>
+        <label>{{ t('amount') }}</label>
         <div style="display:flex;gap:6px">
           <select class="form-input" v-model="form.currency" style="width:110px;flex-shrink:0"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select>
           <input class="form-input" type="number" step="0.01" v-model.number="form.amount" placeholder="1000" inputmode="decimal" style="flex:1;min-width:0">
         </div>
         <div v-if="form.currency!=='CNY'" style="display:flex;gap:6px;margin-top:6px;align-items:center">
-          <span style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0">汇率</span>
+          <span style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0">{{ t('rate') }}</span>
           <input class="form-input" type="number" step="0.0001" v-model="form.rate" :placeholder="form.currency==='HKD'?'0.92':'7.25'" inputmode="decimal" style="flex:1;min-width:0">
           <button class="rate-fetch-btn" @click="fetchRate(form.currency,'form')" :disabled="rateLoading">{{ rateLoading?'获取中…':'获取汇率' }}</button>
         </div>
         <p class="rate-hint" v-if="form.currency!=='CNY'&&form.rate&&form.amount">本笔 ≈ {{ fmt(form.amount*Number(form.rate)) }} 元（1 {{ form.currency }} = {{ form.rate }} CNY）</p>
       </div>
       <div class="form-group"><label>{{ form.type==='入金'?'投入理由':'出金备注' }}</label><input class="form-input" v-model="form.note" :placeholder="form.type==='入金'?'为什么要入这笔？如：定投/补仓/看好行情':'收款渠道/备注'"></div>
-      <div class="form-group"><label>标签</label><input class="form-input" v-model="form.tagText" list="dl-tags" placeholder="定投，补仓，FOMO"><datalist id="dl-tags"><option v-for="t in allTags" :key="t" :value="t"></option></datalist></div>
-      <div class="form-group"><label>类型</label><select class="form-input" v-model="form.type"><option value="入金">入金</option><option value="出金">出金</option></select></div>
-      <button class="btn btn-primary" @click="addEntry">添加记录</button>
-      <button class="btn btn-ghost" @click="copyLast" :disabled="!entries.length">复制上一笔</button>
+      <div class="form-group"><label>{{ t('tagStats') }}</label><input class="form-input" v-model="form.tagText" list="dl-tags" placeholder="定投，补仓，FOMO"><datalist id="dl-tags"><option v-for="t in allTags" :key="t" :value="t"></option></datalist></div>
+      <div class="form-group"><label>类型</label><select class="form-input" v-model="form.type"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option></select></div>
+      <button class="btn btn-primary" @click="addEntry">{{ t('add') }}</button>
+      <button class="btn btn-ghost" @click="copyLast" :disabled="!entries.length">{{ t('copyLast') }}</button>
     </div>
   </section>
 
@@ -715,7 +744,7 @@ tr.row-unmatched td{opacity:.35}
         <span :class="['arrow',{open:showSync}]">&#9654;</span>
         <div><h2>GitHub Gist 同步</h2><p class="hint">多端同步数据。{{ syncStatus!=='未配置'?' · '+syncStatus:'（免费、安全、带版本历史）' }}</p></div>
       </div>
-      <div class="panel-actions" @click.stop><button class="btn btn-ghost btn-sm" @click="saveSyncConfig" v-if="showSync">保存配置</button></div>
+      <div class="panel-actions" @click.stop><button class="btn btn-ghost btn-sm" @click="saveSyncConfig" v-if="showSync">{{ t('syncSaveConfig') }}</button></div>
     </div>
     <div :class="['panel-collapse-body',{collapsed:!showSync}]">
       <div class="form-grid">
@@ -723,7 +752,7 @@ tr.row-unmatched td{opacity:.35}
           <label>GitHub Personal Access Token</label>
           <div style="display:flex;gap:8px">
             <input class="form-input" type="password" v-model="syncCfg.token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="flex:1">
-            <a href="https://github.com/settings/tokens/new" target="_blank" class="btn btn-ghost btn-sm" style="white-space:nowrap">创建 Token</a>
+            <a href="https://github.com/settings/tokens/new" target="_blank" class="btn btn-ghost btn-sm" style="white-space:nowrap">{{ t('syncCreateToken') }}</a>
           </div>
           <p class="hint" style="margin-top:4px">GitHub 页面操作：左侧栏找 <strong>"Tokens (classic)"</strong> &rarr; <strong>"Generate new token (classic)"</strong> &rarr; Note 随意填、Expiration 选不限 &rarr; 勾选 <strong><code>gist</code></strong> 权限 &rarr; 生成后粘贴到此处。Token 仅保存在你的浏览器本地</p>
         </div>
@@ -736,9 +765,9 @@ tr.row-unmatched td{opacity:.35}
           <input class="form-input" value="首次推送后自动创建" readonly>
         </div>
         <div class="form-group"><label>状态</label><input class="form-input" :value="syncStatus" readonly></div>
-        <button class="btn btn-primary btn-sm" @click="syncPush">上传云端</button>
-        <button class="btn btn-ghost btn-sm" @click="syncPull">拉取云端</button>
-        <button class="btn btn-ghost btn-sm" @click="syncAuto" v-if="syncCfg.token">一键同步</button>
+        <button class="btn btn-primary btn-sm" @click="syncPush">{{ t('syncPush') }}</button>
+        <button class="btn btn-ghost btn-sm" @click="syncPull">{{ t('syncPull') }}</button>
+        <button class="btn btn-ghost btn-sm" @click="syncAuto" v-if="syncCfg.token">{{ t('syncAuto') }}</button>
       </div>
       <p class="hint" style="margin-top:10px;font-size:12px">
         提示：首次使用请先<strong>上传</strong>，在其他设备上输入同一 Token 后<strong>拉取</strong>即可。每次同步会保留版本历史，可在 Gist 页面查看和恢复。
@@ -749,13 +778,13 @@ tr.row-unmatched td{opacity:.35}
   <!-- ===== FLOW TABLE ===== -->
   <section class="panel section-records section-not-stats section-not-data">
     <div class="panel-header">
-      <div><h2>流水记录</h2><p class="hint">筛选不隐藏，命中高亮，未命中变淡。</p></div>
+      <div><h2>{{ t('flowRecords') }}</h2><p class="hint">筛选不隐藏，命中高亮，未命中变淡。</p></div>
       <div class="panel-actions">
         <span class="pill">{{ matchCount }}/{{ entries.length }} 命中</span>
-        <button class="btn btn-ghost btn-sm" @click="expandAllMonths">展开全部</button>
-        <button class="btn btn-ghost btn-sm" @click="collapseAllMonths">收起全部</button>
-        <button class="btn btn-ghost btn-sm" @click="scrollToFirstMatch">定位首条</button>
-        <button class="btn btn-ghost btn-sm" @click="clearData">清空数据</button>
+        <button class="btn btn-ghost btn-sm" @click="expandAllMonths">{{ t('expandAll') }}</button>
+        <button class="btn btn-ghost btn-sm" @click="collapseAllMonths">{{ t('collapseAll') }}</button>
+        <button class="btn btn-ghost btn-sm" @click="scrollToFirstMatch">{{ t('locateFirst') }}</button>
+        <button class="btn btn-ghost btn-sm" @click="clearData">{{ t('clearAllRecords') }}</button>
       </div>
     </div>
     <!-- Filter toggle (mobile) -->
@@ -765,21 +794,21 @@ tr.row-unmatched td{opacity:.35}
     <!-- Filters -->
     <div :class="{'filter-collapsed':!showFilters}">
       <div class="filter-grid">
-        <div class="form-group"><label>月份</label><select class="form-input" v-model="filters.month"><option value="">全部</option><option v-for="m in allMonths" :key="m" :value="m">{{ m }}</option></select></div>
-        <div class="form-group"><label>类型</label><select class="form-input" v-model="filters.type"><option value="">全部</option><option value="入金">入金</option><option value="出金">出金</option></select></div>
-        <div class="form-group" style="grid-column:span 2"><label>关键词</label><input class="form-input" v-model="filters.keyword" placeholder="交易所/备注关键词"></div>
-        <div class="form-group"><label>起始日期</label><input class="form-input" type="date" v-model="filters.dateFrom"></div>
-        <div class="form-group"><label>结束日期</label><input class="form-input" type="date" v-model="filters.dateTo"></div>
+        <div class="form-group"><label>{{ t('month') }}</label><select class="form-input" v-model="filters.month"><option value="">{{ t('typeAll') }}</option><option v-for="m in allMonths" :key="m" :value="m">{{ m }}</option></select></div>
+        <div class="form-group"><label>类型</label><select class="form-input" v-model="filters.type"><option value="">{{ t('typeAll') }}</option><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option></select></div>
+        <div class="form-group" style="grid-column:span 2"><label>{{ t('keyword') }}</label><input class="form-input" v-model="filters.keyword" placeholder="交易所/备注关键词"></div>
+        <div class="form-group"><label>{{ t('dateFrom') }}</label><input class="form-input" type="date" v-model="filters.dateFrom"></div>
+        <div class="form-group"><label>{{ t('dateTo') }}</label><input class="form-input" type="date" v-model="filters.dateTo"></div>
         <div class="form-group"><label>最小金额(CNY)</label><input class="form-input" type="number" v-model.number="filters.amountMin" placeholder=">= 0" inputmode="numeric"></div>
         <div class="form-group"><label>最大金额(CNY)</label><input class="form-input" type="number" v-model.number="filters.amountMax" placeholder="不限" inputmode="numeric"></div>
-        <button class="btn btn-ghost btn-sm" @click="clearFilters">清空筛选</button>
+        <button class="btn btn-ghost btn-sm" @click="clearFilters">{{ t('clearFilters') }}</button>
       </div>
       <div class="filter-exchange" v-if="allAssetTypes.length">
-        <span class="filter-title">资产类型</span>
+        <span class="filter-title">{{ t('assetType') }}</span>
         <span v-for="at in allAssetTypes" :key="at" :class="['chip',{active:filters.assetTypes.includes(at)}]" @click="toggleAssetType(at)">{{ at }}</span>
       </div>
       <div class="filter-exchange" v-if="allTags.length">
-        <span class="filter-title">标签</span>
+        <span class="filter-title">{{ t('tagStats') }}</span>
         <span v-for="tag in allTags" :key="tag" :class="['chip',{active:filters.tags.includes(tag)}]" @click="toggleTag(tag)">#{{ tag }}</span>
       </div>
       <div class="filter-exchange" v-if="allExchanges.length">
@@ -794,10 +823,10 @@ tr.row-unmatched td{opacity:.35}
         <span class="fs-range" v-if="filteredStats.firstDate">{{ filteredStats.firstDate }} ~ {{ filteredStats.lastDate }} · {{ filteredStats.count }} 笔</span>
       </div>
       <div class="fs-grid">
-        <div class="fs-cell"><p>入金</p><strong class="text-red">{{ fmt(filteredStats.inTotal) }}</strong></div>
-        <div class="fs-cell"><p>出金</p><strong class="text-green">{{ fmt(filteredStats.outTotal) }}</strong></div>
+        <div class="fs-cell"><p>{{ t('typeIn') }}</p><strong class="text-red">{{ fmt(filteredStats.inTotal) }}</strong></div>
+        <div class="fs-cell"><p>{{ t('typeOut') }}</p><strong class="text-green">{{ fmt(filteredStats.outTotal) }}</strong></div>
         <div class="fs-cell"><p>净盈亏</p><strong :style="{color:filteredStats.net>=0?'var(--blue)':'var(--red)'}">{{ (filteredStats.net>=0?'+':'')+fmt(filteredStats.net) }}</strong></div>
-        <div class="fs-cell"><p>回本比例</p><strong :style="{color:filteredStats.inTotal&&filteredStats.outTotal/filteredStats.inTotal>=1?'var(--green)':'var(--red)'}">{{ filteredStats.inTotal?((filteredStats.outTotal/filteredStats.inTotal)*100).toFixed(1)+'%':'-' }}</strong></div>
+        <div class="fs-cell"><p>{{ t('roi') }}</p><strong :style="{color:filteredStats.inTotal&&filteredStats.outTotal/filteredStats.inTotal>=1?'var(--green)':'var(--red)'}">{{ filteredStats.inTotal?((filteredStats.outTotal/filteredStats.inTotal)*100).toFixed(1)+'%':'-' }}</strong></div>
       </div>
     </div>
     <!-- Desktop Table (grouped by month) -->
@@ -817,12 +846,12 @@ tr.row-unmatched td{opacity:.35}
           </div>
         </div>
         <table v-show="isMonthOpen(g.key)">
-          <thead><tr><th>日期</th><th>资产 / 平台</th><th style="text-align:right">金额</th><th>备注/理由</th><th>类型</th><th>操作</th></tr></thead>
+          <thead><tr><th>{{ t('date') }}</th><th>资产 / 平台</th><th style="text-align:right">{{ t('amount') }}</th><th>备注/理由</th><th>类型</th><th>{{ t('actions') }}</th></tr></thead>
           <tbody>
             <tr v-for="e in g.entries" :key="e.id" :class="rowClass(e)" :id="'row-'+e.id">
               <td><input type="date" :value="e.date" @change="updateField(e.id,'date',$event.target.value)"></td>
               <td style="min-width:140px">
-                <select :value="e.assetType||''" @change="updateField(e.id,'assetType',$event.target.value)" style="width:100%;margin-bottom:3px"><option value="">未分类</option><option value="大A">大A</option><option value="美股">美股</option><option value="港股">港股</option><option value="加密货币">加密货币</option><option value="基金">基金</option><option value="黄金">黄金</option><option value="期货">期货</option><option value="其他">其他</option></select>
+                <select :value="e.assetType||''" @change="updateField(e.id,'assetType',$event.target.value)" style="width:100%;margin-bottom:3px"><option value="">其他</option><option value="大A">大A</option><option value="美股">美股</option><option value="港股">港股</option><option value="加密货币">加密货币</option><option value="基金">基金</option><option value="黄金">黄金</option><option value="期货">期货</option><option value="其他">其他</option></select>
                 <input type="text" :value="e.exchange" @change="updateField(e.id,'exchange',$event.target.value)" placeholder="账户/平台" style="width:100%;font-size:11px;color:var(--muted)">
               </td>
               <td style="text-align:right;min-width:130px">
@@ -839,8 +868,8 @@ tr.row-unmatched td{opacity:.35}
                 <input type="text" :value="e.note" @change="updateField(e.id,'note',$event.target.value)" style="min-width:100px">
                 <div class="tag-strip" v-if="parseTags(e.tags).length"><span v-for="tag in parseTags(e.tags)" :key="tag" class="tag-chip">#{{ tag }}</span></div>
               </td>
-              <td><select :value="e.type" @change="updateField(e.id,'type',$event.target.value)"><option value="入金">入金</option><option value="出金">出金</option></select></td>
-              <td><span class="action-link del" @click="removeEntry(e.id)">删除</span></td>
+              <td><select :value="e.type" @change="updateField(e.id,'type',$event.target.value)"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option></select></td>
+              <td><span class="action-link del" @click="removeEntry(e.id)">{{ t('delete') }}</span></td>
             </tr>
           </tbody>
         </table>
@@ -880,7 +909,7 @@ tr.row-unmatched td{opacity:.35}
               <div class="record-card-meta">
                 <span v-if="e.note" style="color:var(--dim)">{{ e.note }}</span>
               </div>
-              <button class="record-card-del" @click.stop="removeEntry(e.id)">删除</button>
+              <button class="record-card-del" @click.stop="removeEntry(e.id)">{{ t('delete') }}</button>
             </div>
           </div>
         </template>
@@ -890,12 +919,12 @@ tr.row-unmatched td{opacity:.35}
 
   <!-- ===== ASSET ALLOCATION OVERVIEW ===== -->
   <section class="panel section-stats section-not-records section-not-data" v-if="assetTypeRows.length">
-    <div class="panel-header"><h2>资产配置总览</h2><p class="hint">各类资产的投入分布与盈亏情况（折合 CNY）</p></div>
+    <div class="panel-header"><h2>{{ t('assetAlloc') }}</h2><p class="hint">各类资产的投入分布与盈亏情况（折合 CNY）</p></div>
     <div class="stats-layout">
       <div>
         <div style="display:flex;gap:8px;margin-bottom:12px">
-          <button :class="['btn btn-sm',pieMode==='in'?'btn-primary':'btn-ghost']" @click="pieMode='in'">投入分布</button>
-          <button :class="['btn btn-sm',pieMode==='net'?'btn-primary':'btn-ghost']" @click="pieMode='net'">取出分布</button>
+          <button :class="['btn btn-sm',pieMode==='in'?'btn-primary':'btn-ghost']" @click="pieMode='in'">{{ t('investDist') }}</button>
+          <button :class="['btn btn-sm',pieMode==='net'?'btn-primary':'btn-ghost']" @click="pieMode='net'">{{ t('netDist') }}</button>
         </div>
         <div class="chart-wrap" style="max-height:280px"><canvas ref="pieChart"></canvas></div>
       </div>
@@ -906,10 +935,10 @@ tr.row-unmatched td{opacity:.35}
             <p style="font-weight:700;font-size:13px;margin:0">{{ row.assetType||'未分类' }}</p>
           </div>
           <div style="font-size:11px;color:var(--muted);display:grid;grid-template-columns:1fr 1fr;gap:3px 6px">
-            <span>投入</span><span style="text-align:right;color:var(--red);font-variant-numeric:tabular-nums">{{ fmt(row.inTotal) }}</span>
-            <span>取出</span><span style="text-align:right;color:var(--green);font-variant-numeric:tabular-nums">{{ fmt(row.outTotal) }}</span>
+            <span>{{ t('deposit') }}</span><span style="text-align:right;color:var(--red);font-variant-numeric:tabular-nums">{{ fmt(row.inTotal) }}</span>
+            <span>{{ t('withdraw') }}</span><span style="text-align:right;color:var(--green);font-variant-numeric:tabular-nums">{{ fmt(row.outTotal) }}</span>
             <span>盈亏</span><span :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:row.net>=0?'var(--blue)':'var(--red)'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span>
-            <span>回本率</span><span :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:row.inTotal&&row.outTotal/row.inTotal>=1?'var(--green)':'var(--red)'}">{{ row.inTotal?((row.outTotal/row.inTotal)*100).toFixed(0)+'%':'-' }}</span>
+            <span>{{ t('roiRate') }}</span><span :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:row.inTotal&&row.outTotal/row.inTotal>=1?'var(--green)':'var(--red)'}">{{ row.inTotal?((row.outTotal/row.inTotal)*100).toFixed(0)+'%':'-' }}</span>
           </div>
         </div>
       </div>
@@ -921,14 +950,14 @@ tr.row-unmatched td{opacity:.35}
     <div class="panel-header">
       <h2>盈亏统计</h2>
       <div class="panel-actions">
-        <div class="inline-select"><span>周期</span><select class="form-input" v-model="period" style="min-width:100px"><option value="month">月度</option><option value="week">周</option><option value="year">年度</option></select></div>
+        <div class="inline-select"><span>{{ t('periodSwitch') }}</span><select class="form-input" v-model="period" style="min-width:100px"><option value="month">{{ t('periodMonth') }}</option><option value="week">{{ t('periodWeek') }}</option><option value="year">{{ t('periodYear') }}</option></select></div>
       </div>
     </div>
     <!-- Period Compare Cards -->
     <div class="compare-grid" style="margin-bottom:16px">
-      <div class="compare-card"><p>当前周期净盈亏</p><strong :style="{color:periodCompare.curNet>=0?'var(--blue)':'var(--red)'}">{{ fmt(periodCompare.curNet) }}</strong></div>
-      <div class="compare-card"><p>上个周期净盈亏</p><strong :style="{color:periodCompare.prevNet>=0?'var(--blue)':'var(--red)'}">{{ fmt(periodCompare.prevNet) }}</strong></div>
-      <div class="compare-card"><p>环比变化</p><strong :style="{color:periodCompare.delta>=0?'var(--blue)':'var(--red)'}">{{ fmt(periodCompare.delta) }}</strong></div>
+      <div class="compare-card"><p>{{ t('curPeriodNet') }}</p><strong :style="{color:periodCompare.curNet>=0?'var(--blue)':'var(--red)'}">{{ fmt(periodCompare.curNet) }}</strong></div>
+      <div class="compare-card"><p>{{ t('lastPeriod') }}</p><strong :style="{color:periodCompare.prevNet>=0?'var(--blue)':'var(--red)'}">{{ fmt(periodCompare.prevNet) }}</strong></div>
+      <div class="compare-card"><p>{{ t('compareChange') }}</p><strong :style="{color:periodCompare.delta>=0?'var(--blue)':'var(--red)'}">{{ fmt(periodCompare.delta) }}</strong></div>
     </div>
     <!-- Chart -->
     <div class="chart-wrap">
@@ -939,7 +968,7 @@ tr.row-unmatched td{opacity:.35}
         <h4 style="font-size:12px;color:var(--muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:.3px">{{ {month:'月度盈亏',week:'周度盈亏',year:'年度盈亏'}[period] }}</h4>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>{{ {month:'月份',week:'周',year:'年份'}[period] }}</th><th style="text-align:right">入金合计</th><th style="text-align:right">出金合计</th><th style="text-align:right">{{ {month:'月度盈亏',week:'周盈亏',year:'年度盈亏'}[period] }}</th><th style="text-align:right">累计盈亏</th></tr></thead>
+            <thead><tr><th>{{ {month:'月份',week:'周',year:'年份'}[period] }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">{{ {month:'月度盈亏',week:'周盈亏',year:'年度盈亏'}[period] }}</th><th style="text-align:right">{{ t('cumPL') }}</th></tr></thead>
             <tbody>
               <tr v-for="row in periodRows" :key="row.key">
                 <td class="mono">{{ row.key }}</td>
@@ -958,16 +987,16 @@ tr.row-unmatched td{opacity:.35}
               <span class="stat-card-key">{{ row.key }}</span>
               <span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span>
             </div>
-            <div class="stat-card-row"><span>入金</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div>
-            <div class="stat-card-row"><span>出金</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
-            <div class="stat-card-row"><span>累计盈亏</span><span :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.cum) }}</span></div>
+            <div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div>
+            <div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
+            <div class="stat-card-row"><span>{{ t('cumPL') }}</span><span :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.cum) }}</span></div>
           </div>
         </div>
         <!-- Asset type stats -->
         <h4 style="font-size:12px;color:var(--muted);margin:18px 0 10px;text-transform:uppercase;letter-spacing:.3px">资产类型盈亏（折CNY）</h4>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>资产类型</th><th style="text-align:right">投入合计</th><th style="text-align:right">取出合计</th><th style="text-align:right">净盈亏</th></tr></thead>
+            <thead><tr><th>{{ t('assetType') }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">净盈亏</th></tr></thead>
             <tbody>
               <tr v-for="row in assetTypeRows" :key="row.assetType">
                 <td style="font-weight:600">{{ row.assetType||'未分类' }}</td>
@@ -984,8 +1013,8 @@ tr.row-unmatched td{opacity:.35}
               <span class="stat-card-key">{{ row.assetType||'未分类' }}</span>
               <span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span>
             </div>
-            <div class="stat-card-row"><span>投入</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div>
-            <div class="stat-card-row"><span>取出</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
+            <div class="stat-card-row"><span>{{ t('deposit') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div>
+            <div class="stat-card-row"><span>{{ t('withdraw') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
           </div>
         </div>
         <!-- Tag stats -->
@@ -993,7 +1022,7 @@ tr.row-unmatched td{opacity:.35}
           <h4 style="font-size:12px;color:var(--muted);margin:18px 0 10px;text-transform:uppercase;letter-spacing:.3px">标签盈亏（折CNY）</h4>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>标签</th><th style="text-align:right">笔数</th><th style="text-align:right">投入合计</th><th style="text-align:right">取出合计</th><th style="text-align:right">净盈亏</th></tr></thead>
+              <thead><tr><th>{{ t('tagStats') }}</th><th style="text-align:right">笔数</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">净盈亏</th></tr></thead>
               <tbody>
                 <tr v-for="row in tagRows" :key="row.tag">
                   <td style="font-weight:600">#{{ row.tag }}</td>
@@ -1012,8 +1041,8 @@ tr.row-unmatched td{opacity:.35}
                 <span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span>
               </div>
               <div class="stat-card-row"><span>笔数</span><span>{{ row.count }}</span></div>
-              <div class="stat-card-row"><span>投入</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div>
-              <div class="stat-card-row"><span>取出</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
+              <div class="stat-card-row"><span>{{ t('deposit') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div>
+              <div class="stat-card-row"><span>{{ t('withdraw') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
             </div>
           </div>
         </template>
@@ -1021,7 +1050,7 @@ tr.row-unmatched td{opacity:.35}
         <h4 style="font-size:12px;color:var(--muted);margin:18px 0 10px;text-transform:uppercase;letter-spacing:.3px">账户/平台盈亏（折CNY）</h4>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>账户/平台</th><th style="text-align:right">投入合计</th><th style="text-align:right">取出合计</th><th style="text-align:right">净盈亏</th></tr></thead>
+            <thead><tr><th>账户/平台</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">净盈亏</th></tr></thead>
             <tbody>
               <tr v-for="row in exchangeRows" :key="row.exchange">
                 <td style="font-weight:600">{{ row.exchange }}</td>
@@ -1038,39 +1067,39 @@ tr.row-unmatched td{opacity:.35}
               <span class="stat-card-key">{{ row.exchange }}</span>
               <span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span>
             </div>
-            <div class="stat-card-row"><span>投入</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div>
-            <div class="stat-card-row"><span>取出</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
+            <div class="stat-card-row"><span>{{ t('deposit') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div>
+            <div class="stat-card-row"><span>{{ t('withdraw') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
           </div>
         </div>
       </div>
       <!-- Insight Panel -->
       <aside class="insight-panel">
-        <h3>建议与复盘</h3>
+        <h3>{{ t('insights') }}</h3>
         <p class="insight-summary">{{ insightSummary }}</p>
         <ul class="insight-list"><li v-for="(a,i) in insightAdvice" :key="i">{{ a }}</li></ul>
-        <h4>大额提醒</h4>
+        <h4>{{ t('largeTxWarn') }}</h4>
         <ul class="insight-list">
           <li v-for="(t,i) in largeTxList" :key="i">{{ t }}</li>
-          <li v-if="!largeTxList.length" style="color:var(--muted)">暂无大额记录</li>
+          <li v-if="!largeTxList.length" style="color:var(--muted)">{{ t('noLargeTx') }}</li>
         </ul>
-        <h4>复盘清单</h4>
+        <h4>{{ t('reviewChecklist') }}</h4>
         <div v-for="(item,i) in reviewChecklist" :key="i" :class="['check-item',{done:item.checked}]">
           <input type="checkbox" v-model="item.checked" @change="saveChecklist">
           <span>{{ item.text }}</span>
         </div>
-        <h4>规则设置</h4>
+        <h4>{{ t('rules') }}</h4>
         <div class="insight-config">
-          <div class="form-group"><label>亏损提醒</label><input class="form-input" type="number" v-model.number="rules.lossWarn"></div>
-          <div class="form-group"><label>亏损强提醒</label><input class="form-input" type="number" v-model.number="rules.lossCritical"></div>
-          <div class="form-group"><label>回收率提醒</label><input class="form-input" type="number" step="0.01" v-model.number="rules.roiWarn"></div>
-          <div class="form-group"><label>入/出倍数</label><input class="form-input" type="number" step="0.1" v-model.number="rules.inflowRatio"></div>
-          <div class="form-group"><label>大额阈值</label><input class="form-input" type="number" v-model.number="rules.largeTx"></div>
-          <div class="form-group"><label>连续亏损</label><input class="form-input" type="number" v-model.number="rules.lossStreak"></div>
-          <button class="btn btn-ghost btn-sm" @click="saveRules">保存规则</button>
+          <div class="form-group"><label>{{ t('ruleLossWarn') }}</label><input class="form-input" type="number" v-model.number="rules.lossWarn"></div>
+          <div class="form-group"><label>{{ t('ruleLossCritical') }}</label><input class="form-input" type="number" v-model.number="rules.lossCritical"></div>
+          <div class="form-group"><label>{{ t('ruleRoiWarn') }}</label><input class="form-input" type="number" step="0.01" v-model.number="rules.roiWarn"></div>
+          <div class="form-group"><label>{{ t('ruleInflowRatio') }}</label><input class="form-input" type="number" step="0.1" v-model.number="rules.inflowRatio"></div>
+          <div class="form-group"><label>{{ t('ruleLargeTx') }}</label><input class="form-input" type="number" v-model.number="rules.largeTx"></div>
+          <div class="form-group"><label>{{ t('ruleLossStreak') }}</label><input class="form-input" type="number" v-model.number="rules.lossStreak"></div>
+          <button class="btn btn-ghost btn-sm" @click="saveRules">{{ t('saveRules') }}</button>
         </div>
-        <h4>复盘笔记</h4>
+        <h4>{{ t('reviewNote') }}</h4>
         <textarea class="form-input" v-model="reviewNote" placeholder="记录本周期复盘要点" rows="3"></textarea>
-        <div class="note-actions"><button class="btn btn-ghost btn-sm" @click="saveReviewNote">保存笔记</button><small class="note-hint">{{ reviewSavedAt }}</small></div>
+        <div class="note-actions"><button class="btn btn-ghost btn-sm" @click="saveReviewNote">{{ t('saveReviewNote') }}</button><small class="note-hint">{{ reviewSavedAt }}</small></div>
       </aside>
     </div>
   </section>
@@ -1078,11 +1107,11 @@ tr.row-unmatched td{opacity:.35}
   <!-- ===== BEHAVIOR ANALYSIS ===== -->
   <!-- ===== BEHAVIOR ANALYSIS ===== -->
   <section class="panel section-stats section-not-records section-not-data" v-if="behaviorAnalysis">
-    <div class="panel-header"><h2>投入行为分析</h2></div>
+    <div class="panel-header"><h2>{{ t('behaviorAnalysis') }}</h2></div>
 
     <!-- Top: Psychology tags + advice (full width) -->
     <div style="margin-bottom:18px">
-      <h4 style="font-size:12px;color:var(--muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:.3px">心理画像</h4>
+      <h4 style="font-size:12px;color:var(--muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:.3px">{{ t('psychoProfile') }}</h4>
       <div class="tag-list">
         <span v-for="(t,i) in psychoTags" :key="i" :class="['psych-tag',t.type]" :title="t.tip">
           <span class="tag-dot"></span>{{ t.text }}
@@ -1095,24 +1124,24 @@ tr.row-unmatched td{opacity:.35}
 
     <!-- Middle: Key metrics (full width grid) -->
     <div class="behavior-metrics" style="margin-bottom:18px">
-      <div class="behavior-metric"><p>平均间隔</p><strong>{{ behaviorAnalysis.avgInterval }} 天</strong></div>
-      <div class="behavior-metric"><p>密集投入</p><strong>{{ behaviorAnalysis.denseCount }} 次</strong></div>
-      <div class="behavior-metric"><p>最大单笔</p><strong>{{ fmt(behaviorAnalysis.maxAmount) }}</strong></div>
-      <div class="behavior-metric"><p>平均金额</p><strong>{{ fmt(behaviorAnalysis.avgAmount) }}</strong></div>
-      <div class="behavior-metric"><p>最长连续入金</p><strong>{{ behaviorAnalysis.maxStreak }} 笔</strong></div>
-      <div class="behavior-metric"><p>总投入笔数</p><strong>{{ behaviorAnalysis.totalIn }} 笔</strong></div>
+      <div class="behavior-metric"><p>{{ t('avgInterval') }}</p><strong>{{ behaviorAnalysis.avgInterval }} 天</strong></div>
+      <div class="behavior-metric"><p>{{ t('denseCount') }}</p><strong>{{ behaviorAnalysis.denseCount }} 次</strong></div>
+      <div class="behavior-metric"><p>{{ t('maxSingle') }}</p><strong>{{ fmt(behaviorAnalysis.maxAmount) }}</strong></div>
+      <div class="behavior-metric"><p>{{ t('avgAmount') }}</p><strong>{{ fmt(behaviorAnalysis.avgAmount) }}</strong></div>
+      <div class="behavior-metric"><p>{{ t('maxStreak') }}</p><strong>{{ behaviorAnalysis.maxStreak }} 笔</strong></div>
+      <div class="behavior-metric"><p>{{ t('totalCount') }}</p><strong>{{ behaviorAnalysis.totalIn }} 笔</strong></div>
     </div>
 
     <!-- Bottom: Charts side by side -->
     <div class="stats-layout">
       <div>
-        <h4 style="font-size:12px;color:var(--muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:.3px">星期分布</h4>
+        <h4 style="font-size:12px;color:var(--muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:.3px">{{ t('weekdayDist') }}</h4>
         <div class="chart-wrap" style="max-height:220px">
           <canvas ref="weekdayChart"></canvas>
         </div>
       </div>
       <div>
-        <h4 style="font-size:12px;color:var(--muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:.3px">金额区间</h4>
+        <h4 style="font-size:12px;color:var(--muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:.3px">{{ t('amountRange') }}</h4>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <div v-for="r in behaviorAnalysis.ranges" :key="r.label" style="flex:1;min-width:60px;text-align:center;padding:10px 4px;border-radius:8px;border:1px solid var(--border);background:var(--card)">
             <div style="font-size:18px;font-weight:700;font-variant-numeric:tabular-nums" :style="{color:r.count?'var(--text)':'var(--dim)'}">{{ r.count }}</div>
@@ -1126,28 +1155,28 @@ tr.row-unmatched td{opacity:.35}
   <!-- ===== SNAPSHOTS ===== -->
   <section class="panel section-data section-not-records section-not-stats">
     <div class="panel-header">
-      <h2>数据安全</h2>
+      <h2>{{ t('dataMgmt') }}</h2>
       <div class="panel-actions">
-        <button class="btn btn-ghost btn-sm" @click="createSnap">手动快照</button>
-        <button class="btn btn-danger btn-sm" @click="clearSnaps" v-if="snapshots.length">清空快照</button>
-        <button class="btn btn-ghost btn-sm" @click="clearImportBatches" v-if="importBatches.length">清空导入历史</button>
+        <button class="btn btn-ghost btn-sm" @click="createSnap">{{ t('manualSnapDesc') }}</button>
+        <button class="btn btn-danger btn-sm" @click="clearSnaps" v-if="snapshots.length">{{ t('clearSnaps') }}</button>
+        <button class="btn btn-ghost btn-sm" @click="clearImportBatches" v-if="importBatches.length">{{ t('clearImportHistory') }}</button>
       </div>
     </div>
     <p class="hint mb-12">每次修改自动保存快照，最多 10 份。</p>
-    <div v-if="!snapshots.length" style="color:var(--muted);font-size:12px;padding:16px 0;text-align:center">暂无快照</div>
+    <div v-if="!snapshots.length" style="color:var(--muted);font-size:12px;padding:16px 0;text-align:center">{{ t('noSnapshots') }}</div>
     <div v-for="(s,i) in snapshots" :key="i" class="snap-row">
       <div><div style="font-size:13px;font-weight:600">{{ s.at }}</div><div style="font-size:11px;color:var(--muted)">{{ (s.entries||[]).length }} 条记录</div></div>
-      <button class="btn btn-ghost btn-xs" @click="restoreSnap(i)">恢复</button>
+      <button class="btn btn-ghost btn-xs" @click="restoreSnap(i)">{{ t('restoreSnap') }}</button>
     </div>
-    <h4 style="font-size:12px;color:var(--muted);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.3px">导入历史</h4>
+    <h4 style="font-size:12px;color:var(--muted);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.3px">{{ t('importHistory') }}</h4>
     <p class="hint mb-12">合并导入可删除本批新增记录；覆盖导入可恢复导入前账本。</p>
-    <div v-if="!importBatches.length" style="color:var(--muted);font-size:12px;padding:12px 0;text-align:center">暂无导入历史</div>
+    <div v-if="!importBatches.length" style="color:var(--muted);font-size:12px;padding:12px 0;text-align:center">{{ t('noImportHistory') }}</div>
     <div v-for="b in importBatches" :key="b.id" class="batch-row">
       <div>
         <div class="batch-title">
           <span :class="['batch-badge',b.mode]">{{ b.mode==='overwrite'?'覆盖':'合并' }}</span>
           <span>{{ b.fileName||'未知文件' }}</span>
-          <span v-if="b.undone" class="batch-badge undone">已撤销</span>
+          <span v-if="b.undone" class="batch-badge undone">{{ t('undone') }}</span>
         </div>
         <div class="batch-meta">
           {{ b.at }} · {{ b.source }} · 导入 {{ b.importedCount||0 }} 条
@@ -1156,7 +1185,7 @@ tr.row-unmatched td{opacity:.35}
           <span v-if="b.invalidCount"> · 无效 {{ b.invalidCount }} 行</span>
         </div>
       </div>
-      <button class="btn btn-ghost btn-xs" @click="undoImportBatch(b)" :disabled="b.undone">撤销导入</button>
+      <button class="btn btn-ghost btn-xs" @click="undoImportBatch(b)" :disabled="b.undone">{{ t('undoImport') }}</button>
     </div>
   </section>
 
@@ -1165,25 +1194,25 @@ tr.row-unmatched td{opacity:.35}
     <div class="modal-box import-preview-box">
       <div class="modal-head">
         <div>
-          <div class="modal-title">导入预览</div>
+          <div class="modal-title">{{ t('importPreview') }}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:3px">{{ importPreview.fileName }} · {{ importPreview.source }}</div>
         </div>
         <button class="modal-close" @click="cancelImportPreview">&times;</button>
       </div>
       <div class="modal-body">
         <div class="import-summary-grid">
-          <div class="import-summary-cell"><p>有效记录</p><strong>{{ importPreview.validRows.length }}</strong></div>
-          <div class="import-summary-cell"><p>新增</p><strong class="text-green">{{ importPreview.newRows.length }}</strong></div>
-          <div class="import-summary-cell"><p>完全重复</p><strong>{{ importPreview.duplicateRows.length }}</strong></div>
+          <div class="import-summary-cell"><p>{{ t('validRecords') }}</p><strong>{{ importPreview.validRows.length }}</strong></div>
+          <div class="import-summary-cell"><p>{{ t('importNew') }}</p><strong class="text-green">{{ importPreview.newRows.length }}</strong></div>
+          <div class="import-summary-cell"><p>{{ t('importDup') }}</p><strong>{{ importPreview.duplicateRows.length }}</strong></div>
           <div class="import-summary-cell"><p>疑似重复</p><strong style="color:var(--accent)">{{ importPreview.similarRows.length }}</strong></div>
-          <div class="import-summary-cell"><p>无效行</p><strong class="text-red">{{ importPreview.invalidCount }}</strong></div>
+          <div class="import-summary-cell"><p>{{ t('importInvalid') }}</p><strong class="text-red">{{ importPreview.invalidCount }}</strong></div>
         </div>
 
         <div class="import-impact">
-          <div><p>合并后记录数</p><strong>{{ importAfterStats.count }}</strong></div>
-          <div><p>合并后总入金</p><strong class="text-red">{{ fmt(importAfterStats.inTotal) }}</strong></div>
-          <div><p>合并后总出金</p><strong class="text-green">{{ fmt(importAfterStats.outTotal) }}</strong></div>
-          <div><p>合并后净盈亏</p><strong :style="{color:importAfterStats.net>=0?'var(--blue)':'var(--red)'}">{{ (importAfterStats.net>=0?'+':'')+fmt(importAfterStats.net) }}</strong></div>
+          <div><p>{{ t('importAfterCount') }}</p><strong>{{ importAfterStats.count }}</strong></div>
+          <div><p>{{ t('importAfterIn') }}</p><strong class="text-red">{{ fmt(importAfterStats.inTotal) }}</strong></div>
+          <div><p>{{ t('importAfterOut') }}</p><strong class="text-green">{{ fmt(importAfterStats.outTotal) }}</strong></div>
+          <div><p>{{ t('importAfterNet') }}</p><strong :style="{color:importAfterStats.net>=0?'var(--blue)':'var(--red)'}">{{ (importAfterStats.net>=0?'+':'')+fmt(importAfterStats.net) }}</strong></div>
         </div>
 
         <label class="import-option" v-if="importPreview.similarRows.length">
@@ -1192,7 +1221,7 @@ tr.row-unmatched td{opacity:.35}
         </label>
 
         <div class="import-preview-list">
-          <div v-if="!importPreviewRows.length" class="import-empty">没有可预览的记录</div>
+          <div v-if="!importPreviewRows.length" class="import-empty">{{ t('importNone') }}</div>
           <div v-for="row in importPreviewRows" :key="row.key" class="import-preview-row">
             <span :class="['import-status',row.status]">{{ row.label }}</span>
             <div class="import-preview-main">
@@ -1206,7 +1235,7 @@ tr.row-unmatched td{opacity:.35}
         <p class="hint mt-12">确认后会生成导入历史，可在数据安全里一键撤销。覆盖导入会用本文件的有效记录替换当前账本。</p>
       </div>
       <div class="modal-foot">
-        <button class="btn btn-ghost" style="flex:1" @click="cancelImportPreview">取消</button>
+        <button class="btn btn-ghost" style="flex:1" @click="cancelImportPreview">{{ t('cancel') }}</button>
         <button class="btn btn-danger" style="flex:1" @click="confirmImportOverwrite" :disabled="!importPreview.validRows.length">覆盖导入</button>
         <button class="btn btn-primary" style="flex:2" @click="confirmImportMerge" :disabled="!importMergeRows.length">合并导入 {{ importMergeRows.length }} 条</button>
       </div>
@@ -1217,31 +1246,31 @@ tr.row-unmatched td{opacity:.35}
   <div v-if="showMobileAdd" class="modal-mask" @click.self="showMobileAdd=false">
     <div class="modal-box">
       <div class="modal-handle"></div>
-      <div class="modal-head"><div class="modal-title">新增记录</div><button class="modal-close" @click="showMobileAdd=false">&times;</button></div>
+      <div class="modal-head"><div class="modal-title">{{ t('newRecords') }}</div><button class="modal-close" @click="showMobileAdd=false">&times;</button></div>
       <div class="modal-body">
-        <div class="form-group"><label>类型</label><select class="form-input" v-model="form.type"><option value="入金">入金</option><option value="出金">出金</option></select></div>
-        <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="form.date"></div>
-        <div class="form-group"><label>资产类型</label><select class="form-input" v-model="form.assetType"><option value="">未分类</option><option value="大A">大A</option><option value="美股">美股</option><option value="港股">港股</option><option value="加密货币">加密货币</option><option value="基金">基金</option><option value="黄金">黄金</option><option value="期货">期货</option><option value="其他">其他</option></select></div>
+        <div class="form-group"><label>类型</label><select class="form-input" v-model="form.type"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option></select></div>
+        <div class="form-group"><label>{{ t('date') }}</label><input class="form-input" type="date" v-model="form.date"></div>
+        <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="form.assetType"><option value="">其他</option><option value="大A">大A</option><option value="美股">美股</option><option value="港股">港股</option><option value="加密货币">加密货币</option><option value="基金">基金</option><option value="黄金">黄金</option><option value="期货">期货</option><option value="其他">其他</option></select></div>
         <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="form.exchange" list="dl-ex2" placeholder="选择或输入"><datalist id="dl-ex2"><option v-for="ex in platformSuggestions" :key="ex" :value="ex"></option></datalist></div>
         <div class="form-group">
-          <label>金额</label>
+          <label>{{ t('amount') }}</label>
           <div style="display:flex;gap:6px">
             <select class="form-input" v-model="form.currency" style="width:110px;flex-shrink:0"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select>
             <input class="form-input" type="number" step="0.01" v-model.number="form.amount" inputmode="decimal" style="flex:1;min-width:0">
           </div>
           <div v-if="form.currency!=='CNY'" style="display:flex;gap:6px;margin-top:6px;align-items:center">
-            <span style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0">汇率</span>
+            <span style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0">{{ t('rate') }}</span>
             <input class="form-input" type="number" step="0.0001" v-model="form.rate" :placeholder="form.currency==='HKD'?'0.92':'7.25'" inputmode="decimal" style="flex:1;min-width:0">
             <button class="rate-fetch-btn" @click="fetchRate(form.currency,'form')" :disabled="rateLoading">{{ rateLoading?'获取中…':'获取汇率' }}</button>
           </div>
           <p class="rate-hint" v-if="form.currency!=='CNY'&&form.rate&&form.amount">本笔 ≈ {{ fmt(form.amount*Number(form.rate)) }} 元（1 {{ form.currency }} = {{ form.rate }} CNY）</p>
         </div>
         <div class="form-group"><label>{{ form.type==='入金'?'投入理由':'出金备注' }}</label><input class="form-input" v-model="form.note" :placeholder="form.type==='入金'?'为什么要投入这笔？':'收款渠道/备注'"></div>
-        <div class="form-group"><label>标签</label><input class="form-input" v-model="form.tagText" list="dl-tags2" placeholder="定投，补仓，FOMO"><datalist id="dl-tags2"><option v-for="t in allTags" :key="t" :value="t"></option></datalist></div>
+        <div class="form-group"><label>{{ t('tagStats') }}</label><input class="form-input" v-model="form.tagText" list="dl-tags2" placeholder="定投，补仓，FOMO"><datalist id="dl-tags2"><option v-for="t in allTags" :key="t" :value="t"></option></datalist></div>
       </div>
       <div class="modal-foot">
-        <button class="btn btn-ghost" style="flex:1" @click="copyLast">复制上一笔</button>
-        <button class="btn btn-primary" style="flex:2" @click="mobileAddEntry" :disabled="!form.amount||form.amount<=0">添加</button>
+        <button class="btn btn-ghost" style="flex:1" @click="copyLast">{{ t('copyLast') }}</button>
+        <button class="btn btn-primary" style="flex:2" @click="mobileAddEntry" :disabled="!form.amount||form.amount<=0">{{ t('add') }}</button>
       </div>
     </div>
   </div>
@@ -1261,9 +1290,9 @@ tr.row-unmatched td{opacity:.35}
             <span v-for="tag in parseTags(editingEntry.tagText||editingEntry.tags)" :key="tag" class="tag-chip">#{{ tag }}</span>
           </div>
           <div class="detail-grid">
-            <div class="detail-cell"><p>同平台净盈亏</p><strong :style="{color:editingDetail.platformNet>=0?'var(--blue)':'var(--red)'}">{{ (editingDetail.platformNet>=0?'+':'')+fmt(editingDetail.platformNet) }}</strong></div>
-            <div class="detail-cell"><p>同资产净盈亏</p><strong :style="{color:editingDetail.assetNet>=0?'var(--blue)':'var(--red)'}">{{ (editingDetail.assetNet>=0?'+':'')+fmt(editingDetail.assetNet) }}</strong></div>
-            <div class="detail-cell"><p>本月相关记录</p><strong>{{ editingDetail.monthCount }} 笔</strong></div>
+            <div class="detail-cell"><p>{{ t('detailSamePlatform') }}</p><strong :style="{color:editingDetail.platformNet>=0?'var(--blue)':'var(--red)'}">{{ (editingDetail.platformNet>=0?'+':'')+fmt(editingDetail.platformNet) }}</strong></div>
+            <div class="detail-cell"><p>{{ t('detailSameAsset') }}</p><strong :style="{color:editingDetail.assetNet>=0?'var(--blue)':'var(--red)'}">{{ (editingDetail.assetNet>=0?'+':'')+fmt(editingDetail.assetNet) }}</strong></div>
+            <div class="detail-cell"><p>{{ t('relatedThisMonth') }}</p><strong>{{ editingDetail.monthCount }} 笔</strong></div>
           </div>
         </div>
         <h4 v-if="editingDetail&&editingDetail.related.length" style="font-size:12px;color:var(--muted);margin:0 0 8px;text-transform:uppercase;letter-spacing:.3px">相关记录</h4>
@@ -1273,38 +1302,54 @@ tr.row-unmatched td{opacity:.35}
             <strong :style="{color:r.type==='入金'?'var(--red)':'var(--green)'}">{{ r.type==='入金'?'-':'+' }}{{ fmt(amountCNY(r)) }}</strong>
           </div>
         </div>
-        <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type"><option value="入金">入金</option><option value="出金">出金</option></select></div>
-        <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="editingEntry.date"></div>
-        <div class="form-group"><label>资产类型</label><select class="form-input" v-model="editingEntry.assetType"><option value="">未分类</option><option value="大A">大A</option><option value="美股">美股</option><option value="港股">港股</option><option value="加密货币">加密货币</option><option value="基金">基金</option><option value="黄金">黄金</option><option value="期货">期货</option><option value="其他">其他</option></select></div>
+        <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option></select></div>
+        <div class="form-group"><label>{{ t('date') }}</label><input class="form-input" type="date" v-model="editingEntry.date"></div>
+        <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="editingEntry.assetType"><option value="">其他</option><option value="大A">大A</option><option value="美股">美股</option><option value="港股">港股</option><option value="加密货币">加密货币</option><option value="基金">基金</option><option value="黄金">黄金</option><option value="期货">期货</option><option value="其他">其他</option></select></div>
         <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="editingEntry.exchange" list="dl-ex3"><datalist id="dl-ex3"><option v-for="ex in editPlatformSuggestions" :key="ex" :value="ex"></option></datalist></div>
         <div class="form-group">
-          <label>金额</label>
+          <label>{{ t('amount') }}</label>
           <div style="display:flex;gap:6px">
             <select class="form-input" v-model="editingEntry.currency" style="width:110px;flex-shrink:0"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select>
             <input class="form-input" type="number" step="0.01" v-model.number="editingEntry.amount" inputmode="decimal" style="flex:1;min-width:0">
           </div>
           <div v-if="editingEntry.currency&&editingEntry.currency!=='CNY'" style="display:flex;gap:6px;margin-top:6px;align-items:center">
-            <span style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0">汇率</span>
+            <span style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0">{{ t('rate') }}</span>
             <input class="form-input" type="number" step="0.0001" v-model="editingEntry.rate" inputmode="decimal" style="flex:1;min-width:0">
             <button class="rate-fetch-btn" @click="fetchRate(editingEntry.currency,'edit')" :disabled="rateLoading">{{ rateLoading?'获取中…':'获取汇率' }}</button>
           </div>
           <p class="rate-hint" v-if="editingEntry.currency&&editingEntry.currency!=='CNY'&&editingEntry.rate&&editingEntry.amount">本笔 ≈ {{ fmt(amountCNY(editingEntry)) }} 元（1 {{ editingEntry.currency }} = {{ editingEntry.rate }} CNY）</p>
         </div>
         <div class="form-group"><label>{{ editingEntry.type==='入金'?'投入理由':'出金备注' }}</label><input class="form-input" v-model="editingEntry.note" :placeholder="editingEntry.type==='入金'?'为什么要投入这笔？':'收款渠道/备注'"></div>
-        <div class="form-group"><label>标签</label><input class="form-input" v-model="editingEntry.tagText" list="dl-tags3" placeholder="定投，补仓，FOMO"><datalist id="dl-tags3"><option v-for="t in allTags" :key="t" :value="t"></option></datalist></div>
+        <div class="form-group"><label>{{ t('tagStats') }}</label><input class="form-input" v-model="editingEntry.tagText" list="dl-tags3" placeholder="定投，补仓，FOMO"><datalist id="dl-tags3"><option v-for="t in allTags" :key="t" :value="t"></option></datalist></div>
       </div>
       <div class="modal-foot">
-        <button class="btn btn-danger" style="flex:1" @click="removeEntry(editingEntry.id);editingEntry=null">删除</button>
-        <button class="btn btn-primary" style="flex:2" @click="saveEditEntry">保存</button>
+        <button class="btn btn-danger" style="flex:1" @click="removeEntry(editingEntry.id);editingEntry=null">{{ t('delete') }}</button>
+        <button class="btn btn-primary" style="flex:2" @click="saveEditEntry">{{ t('save') }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Onboarding Tour -->
+  <div v-if="onboardStep>0" class="onboard-overlay" @click.self="nextOnboardStep">
+    <div class="onboard-spotlight" :style="spotlightStyle"></div>
+    <div class="onboard-tooltip" :style="tooltipStyle">
+      <div class="onboard-step-title">{{ onboardStep===1?t('onboardStep1Title'):onboardStep===2?t('onboardStep2Title'):onboardStep===3?t('onboardStep3Title'):t('onboardStep4Title') }}</div>
+      <div class="onboard-step-desc">{{ onboardStep===1?t('onboardStep1Desc'):onboardStep===2?t('onboardStep2Desc'):onboardStep===3?t('onboardStep3Desc'):t('onboardStep4Desc') }}</div>
+      <div class="onboard-step-actions">
+        <button class="btn btn-primary" @click="nextOnboardStep">{{ onboardStep===4?t('done'):t('next') }}</button>
+        <button class="btn btn-ghost" @click="skipOnboard">{{ t('skip') }}</button>
+      </div>
+      <div class="onboard-dots">
+        <div v-for="i in 4" :class="['onboard-dot',{active:i===onboardStep}]" :key="i"></div>
       </div>
     </div>
   </div>
 
   <!-- Mobile bottom tabs -->
   <div class="mobile-tabs"><div class="mobile-tabs-inner">
-    <div :class="['mob-tab',{active:mobileTab==='records'}]" @click="mobileTab='records'"><span class="mob-tab-icon">📋</span>记录</div>
-    <div :class="['mob-tab',{active:mobileTab==='stats'}]" @click="mobileTab='stats'"><span class="mob-tab-icon">📊</span>统计</div>
-    <div :class="['mob-tab',{active:mobileTab==='data'}]" @click="mobileTab='data'"><span class="mob-tab-icon">💾</span>数据</div>
+    <div :class="['mob-tab',{active:mobileTab==='records'}]" @click="mobileTab='records'"><span class="mob-tab-icon">📋</span>{{ t('records') }}</div>
+    <div :class="['mob-tab',{active:mobileTab==='stats'}]" @click="mobileTab='stats'"><span class="mob-tab-icon">📊</span>{{ t('stats') }}</div>
+    <div :class="['mob-tab',{active:mobileTab==='data'}]" @click="mobileTab='data'"><span class="mob-tab-icon">💾</span>{{ t('data') }}</div>
   </div></div>
   <button class="fab" @click="showMobileAdd=true">+</button>
 </div>
@@ -1406,6 +1451,537 @@ function prevKey(period,key){
 
 const{createApp,ref,reactive,computed,watch,onMounted}=Vue
 
+// ===== I18N =====
+const I18N={
+  zh:{
+    appTitle:'FlowLedger 投记 · 个人投资记账',
+    appKicker:'个人投资出入金记账',
+    appDesc:'全渠道投资出入金管理 · 盈亏统计 · 行为分析 · 多端同步',
+    records:'记录',
+    stats:'统计',
+    data:'数据',
+    quickAdd:'快速录入',
+    copyLast:'复制上一笔',
+    add:'添加',
+    date:'日期',
+    assetType:'资产类型',
+    exchange:'账户 / 平台',
+    currency:'货币',
+    amount:'金额',
+    rate:'汇率',
+    getRate:'获取汇率',
+    gettingRate:'获取中…',
+    noteIn:'投入理由',
+    noteOut:'出金备注',
+    note:'备注 / 理由',
+    typeIn:'入金',
+    typeOut:'出金',
+    typeAll:'全部',
+    save:'保存',
+    cancel:'取消',
+    delete:'删除',
+    confirmDelete:'确认删除？',
+    filter:'筛选',
+    filterOn:'筛选',
+    filterOff:'收起筛选',
+    keyword:'关键词',
+    month:'月份',
+    dateFrom:'起始日期',
+    dateTo:'结束日期',
+    amountMin:'最小金额',
+    amountMax:'最大金额',
+    locateFirst:'定位首条',
+    clearFilters:'清除筛选',
+    matchCount:'{match}/{total} 命中',
+    totalIn:'总入金',
+    totalOut:'总出金',
+    netPL:'净盈亏',
+    roi:'回本比例',
+    roiRate:'回本率',
+    periodMonth:'月度',
+    periodWeek:'周',
+    periodYear:'年度',
+    periodLabel:{month:'月份',week:'周',year:'年份'},
+    periodTitle:{month:'月度盈亏',week:'周度盈亏',year:'年度盈亏'},
+    cumPL:'累计盈亏',
+    inTotal:'入金合计',
+    outTotal:'出金合计',
+    lastPeriod:'上个周期净盈亏',
+    compareChange:'环比变化',
+    exchangeStats:'账户 / 平台统计',
+    assetStats:'资产类型统计',
+    tagStats:'标签统计',
+    budget:'{{month}} 月度投入预算',
+    budgetOff:'关闭预算',
+    closeBudget:'关闭预算',
+    saveBudget:'预算已保存',
+    overBudget:'超预算',
+    nearBudget:'接近预算上限',
+    largeTxWarn:'大额提醒',
+    insights:'建议与复盘',
+    rules:'规则设置',
+    saveRules:'保存规则',
+    reviewChecklist:'复盘清单',
+    reviewNote:'复盘笔记',
+    saveReviewNote:'保存笔记',
+    ruleLossWarn:'亏损提醒',
+    ruleLossCritical:'亏损强提醒',
+    ruleRoiWarn:'回收率提醒',
+    ruleInflowRatio:'入/出倍数',
+    ruleLargeTx:'大额阈值',
+    ruleLossStreak:'连续亏损',
+    behaviorAnalysis:'投入行为分析',
+    psychoProfile:'心理画像',
+    avgInterval:'平均间隔',
+    denseCount:'密集投入',
+    maxSingle:'最大单笔',
+    avgAmount:'平均金额',
+    maxStreak:'最长连续入金',
+    totalCount:'总投入笔数',
+    weekdayDist:'星期分布',
+    amountRange:'金额区间',
+    assetAlloc:'资产配置总览',
+    investDist:'投入分布',
+    netDist:'净值分布',
+    assetDesc:'各类资产的投入分布与盈亏情况（折合 CNY）',
+    flowRecords:'流水记录',
+    expandAll:'展开全部',
+    collapseAll:'收起全部',
+    periodSwitch:'周期',
+    exportExcel:'导出 Excel',
+    exportJSON:'备份 JSON',
+    importExcel:'导入 Excel',
+    importJSON:'导入 JSON',
+    importPreview:'导入预览',
+    importNew:'新增',
+    importDup:'重复',
+    importSimilar:'疑似重复',
+    importInvalid:'无效',
+    importSkipDup:'跳过完全重复',
+    importSkipSimilar:'跳过疑似重复',
+    importMergeCount:'合并导入 {{n}} 条',
+    importOverwrite:'覆盖导入',
+    importMerge:'合并导入',
+    importConfirm:'确认导入',
+    importCancel:'取消',
+    importImpact:'导入后',
+    importAfterIn:'合并后总入金',
+    importAfterOut:'合并后总出金',
+    importAfterNet:'合并后净盈亏',
+    importAfterCount:'合并后记录数',
+    importHistory:'导入历史',
+    clearImportHistory:'清空导入历史',
+    undoImport:'撤销导入',
+    importHistoryDesc:'合并导入可删除本批新增记录；覆盖导入可恢复导入前账本。',
+    importSimilarWarn:'导入疑似重复记录。默认跳过它们，避免同一笔因为备注、汇率或金额细微差异被记两次。',
+    snapshots:'数据快照',
+    createSnap:'创建快照',
+    clearSnaps:'清空快照',
+    restoreSnap:'恢复',
+    manualSnapDesc:'手动备份当前数据，最多保留 10 份',
+    syncSettings:'GitHub Gist 同步',
+    syncDesc:'多端同步数据。',
+    syncFree:'（免费、安全、带版本历史）',
+    syncToken:'GitHub Personal Access Token',
+    syncTokenPlaceholder:'ghp_xxxxxxxxxxxxxxxxxxxx',
+    syncCreateToken:'创建 Token',
+    syncTokenHint:'GitHub 页面操作：左侧栏找 <strong>"Tokens (classic)"</strong> &rarr; <strong>"Generate new token (classic)"</strong> &rarr; Note 随意填、Expiration 选不限 &rarr; 勾选 <strong><code>gist</code></strong> 权限 &rarr; 生成后粘贴到此处。Token 仅保存在你的浏览器本地',
+    syncGistId:'Gist ID',
+    syncGistPending:'首次推送后自动创建',
+    syncStatus:'状态',
+    syncPush:'上传云端',
+    syncPull:'拉取云端',
+    syncAuto:'一键同步',
+    syncSaveConfig:'保存配置',
+    syncConfigSaved:'同步配置已保存',
+    syncNotConfigured:'未配置',
+    syncConfigured:'已配置',
+    syncUploading:'上传中…',
+    syncPulling:'拉取中…',
+    syncUploadOk:'上传成功',
+    syncPullOk:'拉取成功',
+    syncUploadFail:'上传失败（检查 Token 权限）',
+    syncPullFail:'拉取失败，请检查 Token 是否有效',
+    syncNeedToken:'请先配置 Token',
+    syncNeedUploadFirst:'请先填写 GitHub Token',
+    syncNoData:'未找到云端数据',
+    syncNoGist:'未找到 FlowLedger 的 Gist，请先在另一台设备上上传',
+    syncAutoTip:'提示：首次使用请先<strong>上传</strong>，在其他设备上输入同一 Token 后<strong>拉取</strong>即可。每次同步会保留版本历史，可在 Gist 页面查看和恢复。',
+    syncUploadedN:'已上传 {n} 条',
+    syncPulledN:'已拉取 {n} 条',
+    syncSyncedN:'已同步 {n} 条',
+    syncConfiguredLocal:'已配置 · 本地 {n} 条',
+    toastSaved:'已保存',
+    toastDeleted:'已删除',
+    toastCleared:'已清空',
+    toastAdded:'已添加',
+    toastCopied:'已复制',
+    toastNoData:'无数据',
+    toastInvalidAmount:'请输入有效金额',
+    toastImportSuccess:'导入成功',
+    toastImportFail:'导入失败',
+    themeToggle:'切换主题',
+    psychologyTags:{
+      disciplined:'纪律执行',
+      steady:'节奏稳健',
+      weekendActive:'周末活跃',
+      frequentTrade:'频繁操作',
+      postLossAdd:'亏后加仓',
+      largeImpulse:'大额冲动',
+      continuousIn:'持续流入',
+      lowData:'数据较少'
+    },
+    psychologyTips:{
+      disciplined:'投入间隔和金额都比较稳定，说明你有计划地在操作',
+      steady:'很少出现密集操作，情绪控制良好',
+      weekendActive:'周末投入占比 {pct}%，注意周末市场流动性较低',
+      frequentTrade:'{n} 次间隔不到 3 天的密集投入，占比 {pct}%，可能是情绪驱动',
+      postLossAdd:'取出后投入金额偏高（{a}/{b} 次超过均值 30%），可能存在急于回本的心态',
+      largeImpulse:'最大单笔 {max} 是平均值 {avg} 的 {ratio} 倍，注意仓位控制',
+      continuousIn:'最长连续 {n} 笔投入无取出，注意适时锁定利润',
+      lowData:'继续记录，积累更多数据后分析会更准确'
+    },
+    behaviorAdvice:{
+      frequentTrade:'建议设定最小操作间隔（如 5 天），给自己一个冷静期再决策。',
+      postLossAdd:'亏损后不要急于加大投入，先冷静复盘原因再决定下一步。',
+      largeImpulse:'考虑设定单笔投入上限，大额操作前强制等待 24 小时。',
+      weekendActive:'周末市场流动性较低，建议减少周末操作频率。',
+      continuousIn:'资金持续流入，记得定期取出部分利润，降低整体风险。',
+      disciplined:'当前操作节奏稳定，继续保持计划性投资。'
+    },
+    depositWarnings:{
+      gap1day:'距上次投入仅 {n} 天，建议冷静 24 小时再操作',
+      gap3day:'距上次投入仅 {n} 天，注意控制投入频率',
+      freqHigh:'本周已投入 {n} 次，频率偏高，是否在追涨？',
+      overBudget:'本月投入将达 {n}，超出预算 {budget}',
+      nearBudget:'本月投入将达 {n}，接近预算上限 {budget}',
+      largeAmount:'本笔金额 {n} {currency} 是近期均值的 {ratio} 倍，是否冲动操作？',
+      calmTitle:'⚠️ 冷静提醒',
+      calmConfirm:'确定要继续投入吗？'
+    },
+    emptyState:'还没有记录',
+    unknownPlatform:'未知平台',
+    uncategorized:'未分类',
+    all:'全部',
+    day:'天',
+    times:'次',
+    entries:'笔',
+    items:'条',
+    CNY:'元',
+    USD:'美元',
+    HKD:'港币',
+    USDT:'USDT',
+    dataMgmt:'数据管理',
+    demoData:'演示数据',
+    preloaded:'首次打开即有演示数据，可清空后自行录入',
+    crypto:'Crypto',
+    fund:'Funds',
+    gold:'Gold',
+    futures:'Futures',
+    deposit:'Deposits',
+    withdraw:'Withdrawals',
+    curPeriodNet:'Current Period Net',
+    noLargeTx:'No large transactions',
+    noImportHistory:'No import history',
+    noSnapshots:'No snapshots',
+    validRecords:'valid records',
+    newRecords:'new records',
+    relatedThisMonth:'Related this month',
+    actions:'Actions',
+    undone:'Undone',
+    upload:'Upload',
+    pull:'Pull',
+        deployNote:'本地使用直接打开 index.html；GitHub Pages 部署配合 Gist 同步',
+    recordsThisMonth:'本月投入',
+    clearAllRecords:'清空记录',
+    confirmClear:'确认清空所有记录？',
+    detailRelated:'相关记录',
+    detailSamePlatform:'同平台净盈亏',
+    detailSameAsset:'同资产净盈亏',
+    detailHistory:'历史记录',
+    detailSummary:'记录详情',
+    importNone:'没有待导入的记录',
+    back:'返回',
+    next:'下一步',
+    skip:'跳过',
+    done:'完成',
+    dontShow:'不再显示',
+    onboardStep1Title:'记录第一笔出入金',
+    onboardStep1Desc:'在这里录入你的投入或取出记录，支持多种资产和货币。',
+    onboardStep2Title:'查看盈亏统计',
+    onboardStep2Desc:'图表和指标帮你一目了然看清整体资金情况。',
+    onboardStep3Title:'设置月度预算',
+    onboardStep3Desc:'设定每月投入上限，接近超支时自动提醒。',
+    onboardStep4Title:'开启多端同步',
+    onboardStep4Desc:'用 GitHub Token 同步数据到 Gist，手机电脑随时同步。',
+    edit:'编辑',
+    editEntry:'编辑记录',
+    saveEdit:'保存修改',
+    mobileDetail:'详情',
+    batchUndoWarningOverwrite:'撤销覆盖导入会恢复到该次导入前的完整账本，并覆盖之后的记录改动。继续吗？',
+    batchUndoWarningMerge:'撤销合并导入会删除该批次新增的记录。继续吗？',
+  },
+  en:{
+    appTitle:'FlowLedger · Investment Ledger',
+    appKicker:'Personal Investment Tracking',
+    appDesc:'Multi-asset cashflow tracking · P&L stats · Behavior analysis · Multi-device sync',
+    records:'Records',
+    stats:'Stats',
+    data:'Data',
+    quickAdd:'Quick Add',
+    copyLast:'Copy Last',
+    add:'Add',
+    date:'Date',
+    assetType:'Asset Type',
+    exchange:'Account / Platform',
+    currency:'Currency',
+    amount:'Amount',
+    rate:'Rate',
+    getRate:'Get Rate',
+    gettingRate:'Fetching…',
+    noteIn:'Reason',
+    noteOut:'Note',
+    note:'Note / Reason',
+    typeIn:'Deposit',
+    typeOut:'Withdraw',
+    typeAll:'All',
+    save:'Save',
+    cancel:'Cancel',
+    delete:'Delete',
+    confirmDelete:'Confirm delete?',
+    filter:'Filter',
+    filterOn:'Filters',
+    filterOff:'Hide Filters',
+    keyword:'Keyword',
+    month:'Month',
+    dateFrom:'Date From',
+    dateTo:'Date To',
+    amountMin:'Min Amount',
+    amountMax:'Max Amount',
+    locateFirst:'Go to First',
+    clearFilters:'Clear',
+    matchCount:'{match}/{total} matched',
+    totalIn:'Total Deposits',
+    totalOut:'Total Withdrawals',
+    netPL:'Net P&L',
+    roi:'ROI',
+    roiRate:'Return Rate',
+    periodMonth:'Monthly',
+    periodWeek:'Weekly',
+    periodYear:'Yearly',
+    periodLabel:{month:'Month',week:'Week',year:'Year'},
+    periodTitle:{month:'Monthly P&L',week:'Weekly P&L',year:'Yearly P&L'},
+    cumPL:'Cumulative P&L',
+    inTotal:'Deposits Total',
+    outTotal:'Withdrawals Total',
+    lastPeriod:'Previous Period Net',
+    compareChange:'Change',
+    exchangeStats:'Platform Stats',
+    assetStats:'Asset Type Stats',
+    tagStats:'Tag Stats',
+    budget:'{{month}} Monthly Budget',
+    budgetOff:'Budget Off',
+    closeBudget:'Disable Budget',
+    saveBudget:'Budget saved',
+    overBudget:'Over Budget',
+    nearBudget:'Near Budget Limit',
+    largeTxWarn:'Large Transactions',
+    insights:'Insights & Review',
+    rules:'Rule Settings',
+    saveRules:'Save Rules',
+    reviewChecklist:'Review Checklist',
+    reviewNote:'Review Notes',
+    saveReviewNote:'Save Note',
+    ruleLossWarn:'Loss Warning',
+    ruleLossCritical:'Loss Critical',
+    ruleRoiWarn:'ROI Warning',
+    ruleInflowRatio:'Deposit/Withdraw Ratio',
+    ruleLargeTx:'Large Tx Threshold',
+    ruleLossStreak:'Loss Streak',
+    behaviorAnalysis:'Behavior Analysis',
+    psychoProfile:'Psychological Profile',
+    avgInterval:'Avg Interval',
+    denseCount:'Dense Deposits',
+    maxSingle:'Max Single',
+    avgAmount:'Avg Amount',
+    maxStreak:'Max Streak',
+    totalCount:'Total Deposits',
+    weekdayDist:'Weekday Distribution',
+    amountRange:'Amount Range',
+    assetAlloc:'Asset Allocation',
+    investDist:'Deposit Distribution',
+    netDist:'Net Value Distribution',
+    assetDesc:'Asset distribution and P&L breakdown (in CNY)',
+    flowRecords:'Flow Records',
+    expandAll:'Expand All',
+    collapseAll:'Collapse All',
+    periodSwitch:'Period',
+    exportExcel:'Export Excel',
+    exportJSON:'Backup JSON',
+    importExcel:'Import Excel',
+    importJSON:'Import JSON',
+    importPreview:'Import Preview',
+    importNew:'New',
+    importDup:'Duplicate',
+    importSimilar:'Similar',
+    importInvalid:'Invalid',
+    importSkipDup:'Skip exact duplicates',
+    importSkipSimilar:'Skip likely duplicates',
+    importMergeCount:'Merge {n} records',
+    importOverwrite:'Overwrite Import',
+    importMerge:'Merge Import',
+    importConfirm:'Confirm Import',
+    importCancel:'Cancel',
+    importImpact:'After Import',
+    importAfterIn:'Total Deposits',
+    importAfterOut:'Total Withdrawals',
+    importAfterNet:'Net P&L',
+    importAfterCount:'Total Records',
+    importHistory:'Import History',
+    clearImportHistory:'Clear History',
+    undoImport:'Undo Import',
+    importHistoryDesc:'Merge imports can delete added records; overwrite imports restore the previous ledger.',
+    importSimilarWarn:'Likely duplicate records detected. Skipping them by default to avoid double-counting from minor differences in notes, rates, or amounts.',
+    snapshots:'Data Snapshots',
+    createSnap:'Create Snapshot',
+    clearSnaps:'Clear Snapshots',
+    restoreSnap:'Restore',
+    manualSnapDesc:'Manually backup current data, up to 10 copies',
+    syncSettings:'GitHub Gist Sync',
+    syncDesc:'Multi-device data sync.',
+    syncFree:'(Free, secure, with version history)',
+    syncToken:'GitHub Personal Access Token',
+    syncTokenPlaceholder:'ghp_xxxxxxxxxxxxxxxxxxxx',
+    syncCreateToken:'Create Token',
+    syncTokenHint:'On GitHub: find <strong>"Tokens (classic)"</strong> in left sidebar &rarr; <strong>"Generate new token (classic)"</strong> &rarr; any Note, no expiration &rarr; check <strong><code>gist</code></strong> scope &rarr; paste token here. Stored locally only',
+    syncGistId:'Gist ID',
+    syncGistPending:'Created on first push',
+    syncStatus:'Status',
+    syncPush:'Push to Cloud',
+    syncPull:'Pull from Cloud',
+    syncAuto:'Auto Sync',
+    syncSaveConfig:'Save Config',
+    syncConfigSaved:'Sync config saved',
+    syncNotConfigured:'Not configured',
+    syncConfigured:'Configured',
+    syncUploading:'Uploading…',
+    syncPulling:'Pulling…',
+    syncUploadOk:'Upload successful',
+    syncPullOk:'Pull successful',
+    syncUploadFail:'Upload failed (check token permissions)',
+    syncPullFail:'Pull failed, check token validity',
+    syncNeedToken:'Please configure token first',
+    syncNeedUploadFirst:'Please fill in GitHub Token',
+    syncNoData:'No cloud data found',
+    syncNoGist:'FlowLedger Gist not found. Upload from another device first.',
+    syncAutoTip:'Tip: <strong>Push</strong> first from your main device, then use the same Token to <strong>Pull</strong> on other devices. Every sync preserves version history on Gist.',
+    syncUploadedN:'Uploaded {n} records',
+    syncPulledN:'Pulled {n} records',
+    syncSyncedN:'Synced {n} records',
+    syncConfiguredLocal:'Configured · {n} local records',
+    toastSaved:'Saved',
+    toastDeleted:'Deleted',
+    toastCleared:'Cleared',
+    toastAdded:'Added',
+    toastCopied:'Copied',
+    toastNoData:'No data',
+    toastInvalidAmount:'Please enter a valid amount',
+    toastImportSuccess:'Import successful',
+    toastImportFail:'Import failed',
+    themeToggle:'Toggle Theme',
+    psychologyTags:{
+      disciplined:'Disciplined',
+      steady:'Steady Rhythm',
+      weekendActive:'Weekend Active',
+      frequentTrade:'Frequent Trading',
+      postLossAdd:'Chasing Losses',
+      largeImpulse:'Impulse Buys',
+      continuousIn:'Continuous Inflow',
+      lowData:'Limited Data'
+    },
+    psychologyTips:{
+      disciplined:'Deposit intervals and amounts are stable — your approach is systematic.',
+      steady:'Very few dense trading clusters — good emotional control.',
+      weekendActive:'{pct}% of deposits on weekends. Weekend market liquidity is lower.',
+      frequentTrade:'{n} deposits within 3 days ({pct}% ratio) — may be emotion-driven.',
+      postLossAdd:'Post-withdrawal deposits tend to be larger ({a}/{b} times exceed 130% avg) — possible revenge trading.',
+      largeImpulse:'Max single deposit {max} is {ratio}x your average {avg} — monitor position sizing.',
+      continuousIn:'{n} consecutive deposits without withdrawals — consider taking profits.',
+      lowData:'Keep logging — analysis will improve with more data.'
+    },
+    behaviorAdvice:{
+      frequentTrade:'Consider a minimum interval rule (e.g. 5 days) to create a cooling-off period.',
+      postLossAdd:'Avoid increasing position size right after losses. Review the reason first.',
+      largeImpulse:'Set a single-deposit cap and enforce a 24-hour waiting period for large amounts.',
+      weekendActive:'Weekend markets have lower liquidity. Reduce weekend trading frequency.',
+      continuousIn:'Funds have been flowing in continuously. Remember to take profits periodically.',
+      disciplined:'Your rhythm is stable. Keep up the disciplined approach.'
+    },
+    depositWarnings:{
+      gap1day:'Only {n} day(s) since last deposit — consider waiting 24h',
+      gap3day:'Only {n} day(s) since last deposit — pace yourself',
+      freqHigh:'{n} deposits this week — is this FOMO chasing?',
+      overBudget:'This deposit brings monthly total to {n}, exceeding budget of {budget}',
+      nearBudget:'This deposit brings monthly total to {n}, near budget limit of {budget}',
+      largeAmount:'This deposit ({n} {currency}) is {ratio}x your recent average — impulsive?',
+      calmTitle:'⚠️ Pause & Reflect',
+      calmConfirm:'Are you sure you want to proceed with this deposit?'
+    },
+    emptyState:'No records yet',
+    unknownPlatform:'Unknown',
+    uncategorized:'Uncategorized',
+    all:'All',
+    day:'d',
+    times:'x',
+    entries:'entries',
+    items:'items',
+    CNY:'CNY',
+    USD:'USD',
+    HKD:'HKD',
+    USDT:'USDT',
+    dataMgmt:'Data Management',
+    demoData:'Demo Data',
+    preloaded:'Demo data preloaded on first visit. Clear to start fresh.',
+    deployNote:'Open index.html locally; deploy to GitHub Pages with Gist sync',
+    recordsThisMonth:'This Month',
+    clearAllRecords:'Clear All',
+    confirmClear:'Clear all records?',
+    detailRelated:'Related Records',
+    detailSamePlatform:'Same Platform Net',
+    detailSameAsset:'Same Asset Net',
+    detailHistory:'History',
+    detailSummary:'Record Details',
+    importNone:'No records to import',
+    back:'Back',
+    next:'Next',
+    skip:'Skip',
+    done:'Done',
+    dontShow:'Don\'t show again',
+    onboardStep1Title:'Log Your First Entry',
+    onboardStep1Desc:'Record deposits and withdrawals here. Supports multiple assets and currencies.',
+    onboardStep2Title:'Track P&L',
+    onboardStep2Desc:'Charts and metrics give you a clear view of your overall performance.',
+    onboardStep3Title:'Set a Monthly Budget',
+    onboardStep3Desc:'Cap your monthly deposits and get alerts before exceeding the limit.',
+    onboardStep4Title:'Enable Multi-Device Sync',
+    onboardStep4Desc:'Sync data via GitHub Gist with a personal access token. Free and secure.',
+    edit:'Edit',
+    editEntry:'Edit Entry',
+    saveEdit:'Save Changes',
+    mobileDetail:'Details',
+    batchUndoWarningOverwrite:'Undoing overwrite import will restore the full ledger before that import. Recent changes will be lost. Continue?',
+    batchUndoWarningMerge:'Undoing merge import will remove records added in that batch. Continue?',
+  }
+}
+let lang=ref(localStorage.getItem('flowledger_lang')||(navigator.language.startsWith('zh')?'zh':'en'))
+function t(key,params){
+  const d=I18N[lang.value]||I18N.en
+  let v=d[key]
+  if(v===undefined)return key
+  if(params)Object.entries(params).forEach(([k,val])=>{v=v.replace(new RegExp(`\\{${k}\\}`,'g'),val)})
+  return v
+}
+
 createApp({
 setup(){
   const entries=ref([])
@@ -1455,6 +2031,41 @@ setup(){
   const reviewSavedAt=ref('')
   const importPreview=ref(null)
   let toastT=null
+
+  // Onboarding
+  const onboardStep=ref(0)
+  const spotlightStyle=computed(()=>{
+    if(!onboardStep.value)return{display:'none'}
+    const isMobile=window.innerWidth<=680
+    const targets=isMobile
+      ?[null,{sel:'.fab',pad:8},{sel:'.summary-grid',pad:8},{sel:'.budget-bar-wrap',pad:8},{sel:'.panel-header',pad:8}]
+      :[null,{sel:'.quick-add-panel',pad:8},{sel:'.summary-grid',pad:8},{sel:'.budget-bar-wrap',pad:8},{sel:'.panel-header',pad:8}]
+    const t=targets[onboardStep.value];if(!t)return{display:'none'}
+    const el=document.querySelector(t.sel);if(!el)return{display:'none'}
+    const r=el.getBoundingClientRect()
+    return{left:Math.max(0,r.left-t.pad)+'px',top:Math.max(0,r.top-t.pad)+'px',width:r.width+t.pad*2+'px',height:r.height+t.pad*2+'px'}
+  })
+  const tooltipStyle=computed(()=>{
+    const isMobile=window.innerWidth<=680
+    if(isMobile)return{bottom:'0',left:'0',right:'0',top:'auto'}
+    // Desktop: position below spotlight
+    const s=spotlightStyle.value||{}
+    if(!s.top)return{top:'50%',left:'50%',transform:'translate(-50%,-50%)'}
+    const spotTop=parseFloat(s.top),spotHeight=parseFloat(s.height)||0,spotLeft=parseFloat(s.left),spotWidth=parseFloat(s.width)||0
+    const top=spotTop+spotHeight+16
+    const left=Math.max(16,Math.min(window.innerWidth-376,spotLeft+spotWidth/2-180))
+    return{top:top+'px',left:left+'px'}
+  })
+  function nextOnboardStep(){
+    const isMobile=window.innerWidth<=680
+    if(onboardStep.value===2&&isMobile)mobileTab.value='stats'
+    if(onboardStep.value===2&&!isMobile)window.scrollTo({top:document.querySelector('.section-stats')?.offsetTop-80||0,behavior:'smooth'})
+    if(onboardStep.value===3)window.scrollTo({top:document.querySelector('.budget-bar-wrap')?.offsetTop-120||0,behavior:'smooth'})
+    if(onboardStep.value===4){skipOnboard();return}
+    onboardStep.value++
+  }
+  function skipOnboard(){onboardStep.value=0;localStorage.setItem('flowledger_onboarded','true')}
+  function startOnboard(){if(!localStorage.getItem('flowledger_onboarded'))onboardStep.value=1}
 
   // Persistence
   function load(){
@@ -2300,6 +2911,8 @@ setup(){
 
   onMounted(()=>{
     load()
+    // Start onboarding after a short delay (wait for DOM)
+    setTimeout(()=>startOnboard(),600)
     // Default expand: current year if has data, otherwise latest year with data
     const curYear=dayjs().format('YYYY')
     const years=[...new Set(entries.value.map(e=>e.date?e.date.slice(0,4):'').filter(Boolean))].sort().reverse()
@@ -2358,7 +2971,8 @@ setup(){
     addEntry,mobileAddEntry,copyLast,removeEntry,updateField,clearData,
     createSnap,restoreSnap,clearSnaps,undoImportBatch,clearImportBatches,
     saveSyncConfig,syncPush,syncPull,syncAuto,saveRules,saveReviewNote,saveChecklist,loadReview,
-    exportExcel,exportJSON,importExcel,importJSON,showToast,dayjs}
+    exportExcel,exportJSON,importExcel,importJSON,showToast,dayjs,
+    onboardStep,spotlightStyle,tooltipStyle,nextOnboardStep,skipOnboard,t,lang}
 }
 }).mount('#app')
 
