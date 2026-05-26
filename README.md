@@ -4,8 +4,19 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com)
+[![中文/English](https://img.shields.io/badge/i18n-中文%2FEnglish-blue.svg)]()
 
 > 不是交易工具，不是行情软件。就是一个**记账本 + 心理医生**，帮你看清数字、管住双手。
+
+## 截图预览
+
+| 桌面端 Dashboard | 手机端记录卡片 |
+|:---:|:---:|
+| ![桌面端](screenshots/desktop-dashboard.png) | ![手机端](screenshots/mobile-cards.png) |
+| **行为分析与心理画像** | **资产配置饼图** |
+| ![行为分析](screenshots/behavior-analysis.png) | ![资产配置](screenshots/asset-allocation.png) |
+
+> 截图可通过 `./take-screenshots.sh` 自动生成（macOS 需 Safari 支持）
 
 ## 为什么做这个？
 
@@ -94,6 +105,8 @@ FlowLedger 就是为了解决这个问题：**把每一笔出入金记下来，�
 - Day.js（CDN）
 - PWA（Service Worker + Manifest）
 - GitHub Gist API（云同步）
+- 中英文双语 i18n
+- 新手引导 Onboarding
 
 ## 项目结构
 
