@@ -16,7 +16,6 @@
 | **行为分析与心理画像** | **资产配置饼图** |
 | ![行为分析](screenshots/behavior-analysis.png) | ![资产配置](screenshots/asset-allocation.png) |
 
-> 截图可通过 `./take-screenshots.sh` 自动生成（macOS 需 Safari 支持）
 
 ## 为什么做这个？
 
