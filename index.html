@@ -1037,7 +1037,7 @@ tr.row-unmatched td{opacity:.35}
       </div>
     </div>
     <!-- Period Compare Cards -->
-    <div class="compare-grid" style="margin-bottom:16px">
+    <div class="compare-grid" style="margin-bottom:14px">
       <div class="compare-card"><p>{{ t('curPeriodNet') }}</p><strong :style="{color:periodCompare.curNet>=0?'var(--blue)':'var(--red)'}">{{ fmt(periodCompare.curNet) }}</strong></div>
       <div class="compare-card"><p>{{ t('lastPeriod') }}</p><strong :style="{color:periodCompare.prevNet>=0?'var(--blue)':'var(--red)'}">{{ fmt(periodCompare.prevNet) }}</strong></div>
       <div class="compare-card"><p>{{ t('compareChange') }}</p><strong :style="{color:periodCompare.delta>=0?'var(--blue)':'var(--red)'}">{{ fmt(periodCompare.delta) }}</strong></div>
@@ -1046,145 +1046,56 @@ tr.row-unmatched td{opacity:.35}
     <div class="chart-wrap">
       <canvas ref="trendChart"></canvas>
     </div>
-    <div class="stats-layout">
-      <div>
-        <h4 style="font-size:12px;color:var(--muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:.3px">{{ {month:'月度盈亏',week:'周度盈亏',year:'年度盈亏'}[period] }}</h4>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>{{ {month:'月份',week:'周',year:'年份'}[period] }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">{{ {month:'月度盈亏',week:'周盈亏',year:'年度盈亏'}[period] }}</th><th style="text-align:right">{{ t('cumPL') }}</th></tr></thead>
-            <tbody>
-              <tr v-for="row in periodRows" :key="row.key">
-                <td class="mono">{{ row.key }}</td>
-                <td class="mono" style="text-align:right">{{ fmt(row.inTotal) }}</td>
-                <td class="mono" style="text-align:right">{{ fmt(row.outTotal) }}</td>
-                <td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td>
-                <td class="mono" style="text-align:right" :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.cum) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <!-- Mobile stats cards -->
-        <div class="stats-cards">
-          <div v-for="row in periodRows" :key="row.key" class="stat-card">
-            <div class="stat-card-header">
-              <span class="stat-card-key">{{ row.key }}</span>
-              <span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span>
-            </div>
-            <div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div>
-            <div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
-            <div class="stat-card-row"><span>{{ t('cumPL') }}</span><span :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.cum) }}</span></div>
-          </div>
-        </div>
-        <!-- Asset type stats -->
-        <h4 style="font-size:12px;color:var(--muted);margin:18px 0 10px;text-transform:uppercase;letter-spacing:.3px">资产类型盈亏（折CNY）</h4>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>{{ t('assetType') }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">净盈亏</th></tr></thead>
-            <tbody>
-              <tr v-for="row in assetTypeRows" :key="row.assetType">
-                <td style="font-weight:600">{{ row.assetType||'未分类' }}</td>
-                <td class="mono" style="text-align:right;color:var(--red)">{{ fmt(row.inTotal) }}</td>
-                <td class="mono" style="text-align:right;color:var(--green)">{{ fmt(row.outTotal) }}</td>
-                <td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="stats-cards">
-          <div v-for="row in assetTypeRows" :key="row.assetType" class="stat-card">
-            <div class="stat-card-header">
-              <span class="stat-card-key">{{ row.assetType||'未分类' }}</span>
-              <span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span>
-            </div>
-            <div class="stat-card-row"><span>{{ t('deposit') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div>
-            <div class="stat-card-row"><span>{{ t('withdraw') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
-          </div>
-        </div>
-        <!-- Tag stats -->
-        <template v-if="tagRows.length">
-          <h4 style="font-size:12px;color:var(--muted);margin:18px 0 10px;text-transform:uppercase;letter-spacing:.3px">标签盈亏（折CNY）</h4>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>{{ t('tagStats') }}</th><th style="text-align:right">笔数</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">净盈亏</th></tr></thead>
-              <tbody>
-                <tr v-for="row in tagRows" :key="row.tag">
-                  <td style="font-weight:600">#{{ row.tag }}</td>
-                  <td class="mono" style="text-align:right">{{ row.count }}</td>
-                  <td class="mono" style="text-align:right;color:var(--red)">{{ fmt(row.inTotal) }}</td>
-                  <td class="mono" style="text-align:right;color:var(--green)">{{ fmt(row.outTotal) }}</td>
-                  <td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="stats-cards">
-            <div v-for="row in tagRows" :key="row.tag" class="stat-card">
-              <div class="stat-card-header">
-                <span class="stat-card-key">#{{ row.tag }}</span>
-                <span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span>
-              </div>
-              <div class="stat-card-row"><span>笔数</span><span>{{ row.count }}</span></div>
-              <div class="stat-card-row"><span>{{ t('deposit') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div>
-              <div class="stat-card-row"><span>{{ t('withdraw') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
-            </div>
-          </div>
-        </template>
-        <!-- Account/Exchange stats -->
-        <h4 style="font-size:12px;color:var(--muted);margin:18px 0 10px;text-transform:uppercase;letter-spacing:.3px">账户/平台盈亏（折CNY）</h4>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>账户/平台</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">净盈亏</th></tr></thead>
-            <tbody>
-              <tr v-for="row in exchangeRows" :key="row.exchange">
-                <td style="font-weight:600">{{ row.exchange }}</td>
-                <td class="mono" style="text-align:right;color:var(--red)">{{ fmt(row.inTotal) }}</td>
-                <td class="mono" style="text-align:right;color:var(--green)">{{ fmt(row.outTotal) }}</td>
-                <td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="stats-cards">
-          <div v-for="row in exchangeRows" :key="row.exchange" class="stat-card">
-            <div class="stat-card-header">
-              <span class="stat-card-key">{{ row.exchange }}</span>
-              <span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span>
-            </div>
-            <div class="stat-card-row"><span>{{ t('deposit') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div>
-            <div class="stat-card-row"><span>{{ t('withdraw') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
-          </div>
-        </div>
-      </div>
-      <!-- Insight Panel -->
-      <aside class="insight-panel">
-        <h3>{{ t('insights') }}</h3>
-        <p class="insight-summary">{{ insightSummary }}</p>
-        <ul class="insight-list"><li v-for="(a,i) in insightAdvice" :key="i">{{ a }}</li></ul>
-        <h4>{{ t('largeTxWarn') }}</h4>
-        <ul class="insight-list">
-          <li v-for="(t,i) in largeTxList" :key="i">{{ t }}</li>
-          <li v-if="!largeTxList.length" style="color:var(--muted)">{{ t('noLargeTx') }}</li>
-        </ul>
-        <h4>{{ t('reviewChecklist') }}</h4>
-        <div v-for="(item,i) in reviewChecklist" :key="i" :class="['check-item',{done:item.checked}]">
-          <input type="checkbox" v-model="item.checked" @change="saveChecklist">
-          <span>{{ item.text }}</span>
-        </div>
-        <h4>{{ t('rules') }}</h4>
-        <div class="insight-config">
-          <div class="form-group"><label>{{ t('ruleLossWarn') }}</label><input class="form-input" type="number" v-model.number="rules.lossWarn"></div>
-          <div class="form-group"><label>{{ t('ruleLossCritical') }}</label><input class="form-input" type="number" v-model.number="rules.lossCritical"></div>
-          <div class="form-group"><label>{{ t('ruleRoiWarn') }}</label><input class="form-input" type="number" step="0.01" v-model.number="rules.roiWarn"></div>
-          <div class="form-group"><label>{{ t('ruleInflowRatio') }}</label><input class="form-input" type="number" step="0.1" v-model.number="rules.inflowRatio"></div>
-          <div class="form-group"><label>{{ t('ruleLargeTx') }}</label><input class="form-input" type="number" v-model.number="rules.largeTx"></div>
-          <div class="form-group"><label>{{ t('ruleLossStreak') }}</label><input class="form-input" type="number" v-model.number="rules.lossStreak"></div>
-          <button class="btn btn-ghost btn-sm" @click="saveRules">{{ t('saveRules') }}</button>
-        </div>
-        <h4>{{ t('reviewNote') }}</h4>
-        <textarea class="form-input" v-model="reviewNote" placeholder="记录本周期复盘要点" rows="3"></textarea>
-        <div class="note-actions"><button class="btn btn-ghost btn-sm" @click="saveReviewNote">{{ t('saveReviewNote') }}</button><small class="note-hint">{{ reviewSavedAt }}</small></div>
-      </aside>
+    <!-- Period table -->
+    <div class="table-wrap" style="margin-bottom:14px"><table>
+      <thead><tr><th>{{ {month:'月份',week:'周',year:'年份'}[period] }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th><th style="text-align:right">{{ t('cumPL') }}</th></tr></thead>
+      <tbody><tr v-for="row in periodRows" :key="row.key"><td class="mono">{{ row.key }}</td><td class="mono" style="text-align:right">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td><td class="mono" style="text-align:right" :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.cum) }}</td></tr></tbody>
+    </table></div>
+    <div class="stats-cards" style="margin-bottom:8px">
+      <div v-for="row in periodRows" :key="row.key" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">{{ row.key }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div><div class="stat-card-row"><span>{{ t('cumPL') }}</span><span :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.cum) }}</span></div></div>
     </div>
+    <!-- Tab bar for breakdown views -->
+    <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid var(--border);padding-bottom:0">
+      <button :class="['btn btn-sm',statTab==='asset'?'btn-primary':'btn-ghost']" @click="statTab='asset'" style="border-radius:8px 8px 0 0;font-size:12px">{{ t('assetType') }}</button>
+      <button :class="['btn btn-sm',statTab==='account'?'btn-primary':'btn-ghost']" @click="statTab='account'" style="border-radius:8px 8px 0 0;font-size:12px">{{ t('exchange') }}</button>
+      <button v-if="tagRows.length" :class="['btn btn-sm',statTab==='tag'?'btn-primary':'btn-ghost']" @click="statTab='tag'" style="border-radius:8px 8px 0 0;font-size:12px">{{ t('tagStats') }}</button>
+    </div>
+    <!-- Asset type breakdown -->
+    <div v-if="statTab==='asset'"><div class="table-wrap"><table><thead><tr><th>{{ t('assetType') }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th><th style="text-align:right">{{ t('roiRate') }}</th></tr></thead><tbody><tr v-for="row in assetTypeRows" :key="row.assetType"><td style="font-weight:600">{{ row.assetType||'未分类' }}</td><td class="mono" style="text-align:right;color:var(--red)">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right;color:var(--green)">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td><td class="mono" style="text-align:right" :style="{color:row.inTotal&&row.outTotal/row.inTotal>=1?'var(--green)':'var(--red)'}">{{ row.inTotal?((row.outTotal/row.inTotal)*100).toFixed(0)+'%':'-' }}</td></tr></tbody></table></div><div class="stats-cards"><div v-for="row in assetTypeRows" :key="row.assetType" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">{{ row.assetType||'未分类' }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div></div></div></div>
+    <!-- Account/Exchange breakdown -->
+    <div v-if="statTab==='account'"><div class="table-wrap"><table><thead><tr><th>{{ t('exchange') }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th></tr></thead><tbody><tr v-for="row in exchangeRows" :key="row.exchange"><td style="font-weight:600">{{ row.exchange }}</td><td class="mono" style="text-align:right;color:var(--red)">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right;color:var(--green)">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td></tr></tbody></table></div><div class="stats-cards"><div v-for="row in exchangeRows" :key="row.exchange" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">{{ row.exchange }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div></div></div></div>
+    <!-- Tag breakdown -->
+    <div v-if="statTab==='tag'&&tagRows.length"><div class="table-wrap"><table><thead><tr><th>{{ t('tagStats') }}</th><th style="text-align:right">笔数</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th></tr></thead><tbody><tr v-for="row in tagRows" :key="row.tag"><td style="font-weight:600">#{{ row.tag }}</td><td class="mono" style="text-align:right">{{ row.count }}</td><td class="mono" style="text-align:right;color:var(--red)">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right;color:var(--green)">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</td></tr></tbody></table></div><div class="stats-cards"><div v-for="row in tagRows" :key="row.tag" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">#{{ row.tag }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>笔数</span><span>{{ row.count }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div></div></div></div>
+  </section>
+
+  <!-- ===== INSIGHT & REVIEW ===== -->
+  <section class="panel section-stats section-not-records section-not-data">
+    <div class="panel-header"><h2>{{ t('insights') }}</h2></div>
+    <p class="insight-summary">{{ insightSummary }}</p>
+    <ul class="insight-list"><li v-for="(a,i) in insightAdvice" :key="i">{{ a }}</li></ul>
+    <h4>{{ t('largeTxWarn') }}</h4>
+    <ul class="insight-list">
+      <li v-for="(t,i) in largeTxList" :key="i">{{ t }}</li>
+      <li v-if="!largeTxList.length" style="color:var(--muted)">{{ t('noLargeTx') }}</li>
+    </ul>
+    <h4>{{ t('rules') }}</h4>
+    <div class="insight-config">
+      <div class="form-group"><label>{{ t('ruleLossWarn') }}</label><input class="form-input" type="number" v-model.number="rules.lossWarn"></div>
+      <div class="form-group"><label>{{ t('ruleLossCritical') }}</label><input class="form-input" type="number" v-model.number="rules.lossCritical"></div>
+      <div class="form-group"><label>{{ t('ruleRoiWarn') }}</label><input class="form-input" type="number" step="0.01" v-model.number="rules.roiWarn"></div>
+      <div class="form-group"><label>{{ t('ruleInflowRatio') }}</label><input class="form-input" type="number" step="0.1" v-model.number="rules.inflowRatio"></div>
+      <div class="form-group"><label>{{ t('ruleLargeTx') }}</label><input class="form-input" type="number" v-model.number="rules.largeTx"></div>
+      <div class="form-group"><label>{{ t('ruleLossStreak') }}</label><input class="form-input" type="number" v-model.number="rules.lossStreak"></div>
+      <button class="btn btn-ghost btn-sm" @click="saveRules">{{ t('saveRules') }}</button>
+    </div>
+    <h4>{{ t('reviewChecklist') }}</h4>
+    <div v-for="(item,i) in reviewChecklist" :key="i" :class="['check-item',{done:item.checked}]">
+      <input type="checkbox" v-model="item.checked" @change="saveChecklist">
+      <span>{{ item.text }}</span>
+    </div>
+    <h4>{{ t('reviewNote') }}</h4>
+    <textarea class="form-input" v-model="reviewNote" :placeholder="t('reviewNote')" rows="3"></textarea>
+    <div class="note-actions"><button class="btn btn-ghost btn-sm" @click="saveReviewNote">{{ t('saveReviewNote') }}</button><small class="note-hint">{{ reviewSavedAt }}</small></div>
   </section>
 
   <!-- ===== BEHAVIOR ANALYSIS ===== -->
@@ -2072,6 +1983,7 @@ setup(){
   const snapshots=ref([])
   const importBatches=ref([])
   const period=ref('month')
+  const statTab=ref('asset')
   const mobileTab=ref('records')
   const showMobileAdd=ref(false)
   const showFilters=ref(window.innerWidth>680)
@@ -3245,7 +3157,7 @@ setup(){
     }
   })
 
-  return{entries,sortedEntries,snapshots,importBatches,period,mobileTab,showMobileAdd,showFilters,editingEntry,showSync,theme,toggleTheme,trendChart,weekdayChart,pieChart,pieMode,assetColor,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,
+  return{entries,sortedEntries,snapshots,importBatches,period,statTab,mobileTab,showMobileAdd,showFilters,editingEntry,showSync,theme,toggleTheme,trendChart,weekdayChart,pieChart,pieMode,assetColor,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     totalIn,totalOut,netPL,roi,allExchanges,allAssetTypes,allTags,allMonths,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,exchangeRows,assetTypeRows,tagRows,periodCompare,largeTxList,insightSummary,insightAdvice,
     behaviorAnalysis,psychoTags,behaviorAdvice,
