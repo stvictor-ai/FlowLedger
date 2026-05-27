@@ -403,25 +403,6 @@ tr.row-unmatched td{opacity:.35}
 .stat-card-row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:3px 0}
 .stat-card-row span:last-child{font-weight:600;font-variant-numeric:tabular-nums}
 
-/* ===== BUDGET BAR ===== */
-.budget-bar-wrap{
-  margin-bottom:20px;padding:16px 20px;border-radius:var(--radius);
-  background:var(--card);border:1px solid var(--border);
-}
-.budget-bar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px}
-.budget-bar-title{font-size:13px;font-weight:600}
-.budget-bar-nums{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.budget-bar-track{
-  height:8px;border-radius:4px;background:var(--input-bg);overflow:hidden;
-}
-.budget-bar-fill{
-  height:100%;border-radius:4px;transition:width .4s ease,background .3s;
-  background:var(--green);
-}
-.budget-bar-fill.warn{background:var(--accent)}
-.budget-bar-fill.over{background:var(--red)}
-.budget-set{display:flex;align-items:center;gap:8px;margin-top:10px}
-.budget-set input{width:120px}
 
 /* ===== FILTERED STATS ===== */
 .filtered-stats{
@@ -760,23 +741,6 @@ tr.row-unmatched td{opacity:.35}
   </div>
 
   <!-- ===== BUDGET BAR ===== -->
-  <div class="budget-bar-wrap section-records section-stats section-data" v-if="monthlyBudget>0">
-    <div class="budget-bar-header">
-      <span class="budget-bar-title">{{ dayjs().format('YYYY-MM') }} 月度投入预算</span>
-      <span class="budget-bar-nums">{{ fmt(curMonthIn) }} / {{ fmt(monthlyBudget) }}</span>
-    </div>
-    <div class="budget-bar-track">
-      <div :class="['budget-bar-fill',budgetRatio>1?'over':budgetRatio>0.8?'warn':'']" :style="{width:Math.min(budgetRatio*100,100)+'%'}"></div>
-    </div>
-    <div class="budget-set">
-      <input class="form-input" type="number" v-model.number="monthlyBudget" style="width:120px" placeholder="月预算">
-      <button class="btn btn-ghost btn-xs" @click="saveBudget">{{ t('save') }}</button>
-      <button class="btn btn-ghost btn-xs" @click="monthlyBudget=0;saveBudget()">{{ t('closeBudget') }}</button>
-    </div>
-  </div>
-  <div v-else class="section-records section-stats section-data" style="margin-bottom:14px">
-    <button class="btn btn-ghost btn-sm" @click="monthlyBudget=3000" style="width:100%">设置月度投入预算</button>
-  </div>
 
   <!-- ===== QUICK ADD ===== -->
   <section class="panel section-records section-not-stats section-not-data quick-add-panel">
@@ -1472,11 +1436,11 @@ tr.row-unmatched td{opacity:.35}
       <div class="onboard-step-title">{{ onboardStep===1?t('onboardStep1Title'):onboardStep===2?t('onboardStep2Title'):onboardStep===3?t('onboardStep3Title'):t('onboardStep4Title') }}</div>
       <div class="onboard-step-desc">{{ onboardStep===1?t('onboardStep1Desc'):onboardStep===2?t('onboardStep2Desc'):onboardStep===3?t('onboardStep3Desc'):t('onboardStep4Desc') }}</div>
       <div class="onboard-step-actions">
-        <button class="btn btn-primary" @click="nextOnboardStep">{{ onboardStep===4?t('done'):t('next') }}</button>
+        <button class="btn btn-primary" @click="nextOnboardStep">{{ onboardStep===3?t('done'):t('next') }}</button>
         <button class="btn btn-ghost" @click="skipOnboard">{{ t('skip') }}</button>
       </div>
       <div class="onboard-dots">
-        <div v-for="i in 4" :class="['onboard-dot',{active:i===onboardStep}]" :key="i"></div>
+        <div v-for="i in 3" :class="['onboard-dot',{active:i===onboardStep}]" :key="i"></div>
       </div>
     </div>
   </div>
@@ -1498,7 +1462,6 @@ const SK='flowledger_entries_v1',SNAP_K='flowledger_snapshots_v1',RULES_K='flowl
 ;(()=>{
   const migrations=[
     ['crypto_cashflow_entries_v1',SK],
-    ['crypto_cashflow_budget','flowledger_budget'],
     ['crypto_cashflow_theme','flowledger_theme'],
     ['crypto_cashflow_checklist',CHECKLIST_K]
   ]
@@ -2115,15 +2078,6 @@ setup(){
   const editingEntry=ref(null)
   const showSync=ref(false)
 
-  // Monthly budget
-  const BUDGET_K='flowledger_budget'
-  const monthlyBudget=ref(Number(localStorage.getItem(BUDGET_K))||0)
-  function saveBudget(){localStorage.setItem(BUDGET_K,String(monthlyBudget.value));showToast('预算已保存','success')}
-  const curMonthIn=computed(()=>{
-    const mk=dayjs().format('YYYY-MM')
-    return entries.value.filter(e=>e.type==='入金'&&e.date&&e.date.startsWith(mk)).reduce((s,e)=>s+amountCNY(e),0)
-  })
-  const budgetRatio=computed(()=>monthlyBudget.value>0?curMonthIn.value/monthlyBudget.value:0)
 
   // Theme
   const THEME_K='flowledger_theme'
@@ -2287,7 +2241,8 @@ setup(){
     const isMobile=window.innerWidth<=680
     if(onboardStep.value===2&&isMobile)mobileTab.value='stats'
     if(onboardStep.value===2&&!isMobile)window.scrollTo({top:document.querySelector('.section-stats')?.offsetTop-80||0,behavior:'smooth'})
-    if(onboardStep.value===3)window.scrollTo({top:document.querySelector('.budget-bar-wrap')?.offsetTop-120||0,behavior:'smooth'})
+    if(onboardStep.value===3)showSync.value=true;
+    
     if(onboardStep.value===4){skipOnboard();return}
     onboardStep.value++
   }
@@ -2553,20 +2508,10 @@ setup(){
     const weekDeposits=entries.value.filter(e=>e.type==='入金'&&e.date>=weekStart.format('YYYY-MM-DD')&&e.date<=now.format('YYYY-MM-DD'))
     if(weekDeposits.length>=3)warnings.push('本周已投入 '+weekDeposits.length+' 次，频率偏高，是否在追涨？')
 
-    // Check this month vs budget
-    const monthKey=now.format('YYYY-MM')
-    const formCNY=amountCNY({amount:Number(form.amount||0),rate:form.rate,currency:form.currency})
-    const monthIn=entries.value.filter(e=>e.type==='入金'&&e.date&&e.date.startsWith(monthKey)).reduce((s,e)=>s+amountCNY(e),0)
-    const budget=monthlyBudget.value
-    if(budget>0){
-      const afterAdd=monthIn+formCNY
-      if(afterAdd>budget)warnings.push('本月投入将达 '+fmt(afterAdd)+'，超出预算 '+fmt(budget))
-      else if(afterAdd>budget*0.8)warnings.push('本月投入将达 '+fmt(afterAdd)+'，接近预算上限 '+fmt(budget))
-    }
-
     // Check amount vs average
     if(recent.length>=3){
       const avg=recent.slice(0,10).reduce((s,e)=>s+amountCNY(e),0)/Math.min(recent.length,10)
+      const formCNY=amountCNY({amount:Number(form.amount||0),rate:form.rate,currency:form.currency})
       if(formCNY>avg*2)warnings.push('本笔折合 '+fmt(formCNY)+' 元，是近期均值的 '+(formCNY/avg).toFixed(1)+' 倍，是否冲动操作？')
     }
 
@@ -3304,7 +3249,7 @@ setup(){
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     totalIn,totalOut,netPL,roi,allExchanges,allAssetTypes,allTags,allMonths,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,exchangeRows,assetTypeRows,tagRows,periodCompare,largeTxList,insightSummary,insightAdvice,
     behaviorAnalysis,psychoTags,behaviorAdvice,
-    monthlyBudget,saveBudget,curMonthIn,budgetRatio,
+
     fmt,amountCNY,parseTags,rowClass,toggleEx,toggleAssetType,toggleTag,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,editingDetail,
     platformSuggestions,editPlatformSuggestions,rateLoading,fetchRate,
     groupedEntries,expandedMonths,toggleMonth,isMonthOpen,expandAllMonths,collapseAllMonths,
