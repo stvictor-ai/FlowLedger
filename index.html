@@ -677,7 +677,7 @@ tr.row-unmatched td{opacity:.35}
   <div v-if="toast.show" :class="['toast',toast.type]">{{ toast.message }}</div>
 
   <!-- ===== PRICE TICKER ===== -->
-  <div class="ticker-bar" v-if="tickerData.length" style="display:flex;align-items:center;gap:0">
+  <div class="ticker-bar" style="display:flex;align-items:center;gap:0">
     <button class="btn btn-ghost btn-xs" @click="showTickerPick=!showTickerPick" style="flex-shrink:0;margin-left:8px;font-size:16px;min-width:32px;min-height:32px;border-radius:8px;z-index:11" title="自选行情">⚙</button>
     <div class="ticker-track" style="flex:1">
       <template v-for="(item,i) in tickerData" :key="i">
@@ -696,6 +696,7 @@ tr.row-unmatched td{opacity:.35}
           <span :class="['ticker-change',item.chg>=0?'up':'down']">{{ item.chg>=0?'+':'' }}{{ item.chg }}%</span>
         </span>
       </template>
+      <span v-if="!tickerData.length" class="ticker-item" style="border:none">⏳ 加载行情中…</span>
     </div>
     <!-- Ticker Picker -->
     <div v-if="showTickerPick" class="ticker-picker" @click.self="showTickerPick=false">
