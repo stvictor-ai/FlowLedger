@@ -1015,6 +1015,55 @@ tr.row-unmatched td{opacity:.35}
     </div>
   </section>
 
+  <!-- ===== POSITIONS ===== -->
+  <section class="panel section-stats section-not-records section-not-data">
+    <div class="panel-header" @click="showPosForm=!showPosForm" style="cursor:pointer">
+      <div class="panel-collapse-toggle"><span :class="['arrow',{open:showPosForm}]">&#9654;</span> <div><h2>持仓追踪</h2><p class="hint">持仓 {{ positions.length }} 只 · 总成本 {{ fmt(posSummary.totalCost) }} · 市值 {{ fmt(posSummary.totalValue) }} · <span :style="{color:posSummary.pl>=0?'var(--green)':'var(--red)'}">盈亏 {{ posSummary.pl>=0?'+':'' }}{{ fmt(posSummary.pl) }} ({{ posSummary.plPct }}%)</span></p></div></div>
+    </div>
+    <div :class="['panel-collapse-body',{collapsed:!showPosForm}]">
+      <!-- Add form -->
+      <div class="form-grid" style="margin-bottom:12px">
+        <div class="form-group"><label>标的代码</label><input class="form-input" v-model="posForm.symbol" placeholder="如 BTC / NVDA / 0700.HK" @keyup.enter="addPosition"></div>
+        <div class="form-group"><label>名称</label><input class="form-input" v-model="posForm.name" placeholder="非必填，默认取代码"></div>
+        <div class="form-group"><label>持有数量</label><input class="form-input" type="number" v-model="posForm.qty" placeholder="如 0.5"></div>
+        <div class="form-group"><label>成本均价</label><input class="form-input" type="number" v-model="posForm.avgCost" placeholder="每单位买入均价"></div>
+        <div class="form-group"><label>币种</label><select class="form-input" v-model="posForm.currency"><option>CNY</option><option>USD</option><option>HKD</option><option>USDT</option></select></div>
+        <div class="form-group"><label>价格源</label><select class="form-input" v-model="posForm.source"><option value="auto">自动获取</option><option value="manual">手动输入</option></select></div>
+        <button class="btn btn-primary btn-sm" @click="addPosition" style="align-self:end">添加持仓</button>
+      </div>
+      <!-- Positions table (desktop) -->
+      <div class="table-wrap" v-if="positions.length">
+        <table><thead><tr><th>标的</th><th style="text-align:right">数量</th><th style="text-align:right">成本价</th><th style="text-align:right">现价</th><th style="text-align:right">市值</th><th style="text-align:right">盈亏</th><th style="text-align:center">操作</th></tr></thead>
+        <tbody><tr v-for="p in posRows" :key="p.id">
+          <td><strong>{{ p.symbol }}</strong><span v-if="p.name&&p.name!==p.symbol" style="color:var(--muted);margin-left:6px;font-size:11px">{{ p.name }}</span><span style="font-size:10px;color:var(--dim);margin-left:4px">· {{ p.source==='manual'?'✏️':'✅' }}</span></td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.qty }}</td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ fmt(p.avgCost) }}</td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.price?fmt(p.price):'获取中…' }}</td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.value?fmt(p.value):'-' }}</td>
+          <td :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:p.pl>=0?'var(--green)':'var(--red)'}">{{ p.pl?(p.pl>=0?'+':'')+fmt(p.pl):'-' }}<br><span style="font-size:10px">{{ p.plPct!='0'?p.plPct+'%':'' }}</span></td>
+          <td style="text-align:center"><button class="btn btn-ghost btn-xs" @click="removePosition(p.id)" style="color:var(--red)">✕</button></td>
+        </tr></tbody></table>
+      </div>
+      <!-- Position cards (mobile) -->
+      <div class="record-cards" v-if="positions.length">
+        <div v-for="p in posRows" :key="p.id" class="record-card" style="cursor:default">
+          <div class="record-card-top">
+            <span class="record-card-date">{{ p.symbol }} <span style="font-size:10px;color:var(--dim)">· {{ p.source==='manual'?'✏️手动':'✅自动' }}</span></span>
+            <button class="record-card-del" @click="removePosition(p.id)">✕</button>
+          </div>
+          <div style="font-size:11px;color:var(--muted)">{{ p.name!==p.symbol?p.name+' · ':'' }}{{ p.qty }} 单位 × {{ fmt(p.avgCost) }} = 成本 {{ fmt(p.cost) }}</div>
+          <div style="display:flex;gap:12px;margin-top:6px;font-size:12px">
+            <span>现价 <strong>{{ p.price?fmt(p.price):'…' }}</strong></span>
+            <span>市值 <strong>{{ fmt(p.value) }}</strong></span>
+            <span :style="{color:p.pl>=0?'var(--green)':'var(--red)'}">盈亏 <strong>{{ p.pl?(p.pl>=0?'+':'')+fmt(p.pl):'-' }} ({{ p.plPct }}%)</strong></span>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm mt-8" @click="fetchPosPrices" v-if="positions.length">刷新行情</button>
+      <div v-if="!positions.length" style="text-align:center;color:var(--muted);padding:20px">暂无持仓，用上方表单添加</div>
+    </div>
+  </section>
+
   <!-- ===== PERIOD STATS ===== -->
   <section class="panel section-stats section-not-records section-not-data">
     <div class="panel-header">
@@ -1444,7 +1493,7 @@ tr.row-unmatched td{opacity:.35}
 <script>
 dayjs.extend(dayjs_plugin_isoWeek);dayjs.extend(dayjs_plugin_weekOfYear);dayjs.locale('zh-cn')
 
-const SK='flowledger_entries_v1',SNAP_K='flowledger_snapshots_v1',RULES_K='flowledger_rules_v1',REVIEW_K='flowledger_reviews_v1',SYNC_K='flowledger_sync_v1',IMPORT_K='flowledger_import_batches_v1',CHECKLIST_K='flowledger_checklist'
+const SK='flowledger_entries_v1',SNAP_K='flowledger_snapshots_v1',RULES_K='flowledger_rules_v1',REVIEW_K='flowledger_reviews_v1',SYNC_K='flowledger_sync_v1',IMPORT_K='flowledger_import_batches_v1',CHECKLIST_K='flowledger_checklist',POS_K='flowledger_positions_v1'
 // Migrate from old CryptoFlow keys (backward compat)
 ;(()=>{
   const migrations=[
@@ -2524,6 +2573,65 @@ setup(){
     return warnings
   }
 
+  // Positions (持仓)
+  const positions=ref([])
+  const posForm=reactive({symbol:'',name:'',qty:'',avgCost:'',currency:'CNY',assetType:'',source:'auto'})
+  const showPosForm=ref(false)
+  const posPrices=ref({})
+  function loadPositions(){try{const r=localStorage.getItem(POS_K);if(r)positions.value=JSON.parse(r)}catch(e){}}
+  function savePositions(){localStorage.setItem(POS_K,JSON.stringify(positions.value))}
+  function addPosition(){
+    if(!posForm.symbol.trim()||!Number(posForm.qty)){showToast('请输入标的和数量','error');return}
+    positions.value.push({id:genId(),symbol:posForm.symbol.trim().toUpperCase(),name:posForm.name.trim()||posForm.symbol.trim(),qty:Number(posForm.qty),avgCost:Number(posForm.avgCost)||0,currency:posForm.currency,assetType:posForm.assetType,source:posForm.source})
+    savePositions();posForm.symbol='';posForm.name='';posForm.qty='';posForm.avgCost='';showPosForm.value=false;showToast('已添加持仓','success')
+  }
+  function removePosition(id){if(!confirm('删除持仓？'))return;positions.value=positions.value.filter(p=>p.id!==id);savePositions();showToast('已删除','success')}
+  function updatePosition(id,key,val){const p=positions.value.find(x=>x.id===id);if(!p)return;if(key==='qty'||key==='avgCost')p[key]=Number(val)||0;else p[key]=val;savePositions()}
+  const posSummary=computed(()=>{
+    let totalCost=0,totalValue=0
+    positions.value.forEach(p=>{
+      const cost=p.qty*p.avgCost
+      const price=posPrices.value[p.symbol]
+      const value=price?p.qty*price:cost
+      totalCost+=cost;totalValue+=value
+    })
+    return{totalCost,totalValue,pl:totalValue-totalCost,plPct:totalCost?((totalValue-totalCost)/totalCost*100).toFixed(1):'0'}
+  })
+  const posRows=computed(()=>positions.value.map(p=>{
+    const cost=p.qty*p.avgCost
+    const price=posPrices.value[p.symbol]
+    const value=price?p.qty*price:0;const pl=value-cost
+    return{...p,cost,price:price||0,value,pl,plPct:cost?((pl/cost)*100).toFixed(1):'0'}
+  }))
+  async function fetchPosPrices(){
+    const toFetch=positions.value.filter(p=>p.source!=='manual')
+    if(!toFetch.length)return
+    const results={}
+    // Binance batch
+    try{
+      const res=await Promise.race([fetch('https://api.binance.com/api/v3/ticker/price'),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
+      if(res&&res.ok){const data=await res.json();toFetch.forEach(p=>{const row=data.find(d=>d.symbol===p.symbol+'USDT');if(row)results[p.symbol]=Number(row.price)})}
+    }catch(e){}
+    // Yahoo batch for stocks
+    const yahooItems=toFetch.filter(p=>!results[p.symbol]&&!/^(BTC|ETH|SOL|BNB|XRP|ADA|DOGE|DOT|LINK|AVAX|MATIC|SHIB|UNI|ATOM|APT|FIL|ARB|OP|PEPE|WIF)$/i.test(p.symbol))
+    for(const p of yahooItems){
+      try{
+        const res=await Promise.race([fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${p.symbol}?interval=1d&range=1d`),new Promise((_,r)=>setTimeout(()=>r(null),3000))])
+        if(res&&res.ok){const data=await res.json();const price=data?.chart?.result?.[0]?.meta?.regularMarketPrice;if(price)results[p.symbol]=Number(price)}
+      }catch(e){}
+    }
+    // CoinGecko fallback for unsolved crypto
+    const unsolved=toFetch.filter(p=>!results[p.symbol])
+    if(unsolved.length){
+      try{
+        const ids=unsolved.map(p=>p.symbol.toLowerCase()).join(',')
+        const res=await Promise.race([fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
+        if(res&&res.ok){const data=await res.json();Object.entries(data).forEach(([id,val])=>{const sym=id.toUpperCase();if(val.usd)results[sym]=Number(val.usd)})}
+      }catch(e){}
+    }
+    Object.assign(posPrices.value,results)
+  }
+
   function addEntry(){
     if(!form.amount||form.amount<=0){showToast('请输入有效金额','error');return}
     // Calm-down check
@@ -3135,11 +3243,14 @@ setup(){
 
   onMounted(()=>{
     load()
+    loadPositions()
+    if(positions.value.length)fetchPosPrices()
     // Start onboarding after a short delay (wait for DOM)
     setTimeout(()=>startOnboard(),600)
     // Fetch ticker prices
     fetchTickerPrices()
     const tickerTimer=setInterval(fetchTickerPrices,30000)
+    const posPriceTimer=setInterval(()=>{if(positions.value.length)fetchPosPrices()},60000)
     // Default expand: current year if has data, otherwise latest year with data
     const curYear=dayjs().format('YYYY')
     const years=[...new Set(entries.value.map(e=>e.date?e.date.slice(0,4):'').filter(Boolean))].sort().reverse()
@@ -3202,6 +3313,7 @@ setup(){
     saveSyncConfig,syncPush,syncPull,syncAuto,saveRules,saveReviewNote,saveChecklist,loadReview,
     exportExcel,exportJSON,importExcel,importJSON,showToast,dayjs,
     onboardStep,spotlightStyle,tooltipStyle,nextOnboardStep,skipOnboard,t,lang,tickerData,showTickerPick,tickerSelected,tickerCategories,toggleTicker,
+    positions,posForm,posRows,posSummary,addPosition,removePosition,updatePosition,fetchPosPrices,showPosForm,
     ASSET_TYPES,getPlatforms,assetColor,showAssetMgr,assetMgrNew,assetMgrNewPlatform,
     addAssetType,removeAssetType,addPlatform,removePlatform,resetAssetCfg}
 }
