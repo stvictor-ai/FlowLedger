@@ -614,9 +614,10 @@ tr.row-unmatched td{opacity:.35}
 
 /* ===== PRICE TICKER ===== */
 .ticker-bar{
-  overflow:hidden;white-space:nowrap;padding:8px 0;margin-bottom:12px;
-  background:var(--card);border:1px solid var(--border);border-radius:12px;
-  position:relative;
+  overflow:hidden;white-space:nowrap;padding:7px 0;margin-bottom:14px;
+  background:linear-gradient(90deg,var(--card),var(--panel),var(--card));
+  border:1px solid var(--border);border-radius:12px;
+  position:relative;top:0;z-index:10;
 }
 .ticker-track{display:inline-flex;animation:ticker-scroll 30s linear infinite}
 .ticker-item{
@@ -685,6 +686,28 @@ tr.row-unmatched td{opacity:.35}
   <!-- Toast -->
   <div v-if="toast.show" :class="['toast',toast.type]">{{ toast.message }}</div>
 
+  <!-- ===== PRICE TICKER ===== -->
+  <div class="ticker-bar" v-if="tickerData.length">
+    <div class="ticker-track">
+      <template v-for="(item,i) in tickerData" :key="i">
+        <span class="ticker-item">
+          <span class="ticker-icon">{{ item.icon }}</span>
+          <span style="color:var(--muted);font-size:11px;margin-right:2px">{{ item.symbol }}</span>
+          <span class="ticker-price">{{ item.price }}</span>
+          <span :class="['ticker-change',item.chg>=0?'up':'down']">{{ item.chg>=0?'+':'' }}{{ item.chg }}%</span>
+        </span>
+      </template>
+      <template v-for="(item,i) in tickerData" :key="'dup'+i">
+        <span class="ticker-item">
+          <span class="ticker-icon">{{ item.icon }}</span>
+          <span style="color:var(--muted);font-size:11px;margin-right:2px">{{ item.symbol }}</span>
+          <span class="ticker-price">{{ item.price }}</span>
+          <span :class="['ticker-change',item.chg>=0?'up':'down']">{{ item.chg>=0?'+':'' }}{{ item.chg }}%</span>
+        </span>
+      </template>
+    </div>
+  </div>
+
   <!-- ===== HERO ===== -->
   <header class="hero section-records section-stats section-data">
     <div class="hero-info">
@@ -704,29 +727,6 @@ tr.row-unmatched td{opacity:.35}
       <input ref="jsonFile" type="file" accept=".json" hidden @change="importJSON">
     </div>
   </header>
-
-  <!-- ===== PRICE TICKER ===== -->
-  <div class="ticker-bar section-records section-stats section-data" v-if="tickerData.length">
-    <div class="ticker-track">
-      <template v-for="(item,i) in tickerData" :key="i">
-        <span class="ticker-item">
-          <span class="ticker-icon">{{ item.icon }}</span>
-          <span style="color:var(--muted);font-size:11px;margin-right:2px">{{ item.symbol }}</span>
-          <span class="ticker-price">{{ item.price }}</span>
-          <span :class="['ticker-change',item.chg>=0?'up':'down']">{{ item.chg>=0?'+':'' }}{{ item.chg }}%</span>
-        </span>
-      </template>
-      <!-- Duplicate for seamless loop -->
-      <template v-for="(item,i) in tickerData" :key="'dup'+i">
-        <span class="ticker-item">
-          <span class="ticker-icon">{{ item.icon }}</span>
-          <span style="color:var(--muted);font-size:11px;margin-right:2px">{{ item.symbol }}</span>
-          <span class="ticker-price">{{ item.price }}</span>
-          <span :class="['ticker-change',item.chg>=0?'up':'down']">{{ item.chg>=0?'+':'' }}{{ item.chg }}%</span>
-        </span>
-      </template>
-    </div>
-  </div>
 
   <!-- ===== SUMMARY ===== -->
   <div class="summary-grid section-records section-stats section-data">
@@ -2087,10 +2087,17 @@ setup(){
     {symbol:'BTC',icon:'₿',source:'binance',pair:'BTCUSDT',decimals:0},
     {symbol:'ETH',icon:'Ξ',source:'binance',pair:'ETHUSDT',decimals:0},
     {symbol:'SOL',icon:'◎',source:'binance',pair:'SOLUSDT',decimals:1},
+    {symbol:'BNB',icon:'🟡',source:'binance',pair:'BNBUSDT',decimals:1},
+    {symbol:'XRP',icon:'💧',source:'binance',pair:'XRPUSDT',decimals:3},
+    {symbol:'ADA',icon:'🔵',source:'binance',pair:'ADAUSDT',decimals:3},
+    {symbol:'DOGE',icon:'🐕',source:'binance',pair:'DOGEUSDT',decimals:4},
     {symbol:'NVDA',icon:'📈',source:'yahoo',pair:'NVDA',decimals:1},
     {symbol:'Gold',icon:'🥇',source:'yahoo',pair:'GC=F',decimals:0},
     {symbol:'Silver',icon:'🥈',source:'yahoo',pair:'SI=F',decimals:1},
     {symbol:'SPX',icon:'💹',source:'yahoo',pair:'^GSPC',decimals:0},
+    {symbol:'NASDAQ',icon:'📊',source:'yahoo',pair:'^IXIC',decimals:0},
+    {symbol:'USOIL',icon:'🛢',source:'yahoo',pair:'CL=F',decimals:1},
+    {symbol:'VIX',icon:'⚡',source:'yahoo',pair:'^VIX',decimals:1},
   ]
   // Track last price for change calculation
   let tickerPrev={}
