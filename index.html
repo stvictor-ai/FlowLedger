@@ -635,6 +635,15 @@ tr.row-unmatched td{opacity:.35}
 @media(max-width:680px){
   .ticker-item{font-size:11px;padding:4px 10px}
 }
+.ticker-picker{
+  position:fixed;inset:0;z-index:310;background:rgba(0,0,0,.5);
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.ticker-picker-box{
+  background:var(--panel);border:1px solid var(--border-light);
+  border-radius:18px 18px 0 0;width:100%;max-width:520px;max-height:75vh;
+  overflow-y:auto;padding:20px;animation:slideUp .3s ease;
+}
 
 /* ===== ASSET CARD ===== */
 .asset-card{min-width:120px}
@@ -687,8 +696,9 @@ tr.row-unmatched td{opacity:.35}
   <div v-if="toast.show" :class="['toast',toast.type]">{{ toast.message }}</div>
 
   <!-- ===== PRICE TICKER ===== -->
-  <div class="ticker-bar" v-if="tickerData.length">
-    <div class="ticker-track">
+  <div class="ticker-bar" v-if="tickerData.length" style="display:flex;align-items:center;gap:0">
+    <button class="btn btn-ghost btn-xs" @click="showTickerPick=!showTickerPick" style="flex-shrink:0;margin-left:8px;font-size:16px;min-width:32px;min-height:32px;border-radius:8px;z-index:11" title="自选行情">⚙</button>
+    <div class="ticker-track" style="flex:1">
       <template v-for="(item,i) in tickerData" :key="i">
         <span class="ticker-item">
           <span class="ticker-icon">{{ item.icon }}</span>
@@ -705,6 +715,19 @@ tr.row-unmatched td{opacity:.35}
           <span :class="['ticker-change',item.chg>=0?'up':'down']">{{ item.chg>=0?'+':'' }}{{ item.chg }}%</span>
         </span>
       </template>
+    </div>
+    <!-- Ticker Picker -->
+    <div v-if="showTickerPick" class="ticker-picker" @click.self="showTickerPick=false">
+      <div class="ticker-picker-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><strong style="font-size:15px">自选行情</strong><button class="modal-close" @click="showTickerPick=false">&times;</button></div>
+        <div v-for="cat in tickerCategories" :key="cat.name" style="margin-bottom:12px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">{{ cat.name }}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            <span v-for="t in cat.items" :key="t.symbol" :class="['chip',{active:tickerSelected.includes(t.symbol)}]" @click="toggleTicker(t.symbol)" style="cursor:pointer;font-size:11px;padding:4px 8px">{{ t.icon }} {{ t.symbol }}</span>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" @click="showTickerPick=false" style="width:100%">完成</button>
+      </div>
     </div>
   </div>
 
@@ -2083,32 +2106,76 @@ setup(){
 
   // Price Ticker
   const tickerData=ref([])
+  const showTickerPick=ref(false)
+  const TICKER_DEFAULT=['BTC','ETH','SOL','NVDA','AAPL','TSLA','SPX','NASDAQ','Gold','USOIL','Tencent','Kweichow']
+  const TICKER_PICK_K='flowledger_ticker_pick'
+  function loadTickerPick(){
+    try{const r=localStorage.getItem(TICKER_PICK_K);if(r)return JSON.parse(r)}catch(e){}
+    return [...TICKER_DEFAULT]
+  }
+  function saveTickerPick(){localStorage.setItem(TICKER_PICK_K,JSON.stringify(tickerSelected.value))}
+  const tickerSelected=ref(loadTickerPick())
+  function toggleTicker(sym){
+    const i=tickerSelected.value.indexOf(sym)
+    if(i>=0)tickerSelected.value.splice(i,1);else tickerSelected.value.push(sym)
+    saveTickerPick();fetchTickerPrices()
+  }
+  const tickerCategories=computed(()=>{
+    const cats=['加密','美股','港股','大A','指数','商品']
+    return cats.map(name=>{
+      const items=TICKER_LIST.filter(t=>t.cat===name)
+      return{name,items}
+    }).filter(c=>c.items.length)
+  })
   const TICKER_LIST=[
-    {symbol:'BTC',icon:'₿',source:'binance',pair:'BTCUSDT',decimals:0},
-    {symbol:'ETH',icon:'Ξ',source:'binance',pair:'ETHUSDT',decimals:0},
-    {symbol:'SOL',icon:'◎',source:'binance',pair:'SOLUSDT',decimals:1},
-    {symbol:'BNB',icon:'🟡',source:'binance',pair:'BNBUSDT',decimals:1},
-    {symbol:'XRP',icon:'💧',source:'binance',pair:'XRPUSDT',decimals:3},
-    {symbol:'ADA',icon:'🔵',source:'binance',pair:'ADAUSDT',decimals:3},
-    {symbol:'DOGE',icon:'🐕',source:'binance',pair:'DOGEUSDT',decimals:4},
-    {symbol:'NVDA',icon:'📈',source:'yahoo',pair:'NVDA',decimals:1},
-    {symbol:'Gold',icon:'🥇',source:'yahoo',pair:'GC=F',decimals:0},
-    {symbol:'Silver',icon:'🥈',source:'yahoo',pair:'SI=F',decimals:1},
-    {symbol:'SPX',icon:'💹',source:'yahoo',pair:'^GSPC',decimals:0},
-    {symbol:'NASDAQ',icon:'📊',source:'yahoo',pair:'^IXIC',decimals:0},
-    {symbol:'USOIL',icon:'🛢',source:'yahoo',pair:'CL=F',decimals:1},
-    {symbol:'VIX',icon:'⚡',source:'yahoo',pair:'^VIX',decimals:1},
+    // Crypto — Binance
+    {symbol:'BTC',icon:'₿',source:'binance',pair:'BTCUSDT',decimals:0,cat:'加密'},
+    {symbol:'ETH',icon:'Ξ',source:'binance',pair:'ETHUSDT',decimals:0,cat:'加密'},
+    {symbol:'SOL',icon:'◎',source:'binance',pair:'SOLUSDT',decimals:1,cat:'加密'},
+    {symbol:'BNB',icon:'🟡',source:'binance',pair:'BNBUSDT',decimals:1,cat:'加密'},
+    {symbol:'XRP',icon:'💧',source:'binance',pair:'XRPUSDT',decimals:3,cat:'加密'},
+    {symbol:'ADA',icon:'🔵',source:'binance',pair:'ADAUSDT',decimals:3,cat:'加密'},
+    {symbol:'DOGE',icon:'🐕',source:'binance',pair:'DOGEUSDT',decimals:4,cat:'加密'},
+    // US Stocks — Yahoo
+    {symbol:'NVDA',icon:'🟢',source:'yahoo',pair:'NVDA',decimals:1,cat:'美股'},
+    {symbol:'AAPL',icon:'🍎',source:'yahoo',pair:'AAPL',decimals:1,cat:'美股'},
+    {symbol:'MSFT',icon:'💻',source:'yahoo',pair:'MSFT',decimals:1,cat:'美股'},
+    {symbol:'TSLA',icon:'🚗',source:'yahoo',pair:'TSLA',decimals:1,cat:'美股'},
+    {symbol:'GOOGL',icon:'🔍',source:'yahoo',pair:'GOOGL',decimals:1,cat:'美股'},
+    {symbol:'AMZN',icon:'📦',source:'yahoo',pair:'AMZN',decimals:1,cat:'美股'},
+    {symbol:'META',icon:'👤',source:'yahoo',pair:'META',decimals:1,cat:'美股'},
+    {symbol:'AMD',icon:'🔴',source:'yahoo',pair:'AMD',decimals:1,cat:'美股'},
+    // Index & Commodities
+    {symbol:'SPX',icon:'💹',source:'yahoo',pair:'^GSPC',decimals:0,cat:'指数'},
+    {symbol:'NASDAQ',icon:'📊',source:'yahoo',pair:'^IXIC',decimals:0,cat:'指数'},
+    {symbol:'DOW',icon:'🏛',source:'yahoo',pair:'^DJI',decimals:0,cat:'指数'},
+    {symbol:'Gold',icon:'🥇',source:'yahoo',pair:'GC=F',decimals:0,cat:'商品'},
+    {symbol:'Silver',icon:'🥈',source:'yahoo',pair:'SI=F',decimals:1,cat:'商品'},
+    {symbol:'USOIL',icon:'🛢',source:'yahoo',pair:'CL=F',decimals:1,cat:'商品'},
+    {symbol:'VIX',icon:'⚡',source:'yahoo',pair:'^VIX',decimals:1,cat:'指数'},
+    // HK Stocks — Yahoo
+    {symbol:'Tencent',icon:'💬',source:'yahoo',pair:'0700.HK',decimals:1,cat:'港股'},
+    {symbol:'Alibaba',icon:'🛒',source:'yahoo',pair:'9988.HK',decimals:1,cat:'港股'},
+    {symbol:'Meituan',icon:'🍚',source:'yahoo',pair:'3690.HK',decimals:1,cat:'港股'},
+    {symbol:'Xiaomi',icon:'📱',source:'yahoo',pair:'1810.HK',decimals:1,cat:'港股'},
+    // A-Share — Yahoo
+    {symbol:'Kweichow',icon:'🍶',source:'yahoo',pair:'600519.SS',decimals:1,cat:'大A'},
+    {symbol:'CATL',icon:'🔋',source:'yahoo',pair:'300750.SZ',decimals:1,cat:'大A'},
+    {symbol:'BYD',icon:'⚡',source:'yahoo',pair:'002594.SZ',decimals:1,cat:'大A'},
   ]
   // Track last price for change calculation
   let tickerPrev={}
   async function fetchTickerPrices(){
     const results=[]
+    const selected=new Set(tickerSelected.value)
+    const active=TICKER_LIST.filter(t=>selected.has(t.symbol))
+    if(!active.length){tickerData.value=[];return}
     // Binance batch (fast, reliable)
     try{
       const res=await Promise.race([fetch('https://api.binance.com/api/v3/ticker/price'),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
       if(res&&res.ok){
         const data=await res.json()
-        const binanceItems=TICKER_LIST.filter(t=>t.source==='binance')
+        const binanceItems=active.filter(t=>t.source==='binance')
         binanceItems.forEach(t=>{
           const row=data.find(d=>d.symbol===t.pair)
           if(row){
@@ -2122,7 +2189,7 @@ setup(){
       }
     }catch(e){/* binance failed, continue to try yahoo */}
     // Yahoo Finance for stocks/commodities
-    const yahooItems=TICKER_LIST.filter(t=>t.source==='yahoo')
+    const yahooItems=active.filter(t=>t.source==='yahoo')
     for(const t of yahooItems){
       try{
         const res=await Promise.race([fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${t.pair}?interval=1d&range=2d`),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
@@ -3134,7 +3201,7 @@ setup(){
     createSnap,restoreSnap,clearSnaps,undoImportBatch,clearImportBatches,
     saveSyncConfig,syncPush,syncPull,syncAuto,saveRules,saveReviewNote,saveChecklist,loadReview,
     exportExcel,exportJSON,importExcel,importJSON,showToast,dayjs,
-    onboardStep,spotlightStyle,tooltipStyle,nextOnboardStep,skipOnboard,t,lang,tickerData,
+    onboardStep,spotlightStyle,tooltipStyle,nextOnboardStep,skipOnboard,t,lang,tickerData,showTickerPick,tickerSelected,tickerCategories,toggleTicker,
     ASSET_TYPES,getPlatforms,assetColor,showAssetMgr,assetMgrNew,assetMgrNewPlatform,
     addAssetType,removeAssetType,addPlatform,removePlatform,resetAssetCfg}
 }
