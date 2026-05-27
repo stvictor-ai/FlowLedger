@@ -612,6 +612,29 @@ tr.row-unmatched td{opacity:.35}
   .hero-actions .btn{flex:1 1 45%}
 }
 
+/* ===== PRICE TICKER ===== */
+.ticker-bar{
+  overflow:hidden;white-space:nowrap;padding:8px 0;margin-bottom:12px;
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  position:relative;
+}
+.ticker-track{display:inline-flex;animation:ticker-scroll 30s linear infinite}
+.ticker-item{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 16px;
+  font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;
+  border-right:1px solid var(--border);flex-shrink:0;
+}
+.ticker-icon{font-size:16px}
+.ticker-price{color:var(--text)}
+.ticker-change{font-size:11px;font-weight:700}
+.ticker-change.up{color:var(--green)}
+.ticker-change.down{color:var(--red)}
+@keyframes ticker-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ticker-bar:hover .ticker-track{animation-play-state:paused}
+@media(max-width:680px){
+  .ticker-item{font-size:11px;padding:4px 10px}
+}
+
 /* ===== ASSET CARD ===== */
 .asset-card{min-width:120px}
 
@@ -672,7 +695,7 @@ tr.row-unmatched td{opacity:.35}
     </div>
     <div class="hero-actions">
       <button class="theme-toggle" @click="toggleTheme" :title="t('themeToggle')">{{ theme==='dark'?'☀️':'🌙' }}</button>
-      <button class="btn btn-ghost btn-sm" @click="lang=lang==='zh'?'en':'zh';localStorage.setItem('flowledger_lang',lang)" style="font-size:14px;min-width:38px;min-height:38px;display:inline-flex;align-items:center;justify-content:center;background:var(--overlay);border:1px solid var(--border);border-radius:50%">{{ lang==='zh'?'EN':'中' }}</button>
+      <button class="btn btn-ghost btn-sm" @click="lang=lang==='zh'?'en':'zh';localStorage.setItem('flowledger_lang',lang)">🌐 {{ lang==='zh'?'English':'中文' }}</button>
       <button class="btn btn-primary" @click="$refs.xlsxFile.click()">{{ t('importExcel') }}</button>
       <button class="btn btn-ghost" @click="$refs.jsonFile.click()">{{ t('importJSON') }}</button>
       <button class="btn btn-ghost" @click="exportExcel">{{ t('exportExcel') }}</button>
@@ -681,6 +704,29 @@ tr.row-unmatched td{opacity:.35}
       <input ref="jsonFile" type="file" accept=".json" hidden @change="importJSON">
     </div>
   </header>
+
+  <!-- ===== PRICE TICKER ===== -->
+  <div class="ticker-bar section-records section-stats section-data" v-if="tickerData.length">
+    <div class="ticker-track">
+      <template v-for="(item,i) in tickerData" :key="i">
+        <span class="ticker-item">
+          <span class="ticker-icon">{{ item.icon }}</span>
+          <span style="color:var(--muted);font-size:11px;margin-right:2px">{{ item.symbol }}</span>
+          <span class="ticker-price">{{ item.price }}</span>
+          <span :class="['ticker-change',item.chg>=0?'up':'down']">{{ item.chg>=0?'+':'' }}{{ item.chg }}%</span>
+        </span>
+      </template>
+      <!-- Duplicate for seamless loop -->
+      <template v-for="(item,i) in tickerData" :key="'dup'+i">
+        <span class="ticker-item">
+          <span class="ticker-icon">{{ item.icon }}</span>
+          <span style="color:var(--muted);font-size:11px;margin-right:2px">{{ item.symbol }}</span>
+          <span class="ticker-price">{{ item.price }}</span>
+          <span :class="['ticker-change',item.chg>=0?'up':'down']">{{ item.chg>=0?'+':'' }}{{ item.chg }}%</span>
+        </span>
+      </template>
+    </div>
+  </div>
 
   <!-- ===== SUMMARY ===== -->
   <div class="summary-grid section-records section-stats section-data">
@@ -1391,25 +1437,8 @@ const SK='flowledger_entries_v1',SNAP_K='flowledger_snapshots_v1',RULES_K='flowl
 const genId=()=>crypto.randomUUID?crypto.randomUUID():('r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6))
 const clone=o=>JSON.parse(JSON.stringify(o))
 
-// Demo data (fictional) — 新用户首次打开看到的演示数据，清空后可自行录入或导入
-const PRELOADED=[
-  {date:"2025-10-08",amount:10000,rate:"",exchange:"招商证券",note:"沪深300定投",type:"入金",assetType:"大A",currency:"CNY"},
-  {date:"2025-10-15",amount:500,rate:7.18,exchange:"富途",note:"买入苹果AAPL",type:"入金",assetType:"美股",currency:"USD"},
-  {date:"2025-10-22",amount:2000,rate:"",exchange:"币安",note:"首次入金试水",type:"入金",assetType:"加密货币",currency:"CNY"},
-  {date:"2025-11-05",amount:8000,rate:"",exchange:"招商证券",note:"加仓医药ETF",type:"入金",assetType:"大A",currency:"CNY"},
-  {date:"2025-11-12",amount:300,rate:7.15,exchange:"富途",note:"买入NVDA",type:"入金",assetType:"美股",currency:"USD"},
-  {date:"2025-11-20",amount:12000,rate:"",exchange:"招商证券",note:"部分止盈",type:"出金",assetType:"大A",currency:"CNY"},
-  {date:"2025-12-03",amount:1000,rate:"",exchange:"欧易",note:"小额定投BTC",type:"入金",assetType:"加密货币",currency:"CNY"},
-  {date:"2025-12-10",amount:2000,rate:0.91,exchange:"富途",note:"港股腾讯",type:"入金",assetType:"港股",currency:"HKD"},
-  {date:"2025-12-20",amount:5000,rate:"",exchange:"招商证券",note:"年底定投",type:"入金",assetType:"大A",currency:"CNY"},
-  {date:"2026-01-08",amount:1000,rate:7.10,exchange:"富途",note:"补仓AAPL",type:"入金",assetType:"美股",currency:"USD"},
-  {date:"2026-01-15",amount:1500,rate:"",exchange:"币安",note:"",type:"出金",assetType:"加密货币",currency:"CNY"},
-  {date:"2026-02-10",amount:8000,rate:"",exchange:"招商证券",note:"",type:"出金",assetType:"大A",currency:"CNY"},
-  {date:"2026-02-20",amount:500,rate:7.05,exchange:"富途",note:"定投纳指ETF",type:"入金",assetType:"美股",currency:"USD"},
-  {date:"2026-03-05",amount:5000,rate:"",exchange:"招商证券",note:"加仓A500ETF",type:"入金",assetType:"大A",currency:"CNY"},
-  {date:"2026-03-18",amount:1000,rate:"",exchange:"欧易",note:"补仓",type:"入金",assetType:"加密货币",currency:"CNY"},
-  {date:"2026-04-01",amount:3000,rate:0.90,exchange:"富途",note:"港股科技ETF",type:"入金",assetType:"港股",currency:"HKD"},
-]
+// Demo data — 空数组，用户自行录入或从 Gist 拉取
+const PRELOADED=[]
 
 function normDate(s){
   if(s instanceof Date&&!isNaN(s))return s.toISOString().slice(0,10)
@@ -2051,6 +2080,61 @@ setup(){
   const reviewSavedAt=ref('')
   const importPreview=ref(null)
   let toastT=null
+
+  // Price Ticker
+  const tickerData=ref([])
+  const TICKER_LIST=[
+    {symbol:'BTC',icon:'₿',source:'binance',pair:'BTCUSDT',decimals:0},
+    {symbol:'ETH',icon:'Ξ',source:'binance',pair:'ETHUSDT',decimals:0},
+    {symbol:'SOL',icon:'◎',source:'binance',pair:'SOLUSDT',decimals:1},
+    {symbol:'NVDA',icon:'📈',source:'yahoo',pair:'NVDA',decimals:1},
+    {symbol:'Gold',icon:'🥇',source:'yahoo',pair:'GC=F',decimals:0},
+    {symbol:'Silver',icon:'🥈',source:'yahoo',pair:'SI=F',decimals:1},
+    {symbol:'SPX',icon:'💹',source:'yahoo',pair:'^GSPC',decimals:0},
+  ]
+  // Track last price for change calculation
+  let tickerPrev={}
+  async function fetchTickerPrices(){
+    const results=[]
+    // Binance batch (fast, reliable)
+    try{
+      const res=await Promise.race([fetch('https://api.binance.com/api/v3/ticker/price'),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
+      if(res&&res.ok){
+        const data=await res.json()
+        const binanceItems=TICKER_LIST.filter(t=>t.source==='binance')
+        binanceItems.forEach(t=>{
+          const row=data.find(d=>d.symbol===t.pair)
+          if(row){
+            const price=Number(row.price)
+            const prev=tickerPrev[t.symbol]||price
+            const chg=prev?((price-prev)/prev*100).toFixed(1):0
+            tickerPrev[t.symbol]=price
+            results.push({symbol:t.symbol,icon:t.icon,price:price>=1?price.toFixed(t.decimals):price.toPrecision(4),chg:Number(chg)})
+          }
+        })
+      }
+    }catch(e){/* binance failed, continue to try yahoo */}
+    // Yahoo Finance for stocks/commodities
+    const yahooItems=TICKER_LIST.filter(t=>t.source==='yahoo')
+    for(const t of yahooItems){
+      try{
+        const res=await Promise.race([fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${t.pair}?interval=1d&range=2d`),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
+        if(res&&res.ok){
+          const data=await res.json()
+          const result=data?.chart?.result?.[0]
+          if(result){
+            const meta=result.meta
+            const price=meta.regularMarketPrice
+            const prev=meta.previousClose||tickerPrev[t.symbol]||price
+            const chg=prev?((price-prev)/prev*100).toFixed(1):0
+            tickerPrev[t.symbol]=price
+            results.push({symbol:t.symbol,icon:t.icon,price:price>=1?price.toFixed(t.decimals):price.toPrecision(4),chg:Number(chg)})
+          }
+        }
+      }catch(e){/* individual ticker failed */}
+    }
+    if(results.length)tickerData.value=results
+  }
 
   // Onboarding
   const onboardStep=ref(0)
@@ -2979,6 +3063,9 @@ setup(){
     load()
     // Start onboarding after a short delay (wait for DOM)
     setTimeout(()=>startOnboard(),600)
+    // Fetch ticker prices
+    fetchTickerPrices()
+    const tickerTimer=setInterval(fetchTickerPrices,30000)
     // Default expand: current year if has data, otherwise latest year with data
     const curYear=dayjs().format('YYYY')
     const years=[...new Set(entries.value.map(e=>e.date?e.date.slice(0,4):'').filter(Boolean))].sort().reverse()
@@ -3040,7 +3127,7 @@ setup(){
     createSnap,restoreSnap,clearSnaps,undoImportBatch,clearImportBatches,
     saveSyncConfig,syncPush,syncPull,syncAuto,saveRules,saveReviewNote,saveChecklist,loadReview,
     exportExcel,exportJSON,importExcel,importJSON,showToast,dayjs,
-    onboardStep,spotlightStyle,tooltipStyle,nextOnboardStep,skipOnboard,t,lang,
+    onboardStep,spotlightStyle,tooltipStyle,nextOnboardStep,skipOnboard,t,lang,tickerData,
     ASSET_TYPES,getPlatforms,assetColor,showAssetMgr,assetMgrNew,assetMgrNewPlatform,
     addAssetType,removeAssetType,addPlatform,removePlatform,resetAssetCfg}
 }
