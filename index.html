@@ -724,6 +724,7 @@ tr.row-unmatched td{opacity:.35}
     <div class="hero-actions">
       <button class="theme-toggle" @click="toggleTheme" :title="t('themeToggle')">{{ theme==='dark'?'☀️':'🌙' }}</button>
       <button class="btn btn-ghost btn-sm" @click="lang=lang==='zh'?'en':'zh';localStorage.setItem('flowledger_lang',lang)">🌐 {{ lang==='zh'?'English':'中文' }}</button>
+      <button class="btn btn-ghost btn-sm section-stats section-not-records section-not-data" @click="showDashCfg=true">⚙ 看板</button>
       <button class="btn btn-primary" @click="$refs.xlsxFile.click()">{{ t('importExcel') }}</button>
       <button class="btn btn-ghost" @click="$refs.jsonFile.click()">{{ t('importJSON') }}</button>
       <button class="btn btn-ghost" @click="exportExcel">{{ t('exportExcel') }}</button>
@@ -865,7 +866,7 @@ tr.row-unmatched td{opacity:.35}
     </div>
     <!-- Desktop Table (grouped by month) -->
     <div class="table-wrap">
-      <div v-if="!entries.length" style="text-align:center;color:var(--muted);padding:32px">{{ t('emptyStateHint') }}</div>
+      <div v-if="!entries.length" style="text-align:center;color:var(--muted);padding:32px">{{ t('emptyStateHint') }}<br><button class="btn btn-ghost btn-sm mt-12" @click="loadDemo">📊 加载演示数据</button></div>
       <div v-else-if="hasActiveFilter&&!matchCount" style="text-align:center;color:var(--muted);padding:32px">{{ t('noMatch') }}</div>
       <div v-for="g in groupedEntries" :key="g.key">
         <div class="month-group-header" @click="toggleMonth(g.key)">
@@ -953,7 +954,7 @@ tr.row-unmatched td{opacity:.35}
   </section>
 
   <!-- ===== ASSET ALLOCATION OVERVIEW ===== -->
-  <section class="panel section-stats section-not-records section-not-data" v-if="assetTypeRows.length">
+  <section class="panel section-stats section-not-records section-not-data" v-if="dashVisible('assetAlloc')&&assetTypeRows.length">
     <div class="panel-header"><h2>{{ t('assetAlloc') }}</h2><p class="hint">各类资产的投入分布与盈亏情况（折合 CNY）</p></div>
     <div class="stats-layout">
       <div>
@@ -981,7 +982,7 @@ tr.row-unmatched td{opacity:.35}
   </section>
 
   <!-- ===== POSITIONS ===== -->
-  <section class="panel section-stats section-not-records section-not-data">
+  <section class="panel section-stats section-not-records section-not-data" v-if="dashVisible('positions')">
     <div class="panel-header" @click="showPosForm=!showPosForm" style="cursor:pointer">
       <div class="panel-collapse-toggle"><span :class="['arrow',{open:showPosForm}]">&#9654;</span> <div><h2>持仓追踪</h2><p class="hint">持仓 {{ positions.length }} 只 · 总成本 {{ fmt(posSummary.totalCost) }} · 市值 {{ fmt(posSummary.totalValue) }} · <span :style="{color:posSummary.pl>=0?'var(--green)':'var(--red)'}">盈亏 {{ posSummary.pl>=0?'+':'' }}{{ fmt(posSummary.pl) }} ({{ posSummary.plPct }}%)</span></p></div></div>
     </div>
@@ -1030,7 +1031,7 @@ tr.row-unmatched td{opacity:.35}
   </section>
 
   <!-- ===== PERIOD STATS ===== -->
-  <section class="panel section-stats section-not-records section-not-data">
+  <section class="panel section-stats section-not-records section-not-data" v-if="dashVisible('periodStats')">
     <div class="panel-header">
       <h2>盈亏统计</h2>
       <div class="panel-actions">
@@ -1070,7 +1071,7 @@ tr.row-unmatched td{opacity:.35}
   </section>
 
   <!-- ===== INSIGHT & REVIEW ===== -->
-  <section class="panel section-stats section-not-records section-not-data">
+  <section class="panel section-stats section-not-records section-not-data" v-if="dashVisible('insights')">
     <div class="panel-header"><h2>{{ t('insights') }}</h2></div>
     <p class="insight-summary">{{ insightSummary }}</p>
     <ul class="insight-list"><li v-for="(a,i) in insightAdvice" :key="i">{{ a }}</li></ul>
@@ -1100,8 +1101,7 @@ tr.row-unmatched td{opacity:.35}
   </section>
 
   <!-- ===== BEHAVIOR ANALYSIS ===== -->
-  <!-- ===== BEHAVIOR ANALYSIS ===== -->
-  <section class="panel section-stats section-not-records section-not-data" v-if="behaviorAnalysis">
+  <section class="panel section-stats section-not-records section-not-data" v-if="dashVisible('behavior')&&behaviorAnalysis">
     <div class="panel-header"><h2>{{ t('behaviorAnalysis') }}</h2></div>
 
     <!-- Top: Psychology tags + advice (full width) -->
@@ -1357,6 +1357,24 @@ tr.row-unmatched td{opacity:.35}
     </div>
   </div>
 
+  <!-- Dashboard Config Modal -->
+  <div v-if="showDashCfg" class="modal-mask" @click.self="showDashCfg=false">
+    <div class="modal-box" style="border-radius:20px 20px 0 0;max-width:440px">
+      <div class="modal-handle"></div>
+      <div class="modal-head"><div class="modal-title">自定义看板</div><button class="modal-close" @click="showDashCfg=false">&times;</button></div>
+      <div class="modal-body">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px">拖拽排序未支持，先用上下按钮调整。取消勾选的面板将隐藏。</p>
+        <div v-for="key in DASH_DEFAULT" :key="key" style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;border:1px solid var(--border);border-radius:10px;background:var(--card)">
+          <input type="checkbox" :checked="dashVisible(key)" @change="toggleDashPanel(key)" style="accent-color:var(--accent);width:18px;height:18px">
+          <span style="flex:1;font-size:14px;font-weight:600">{{ dashLabels[key] }}</span>
+          <button class="btn btn-ghost btn-xs" @click="moveDashPanel(key,-1)" :disabled="dashPanels.indexOf(key)<=0" style="font-size:16px">▲</button>
+          <button class="btn btn-ghost btn-xs" @click="moveDashPanel(key,1)" :disabled="dashPanels.indexOf(key)>=dashPanels.length-1" style="font-size:16px">▼</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" @click="resetDashboard" style="width:100%;margin-top:8px">恢复默认</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Mobile bottom tabs -->
   <div class="mobile-tabs"><div class="mobile-tabs-inner">
     <div :class="['mob-tab',{active:mobileTab==='records'}]" @click="mobileTab='records'"><span class="mob-tab-icon">📋</span>{{ t('records') }}</div>
@@ -1386,6 +1404,7 @@ const clone=o=>JSON.parse(JSON.stringify(o))
 
 // Demo data — 空数组，用户自行录入或从 Gist 拉取
 const PRELOADED=[]
+const DEMO_ENTRIES=[{date:"2025-10-08",amount:10000,rate:"",exchange:"招商证券",note:"沪深300定投",type:"入金",assetType:"大A",currency:"CNY"},{date:"2025-10-15",amount:500,rate:7.18,exchange:"富途",note:"买入AAPL",type:"入金",assetType:"美股",currency:"USD"},{date:"2025-10-22",amount:2000,rate:"",exchange:"币安",note:"入金试水",type:"入金",assetType:"加密货币",currency:"CNY"},{date:"2025-11-12",amount:300,rate:7.15,exchange:"富途",note:"买入NVDA",type:"入金",assetType:"美股",currency:"USD"},{date:"2025-11-20",amount:12000,rate:"",exchange:"招商证券",note:"部分止盈",type:"出金",assetType:"大A",currency:"CNY"},{date:"2025-12-03",amount:1000,rate:"",exchange:"欧易",note:"定投BTC",type:"入金",assetType:"加密货币",currency:"CNY"},{date:"2026-01-15",amount:1500,rate:"",exchange:"币安",note:"",type:"出金",assetType:"加密货币",currency:"CNY"},{date:"2026-02-10",amount:8000,rate:"",exchange:"招商证券",note:"",type:"出金",assetType:"大A",currency:"CNY"}]
 
 function normDate(s){
   if(s instanceof Date&&!isNaN(s))return s.toISOString().slice(0,10)
@@ -1985,6 +2004,27 @@ setup(){
   const importBatches=ref([])
   const period=ref('month')
   const statTab=ref('asset')
+  // Dashboard customization
+  const DASH_K='flowledger_dashboard'
+  const DASH_DEFAULT=['periodStats','assetAlloc','positions','insights','behavior']
+  function loadDashboard(){try{const r=localStorage.getItem(DASH_K);if(r)return JSON.parse(r)}catch(e){}return [...DASH_DEFAULT]}
+  function saveDashboard(){localStorage.setItem(DASH_K,JSON.stringify(dashPanels.value))}
+  const dashPanels=ref(loadDashboard())
+  const showDashCfg=ref(false)
+  const dashLabels={periodStats:'盈亏统计',assetAlloc:'资产配置',positions:'持仓追踪',insights:'建议与复盘',behavior:'行为分析'}
+  function dashVisible(key){return dashPanels.value.includes(key)}
+  function toggleDashPanel(key){
+    const i=dashPanels.value.indexOf(key)
+    if(i>=0)dashPanels.value.splice(i,1);else dashPanels.value.push(key)
+    saveDashboard()
+  }
+  function moveDashPanel(key,dir){
+    const i=dashPanels.value.indexOf(key);if(i<0)return
+    const j=i+dir;if(j<0||j>=dashPanels.value.length)return
+    const tmp=dashPanels.value[i];dashPanels.value[i]=dashPanels.value[j];dashPanels.value[j]=tmp
+    saveDashboard()
+  }
+  function resetDashboard(){dashPanels.value=[...DASH_DEFAULT];saveDashboard()}
   const mobileTab=ref('records')
   const showMobileAdd=ref(false)
   const showFilters=ref(window.innerWidth>680)
@@ -2511,6 +2551,7 @@ setup(){
     if(e[key]===next)return
     snap();e[key]=next;save()
   }
+  function loadDemo(){if(!confirm('加载演示数据会覆盖当前记录，继续吗？'))return;entries.value=DEMO_ENTRIES.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1);save();showToast('已加载演示数据','success')}
   function clearData(){if(!confirm('确认清空所有记录？'))return;snap();entries.value=[];save();showToast('已清空','success')}
 
   // Period Stats
@@ -3166,12 +3207,13 @@ setup(){
     fmt,amountCNY,parseTags,rowClass,toggleEx,toggleAssetType,toggleTag,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,editingDetail,
     platformSuggestions,editPlatformSuggestions,rateLoading,fetchRate,
     groupedEntries,expandedMonths,toggleMonth,isMonthOpen,expandAllMonths,collapseAllMonths,
-    addEntry,mobileAddEntry,copyLast,removeEntry,updateField,clearData,
+    addEntry,mobileAddEntry,copyLast,removeEntry,updateField,clearData,loadDemo,
     createSnap,restoreSnap,clearSnaps,undoImportBatch,clearImportBatches,
     saveSyncConfig,syncPush,syncPull,syncAuto,saveRules,saveReviewNote,saveChecklist,loadReview,
     exportExcel,exportJSON,importExcel,importJSON,showToast,dayjs,
     onboardStep,spotlightStyle,tooltipStyle,nextOnboardStep,skipOnboard,t,lang,tickerData,showTickerPick,tickerSelected,tickerCategories,toggleTicker,
     positions,posForm,posRows,posSummary,addPosition,removePosition,updatePosition,fetchPosPrices,showPosForm,
+    showDashCfg,dashPanels,dashVisible,toggleDashPanel,moveDashPanel,resetDashboard,DASH_DEFAULT,dashLabels,
     ASSET_TYPES,getPlatforms,assetColor,showAssetMgr,assetMgrNew,assetMgrNewPlatform,
     addAssetType,removeAssetType,addPlatform,removePlatform,resetAssetCfg}
 }
