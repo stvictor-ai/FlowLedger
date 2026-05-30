@@ -730,7 +730,7 @@ tr.row-unmatched td{opacity:.35}
   <!-- ===== HERO ===== -->
   <header class="hero section-records section-stats section-data">
     <div class="hero-info">
-      <p class="kicker">{{ t('appKicker') }}</p>
+      <p class="kicker">{{ t('appKicker') }} <span style="opacity:.45;font-weight:400;margin-left:4px">{{ APP_VERSION }}</span></p>
       <h1>{{ t('appKicker') }}</h1>
       <p class="sub">{{ t('appDesc') }}</p>
       <blockquote class="hero-quote" id="heroQuote"></blockquote>
@@ -976,18 +976,26 @@ tr.row-unmatched td{opacity:.35}
       <div class="form-grid" style="margin-bottom:12px">
         <div class="form-group" style="position:relative">
           <label>{{ t('posSymbol') }}</label>
-          <input class="form-input" v-model="posSymbolSearch" @focus="showSymbolPicker=true" @input="showSymbolPicker=true" :placeholder="t('posSymbolPlaceholder')" @keyup.enter="addPosition">
+          <input class="form-input" v-model="posSymbolSearch" @focus="showSymbolPicker=true" @input="onPosSearchInput" :placeholder="t('posSymbolPlaceholder')">
           <div v-if="showSymbolPicker" class="symbol-picker-dropdown">
             <div class="symbol-picker-list">
-              <div v-for="cat in tickerCategories" :key="cat.name" style="margin-bottom:4px">
-                <div style="font-size:10px;color:var(--dim);padding:4px 10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">{{ cat.name }}</div>
-                <div v-for="t in cat.items.filter(x=>!posSymbolSearch||x.symbol.toLowerCase().includes(posSymbolSearch.toLowerCase())||(x.pair||'').toLowerCase().includes(posSymbolSearch.toLowerCase()))" :key="t.symbol" class="symbol-option" @click="selectTickerSymbol(t)">
-                  <span class="symbol-option-icon">{{ t.icon }}</span><span class="symbol-option-name">{{ t.symbol }}</span><span class="symbol-option-pair">{{ t.pair!==t.symbol?t.pair:'' }}</span>
+              <!-- 搜索结果（东方财富，支持中文名/代码） -->
+              <template v-if="posSymbolSearch.trim()">
+                <div v-if="posSearching" class="symbol-option" style="color:var(--muted)">{{ t('posSearching') }}</div>
+                <div v-else-if="!posSearchResults.length" class="symbol-option" style="color:var(--muted)">{{ t('posNoResult') }}</div>
+                <div v-for="it in posSearchResults" :key="it.secid" class="symbol-option" @click="selectEmResult(it)">
+                  <span class="symbol-option-icon" style="font-size:10px;font-weight:700;color:var(--accent)">{{ it.typeName }}</span>
+                  <span class="symbol-option-name">{{ it.name }}</span>
+                  <span class="symbol-option-pair">{{ it.code }} · {{ it.currency }}</span>
                 </div>
-              </div>
-              <div v-if="posSymbolSearch&&!TICKER_LIST.some(t=>t.symbol.toUpperCase()===posSymbolSearch.toUpperCase().trim())" class="symbol-option" @click="selectCustomSymbol" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px">
-                <span style="font-size:14px;margin-right:8px">➕</span><span>{{ t('posCustom') }}: <strong>{{ posSymbolSearch.toUpperCase().trim() }}</strong></span>
-              </div>
+              </template>
+              <!-- 空时：加密货币快捷入口 -->
+              <template v-else>
+                <div style="font-size:10px;color:var(--dim);padding:4px 10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">{{ t('posCryptoQuick') }}</div>
+                <div v-for="t in cryptoQuickList" :key="t.symbol" class="symbol-option" @click="selectCryptoQuick(t)">
+                  <span class="symbol-option-icon">{{ t.icon }}</span><span class="symbol-option-name">{{ t.symbol }}</span><span class="symbol-option-pair">USDT</span>
+                </div>
+              </template>
             </div>
             <div class="symbol-picker-backdrop" @click="showSymbolPicker=false"></div>
           </div>
@@ -996,7 +1004,7 @@ tr.row-unmatched td{opacity:.35}
         <div class="form-group"><label>{{ t('posQty') }}</label><input class="form-input" type="number" v-model="posForm.qty" :placeholder="t('posQtyPlaceholder')" @keyup.enter="addPosition" step="any"></div>
         <div class="form-group"><label>{{ t('posAvgCost') }}</label><input class="form-input" type="number" v-model="posForm.avgCost" :placeholder="t('posAvgCostPlaceholder')" step="any"></div>
         <div class="form-group"><label>{{ t('posCurrency') }}</label><select class="form-input" v-model="posForm.currency"><option>CNY</option><option>USD</option><option>HKD</option><option>USDT</option></select></div>
-        <div class="form-group" v-if="posForm.pair&&posForm.pair!==posForm.symbol" style="font-size:11px;color:var(--muted);align-self:end;padding-bottom:8px">API: {{ posForm.pair }} · {{ posForm.assetType||'未知' }}</div>
+        <div class="form-group" v-if="posForm.secid" style="font-size:11px;color:var(--muted);align-self:end;padding-bottom:8px">{{ posForm.assetType }} · {{ posForm.secid }}</div>
         <button class="btn btn-primary btn-sm" @click="addPosition" style="align-self:end">{{ t('posAdd') }}</button>
       </div>
       <!-- Positions table (desktop) -->
@@ -1765,7 +1773,7 @@ const I18N={
     posTotalValue:'市值',
     posPL:'盈亏',
     posSymbol:'标的代码',
-    posSymbolPlaceholder:'搜索或选择标的…',
+    posSymbolPlaceholder:'搜名称或代码 如 茅台 / 600519 / 腾讯',
     posName:'名称',
     posNamePlaceholder:'非必填',
     posQty:'持有份额',
@@ -1787,6 +1795,9 @@ const I18N={
     posCustom:'自定义标的',
     posAutoSource:'自动',
     posManualSource:'手动',
+    posSearching:'搜索中…',
+    posNoResult:'无结果，试试代码或英文名',
+    posCryptoQuick:'加密货币（快捷）',
   },
   en:{
     appTitle:'FlowLedger · Investment Ledger & Portfolio',
@@ -2038,7 +2049,7 @@ const I18N={
     posTotalValue:'Market Value',
     posPL:'P&L',
     posSymbol:'Symbol',
-    posSymbolPlaceholder:'Search or select symbol…',
+    posSymbolPlaceholder:'Search name or code, e.g. 600519 / AAPL',
     posName:'Name',
     posNamePlaceholder:'Optional',
     posQty:'Quantity',
@@ -2060,6 +2071,9 @@ const I18N={
     posCustom:'Custom Symbol',
     posAutoSource:'Auto',
     posManualSource:'Manual',
+    posSearching:'Searching…',
+    posNoResult:'No results — try a code or English name',
+    posCryptoQuick:'Crypto (quick)',
   }
 }
 let lang=ref(localStorage.getItem('flowledger_lang')||(navigator.language.startsWith('zh')?'zh':'en'))
@@ -2073,6 +2087,7 @@ function t(key,params){
 
 createApp({
 setup(){
+  const APP_VERSION='v2026.05.30-1' // 每次部署递增末位，方便区分加载到哪一版
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const snapshots=ref([])
@@ -2575,46 +2590,102 @@ setup(){
 
   // Positions (持仓)
   const positions=ref([])
-  const posForm=reactive({symbol:'',name:'',qty:'',avgCost:'',currency:'CNY',assetType:'',pair:'',decimals:2,icon:''})
+  const posForm=reactive({symbol:'',name:'',qty:'',avgCost:'',currency:'CNY',assetType:'',icon:'',source:'eastmoney',secid:''})
   const showPosForm=ref(false)
   const showSymbolPicker=ref(false)
   const posSymbolSearch=ref('')
   const posPrices=ref({})
+  const posSearchResults=ref([])
+  const posSearching=ref(false)
   function findTicker(sym){return TICKER_LIST.find(t=>t.symbol.toUpperCase()===sym.toUpperCase())}
-  function currencyFromTicker(t){return t.source==='binance'?'USDT':t.cat==='港股'?'HKD':t.cat==='大A'?'CNY':'USD'}
-  function selectTickerSymbol(t){
-    posForm.symbol=t.symbol;posForm.name=t.symbol;posForm.icon=t.icon;posForm.pair=t.pair
-    posForm.decimals=t.decimals;posForm.currency=currencyFromTicker(t)
-    posForm.assetType=t.cat
-    posSymbolSearch.value=t.symbol;showSymbolPicker.value=false
+  // 东方财富：市场号 → 币种 / 资产类型
+  const EM_CCY={'0':'CNY','1':'CNY','105':'USD','106':'USD','107':'USD','116':'HKD','153':'USD','155':'USD'}
+  const EM_ASSET={'0':'大A','1':'大A','116':'港股','105':'美股','106':'美股','107':'美股','153':'美股','155':'美股'}
+  function emCurrency(mkt){return EM_CCY[String(mkt)]||'CNY'}
+  function emAsset(mkt,typeName){return EM_ASSET[String(mkt)]||(typeName&&typeName.includes('基金')?'基金':'其他')}
+  // JSONP 搜索（<script> 注入，绕过 CORS；东方财富支持中文名/代码）
+  function emSearch(q){
+    return new Promise(resolve=>{
+      const cb='__em_'+Date.now()+'_'+Math.floor(Math.random()*1e4)
+      const s=document.createElement('script')
+      const timer=setTimeout(()=>{cleanup();resolve([])},6000)
+      function cleanup(){clearTimeout(timer);try{delete window[cb]}catch(_){window[cb]=undefined}s.remove()}
+      window[cb]=data=>{cleanup()
+        const list=(data&&data.QuotationCodeTable&&data.QuotationCodeTable.Data)||[]
+        resolve(list.filter(it=>it.Code&&it.MktNum!=null).map(it=>({
+          code:it.Code,name:it.Name,secid:it.MktNum+'.'+it.Code,
+          currency:emCurrency(it.MktNum),assetType:emAsset(it.MktNum,it.SecurityTypeName),
+          typeName:it.SecurityTypeName||''
+        })))
+      }
+      s.onerror=()=>{cleanup();resolve([])}
+      s.src=`https://searchapi.eastmoney.com/api/suggest/get?input=${encodeURIComponent(q)}&type=14&token=D43BF722C8E33BDC906FB84D85E326E8&count=10&cb=${cb}`
+      document.body.appendChild(s)
+    })
   }
-  function selectCustomSymbol(){
-    const sym=posSymbolSearch.value.trim().toUpperCase()
-    if(!sym)return
-    posForm.symbol=sym;posForm.name='';posForm.icon='';posForm.pair=sym;posForm.decimals=2
-    posForm.currency='USD';posForm.assetType=''
-    showSymbolPicker.value=false
+  // 东方财富取价（直连 push2delay，CORS 开放）
+  async function emPrice(secid){
+    try{
+      const res=await Promise.race([fetch(`https://push2delay.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f57,f58,f170,f59`),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
+      if(!res||!res.ok)return null
+      const d=await res.json();const x=d&&d.data
+      if(!x||x.f43==null)return null
+      return{name:x.f58,price:x.f43/Math.pow(10,x.f59||2),chg:(x.f170||0)/100}
+    }catch(e){return null}
   }
+  let _posSearchTimer=null
+  function onPosSearchInput(){
+    showSymbolPicker.value=true
+    const q=posSymbolSearch.value.trim()
+    clearTimeout(_posSearchTimer)
+    if(!q){posSearchResults.value=[];posSearching.value=false;return}
+    posSearching.value=true
+    _posSearchTimer=setTimeout(async()=>{
+      const r=await emSearch(q)
+      // 仅在输入未变时更新，避免竞态
+      if(posSymbolSearch.value.trim()===q){posSearchResults.value=r;posSearching.value=false}
+    },300)
+  }
+  // 选中东方财富搜索结果
+  function selectEmResult(it){
+    posForm.symbol=it.code;posForm.name=it.name;posForm.icon=''
+    posForm.source='eastmoney';posForm.secid=it.secid
+    posForm.currency=it.currency;posForm.assetType=it.assetType
+    posSymbolSearch.value=`${it.name} ${it.code}`;showSymbolPicker.value=false;posSearchResults.value=[]
+  }
+  // 选中加密货币快捷入口（Binance）
+  function selectCryptoQuick(t){
+    posForm.symbol=t.symbol;posForm.name=t.symbol;posForm.icon=t.icon
+    posForm.source='binance';posForm.secid=''
+    posForm.currency='USDT';posForm.assetType='加密货币'
+    posSymbolSearch.value=t.symbol;showSymbolPicker.value=false;posSearchResults.value=[]
+  }
+  // 加密快捷列表（从 TICKER_LIST 取 binance 源）
+  const cryptoQuickList=computed(()=>TICKER_LIST.filter(t=>t.source==='binance'))
   function loadPositions(){
     try{
       const r=localStorage.getItem(POS_K)
       if(r){
         const raw=JSON.parse(r)
-        // Migrate old positions: add icon/pair/decimals from TICKER_LIST
+        // 迁移旧持仓：推断 source。加密(Binance)保留，其余视为待重选的股票
         positions.value=raw.map(p=>{
+          if(p.source==='eastmoney'||p.source==='binance')return p // 已是新格式
           const t=findTicker(p.symbol)
-          if(t)return{...p,icon:p.icon||t.icon,pair:p.pair||t.pair,decimals:p.decimals??t.decimals,currency:p.currency||currencyFromTicker(t),assetType:p.assetType||t.cat}
-          return{...p,icon:p.icon||'',pair:p.pair||p.symbol,decimals:p.decimals??2}
+          if(t&&t.source==='binance')return{...p,source:'binance',secid:'',currency:p.currency||'USDT',assetType:p.assetType||'加密货币'}
+          // 旧的股票持仓（Yahoo，本就取不到价）→ 标记 eastmoney 但无 secid，需用户重新选标的
+          return{...p,source:'eastmoney',secid:p.secid||''}
         })
       }
     }catch(e){}
   }
   function savePositions(){localStorage.setItem(POS_K,JSON.stringify(positions.value))}
   function addPosition(){
-    if(!posForm.symbol.trim()||!Number(posForm.qty)){showToast('请输入标的和数量','error');return}
+    if(!posForm.symbol.trim()||!Number(posForm.qty)){showToast('请选择标的并填写份额','error');return}
     const avg=posForm.avgCost===''||posForm.avgCost==null?null:Number(posForm.avgCost)
-    positions.value.push({id:genId(),symbol:posForm.symbol.trim().toUpperCase(),name:posForm.name.trim()||posForm.symbol.trim(),icon:posForm.icon,qty:Number(posForm.qty),avgCost:avg,currency:posForm.currency,assetType:posForm.assetType,pair:posForm.pair,decimals:posForm.decimals})
-    savePositions();posForm.symbol='';posForm.name='';posForm.qty='';posForm.avgCost='';posForm.icon='';posForm.pair='';posSymbolSearch.value='';showPosForm.value=false;showToast('已添加持仓','success')
+    positions.value.push({id:genId(),symbol:posForm.symbol.trim(),name:posForm.name.trim()||posForm.symbol.trim(),icon:posForm.icon,qty:Number(posForm.qty),avgCost:avg,currency:posForm.currency,assetType:posForm.assetType,source:posForm.source,secid:posForm.secid})
+    savePositions()
+    posForm.symbol='';posForm.name='';posForm.qty='';posForm.avgCost='';posForm.icon='';posForm.secid='';posForm.source='eastmoney'
+    posSymbolSearch.value='';posSearchResults.value=[];showPosForm.value=false;showToast('已添加持仓','success')
   }
   function removePosition(id){if(!confirm('确定删除持仓？'))return;positions.value=positions.value.filter(p=>p.id!==id);savePositions();showToast('已删除','success')}
   function updatePosition(id,key,val){const p=positions.value.find(x=>x.id===id);if(!p)return;if(key==='qty'||key==='avgCost')p[key]=Number(val)||0;else p[key]=val;savePositions()}
@@ -2626,7 +2697,7 @@ setup(){
       const r=fx(p.currency)
       const hasCost=p.avgCost!=null
       const cost=p.qty*(hasCost?p.avgCost:0)*r
-      const price=posPrices.value[p.symbol]
+      const price=posPrices.value[posKey(p)]
       const value=price?p.qty*price*r:(hasCost?cost:0)
       if(hasCost){totalCost+=cost;hasCostCount++}
       totalValue+=value
@@ -2637,58 +2708,33 @@ setup(){
     const r=fx(p.currency)
     const hasCost=p.avgCost!=null
     const cost=p.qty*(hasCost?p.avgCost:0)*r      // CNY 折合
-    const price=posPrices.value[p.symbol]          // 原币种现价
+    const price=posPrices.value[posKey(p)]         // 原币种现价
     const value=price?p.qty*price*r:0              // CNY 市值
     const pl=value-cost                            // CNY 盈亏
     return{...p,cost,price:price||0,value,pl,hasCost,plPct:hasCost&&cost?((pl/cost)*100).toFixed(1):'0'}
   }))
-  // Also update posPrices from ticker data cache
-  function syncPosFromTicker(){
-    if(!tickerData.value.length)return
-    let changed=false
-    tickerData.value.forEach(t=>{
-      if(!posPrices.value[t.symbol]||posPrices.value[t.symbol]!==Number(t.price)){
-        posPrices.value[t.symbol]=Number(t.price);changed=true
-      }
-    })
-    if(changed)posPrices.value={...posPrices.value}
-  }
+  // 持仓价格缓存的 key：股票用 secid，加密用 symbol
+  function posKey(p){return p.source==='eastmoney'?p.secid:p.symbol}
   async function fetchPosPrices(){
     if(!positions.value.length)return
-    // First, copy from ticker cache (fast)
-    syncPosFromTicker()
     const results={}
-    // Positions with known pair+source from TICKER_LIST
-    const known=positions.value.filter(p=>p.pair&&p.pair!==p.symbol)
-    const unknown=positions.value.filter(p=>!p.pair||p.pair===p.symbol)
-    // Single Binance batch covers both known pairs and custom symbol guesses
-    const binKnown=known.filter(p=>findTicker(p.symbol)?.source==='binance')
-    const binGuess=unknown.filter(p=>!results[p.symbol])
-    if(binKnown.length||binGuess.length){
+    // 加密：Binance 批量
+    const cryptoPos=positions.value.filter(p=>p.source==='binance'&&p.symbol)
+    if(cryptoPos.length){
       try{
         const res=await Promise.race([fetch('https://api.binance.com/api/v3/ticker/price'),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
         if(res&&res.ok){
           const data=await res.json()
-          binKnown.forEach(p=>{const row=data.find(d=>d.symbol===p.pair);if(row)results[p.symbol]=Number(row.price)})
-          binGuess.forEach(p=>{if(!results[p.symbol]){const row=data.find(d=>d.symbol===p.symbol.toUpperCase()+'USDT');if(row)results[p.symbol]=Number(row.price)}})
+          cryptoPos.forEach(p=>{const row=data.find(d=>d.symbol===p.symbol.toUpperCase()+'USDT');if(row)results[p.symbol]=Number(row.price)})
         }
       }catch(e){}
     }
-    // Yahoo for known yahoo positions (parallel)
-    const yahooKnown=known.filter(p=>!results[p.symbol]&&findTicker(p.symbol)?.source==='yahoo')
-    await Promise.all(yahooKnown.map(async p=>{
-      try{
-        const res=await Promise.race([fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${p.pair}?interval=1d&range=2d`),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
-        if(res&&res.ok){const data=await res.json();const price=data?.chart?.result?.[0]?.meta?.regularMarketPrice;if(price)results[p.symbol]=Number(price)}
-      }catch(e){}
+    // 股票/基金：东方财富并行取价
+    const emPos=positions.value.filter(p=>p.source==='eastmoney'&&p.secid)
+    await Promise.all(emPos.map(async p=>{
+      const r=await emPrice(p.secid)
+      if(r&&r.price)results[p.secid]=r.price
     }))
-    // Custom symbols not resolved by Binance: try Yahoo directly
-    for(const p of unknown.filter(p=>!results[p.symbol])){
-      try{
-        const res=await Promise.race([fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${p.symbol}?interval=1d&range=1d`),new Promise((_,r)=>setTimeout(()=>r(null),3000))])
-        if(res&&res.ok){const data=await res.json();const price=data?.chart?.result?.[0]?.meta?.regularMarketPrice;if(price)results[p.symbol]=Number(price)}
-      }catch(e){}
-    }
     if(Object.keys(results).length)Object.assign(posPrices.value,results)
   }
 
@@ -3455,7 +3501,7 @@ setup(){
     setInterval(()=>{if(!document.hidden)backgroundPull()},120000)
   })
 
-  return{entries,sortedEntries,snapshots,importBatches,period,statTab,mobileTab,showMobileAdd,showFilters,editingEntry,showSync,theme,toggleTheme,trendChart,weekdayChart,pieChart,pieMode,assetColor,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,
+  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,mobileTab,showMobileAdd,showFilters,editingEntry,showSync,theme,toggleTheme,trendChart,weekdayChart,pieChart,pieMode,assetColor,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,holdingsValue,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allMonths,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,exchangeRows,assetTypeRows,tagRows,periodCompare,largeTxList,insightSummary,insightAdvice,
     behaviorAnalysis,psychoTags,behaviorAdvice,
@@ -3468,7 +3514,7 @@ setup(){
     saveSyncConfig,syncPush,syncPull,syncAuto,saveRules,saveReviewNote,saveChecklist,loadReview,
     exportExcel,exportJSON,importExcel,importJSON,showToast,dayjs,
     onboardStep,spotlightStyle,tooltipStyle,nextOnboardStep,skipOnboard,t,lang,tickerData,showTickerPick,tickerSelected,tickerCategories,toggleTicker,
-    positions,posForm,posRows,posSummary,addPosition,removePosition,updatePosition,fetchPosPrices,showPosForm,posSymbolSearch,showSymbolPicker,selectTickerSymbol,selectCustomSymbol,
+    positions,posForm,posRows,posSummary,addPosition,removePosition,updatePosition,fetchPosPrices,showPosForm,posSymbolSearch,showSymbolPicker,posSearchResults,posSearching,onPosSearchInput,selectEmResult,selectCryptoQuick,cryptoQuickList,
     showDashCfg,dashPanels,dashVisible,toggleDashPanel,moveDashPanel,resetDashboard,DASH_DEFAULT,dashLabels,
     ASSET_TYPES,getPlatforms,assetColor,showAssetMgr,assetMgrNew,assetMgrNewPlatform,
     addAssetType,removeAssetType,addPlatform,removePlatform,resetAssetCfg}
