@@ -1,7 +1,7 @@
 {
-  "name": "FlowLedger 投记 · 个人投资记账",
+  "name": "FlowLedger 投记 · 个人投资记账与资产追踪",
   "short_name": "投记",
-  "description": "个人全渠道投资出入金管理工具，支持大A、美股、港股、加密货币等多资产记录、盈亏统计与行为分析",
+  "description": "个人投资记账与资产追踪工具：记录出入金、追踪持仓实时市值、看清真实净值与盈亏，支持大A、美股、港股、加密货币等多资产，含行为分析与多端同步",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a0d12",

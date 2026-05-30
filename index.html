@@ -129,6 +129,7 @@ button{cursor:pointer;border:none;background:none}
 .summary-card:nth-child(4)::after{background:var(--blue);opacity:.6}
 .summary-card .label{color:var(--muted);font-size:11px;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
 .summary-card .value{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.summary-card .sub-metric{font-size:13px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
 
 /* ===== PANEL ===== */
 .panel{
@@ -452,6 +453,19 @@ tr.row-unmatched td{opacity:.35}
   font-size:18px;cursor:pointer;transition:all .2s;flex-shrink:0;
 }
 .theme-toggle:hover{border-color:var(--accent);background:var(--accent-dim)}
+.sync-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);align-self:center;margin:0 4px;cursor:default;flex-shrink:0}
+.sync-dot.syncing{background:var(--accent);animation:syncPulse .8s ease-in-out infinite alternate}
+.sync-dot.stale{background:#f59e0b}
+@keyframes syncPulse{from{opacity:.4;transform:scale(.8)}to{opacity:1;transform:scale(1.2)}}
+/* Symbol Picker Dropdown */
+.symbol-picker-dropdown{position:absolute;top:100%;left:0;right:0;z-index:100}
+.symbol-picker-backdrop{position:fixed;inset:0;z-index:-1}
+.symbol-picker-list{position:relative;z-index:1;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);max-height:280px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.symbol-option{display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;font-size:12px;transition:background .15s}
+.symbol-option:hover{background:var(--overlay)}
+.symbol-option-icon{font-size:15px;width:22px;text-align:center;flex-shrink:0}
+.symbol-option-name{font-weight:600;min-width:60px}
+.symbol-option-pair{font-size:10px;color:var(--dim);margin-left:auto}
 
 /* ===== COLLAPSIBLE PANEL ===== */
 .panel-collapse-toggle{
@@ -724,6 +738,7 @@ tr.row-unmatched td{opacity:.35}
     <div class="hero-actions">
       <button class="theme-toggle" @click="toggleTheme" :title="t('themeToggle')">{{ theme==='dark'?'☀️':'🌙' }}</button>
       <button class="btn btn-ghost btn-sm" @click="lang=lang==='zh'?'en':'zh';localStorage.setItem('flowledger_lang',lang)">🌐 {{ lang==='zh'?'English':'中文' }}</button>
+      <span v-if="syncCfg.token" class="sync-dot" :class="{syncing:syncing,stale:!syncing&&lastChangeAt>lastSyncedAt}" :title="syncStatus"></span>
       <button class="btn btn-ghost btn-sm section-stats section-not-records section-not-data" @click="showDashCfg=true">⚙ 看板</button>
       <button class="btn btn-primary" @click="$refs.xlsxFile.click()">{{ t('importExcel') }}</button>
       <button class="btn btn-ghost" @click="$refs.jsonFile.click()">{{ t('importJSON') }}</button>
@@ -734,12 +749,12 @@ tr.row-unmatched td{opacity:.35}
     </div>
   </header>
 
-  <!-- ===== SUMMARY ===== -->
+  <!-- ===== SUMMARY (统一净值视角) ===== -->
   <div class="summary-grid section-records section-stats section-data">
     <div class="summary-card"><p class="label">{{ t('totalIn') }}</p><p class="value text-red">{{ fmt(totalIn) }}</p></div>
     <div class="summary-card"><p class="label">{{ t('totalOut') }}</p><p class="value text-green">{{ fmt(totalOut) }}</p></div>
-    <div class="summary-card"><p class="label">净盈亏</p><p :class="['value', netPL>=0?'text-green':'text-red']">{{ (netPL>=0?'+':'')+fmt(netPL) }}</p></div>
-    <div class="summary-card"><p class="label">{{ t('roi') }}</p><p :class="['value', roi>=1?'text-green':'text-red']">{{ (roi*100).toFixed(1) }}%</p></div>
+    <div class="summary-card"><p class="label">{{ t('holdingsValue') }}</p><p class="value">{{ fmt(holdingsValue) }}</p></div>
+    <div class="summary-card"><p class="label">{{ t('trueReturn') }}</p><p :class="['value', trueReturn>=0?'text-green':'text-red']">{{ (trueReturn>=0?'+':'')+fmt(trueReturn) }}</p><p class="sub-metric" :class="trueROI>=0?'text-green':'text-red'">{{ (trueROI*100).toFixed(1) }}%</p></div>
   </div>
 
   <!-- ===== BUDGET BAR ===== -->
@@ -984,49 +999,68 @@ tr.row-unmatched td{opacity:.35}
   <!-- ===== POSITIONS ===== -->
   <section class="panel section-stats section-not-records section-not-data" v-if="dashVisible('positions')">
     <div class="panel-header" @click="showPosForm=!showPosForm" style="cursor:pointer">
-      <div class="panel-collapse-toggle"><span :class="['arrow',{open:showPosForm}]">&#9654;</span> <div><h2>持仓追踪</h2><p class="hint">持仓 {{ positions.length }} 只 · 总成本 {{ fmt(posSummary.totalCost) }} · 市值 {{ fmt(posSummary.totalValue) }} · <span :style="{color:posSummary.pl>=0?'var(--green)':'var(--red)'}">盈亏 {{ posSummary.pl>=0?'+':'' }}{{ fmt(posSummary.pl) }} ({{ posSummary.plPct }}%)</span></p></div></div>
+      <div class="panel-collapse-toggle"><span :class="['arrow',{open:showPosForm}]">&#9654;</span> <div><h2>{{ t('posTitle') }}</h2><p class="hint">{{ t('posCount',{n:positions.length}) }}<span v-if="positions.length"> · {{ t('posTotalCost') }} {{ fmt(posSummary.totalCost) }} · {{ t('posTotalValue') }} {{ fmt(posSummary.totalValue) }} · <span :style="{color:posSummary.pl>=0?'var(--green)':'var(--red)'}">{{ t('posPL') }} {{ posSummary.pl>=0?'+':'' }}{{ fmt(posSummary.pl) }} ({{ posSummary.plPct }}%)</span></span></p></div></div>
     </div>
     <div :class="['panel-collapse-body',{collapsed:!showPosForm}]">
       <!-- Add form -->
       <div class="form-grid" style="margin-bottom:12px">
-        <div class="form-group"><label>标的代码</label><input class="form-input" v-model="posForm.symbol" placeholder="如 BTC / NVDA / 0700.HK" @keyup.enter="addPosition"></div>
-        <div class="form-group"><label>名称</label><input class="form-input" v-model="posForm.name" placeholder="非必填，默认取代码"></div>
-        <div class="form-group"><label>持有数量</label><input class="form-input" type="number" v-model="posForm.qty" placeholder="如 0.5"></div>
-        <div class="form-group"><label>成本均价</label><input class="form-input" type="number" v-model="posForm.avgCost" placeholder="每单位买入均价"></div>
-        <div class="form-group"><label>币种</label><select class="form-input" v-model="posForm.currency"><option>CNY</option><option>USD</option><option>HKD</option><option>USDT</option></select></div>
-        <div class="form-group"><label>价格源</label><select class="form-input" v-model="posForm.source"><option value="auto">自动获取</option><option value="manual">手动输入</option></select></div>
-        <button class="btn btn-primary btn-sm" @click="addPosition" style="align-self:end">添加持仓</button>
+        <div class="form-group" style="position:relative">
+          <label>{{ t('posSymbol') }}</label>
+          <input class="form-input" v-model="posSymbolSearch" @focus="showSymbolPicker=true" @input="showSymbolPicker=true" :placeholder="t('posSymbolPlaceholder')" @keyup.enter="addPosition">
+          <div v-if="showSymbolPicker" class="symbol-picker-dropdown">
+            <div class="symbol-picker-list">
+              <div v-for="cat in tickerCategories" :key="cat.name" style="margin-bottom:4px">
+                <div style="font-size:10px;color:var(--dim);padding:4px 10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">{{ cat.name }}</div>
+                <div v-for="t in cat.items.filter(x=>!posSymbolSearch||x.symbol.toLowerCase().includes(posSymbolSearch.toLowerCase())||(x.pair||'').toLowerCase().includes(posSymbolSearch.toLowerCase()))" :key="t.symbol" class="symbol-option" @click="selectTickerSymbol(t)">
+                  <span class="symbol-option-icon">{{ t.icon }}</span><span class="symbol-option-name">{{ t.symbol }}</span><span class="symbol-option-pair">{{ t.pair!==t.symbol?t.pair:'' }}</span>
+                </div>
+              </div>
+              <div v-if="posSymbolSearch&&!TICKER_LIST.some(t=>t.symbol.toUpperCase()===posSymbolSearch.toUpperCase().trim())" class="symbol-option" @click="selectCustomSymbol" style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px">
+                <span style="font-size:14px;margin-right:8px">➕</span><span>{{ t('posCustom') }}: <strong>{{ posSymbolSearch.toUpperCase().trim() }}</strong></span>
+              </div>
+            </div>
+            <div class="symbol-picker-backdrop" @click="showSymbolPicker=false"></div>
+          </div>
+        </div>
+        <div class="form-group"><label>{{ t('posName') }}</label><input class="form-input" v-model="posForm.name" :placeholder="t('posNamePlaceholder')"></div>
+        <div class="form-group"><label>{{ t('posQty') }}</label><input class="form-input" type="number" v-model="posForm.qty" :placeholder="t('posQtyPlaceholder')" @keyup.enter="addPosition" step="any"></div>
+        <div class="form-group"><label>{{ t('posAvgCost') }}</label><input class="form-input" type="number" v-model="posForm.avgCost" :placeholder="t('posAvgCostPlaceholder')" step="any"></div>
+        <div class="form-group"><label>{{ t('posCurrency') }}</label><select class="form-input" v-model="posForm.currency"><option>CNY</option><option>USD</option><option>HKD</option><option>USDT</option></select></div>
+        <div class="form-group" v-if="posForm.pair&&posForm.pair!==posForm.symbol" style="font-size:11px;color:var(--muted);align-self:end;padding-bottom:8px">API: {{ posForm.pair }} · {{ posForm.assetType||'未知' }}</div>
+        <button class="btn btn-primary btn-sm" @click="addPosition" style="align-self:end">{{ t('posAdd') }}</button>
       </div>
       <!-- Positions table (desktop) -->
       <div class="table-wrap" v-if="positions.length">
-        <table><thead><tr><th>标的</th><th style="text-align:right">数量</th><th style="text-align:right">成本价</th><th style="text-align:right">现价</th><th style="text-align:right">市值</th><th style="text-align:right">盈亏</th><th style="text-align:center">操作</th></tr></thead>
+        <table><thead><tr><th>{{ t('posSymbolCol') }}</th><th style="text-align:right">{{ t('posQtyCol') }}</th><th style="text-align:right">{{ t('posAvgCostCol') }}</th><th style="text-align:right">{{ t('posPriceCol') }}</th><th style="text-align:right">{{ t('posValueCol') }} (CNY)</th><th style="text-align:right">{{ t('posPLCol') }} (CNY)</th><th style="text-align:center">{{ t('posActionCol') }}</th></tr></thead>
         <tbody><tr v-for="p in posRows" :key="p.id">
-          <td><strong>{{ p.symbol }}</strong><span v-if="p.name&&p.name!==p.symbol" style="color:var(--muted);margin-left:6px;font-size:11px">{{ p.name }}</span><span style="font-size:10px;color:var(--dim);margin-left:4px">· {{ p.source==='manual'?'✏️':'✅' }}</span></td>
+          <td><span v-if="p.icon" style="margin-right:4px;font-size:14px">{{ p.icon }}</span><strong>{{ p.symbol }}</strong><span v-if="p.name&&p.name!==p.symbol" style="color:var(--muted);margin-left:6px;font-size:11px">{{ p.name }}</span></td>
           <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.qty }}</td>
-          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ fmt(p.avgCost) }}</td>
-          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.price?fmt(p.price):'获取中…' }}</td>
-          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.value?fmt(p.value):'-' }}</td>
-          <td :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:p.pl>=0?'var(--green)':'var(--red)'}">{{ p.pl?(p.pl>=0?'+':'')+fmt(p.pl):'-' }}<br><span style="font-size:10px">{{ p.plPct!='0'?p.plPct+'%':'' }}</span></td>
-          <td style="text-align:center"><button class="btn btn-ghost btn-xs" @click="removePosition(p.id)" style="color:var(--red)">✕</button></td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.hasCost?fmt(p.avgCost):'-' }}<span v-if="p.hasCost&&p.currency!=='CNY'" style="font-size:10px;color:var(--dim);margin-left:3px">{{ p.currency }}</span></td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.price?fmt(p.price):t('posFetching') }}<span v-if="p.price&&p.currency!=='CNY'" style="font-size:10px;color:var(--dim);margin-left:3px">{{ p.currency }}</span></td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600">{{ p.value?fmt(p.value):'-' }}</td>
+          <td :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:p.pl>=0?'var(--green)':'var(--red)'}">
+            <template v-if="p.hasCost">{{ p.pl>=0?'+':'' }}{{ fmt(p.pl) }}</template><template v-else>-</template><br><span style="font-size:10px">{{ p.hasCost&&p.plPct!='0'?p.plPct+'%':'' }}</span>
+          </td>
+          <td style="text-align:center"><button class="btn btn-ghost btn-xs" @click="removePosition(p.id)" style="color:var(--red)" :title="t('posManualSource')">✕</button></td>
         </tr></tbody></table>
       </div>
       <!-- Position cards (mobile) -->
       <div class="record-cards" v-if="positions.length">
         <div v-for="p in posRows" :key="p.id" class="record-card" style="cursor:default">
           <div class="record-card-top">
-            <span class="record-card-date">{{ p.symbol }} <span style="font-size:10px;color:var(--dim)">· {{ p.source==='manual'?'✏️手动':'✅自动' }}</span></span>
+            <span class="record-card-date"><span v-if="p.icon">{{ p.icon }}</span> {{ p.symbol }} <span v-if="p.name&&p.name!==p.symbol" style="font-size:10px;color:var(--dim)">{{ p.name }}</span></span>
             <button class="record-card-del" @click="removePosition(p.id)">✕</button>
           </div>
-          <div style="font-size:11px;color:var(--muted)">{{ p.name!==p.symbol?p.name+' · ':'' }}{{ p.qty }} 单位 × {{ fmt(p.avgCost) }} = 成本 {{ fmt(p.cost) }}</div>
+          <div style="font-size:11px;color:var(--muted)">{{ p.qty }} {{ t('posQtyCol') }}<span v-if="p.hasCost"> × {{ fmt(p.avgCost) }}{{ p.currency!=='CNY'?' '+p.currency:'' }} = {{ t('posTotalCost') }} {{ fmt(p.cost) }} CNY</span></div>
           <div style="display:flex;gap:12px;margin-top:6px;font-size:12px">
-            <span>现价 <strong>{{ p.price?fmt(p.price):'…' }}</strong></span>
-            <span>市值 <strong>{{ fmt(p.value) }}</strong></span>
-            <span :style="{color:p.pl>=0?'var(--green)':'var(--red)'}">盈亏 <strong>{{ p.pl?(p.pl>=0?'+':'')+fmt(p.pl):'-' }} ({{ p.plPct }}%)</strong></span>
+            <span>{{ t('posPriceCol') }} <strong>{{ p.price?fmt(p.price):'…' }}</strong><span v-if="p.price&&p.currency!=='CNY'" style="font-size:10px;color:var(--dim)"> {{ p.currency }}</span></span>
+            <span>{{ t('posValueCol') }} <strong>{{ fmt(p.value) }}</strong> <span style="font-size:10px;color:var(--dim)">CNY</span></span>
+            <span v-if="p.hasCost" :style="{color:p.pl>=0?'var(--green)':'var(--red)'}">{{ t('posPL') }} <strong>{{ p.pl>=0?'+':'' }}{{ fmt(p.pl) }} ({{ p.plPct }}%)</strong></span>
           </div>
         </div>
       </div>
-      <button class="btn btn-ghost btn-sm mt-8" @click="fetchPosPrices" v-if="positions.length">刷新行情</button>
-      <div v-if="!positions.length" style="text-align:center;color:var(--muted);padding:20px">暂无持仓，用上方表单添加</div>
+      <button class="btn btn-ghost btn-sm mt-8" @click="fetchPosPrices" v-if="positions.length">{{ t('posRefreshPrice') }}</button>
+      <div v-if="!positions.length" style="text-align:center;color:var(--muted);padding:20px">{{ t('posEmpty') }}</div>
     </div>
   </section>
 
@@ -1387,7 +1421,7 @@ tr.row-unmatched td{opacity:.35}
 <script>
 dayjs.extend(dayjs_plugin_isoWeek);dayjs.extend(dayjs_plugin_weekOfYear);dayjs.locale('zh-cn')
 
-const SK='flowledger_entries_v1',SNAP_K='flowledger_snapshots_v1',RULES_K='flowledger_rules_v1',REVIEW_K='flowledger_reviews_v1',SYNC_K='flowledger_sync_v1',IMPORT_K='flowledger_import_batches_v1',CHECKLIST_K='flowledger_checklist',POS_K='flowledger_positions_v1'
+const SK='flowledger_entries_v1',SNAP_K='flowledger_snapshots_v1',RULES_K='flowledger_rules_v1',REVIEW_K='flowledger_reviews_v1',SYNC_K='flowledger_sync_v1',IMPORT_K='flowledger_import_batches_v1',CHECKLIST_K='flowledger_checklist',POS_K='flowledger_positions_v1',DEL_K='flowledger_deleted_v1'
 // Migrate from old CryptoFlow keys (backward compat)
 ;(()=>{
   const migrations=[
@@ -1447,7 +1481,7 @@ function normRow(row){
   const currency=String(row.currency||row['货币']||'CNY').trim().toUpperCase()
   const tags=parseTags(row.tags||row['标签']||row.tagText||row['Tag']||row['Tags'])
   if(!date||!amt)return null
-  return{id:row.id||genId(),date,amount:amt,rate:rate===''?'':normNum(rate),exchange,note,type,assetType,currency,tags}
+  return{id:row.id||genId(),date,amount:amt,rate:rate===''?'':normNum(rate),exchange,note,type,assetType,currency,tags,updatedAt:row.updatedAt||0}
 }
 
 function defRules(){return{lossWarn:3000,lossCritical:5000,roiWarn:0.6,inflowRatio:1.8,largeTx:5000,lossStreak:2}}
@@ -1467,9 +1501,9 @@ const{createApp,ref,reactive,computed,watch,onMounted}=Vue
 // ===== I18N =====
 const I18N={
   zh:{
-    appTitle:'FlowLedger 投记 · 个人投资记账',
-    appKicker:'个人投资出入金记账',
-    appDesc:'全渠道投资出入金管理 · 盈亏统计 · 行为分析 · 多端同步',
+    appTitle:'FlowLedger 投记 · 个人投资记账与资产追踪',
+    appKicker:'个人投资记账与资产追踪',
+    appDesc:'出入金记账 · 持仓实时估值 · 真实净值与盈亏 · 行为分析 · 多端同步',
     records:'记录',
     stats:'统计',
     data:'数据',
@@ -1507,9 +1541,12 @@ const I18N={
     clearFilters:'清除筛选',
     matchCount:'{match}/{total} 命中',
     totalIn:'总入金',
-    totalOut:'总出金',
+    totalOut:'已出金',
     netPL:'净盈亏',
     roi:'回本比例',
+    holdingsValue:'持仓市值',
+    trueReturn:'真实收益',
+    trueROI:'真实收益率',
     roiRate:'回本率',
     periodMonth:'月度',
     periodWeek:'周',
@@ -1734,11 +1771,39 @@ const I18N={
     mobileDetail:'详情',
     batchUndoWarningOverwrite:'撤销覆盖导入会恢复到该次导入前的完整账本，并覆盖之后的记录改动。继续吗？',
     batchUndoWarningMerge:'撤销合并导入会删除该批次新增的记录。继续吗？',
+    posTitle:'持仓追踪',
+    posCount:'持仓 {{n}} 只',
+    posTotalCost:'总成本',
+    posTotalValue:'市值',
+    posPL:'盈亏',
+    posSymbol:'标的代码',
+    posSymbolPlaceholder:'搜索或选择标的…',
+    posName:'名称',
+    posNamePlaceholder:'非必填',
+    posQty:'持有份额',
+    posQtyPlaceholder:'如 0.5',
+    posAvgCost:'成本均价',
+    posAvgCostPlaceholder:'选填，不记得成本可不填',
+    posCurrency:'币种',
+    posAdd:'添加持仓',
+    posRefreshPrice:'刷新行情',
+    posEmpty:'暂无持仓，上方添加',
+    posSymbolCol:'标的',
+    posQtyCol:'份额',
+    posAvgCostCol:'成本价',
+    posPriceCol:'现价',
+    posValueCol:'市值',
+    posPLCol:'盈亏',
+    posActionCol:'操作',
+    posFetching:'获取中…',
+    posCustom:'自定义标的',
+    posAutoSource:'自动',
+    posManualSource:'手动',
   },
   en:{
-    appTitle:'FlowLedger · Investment Ledger',
-    appKicker:'Personal Investment Tracking',
-    appDesc:'Multi-asset cashflow tracking · P&L stats · Behavior analysis · Multi-device sync',
+    appTitle:'FlowLedger · Investment Ledger & Portfolio',
+    appKicker:'Investment Ledger & Portfolio Tracker',
+    appDesc:'Cashflow tracking · Live position valuation · True net worth · Behavior analysis · Multi-device sync',
     records:'Records',
     stats:'Stats',
     data:'Data',
@@ -1779,6 +1844,9 @@ const I18N={
     totalOut:'Total Withdrawals',
     netPL:'Net P&L',
     roi:'ROI',
+    holdingsValue:'Holdings Value',
+    trueReturn:'True Return',
+    trueROI:'True ROI',
     roiRate:'Return Rate',
     periodMonth:'Monthly',
     periodWeek:'Weekly',
@@ -1986,6 +2054,34 @@ const I18N={
     mobileDetail:'Details',
     batchUndoWarningOverwrite:'Undoing overwrite import will restore the full ledger before that import. Recent changes will be lost. Continue?',
     batchUndoWarningMerge:'Undoing merge import will remove records added in that batch. Continue?',
+    posTitle:'Positions',
+    posCount:'{{n}} holdings',
+    posTotalCost:'Total Cost',
+    posTotalValue:'Market Value',
+    posPL:'P&L',
+    posSymbol:'Symbol',
+    posSymbolPlaceholder:'Search or select symbol…',
+    posName:'Name',
+    posNamePlaceholder:'Optional',
+    posQty:'Quantity',
+    posQtyPlaceholder:'e.g. 0.5',
+    posAvgCost:'Avg Cost',
+    posAvgCostPlaceholder:'Optional, leave blank if unknown',
+    posCurrency:'Currency',
+    posAdd:'Add Position',
+    posRefreshPrice:'Refresh Prices',
+    posEmpty:'No positions yet, add one above',
+    posSymbolCol:'Symbol',
+    posQtyCol:'Qty',
+    posAvgCostCol:'Avg Cost',
+    posPriceCol:'Price',
+    posValueCol:'Value',
+    posPLCol:'P&L',
+    posActionCol:'Action',
+    posFetching:'Fetching…',
+    posCustom:'Custom Symbol',
+    posAutoSource:'Auto',
+    posManualSource:'Manual',
   }
 }
 let lang=ref(localStorage.getItem('flowledger_lang')||(navigator.language.startsWith('zh')?'zh':'en'))
@@ -2000,6 +2096,7 @@ function t(key,params){
 createApp({
 setup(){
   const entries=ref([])
+  const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const snapshots=ref([])
   const importBatches=ref([])
   const period=ref('month')
@@ -2055,6 +2152,9 @@ setup(){
   const rules=reactive(defRules())
   const syncCfg=reactive({token:'',gistId:''})
   const syncStatus=ref('未配置')
+  const syncing=ref(false)
+  const lastSyncedAt=ref(0)
+  const lastChangeAt=ref(0)
   const reviewNote=ref('')
   const reviewSavedAt=ref('')
   const importPreview=ref(null)
@@ -2126,20 +2226,18 @@ setup(){
     const selected=new Set(tickerSelected.value)
     const active=TICKER_LIST.filter(t=>selected.has(t.symbol))
     if(!active.length){tickerData.value=[];return}
-    // Binance batch (fast, reliable)
+    // Binance 24hr ticker (price + daily change)
     try{
-      const res=await Promise.race([fetch('https://api.binance.com/api/v3/ticker/price'),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
+      const res=await Promise.race([fetch('https://api.binance.com/api/v3/ticker/24hr'),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
       if(res&&res.ok){
         const data=await res.json()
         const binanceItems=active.filter(t=>t.source==='binance')
         binanceItems.forEach(t=>{
           const row=data.find(d=>d.symbol===t.pair)
           if(row){
-            const price=Number(row.price)
-            const prev=tickerPrev[t.symbol]||price
-            const chg=prev?((price-prev)/prev*100).toFixed(1):0
-            tickerPrev[t.symbol]=price
-            results.push({symbol:t.symbol,icon:t.icon,price:price>=1?price.toFixed(t.decimals):price.toPrecision(4),chg:Number(chg)})
+            const price=Number(row.lastPrice)
+            const chg=Number(row.priceChangePercent)
+            results.push({symbol:t.symbol,icon:t.icon,price:price>=1?price.toFixed(t.decimals):price.toPrecision(4),chg:Number(chg.toFixed(1))})
           }
         })
       }
@@ -2210,9 +2308,13 @@ setup(){
     try{const r=localStorage.getItem(IMPORT_K);if(r)importBatches.value=JSON.parse(r)}catch(e){}
     try{const r=localStorage.getItem(RULES_K);if(r)Object.assign(rules,{...defRules(),...JSON.parse(r)})}catch(e){}
     try{const r=localStorage.getItem(SYNC_K);if(r)Object.assign(syncCfg,JSON.parse(r));syncStatus.value=syncCfg.token?'已配置':'未配置'}catch(e){}
+    try{const r=localStorage.getItem(DEL_K);if(r)deletedIds.value=JSON.parse(r)||{}}catch(e){}
     loadReview()
   }
-  function save(){localStorage.setItem(SK,JSON.stringify(entries.value))}
+  function save(){localStorage.setItem(SK,JSON.stringify(entries.value));if(typeof scheduleAutoPush==='function')scheduleAutoPush()}
+  function saveDeleted(){localStorage.setItem(DEL_K,JSON.stringify(deletedIds.value))}
+  // 记录墓碑（删除/清空时调用）
+  function recordDeleted(ids){const now=Date.now();ids.forEach(id=>{deletedIds.value[id]=now});saveDeleted()}
   function snap(){
     const s={at:new Date().toISOString(),entries:clone(entries.value)}
     snapshots.value.unshift(s);if(snapshots.value.length>10)snapshots.value=snapshots.value.slice(0,10)
@@ -2302,35 +2404,51 @@ setup(){
   // 汇率自动获取
   const rateLoading=ref(false)
   const RATE_FALLBACK={USD:7.25,HKD:0.92,USDT:7.25}
+  // 全局实时汇率缓存（对 CNY），供持仓市值折算用；默认兜底，启动时刷新
+  const fxRates=reactive({USD:7.25,HKD:0.92,USDT:7.25,CNY:1})
+  // 纯获取逻辑：返回 currency→CNY 汇率数值，失败返回 null
+  async function fetchRateValue(currency){
+    if(!currency||currency==='CNY')return 1
+    const sym=(currency==='USDT'?'USD':currency).toLowerCase()
+    let rate=null
+    // 优先：jsdelivr CDN（国内可访问，每日更新）
+    try{
+      const res=await Promise.race([
+        fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${sym}.json`),
+        new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),5000))
+      ])
+      if(res.ok){const data=await res.json();rate=data[sym]?.cny}
+    }catch(_){}
+    // 备用：frankfurter.app
+    if(!rate){
+      try{
+        const res=await Promise.race([
+          fetch(`https://api.frankfurter.app/latest?from=${sym.toUpperCase()}&to=CNY`),
+          new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),5000))
+        ])
+        if(res.ok){const data=await res.json();rate=data.rates?.CNY}
+      }catch(_){}
+    }
+    return rate?Math.round(rate*10000)/10000:null
+  }
+  // 刷新全局汇率缓存（启动时调用，静默）
+  async function refreshFxRates(){
+    for(const cur of ['USD','HKD']){
+      const r=await fetchRateValue(cur)
+      if(r){fxRates[cur]=r}
+    }
+    fxRates.USDT=fxRates.USD // USDT≈USD
+  }
   async function fetchRate(currency,target='form'){
     if(!currency||currency==='CNY')return
     rateLoading.value=true
     try{
-      const sym=(currency==='USDT'?'USD':currency).toLowerCase()
-      let rate=null
-      // 优先：jsdelivr CDN（国内可访问，每日更新）
-      try{
-        const res=await Promise.race([
-          fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${sym}.json`),
-          new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),5000))
-        ])
-        if(res.ok){const data=await res.json();rate=data[sym]?.cny}
-      }catch(_){}
-      // 备用：frankfurter.app
-      if(!rate){
-        try{
-          const res=await Promise.race([
-            fetch(`https://api.frankfurter.app/latest?from=${sym.toUpperCase()}&to=CNY`),
-            new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),5000))
-          ])
-          if(res.ok){const data=await res.json();rate=data.rates?.CNY}
-        }catch(_){}
-      }
+      const rate=await fetchRateValue(currency)
       if(rate){
-        const rounded=Math.round(rate*10000)/10000
-        if(target==='form')form.rate=String(rounded)
-        else if(target==='edit'&&editingEntry.value)editingEntry.value.rate=String(rounded)
-        showToast(`1 ${currency} ≈ ${rounded} CNY（实时）`,'success')
+        if(target==='form')form.rate=String(rate)
+        else if(target==='edit'&&editingEntry.value)editingEntry.value.rate=String(rate)
+        if(fxRates[currency]!==undefined)fxRates[currency]=rate
+        showToast(`1 ${currency} ≈ ${rate} CNY（实时）`,'success')
       }else throw new Error('no rate')
     }catch(e){
       const fallback=RATE_FALLBACK[currency]
@@ -2345,6 +2463,10 @@ setup(){
   const totalOut=computed(()=>entries.value.filter(e=>e.type==='出金').reduce((s,e)=>s+amountCNY(e),0))
   const netPL=computed(()=>totalOut.value-totalIn.value)
   const roi=computed(()=>totalIn.value?totalOut.value/totalIn.value:0)
+  // 统一净值视角：当前持仓市值 + 真实总收益（含未实现盈亏）
+  const holdingsValue=computed(()=>posSummary.value.totalValue)
+  const trueReturn=computed(()=>totalOut.value+holdingsValue.value-totalIn.value)
+  const trueROI=computed(()=>totalIn.value?trueReturn.value/totalIn.value:0)
 
   // Filters
   function matchEntry(e){
@@ -2389,7 +2511,7 @@ setup(){
     const map=new Map()
     const filtering=hasActiveFilter.value
     sortedEntries.value.forEach(e=>{
-      const m=e.date?e.date.slice(0,4):'未知'
+      const m=e.date?e.date.slice(0,7):'未知'
       if(!map.has(m))map.set(m,{key:m,entries:[],inTotal:0,outTotal:0,matchedCount:0})
       const g=map.get(m);g.entries.push(e)
       const matched=!filtering||matchedIds.value.has(e.id)
@@ -2436,7 +2558,7 @@ setup(){
     e.rate=editingEntry.value.rate===''?'':Number(editingEntry.value.rate)
     e.exchange=(editingEntry.value.exchange||'').trim();e.note=(editingEntry.value.note||'').trim()
     e.type=editingEntry.value.type;e.assetType=editingEntry.value.assetType||'';e.currency=editingEntry.value.currency||'CNY'
-    e.tags=parseTags(editingEntry.value.tagText||editingEntry.value.tags)
+    e.tags=parseTags(editingEntry.value.tagText||editingEntry.value.tags);e.updatedAt=Date.now()
     save();editingEntry.value=null;showToast('已保存','success')
   }
 
@@ -2473,61 +2595,121 @@ setup(){
 
   // Positions (持仓)
   const positions=ref([])
-  const posForm=reactive({symbol:'',name:'',qty:'',avgCost:'',currency:'CNY',assetType:'',source:'auto'})
+  const posForm=reactive({symbol:'',name:'',qty:'',avgCost:'',currency:'CNY',assetType:'',pair:'',decimals:2,icon:''})
   const showPosForm=ref(false)
+  const showSymbolPicker=ref(false)
+  const posSymbolSearch=ref('')
   const posPrices=ref({})
-  function loadPositions(){try{const r=localStorage.getItem(POS_K);if(r)positions.value=JSON.parse(r)}catch(e){}}
+  function findTicker(sym){return TICKER_LIST.find(t=>t.symbol.toUpperCase()===sym.toUpperCase())}
+  function currencyFromTicker(t){return t.source==='binance'?'USDT':t.cat==='港股'?'HKD':t.cat==='大A'?'CNY':'USD'}
+  function selectTickerSymbol(t){
+    posForm.symbol=t.symbol;posForm.name=t.symbol;posForm.icon=t.icon;posForm.pair=t.pair
+    posForm.decimals=t.decimals;posForm.currency=currencyFromTicker(t)
+    posForm.assetType=t.cat
+    posSymbolSearch.value=t.symbol;showSymbolPicker.value=false
+  }
+  function selectCustomSymbol(){
+    const sym=posSymbolSearch.value.trim().toUpperCase()
+    if(!sym)return
+    posForm.symbol=sym;posForm.name='';posForm.icon='';posForm.pair=sym;posForm.decimals=2
+    posForm.currency='USD';posForm.assetType=''
+    showSymbolPicker.value=false
+  }
+  function loadPositions(){
+    try{
+      const r=localStorage.getItem(POS_K)
+      if(r){
+        const raw=JSON.parse(r)
+        // Migrate old positions: add icon/pair/decimals from TICKER_LIST
+        positions.value=raw.map(p=>{
+          const t=findTicker(p.symbol)
+          if(t)return{...p,icon:p.icon||t.icon,pair:p.pair||t.pair,decimals:p.decimals??t.decimals,currency:p.currency||currencyFromTicker(t),assetType:p.assetType||t.cat}
+          return{...p,icon:p.icon||'',pair:p.pair||p.symbol,decimals:p.decimals??2}
+        })
+      }
+    }catch(e){}
+  }
   function savePositions(){localStorage.setItem(POS_K,JSON.stringify(positions.value))}
   function addPosition(){
     if(!posForm.symbol.trim()||!Number(posForm.qty)){showToast('请输入标的和数量','error');return}
-    positions.value.push({id:genId(),symbol:posForm.symbol.trim().toUpperCase(),name:posForm.name.trim()||posForm.symbol.trim(),qty:Number(posForm.qty),avgCost:Number(posForm.avgCost)||0,currency:posForm.currency,assetType:posForm.assetType,source:posForm.source})
-    savePositions();posForm.symbol='';posForm.name='';posForm.qty='';posForm.avgCost='';showPosForm.value=false;showToast('已添加持仓','success')
+    const avg=posForm.avgCost===''||posForm.avgCost==null?null:Number(posForm.avgCost)
+    positions.value.push({id:genId(),symbol:posForm.symbol.trim().toUpperCase(),name:posForm.name.trim()||posForm.symbol.trim(),icon:posForm.icon,qty:Number(posForm.qty),avgCost:avg,currency:posForm.currency,assetType:posForm.assetType,pair:posForm.pair,decimals:posForm.decimals})
+    savePositions();posForm.symbol='';posForm.name='';posForm.qty='';posForm.avgCost='';posForm.icon='';posForm.pair='';posSymbolSearch.value='';showPosForm.value=false;showToast('已添加持仓','success')
   }
-  function removePosition(id){if(!confirm('删除持仓？'))return;positions.value=positions.value.filter(p=>p.id!==id);savePositions();showToast('已删除','success')}
+  function removePosition(id){if(!confirm('确定删除持仓？'))return;positions.value=positions.value.filter(p=>p.id!==id);savePositions();showToast('已删除','success')}
   function updatePosition(id,key,val){const p=positions.value.find(x=>x.id===id);if(!p)return;if(key==='qty'||key==='avgCost')p[key]=Number(val)||0;else p[key]=val;savePositions()}
+  // currency→CNY 汇率访问器（兜底 1）
+  function fx(cur){return fxRates[cur]||1}
   const posSummary=computed(()=>{
-    let totalCost=0,totalValue=0
+    let totalCost=0,totalValue=0,hasCostCount=0
     positions.value.forEach(p=>{
-      const cost=p.qty*p.avgCost
+      const r=fx(p.currency)
+      const hasCost=p.avgCost!=null
+      const cost=p.qty*(hasCost?p.avgCost:0)*r
       const price=posPrices.value[p.symbol]
-      const value=price?p.qty*price:cost
-      totalCost+=cost;totalValue+=value
+      const value=price?p.qty*price*r:(hasCost?cost:0)
+      if(hasCost){totalCost+=cost;hasCostCount++}
+      totalValue+=value
     })
-    return{totalCost,totalValue,pl:totalValue-totalCost,plPct:totalCost?((totalValue-totalCost)/totalCost*100).toFixed(1):'0'}
+    return{totalCost,totalValue,pl:totalValue-totalCost,plPct:hasCostCount&&totalCost?((totalValue-totalCost)/totalCost*100).toFixed(1):'0'}
   })
   const posRows=computed(()=>positions.value.map(p=>{
-    const cost=p.qty*p.avgCost
-    const price=posPrices.value[p.symbol]
-    const value=price?p.qty*price:0;const pl=value-cost
-    return{...p,cost,price:price||0,value,pl,plPct:cost?((pl/cost)*100).toFixed(1):'0'}
+    const r=fx(p.currency)
+    const hasCost=p.avgCost!=null
+    const cost=p.qty*(hasCost?p.avgCost:0)*r      // CNY 折合
+    const price=posPrices.value[p.symbol]          // 原币种现价
+    const value=price?p.qty*price*r:0              // CNY 市值
+    const pl=value-cost                            // CNY 盈亏
+    return{...p,cost,price:price||0,value,pl,hasCost,plPct:hasCost&&cost?((pl/cost)*100).toFixed(1):'0'}
   }))
+  // Also update posPrices from ticker data cache
+  function syncPosFromTicker(){
+    if(!tickerData.value.length)return
+    let changed=false
+    tickerData.value.forEach(t=>{
+      if(!posPrices.value[t.symbol]||posPrices.value[t.symbol]!==Number(t.price)){
+        posPrices.value[t.symbol]=Number(t.price);changed=true
+      }
+    })
+    if(changed)posPrices.value={...posPrices.value}
+  }
   async function fetchPosPrices(){
-    const toFetch=positions.value.filter(p=>p.source!=='manual')
-    if(!toFetch.length)return
+    if(!positions.value.length)return
+    // First, copy from ticker cache (fast)
+    syncPosFromTicker()
     const results={}
-    // Binance batch
-    try{
-      const res=await Promise.race([fetch('https://api.binance.com/api/v3/ticker/price'),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
-      if(res&&res.ok){const data=await res.json();toFetch.forEach(p=>{const row=data.find(d=>d.symbol===p.symbol+'USDT');if(row)results[p.symbol]=Number(row.price)})}
-    }catch(e){}
-    // Yahoo batch for stocks
-    const yahooItems=toFetch.filter(p=>!results[p.symbol]&&!/^(BTC|ETH|SOL|BNB|XRP|ADA|DOGE|DOT|LINK|AVAX|MATIC|SHIB|UNI|ATOM|APT|FIL|ARB|OP|PEPE|WIF)$/i.test(p.symbol))
-    for(const p of yahooItems){
+    // Positions with known pair+source from TICKER_LIST
+    const known=positions.value.filter(p=>p.pair&&p.pair!==p.symbol)
+    const unknown=positions.value.filter(p=>!p.pair||p.pair===p.symbol)
+    // Single Binance batch covers both known pairs and custom symbol guesses
+    const binKnown=known.filter(p=>findTicker(p.symbol)?.source==='binance')
+    const binGuess=unknown.filter(p=>!results[p.symbol])
+    if(binKnown.length||binGuess.length){
+      try{
+        const res=await Promise.race([fetch('https://api.binance.com/api/v3/ticker/price'),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
+        if(res&&res.ok){
+          const data=await res.json()
+          binKnown.forEach(p=>{const row=data.find(d=>d.symbol===p.pair);if(row)results[p.symbol]=Number(row.price)})
+          binGuess.forEach(p=>{if(!results[p.symbol]){const row=data.find(d=>d.symbol===p.symbol.toUpperCase()+'USDT');if(row)results[p.symbol]=Number(row.price)}})
+        }
+      }catch(e){}
+    }
+    // Yahoo for known yahoo positions (parallel)
+    const yahooKnown=known.filter(p=>!results[p.symbol]&&findTicker(p.symbol)?.source==='yahoo')
+    await Promise.all(yahooKnown.map(async p=>{
+      try{
+        const res=await Promise.race([fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${p.pair}?interval=1d&range=2d`),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
+        if(res&&res.ok){const data=await res.json();const price=data?.chart?.result?.[0]?.meta?.regularMarketPrice;if(price)results[p.symbol]=Number(price)}
+      }catch(e){}
+    }))
+    // Custom symbols not resolved by Binance: try Yahoo directly
+    for(const p of unknown.filter(p=>!results[p.symbol])){
       try{
         const res=await Promise.race([fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${p.symbol}?interval=1d&range=1d`),new Promise((_,r)=>setTimeout(()=>r(null),3000))])
         if(res&&res.ok){const data=await res.json();const price=data?.chart?.result?.[0]?.meta?.regularMarketPrice;if(price)results[p.symbol]=Number(price)}
       }catch(e){}
     }
-    // CoinGecko fallback for unsolved crypto
-    const unsolved=toFetch.filter(p=>!results[p.symbol])
-    if(unsolved.length){
-      try{
-        const ids=unsolved.map(p=>p.symbol.toLowerCase()).join(',')
-        const res=await Promise.race([fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
-        if(res&&res.ok){const data=await res.json();Object.entries(data).forEach(([id,val])=>{const sym=id.toUpperCase();if(val.usd)results[sym]=Number(val.usd)})}
-      }catch(e){}
-    }
-    Object.assign(posPrices.value,results)
+    if(Object.keys(results).length)Object.assign(posPrices.value,results)
   }
 
   function addEntry(){
@@ -2539,20 +2721,20 @@ setup(){
       if(!confirm(msg))return
     }
     snap()
-    entries.value.unshift({id:genId(),date:form.date||dayjs().format('YYYY-MM-DD'),amount:Number(form.amount),rate:form.rate?Number(form.rate):'',exchange:form.exchange.trim(),note:form.note.trim(),type:form.type,assetType:form.assetType,currency:form.currency||'CNY',tags:parseTags(form.tagText)})
+    entries.value.unshift({id:genId(),date:form.date||dayjs().format('YYYY-MM-DD'),amount:Number(form.amount),rate:form.rate?Number(form.rate):'',exchange:form.exchange.trim(),note:form.note.trim(),type:form.type,assetType:form.assetType,currency:form.currency||'CNY',tags:parseTags(form.tagText),updatedAt:Date.now()})
     save();form.amount='';form.note='';form.tagText='';showToast('已添加','success')
   }
   function mobileAddEntry(){const before=entries.value.length;addEntry();if(entries.value.length>before)showMobileAdd.value=false}
   function copyLast(){const e=sortedEntries.value[0];if(!e)return;form.date=e.date;form.amount=e.amount;form.rate=e.rate||'';form.exchange=e.exchange;form.note='';form.type=e.type;form.assetType=e.assetType||'';form.currency=e.currency||'CNY';form.tagText=tagsText(e.tags);showToast('已复制','info')}
-  function removeEntry(id){if(!confirm('确认删除？'))return;snap();entries.value=entries.value.filter(e=>e.id!==id);save();showToast('已删除','success')}
+  function removeEntry(id){if(!confirm('确认删除？'))return;snap();entries.value=entries.value.filter(e=>e.id!==id);recordDeleted([id]);save();showToast('已删除','success')}
   function updateField(id,key,val){
     const e=entries.value.find(x=>x.id===id);if(!e)return
     const next=(key==='amount'||key==='rate')?(val===''?'':Number(val)):val
     if(e[key]===next)return
-    snap();e[key]=next;save()
+    snap();e[key]=next;e.updatedAt=Date.now();save()
   }
   function loadDemo(){if(!confirm('加载演示数据会覆盖当前记录，继续吗？'))return;entries.value=DEMO_ENTRIES.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1);save();showToast('已加载演示数据','success')}
-  function clearData(){if(!confirm('确认清空所有记录？'))return;snap();entries.value=[];save();showToast('已清空','success')}
+  function clearData(){if(!confirm('确认清空所有记录？'))return;snap();recordDeleted(entries.value.map(e=>e.id));entries.value=[];save();showToast('已清空','success')}
 
   // Period Stats
   const periodRows=computed(()=>{
@@ -2766,6 +2948,89 @@ setup(){
   }
   function clearImportBatches(){if(!confirm('清空导入历史？不会删除账本记录。'))return;importBatches.value=[];localStorage.removeItem(IMPORT_K);showToast('导入历史已清空','success')}
 
+  // Timestamp-based merge: same ID → keep newer; different IDs → union；
+  // 墓碑（deletedIds）确保已删除记录不会被对端"复活"，且删除能跨设备传播
+  function mergeByTimestamp(local,remote,remoteDeleted){
+    // 1. 合并对端墓碑（每个 id 取最新删除时间）
+    if(remoteDeleted&&typeof remoteDeleted==='object'){
+      let changed=false
+      for(const id in remoteDeleted){
+        if(!deletedIds.value[id]||remoteDeleted[id]>deletedIds.value[id]){deletedIds.value[id]=remoteDeleted[id];changed=true}
+      }
+      if(changed)saveDeleted()
+    }
+    const del=deletedIds.value
+    // 2. 按 id 取并集，同 id 保留 updatedAt 更新的
+    const map=new Map()
+    local.forEach(e=>map.set(e.id,e))
+    remote.forEach(e=>{
+      const ex=map.get(e.id)
+      if(!ex){map.set(e.id,e)}
+      else if((e.updatedAt||0)>(ex.updatedAt||0)){map.set(e.id,e)}
+    })
+    // 3. 剔除被墓碑标记的记录（删除时间晚于该记录最后修改时间才算删除生效，
+    //    若记录在删除后又被编辑过 updatedAt>删除时间 则视为有意复活，保留）
+    return [...map.values()].filter(e=>{const d=del[e.id];return !(d&&d>=(e.updatedAt||0))}).map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1)
+  }
+  // Debounced auto-sync: 3s after last change → silent pull + push
+  let _autoPushTimer=null
+  let _syncingInProgress=false
+  function scheduleAutoPush(){
+    if(!syncCfg.token||_syncingInProgress)return
+    lastChangeAt.value=Date.now()
+    clearTimeout(_autoPushTimer)
+    _autoPushTimer=setTimeout(()=>doAutoSync(),3000)
+  }
+  async function doAutoSync(){
+    if(!syncCfg.token||_syncingInProgress)return
+    _syncingInProgress=true;syncing.value=true
+    try{
+      if(syncCfg.gistId){
+        try{
+          const gist=await gistGet()
+          const file=gist.files[GIST_FILE]
+          if(file&&file.content){
+            const remote=JSON.parse(file.content)
+            const rList=Array.isArray(remote.entries)?remote.entries:[]
+            const merged=mergeByTimestamp(entries.value,rList,remote.deletedIds)
+            if(merged.length!==entries.value.length||merged.some((e,i)=>e.id!==entries.value[i]?.id||e.updatedAt!==entries.value[i]?.updatedAt)){
+              entries.value=merged;localStorage.setItem(SK,JSON.stringify(entries.value))
+            }
+          }
+        }catch(e){/* silent pull failed, continue to push */}
+      }
+      const payload=JSON.stringify({version:1,updatedAt:new Date().toISOString(),entries:entries.value,deletedIds:deletedIds.value},null,2)
+      if(syncCfg.gistId){
+        await gistUpdate(payload)
+      }else{
+        const gist=await gistCreate(payload)
+        syncCfg.gistId=gist.id;localStorage.setItem(SYNC_K,JSON.stringify({token:syncCfg.token,gistId:syncCfg.gistId}))
+      }
+      lastSyncedAt.value=Date.now();syncStatus.value='已同步 · '+new Date().toLocaleTimeString()
+    }catch(e){syncStatus.value='同步失败'}
+    finally{_syncingInProgress=false;syncing.value=false}
+  }
+  // Background periodic pull: check remote every 2 min, merge if newer data found
+  async function backgroundPull(){
+    if(!syncCfg.token||!syncCfg.gistId||_syncingInProgress)return
+    _syncingInProgress=true
+    try{
+      const gist=await gistGet()
+      const file=gist.files[GIST_FILE]
+      if(file&&file.content){
+        const remote=JSON.parse(file.content)
+        const rList=Array.isArray(remote.entries)?remote.entries:[]
+        const merged=mergeByTimestamp(entries.value,rList,remote.deletedIds)
+        if(merged.length!==entries.value.length||merged.some((e,i)=>e.id!==entries.value[i]?.id||e.updatedAt!==entries.value[i]?.updatedAt)){
+          entries.value=merged;save()
+          syncStatus.value='已同步 · '+new Date().toLocaleTimeString()
+          lastSyncedAt.value=Date.now()
+        }
+      }
+    }catch(e){/* silent */}
+    finally{_syncingInProgress=false}
+  }
+
   // Sync — GitHub Gist
   const GIST_API='https://api.github.com/gists'
   const GIST_FILE='flowledger.json'
@@ -2805,7 +3070,7 @@ setup(){
     if(!syncCfg.token){syncStatus.value='请先配置 Token';showToast('请先填写 GitHub Token','error');return}
     syncStatus.value='上传中…'
     try{
-      const payload=JSON.stringify({version:1,updatedAt:new Date().toISOString(),entries:entries.value},null,2)
+      const payload=JSON.stringify({version:1,updatedAt:new Date().toISOString(),entries:entries.value,deletedIds:deletedIds.value},null,2)
       if(syncCfg.gistId){
         await gistUpdate(payload)
       }else{
@@ -2832,7 +3097,7 @@ setup(){
       if(!file||!file.content)throw new Error('no file')
       const data=JSON.parse(file.content)
       const list=Array.isArray(data.entries)?data.entries:[]
-      snap();entries.value=list.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1);save()
+      entries.value=mergeByTimestamp(entries.value,list,data.deletedIds);save()
       syncStatus.value=`已拉取 ${list.length} 条 · ${new Date(gist.updated_at).toLocaleString()}`
       showToast(`拉取成功，${list.length} 条记录`,'success')
     }catch(e){syncStatus.value='拉取失败';showToast('拉取失败，请检查 Token 是否有效','error')}
@@ -2843,7 +3108,7 @@ setup(){
     if(!syncCfg.gistId){
       try{const found=await gistFind();if(found){syncCfg.gistId=found.id;saveSyncConfig()}}catch(e){}
     }
-    // Pull first, then push — push wins for conflict resolution
+    // Pull first, merge by timestamp, then push
     if(syncCfg.gistId){
       try{
         const gist=await gistGet()
@@ -2851,9 +3116,7 @@ setup(){
         if(file&&file.content){
           const remote=JSON.parse(file.content)
           const rList=Array.isArray(remote.entries)?remote.entries:[]
-          const lList=entries.value
-          const merged=[...rList.filter(e=>!lList.some(le=>le.id===e.id)),...lList]
-          entries.value=merged.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1)
+          entries.value=mergeByTimestamp(entries.value,rList,remote.deletedIds)
           save()
         }
       }catch(e){/* pull failed, continue with push */}
@@ -2942,7 +3205,7 @@ setup(){
   })
   const importPreviewRows=computed(()=>{
     if(!importPreview.value)return[]
-    return importPreview.value.validRows.slice(0,30)
+    return importPreview.value.validRows
   })
   function cancelImportPreview(){importPreview.value=null}
   function confirmImportMerge(){
@@ -3143,17 +3406,28 @@ setup(){
   onMounted(()=>{
     load()
     loadPositions()
+    refreshFxRates() // 静默刷新全局汇率，供持仓市值折算
     if(positions.value.length)fetchPosPrices()
     // Start onboarding after a short delay (wait for DOM)
     setTimeout(()=>startOnboard(),600)
     // Fetch ticker prices
     fetchTickerPrices()
-    const tickerTimer=setInterval(fetchTickerPrices,30000)
-    const posPriceTimer=setInterval(()=>{if(positions.value.length)fetchPosPrices()},60000)
+    let tickerTimer=setInterval(fetchTickerPrices,30000)
+    let posPriceTimer=setInterval(()=>{if(positions.value.length)fetchPosPrices()},60000)
+    // Pause polling when tab is hidden to save bandwidth/battery
+    document.addEventListener('visibilitychange',()=>{
+      if(document.hidden){
+        clearInterval(tickerTimer);clearInterval(posPriceTimer)
+      }else{
+        fetchTickerPrices()
+        tickerTimer=setInterval(fetchTickerPrices,30000)
+        posPriceTimer=setInterval(()=>{if(positions.value.length)fetchPosPrices()},60000)
+      }
+    })
     // Default expand: current year if has data, otherwise latest year with data
-    const curYear=dayjs().format('YYYY')
-    const years=[...new Set(entries.value.map(e=>e.date?e.date.slice(0,4):'').filter(Boolean))].sort().reverse()
-    expandedMonths.value=new Set([years.includes(curYear)?curYear:(years[0]||curYear)])
+    const curMonth=dayjs().format('YYYY-MM')
+    const months=[...new Set(entries.value.map(e=>e.date?e.date.slice(0,7):'').filter(Boolean))].sort().reverse()
+    expandedMonths.value=new Set([months.includes(curMonth)?curMonth:(months[0]||curMonth)])
     // Apply root class since #app mount element isn't compiled by Vue 3
     // Only apply mobile tab class when viewport is mobile (<680px)
     const appEl=document.getElementById('app')
@@ -3174,7 +3448,7 @@ setup(){
     watch(()=>lang.value,()=>{Vue.nextTick(()=>{renderChart();renderWeekdayChart();renderPieChart()})})
     // 切换货币时自动拉取汇率（仅非CNY且汇率为空时）
     watch(()=>form.currency,cur=>{if(cur!=='CNY'&&!form.rate)fetchRate(cur,'form')})
-    // Auto-sync from GitHub Gist on load (silent)
+    // Auto-sync from GitHub Gist on load (silent, timestamp merge)
     if(syncCfg.token){
       const doSync=async()=>{
         try{
@@ -3185,23 +3459,25 @@ setup(){
           if(file&&file.content){
             const data=JSON.parse(file.content)
             const list=Array.isArray(data.entries)?data.entries:[]
-            if(list.length>entries.value.length){
-              entries.value=list.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1)
-              save()
-              syncStatus.value=`已同步 ${list.length} 条 · ${new Date(gist.updated_at).toLocaleString()}`
+            const merged=mergeByTimestamp(entries.value,list,data.deletedIds)
+            if(merged.length!==entries.value.length||merged.some((e,i)=>e.id!==entries.value[i]?.id||e.updatedAt!==entries.value[i]?.updatedAt)){
+              entries.value=merged;save()
+              syncStatus.value=`已同步 ${merged.length} 条 · ${new Date(gist.updated_at).toLocaleString()}`
             }else{
               syncStatus.value=`已配置 · 本地 ${entries.value.length} 条`
             }
           }
-        }catch(e){}
+        }catch(e){syncStatus.value='同步失败，请检查网络或 Token'}
       }
       doSync()
     }
+    // Background pull every 2 min when tab is visible
+    setInterval(()=>{if(!document.hidden)backgroundPull()},120000)
   })
 
   return{entries,sortedEntries,snapshots,importBatches,period,statTab,mobileTab,showMobileAdd,showFilters,editingEntry,showSync,theme,toggleTheme,trendChart,weekdayChart,pieChart,pieMode,assetColor,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,
-    importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
-    totalIn,totalOut,netPL,roi,allExchanges,allAssetTypes,allTags,allMonths,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,exchangeRows,assetTypeRows,tagRows,periodCompare,largeTxList,insightSummary,insightAdvice,
+    importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,syncing,lastSyncedAt,lastChangeAt,
+    totalIn,totalOut,netPL,roi,holdingsValue,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allMonths,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,exchangeRows,assetTypeRows,tagRows,periodCompare,largeTxList,insightSummary,insightAdvice,
     behaviorAnalysis,psychoTags,behaviorAdvice,
 
     fmt,amountCNY,parseTags,rowClass,toggleEx,toggleAssetType,toggleTag,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,editingDetail,
@@ -3212,7 +3488,7 @@ setup(){
     saveSyncConfig,syncPush,syncPull,syncAuto,saveRules,saveReviewNote,saveChecklist,loadReview,
     exportExcel,exportJSON,importExcel,importJSON,showToast,dayjs,
     onboardStep,spotlightStyle,tooltipStyle,nextOnboardStep,skipOnboard,t,lang,tickerData,showTickerPick,tickerSelected,tickerCategories,toggleTicker,
-    positions,posForm,posRows,posSummary,addPosition,removePosition,updatePosition,fetchPosPrices,showPosForm,
+    positions,posForm,posRows,posSummary,addPosition,removePosition,updatePosition,fetchPosPrices,showPosForm,posSymbolSearch,showSymbolPicker,selectTickerSymbol,selectCustomSymbol,
     showDashCfg,dashPanels,dashVisible,toggleDashPanel,moveDashPanel,resetDashboard,DASH_DEFAULT,dashLabels,
     ASSET_TYPES,getPlatforms,assetColor,showAssetMgr,assetMgrNew,assetMgrNewPlatform,
     addAssetType,removeAssetType,addPlatform,removePlatform,resetAssetCfg}

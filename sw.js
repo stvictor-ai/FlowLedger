@@ -1,10 +1,7 @@
-const CACHE_NAME = 'flowledger-v3';
-const ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
+const CACHE_NAME = 'flowledger-v4';
+
+// CDN assets: cache-first (immutable, versioned URLs)
+const CDN_ASSETS = [
   'https://unpkg.com/vue@3.5/dist/vue.global.prod.js',
   'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js',
   'https://unpkg.com/dayjs@1.11/dayjs.min.js',
@@ -14,11 +11,11 @@ const ASSETS = [
   'https://cdn.jsdelivr.net/npm/chart.js@4.4/dist/chart.umd.min.js'
 ];
 
-// Install: cache all assets
+// Install: pre-cache CDN assets only
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => Promise.allSettled(ASSETS.map(asset => cache.add(asset))))
+      .then(cache => Promise.allSettled(CDN_ASSETS.map(url => cache.add(url))))
       .then(() => self.skipWaiting())
   );
 });
@@ -32,30 +29,34 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Fetch: cache-first for assets, network-first for sync API
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
+  const isCDN = CDN_ASSETS.some(u => e.request.url.startsWith(u));
 
-  // Network-first for sync API calls
-  if (url.pathname.includes('/sync')) {
+  // CDN: cache-first (these URLs are version-pinned, safe to cache forever)
+  if (isCDN) {
     e.respondWith(
-      fetch(e.request).catch(() => caches.match(e.request))
+      caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
+        if (res.ok) caches.open(CACHE_NAME).then(c => c.put(e.request, res.clone()));
+        return res;
+      }))
     );
     return;
   }
 
-  // Cache-first for everything else
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(response => {
-        // Cache successful GET responses
-        if (response.ok && e.request.method === 'GET') {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-        }
-        return response;
-      });
-    })
-  );
+  // Local app files (index.html, icons, manifest): network-first, fall back to cache
+  if (url.origin === self.location.origin) {
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          if (res.ok) caches.open(CACHE_NAME).then(c => c.put(e.request, res.clone()));
+          return res;
+        })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Everything else (API calls etc): network only
+  e.respondWith(fetch(e.request));
 });
