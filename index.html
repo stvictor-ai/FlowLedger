@@ -757,8 +757,6 @@ tr.row-unmatched td{opacity:.35}
     <div class="summary-card"><p class="label">{{ t('trueReturn') }}</p><p :class="['value', trueReturn>=0?'text-green':'text-red']">{{ (trueReturn>=0?'+':'')+fmt(trueReturn) }}</p><p class="sub-metric" :class="trueROI>=0?'text-green':'text-red'">{{ (trueROI*100).toFixed(1) }}%</p></div>
   </div>
 
-  <!-- ===== BUDGET BAR ===== -->
-
   <!-- ===== QUICK ADD ===== -->
   <section class="panel section-records section-not-stats section-not-data quick-add-panel">
     <h2 style="margin-bottom:14px">{{ t('quickAdd') }}</h2>
@@ -968,34 +966,6 @@ tr.row-unmatched td{opacity:.35}
     </div>
   </section>
 
-  <!-- ===== ASSET ALLOCATION OVERVIEW ===== -->
-  <section class="panel section-stats section-not-records section-not-data" v-if="dashVisible('assetAlloc')&&assetTypeRows.length">
-    <div class="panel-header"><h2>{{ t('assetAlloc') }}</h2><p class="hint">各类资产的投入分布与盈亏情况（折合 CNY）</p></div>
-    <div class="stats-layout">
-      <div>
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <button :class="['btn btn-sm',pieMode==='in'?'btn-primary':'btn-ghost']" @click="pieMode='in'">{{ t('investDist') }}</button>
-          <button :class="['btn btn-sm',pieMode==='net'?'btn-primary':'btn-ghost']" @click="pieMode='net'">{{ t('netDist') }}</button>
-        </div>
-        <div class="chart-wrap" style="max-height:280px"><canvas ref="pieChart"></canvas></div>
-      </div>
-      <div class="compare-grid" style="align-content:start">
-        <div v-for="row in assetTypeRows" :key="row.assetType" class="compare-card asset-card">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-            <span :style="{width:'8px',height:'8px',borderRadius:'50%',background:assetColor(row.assetType),flexShrink:0,display:'inline-block'}"></span>
-            <p style="font-weight:700;font-size:13px;margin:0">{{ row.assetType||'未分类' }}</p>
-          </div>
-          <div style="font-size:11px;color:var(--muted);display:grid;grid-template-columns:1fr 1fr;gap:3px 6px">
-            <span>{{ t('deposit') }}</span><span style="text-align:right;color:var(--red);font-variant-numeric:tabular-nums">{{ fmt(row.inTotal) }}</span>
-            <span>{{ t('withdraw') }}</span><span style="text-align:right;color:var(--green);font-variant-numeric:tabular-nums">{{ fmt(row.outTotal) }}</span>
-            <span>盈亏</span><span :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:row.net>=0?'var(--blue)':'var(--red)'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span>
-            <span>{{ t('roiRate') }}</span><span :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:row.inTotal&&row.outTotal/row.inTotal>=1?'var(--green)':'var(--red)'}">{{ row.inTotal?((row.outTotal/row.inTotal)*100).toFixed(0)+'%':'-' }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- ===== POSITIONS ===== -->
   <section class="panel section-stats section-not-records section-not-data" v-if="dashVisible('positions')">
     <div class="panel-header" @click="showPosForm=!showPosForm" style="cursor:pointer">
@@ -1061,6 +1031,34 @@ tr.row-unmatched td{opacity:.35}
       </div>
       <button class="btn btn-ghost btn-sm mt-8" @click="fetchPosPrices" v-if="positions.length">{{ t('posRefreshPrice') }}</button>
       <div v-if="!positions.length" style="text-align:center;color:var(--muted);padding:20px">{{ t('posEmpty') }}</div>
+    </div>
+  </section>
+
+  <!-- ===== ASSET ALLOCATION OVERVIEW ===== -->
+  <section class="panel section-stats section-not-records section-not-data" v-if="dashVisible('assetAlloc')&&assetTypeRows.length">
+    <div class="panel-header"><h2>{{ t('assetAlloc') }}</h2><p class="hint">各类资产的投入分布与盈亏情况（折合 CNY）</p></div>
+    <div class="stats-layout">
+      <div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button :class="['btn btn-sm',pieMode==='in'?'btn-primary':'btn-ghost']" @click="pieMode='in'">{{ t('investDist') }}</button>
+          <button :class="['btn btn-sm',pieMode==='net'?'btn-primary':'btn-ghost']" @click="pieMode='net'">{{ t('netDist') }}</button>
+        </div>
+        <div class="chart-wrap" style="max-height:280px"><canvas ref="pieChart"></canvas></div>
+      </div>
+      <div class="compare-grid" style="align-content:start">
+        <div v-for="row in assetTypeRows" :key="row.assetType" class="compare-card asset-card">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            <span :style="{width:'8px',height:'8px',borderRadius:'50%',background:assetColor(row.assetType),flexShrink:0,display:'inline-block'}"></span>
+            <p style="font-weight:700;font-size:13px;margin:0">{{ row.assetType||'未分类' }}</p>
+          </div>
+          <div style="font-size:11px;color:var(--muted);display:grid;grid-template-columns:1fr 1fr;gap:3px 6px">
+            <span>{{ t('deposit') }}</span><span style="text-align:right;color:var(--red);font-variant-numeric:tabular-nums">{{ fmt(row.inTotal) }}</span>
+            <span>{{ t('withdraw') }}</span><span style="text-align:right;color:var(--green);font-variant-numeric:tabular-nums">{{ fmt(row.outTotal) }}</span>
+            <span>盈亏</span><span :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:row.net>=0?'var(--blue)':'var(--red)'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span>
+            <span>{{ t('roiRate') }}</span><span :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:row.inTotal&&row.outTotal/row.inTotal>=1?'var(--green)':'var(--red)'}">{{ row.inTotal?((row.outTotal/row.inTotal)*100).toFixed(0)+'%':'-' }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1379,8 +1377,8 @@ tr.row-unmatched td{opacity:.35}
   <div v-if="onboardStep>0" class="onboard-overlay" @click.self="nextOnboardStep">
     <div class="onboard-spotlight" :style="spotlightStyle"></div>
     <div class="onboard-tooltip" :style="tooltipStyle">
-      <div class="onboard-step-title">{{ onboardStep===1?t('onboardStep1Title'):onboardStep===2?t('onboardStep2Title'):onboardStep===3?t('onboardStep3Title'):t('onboardStep4Title') }}</div>
-      <div class="onboard-step-desc">{{ onboardStep===1?t('onboardStep1Desc'):onboardStep===2?t('onboardStep2Desc'):onboardStep===3?t('onboardStep3Desc'):t('onboardStep4Desc') }}</div>
+      <div class="onboard-step-title">{{ onboardStep===1?t('onboardStep1Title'):onboardStep===2?t('onboardStep2Title'):t('onboardStep3Title') }}</div>
+      <div class="onboard-step-desc">{{ onboardStep===1?t('onboardStep1Desc'):onboardStep===2?t('onboardStep2Desc'):t('onboardStep3Desc') }}</div>
       <div class="onboard-step-actions">
         <button class="btn btn-primary" @click="nextOnboardStep">{{ onboardStep===3?t('done'):t('next') }}</button>
         <button class="btn btn-ghost" @click="skipOnboard">{{ t('skip') }}</button>
@@ -1561,12 +1559,6 @@ const I18N={
     exchangeStats:'账户 / 平台统计',
     assetStats:'资产类型统计',
     tagStats:'标签统计',
-    budget:'{{month}} 月度投入预算',
-    budgetOff:'关闭预算',
-    closeBudget:'关闭预算',
-    saveBudget:'预算已保存',
-    overBudget:'超预算',
-    nearBudget:'接近预算上限',
     largeTxWarn:'大额提醒',
     insights:'建议与复盘',
     rules:'规则设置',
@@ -1703,8 +1695,6 @@ const I18N={
       gap1day:'距上次投入仅 {n} 天，建议冷静 24 小时再操作',
       gap3day:'距上次投入仅 {n} 天，注意控制投入频率',
       freqHigh:'本周已投入 {n} 次，频率偏高，是否在追涨？',
-      overBudget:'本月投入将达 {n}，超出预算 {budget}',
-      nearBudget:'本月投入将达 {n}，接近预算上限 {budget}',
       largeAmount:'本笔金额 {n} {currency} 是近期均值的 {ratio} 倍，是否冲动操作？',
       calmTitle:'⚠️ 冷静提醒',
       calmConfirm:'确定要继续投入吗？'
@@ -1761,10 +1751,8 @@ const I18N={
     onboardStep1Desc:'在这里录入你的投入或取出记录，支持多种资产和货币。',
     onboardStep2Title:'查看盈亏统计',
     onboardStep2Desc:'图表和指标帮你一目了然看清整体资金情况。',
-    onboardStep3Title:'设置月度预算',
-    onboardStep3Desc:'设定每月投入上限，接近超支时自动提醒。',
-    onboardStep4Title:'开启多端同步',
-    onboardStep4Desc:'用 GitHub Token 同步数据到 Gist，手机电脑随时同步。',
+    onboardStep3Title:'开启多端同步',
+    onboardStep3Desc:'用 GitHub Token 同步数据到 Gist，手机电脑随时同步。',
     edit:'编辑',
     editEntry:'编辑记录',
     saveEdit:'保存修改',
@@ -1861,12 +1849,6 @@ const I18N={
     exchangeStats:'Platform Stats',
     assetStats:'Asset Type Stats',
     tagStats:'Tag Stats',
-    budget:'{{month}} Monthly Budget',
-    budgetOff:'Budget Off',
-    closeBudget:'Disable Budget',
-    saveBudget:'Budget saved',
-    overBudget:'Over Budget',
-    nearBudget:'Near Budget Limit',
     largeTxWarn:'Large Transactions',
     insights:'Insights & Review',
     rules:'Rule Settings',
@@ -2003,8 +1985,6 @@ const I18N={
       gap1day:'Only {n} day(s) since last deposit — consider waiting 24h',
       gap3day:'Only {n} day(s) since last deposit — pace yourself',
       freqHigh:'{n} deposits this week — is this FOMO chasing?',
-      overBudget:'This deposit brings monthly total to {n}, exceeding budget of {budget}',
-      nearBudget:'This deposit brings monthly total to {n}, near budget limit of {budget}',
       largeAmount:'This deposit ({n} {currency}) is {ratio}x your recent average — impulsive?',
       calmTitle:'⚠️ Pause & Reflect',
       calmConfirm:'Are you sure you want to proceed with this deposit?'
@@ -2044,10 +2024,8 @@ const I18N={
     onboardStep1Desc:'Record deposits and withdrawals here. Supports multiple assets and currencies.',
     onboardStep2Title:'Track P&L',
     onboardStep2Desc:'Charts and metrics give you a clear view of your overall performance.',
-    onboardStep3Title:'Set a Monthly Budget',
-    onboardStep3Desc:'Cap your monthly deposits and get alerts before exceeding the limit.',
-    onboardStep4Title:'Enable Multi-Device Sync',
-    onboardStep4Desc:'Sync data via GitHub Gist with a personal access token. Free and secure.',
+    onboardStep3Title:'Enable Multi-Device Sync',
+    onboardStep3Desc:'Sync data via GitHub Gist with a personal access token. Free and secure.',
     edit:'Edit',
     editEntry:'Edit Entry',
     saveEdit:'Save Changes',
@@ -2103,7 +2081,7 @@ setup(){
   const statTab=ref('asset')
   // Dashboard customization
   const DASH_K='flowledger_dashboard'
-  const DASH_DEFAULT=['periodStats','assetAlloc','positions','insights','behavior']
+  const DASH_DEFAULT=['positions','assetAlloc','periodStats','insights','behavior']
   function loadDashboard(){try{const r=localStorage.getItem(DASH_K);if(r)return JSON.parse(r)}catch(e){}return [...DASH_DEFAULT]}
   function saveDashboard(){localStorage.setItem(DASH_K,JSON.stringify(dashPanels.value))}
   const dashPanels=ref(loadDashboard())
@@ -2270,8 +2248,8 @@ setup(){
     if(!onboardStep.value)return{display:'none'}
     const isMobile=window.innerWidth<=680
     const targets=isMobile
-      ?[null,{sel:'.fab',pad:8},{sel:'.summary-grid',pad:8},{sel:'.budget-bar-wrap',pad:8},{sel:'.panel-header',pad:8}]
-      :[null,{sel:'.quick-add-panel',pad:8},{sel:'.summary-grid',pad:8},{sel:'.budget-bar-wrap',pad:8},{sel:'.panel-header',pad:8}]
+      ?[null,{sel:'.fab',pad:8},{sel:'.summary-grid',pad:8},{sel:'.panel-header',pad:8}]
+      :[null,{sel:'.quick-add-panel',pad:8},{sel:'.summary-grid',pad:8},{sel:'.panel-header',pad:8}]
     const t=targets[onboardStep.value];if(!t)return{display:'none'}
     const el=document.querySelector(t.sel);if(!el)return{display:'none'}
     const r=el.getBoundingClientRect()
@@ -2290,11 +2268,13 @@ setup(){
   })
   function nextOnboardStep(){
     const isMobile=window.innerWidth<=680
-    if(onboardStep.value===2&&isMobile)mobileTab.value='stats'
-    if(onboardStep.value===2&&!isMobile)window.scrollTo({top:document.querySelector('.section-stats')?.offsetTop-80||0,behavior:'smooth'})
-    if(onboardStep.value===3)showSync.value=true;
-    
-    if(onboardStep.value===4){skipOnboard();return}
+    // 进入第3步（多端同步）前：展开同步面板并定位
+    if(onboardStep.value===2){
+      showSync.value=true
+      if(isMobile)mobileTab.value='records'
+      else Vue.nextTick(()=>document.querySelector('.panel-header')?.scrollIntoView({behavior:'smooth',block:'center'}))
+    }
+    if(onboardStep.value===3){skipOnboard();return}
     onboardStep.value++
   }
   function skipOnboard(){onboardStep.value=0;localStorage.setItem('flowledger_onboarded','true')}
