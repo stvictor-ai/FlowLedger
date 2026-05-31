@@ -756,6 +756,12 @@ tr.row-unmatched td{opacity:.35}
     </div>
     <div :class="['panel-collapse-body',{collapsed:!showPosForm}]">
       <!-- Add form -->
+      <!-- 市场分类筛选 -->
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;align-items:center">
+        <span style="font-size:11px;color:var(--muted);margin-right:2px">{{ t('posMarketLabel') }}</span>
+        <span :class="['chip',{active:posMarket===''}]" @click="posMarket=''" style="cursor:pointer;font-size:11px;padding:4px 12px">{{ t('posMarketAll') }}</span>
+        <span v-for="m in POS_MARKETS" :key="m.v" :class="['chip',{active:posMarket===m.v}]" @click="posMarket=m.v" style="cursor:pointer;font-size:11px;padding:4px 12px">{{ m.l }}</span>
+      </div>
       <div class="form-grid" style="margin-bottom:12px">
         <div class="form-group" style="position:relative">
           <label>{{ t('posSymbol') }}</label>
@@ -765,8 +771,8 @@ tr.row-unmatched td{opacity:.35}
               <!-- 搜索结果（东方财富，支持中文名/代码） -->
               <template v-if="posSymbolSearch.trim()">
                 <div v-if="posSearching" class="symbol-option" style="color:var(--muted)">{{ t('posSearching') }}</div>
-                <div v-else-if="!posSearchResults.length" class="symbol-option" style="color:var(--muted)">{{ t('posNoResult') }}</div>
-                <div v-for="it in posSearchResults" :key="it.secid" class="symbol-option" @click="selectEmResult(it)">
+                <div v-else-if="!posResultsShown.length" class="symbol-option" style="color:var(--muted)">{{ t('posNoResult') }}</div>
+                <div v-for="it in posResultsShown" :key="it.secid" class="symbol-option" @click="selectEmResult(it)">
                   <span class="symbol-option-icon" style="font-size:10px;font-weight:700;color:var(--accent)">{{ it.typeName }}</span>
                   <span class="symbol-option-name">{{ it.name }}</span>
                   <span class="symbol-option-pair">{{ it.code }} · {{ it.currency }}</span>
@@ -1221,23 +1227,6 @@ tr.row-unmatched td{opacity:.35}
         </div>
       </div>
       <button class="btn btn-ghost btn-xs" @click="undoImportBatch(b)" :disabled="b.undone">{{ t('undoImport') }}</button>
-    </div>
-    <div class="panel-header" style="margin-top:16px;cursor:pointer" @click="showAssetMgr=!showAssetMgr">
-      <div class="panel-collapse-toggle"><span :class="['arrow',{open:showAssetMgr}]">&#9654;</span> <div><h2>资产类型管理</h2><p class="hint">自定义资产类型和平台建议</p></div></div>
-    </div>
-    <div :class="['panel-collapse-body',{collapsed:!showAssetMgr}]">
-      <div class="form-grid" style="margin-bottom:10px"><div class="form-group"><label>新增资产类型</label><div style="display:flex;gap:6px"><input class="form-input" v-model="assetMgrNew" placeholder="如：可转债" style="flex:1"><button class="btn btn-primary btn-sm" @click="addAssetType">添加</button></div></div></div>
-      <div v-for="t in ASSET_TYPES" :key="t" style="border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--card)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <strong style="font-size:14px">{{ t }}</strong>
-          <button class="btn btn-ghost btn-xs" @click="removeAssetType(t)" style="color:var(--red);font-size:11px" v-if="!['大A','美股','港股','加密货币','基金','黄金','期货','其他'].includes(t)">删除</button>
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
-          <span v-for="p in getPlatforms(t)" :key="p" style="display:inline-flex;align-items:center;gap:3px;background:var(--overlay);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:11px">{{ p }}<button style="cursor:pointer;color:var(--dim);font-size:12px;line-height:1" @click="removePlatform(t,p)">&times;</button></span>
-        </div>
-        <div style="display:flex;gap:4px"><input class="form-input" v-model="assetMgrNewPlatform" :placeholder="'添加'+t+'平台'" style="flex:1;font-size:11px;padding:4px 8px"><button class="btn btn-ghost btn-xs" @click="addPlatform(t)">+</button></div>
-      </div>
-      <button class="btn btn-ghost btn-sm mt-8" @click="resetAssetCfg">恢复默认</button>
     </div>
   </section>
 
@@ -1798,6 +1787,8 @@ const I18N={
     posSearching:'搜索中…',
     posNoResult:'无结果，试试代码或英文名',
     posCryptoQuick:'加密货币（快捷）',
+    posMarketLabel:'市场',
+    posMarketAll:'全部',
   },
   en:{
     appTitle:'FlowLedger · Investment Ledger & Portfolio',
@@ -2074,6 +2065,8 @@ const I18N={
     posSearching:'Searching…',
     posNoResult:'No results — try a code or English name',
     posCryptoQuick:'Crypto (quick)',
+    posMarketLabel:'Market',
+    posMarketAll:'All',
   }
 }
 let lang=ref(localStorage.getItem('flowledger_lang')||(navigator.language.startsWith('zh')?'zh':'en'))
@@ -2087,7 +2080,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.05.30-2' // 每次部署递增末位，方便区分加载到哪一版
+  const APP_VERSION='v2026.05.30-3' // 每次部署递增末位，方便区分加载到哪一版
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const snapshots=ref([])
@@ -2358,32 +2351,6 @@ setup(){
   const ASSET_TYPES=computed(()=>assetCfg.types)
   function getPlatforms(assetType){return assetCfg.platforms[assetType]||[]}
   function assetColor(type){return assetCfg.colors[type]||assetCfg.colors['']}
-  // 资产类型管理
-  const showAssetMgr=ref(false)
-  const assetMgrNew=ref('')
-  const assetMgrNewPlatform=ref('')
-  function addAssetType(){
-    const v=assetMgrNew.value.trim();if(!v||assetCfg.types.includes(v))return
-    assetCfg.types.push(v);assetCfg.platforms[v]=[];assetCfg.colors[v]=assetCfg.colors['其他']
-    assetMgrNew.value='';saveAssetCfg()
-  }
-  function removeAssetType(t){
-    if(BUILTIN_TYPES.includes(t)){showToast('内置类型不可删除','error');return}
-    assetCfg.types=assetCfg.types.filter(x=>x!==t);delete assetCfg.platforms[t];delete assetCfg.colors[t]
-    saveAssetCfg()
-  }
-  function addPlatform(type){
-    const v=assetMgrNewPlatform.value.trim();if(!v||(assetCfg.platforms[type]||[]).includes(v))return
-    if(!assetCfg.platforms[type])assetCfg.platforms[type]=[]
-    assetCfg.platforms[type].push(v);assetMgrNewPlatform.value='';saveAssetCfg()
-  }
-  function removePlatform(type,plat){
-    assetCfg.platforms[type]=assetCfg.platforms[type].filter(p=>p!==plat);saveAssetCfg()
-  }
-  function resetAssetCfg(){
-    assetCfg.types=[...BUILTIN_TYPES];assetCfg.platforms={...BUILTIN_PLATFORMS};assetCfg.colors={...BUILTIN_COLORS}
-    saveAssetCfg();showToast('已恢复默认','success')
-  }
   const platformSuggestions=computed(()=>{
     const preset=getPlatforms(form.assetType)
     const used=allExchanges.value.filter(ex=>!preset.includes(ex))
@@ -2597,6 +2564,10 @@ setup(){
   const posPrices=ref({})
   const posSearchResults=ref([])
   const posSearching=ref(false)
+  const posMarket=ref('') // 市场筛选：''=全部，否则为 assetType 值
+  const POS_MARKETS=[{l:'A股',v:'大A'},{l:'港股',v:'港股'},{l:'美股',v:'美股'},{l:'基金',v:'基金'}]
+  // 按所选市场过滤搜索结果
+  const posResultsShown=computed(()=>posMarket.value?posSearchResults.value.filter(it=>it.assetType===posMarket.value):posSearchResults.value)
   function findTicker(sym){return TICKER_LIST.find(t=>t.symbol.toUpperCase()===sym.toUpperCase())}
   // 东方财富：市场号 → 币种 / 资产类型
   const EM_CCY={'0':'CNY','1':'CNY','105':'USD','106':'USD','107':'USD','116':'HKD','153':'USD','155':'USD'}
@@ -3514,10 +3485,9 @@ setup(){
     saveSyncConfig,syncPush,syncPull,syncAuto,saveRules,saveReviewNote,saveChecklist,loadReview,
     exportExcel,exportJSON,importExcel,importJSON,showToast,dayjs,
     onboardStep,spotlightStyle,tooltipStyle,nextOnboardStep,skipOnboard,t,lang,tickerData,showTickerPick,tickerSelected,tickerCategories,toggleTicker,
-    positions,posForm,posRows,posSummary,addPosition,removePosition,updatePosition,fetchPosPrices,showPosForm,posSymbolSearch,showSymbolPicker,posSearchResults,posSearching,onPosSearchInput,selectEmResult,selectCryptoQuick,cryptoQuickList,
+    positions,posForm,posRows,posSummary,addPosition,removePosition,updatePosition,fetchPosPrices,showPosForm,posSymbolSearch,showSymbolPicker,posSearchResults,posSearching,posResultsShown,posMarket,POS_MARKETS,onPosSearchInput,selectEmResult,selectCryptoQuick,cryptoQuickList,
     showDashCfg,dashPanels,dashVisible,toggleDashPanel,moveDashPanel,resetDashboard,DASH_DEFAULT,dashLabels,
-    ASSET_TYPES,getPlatforms,assetColor,showAssetMgr,assetMgrNew,assetMgrNewPlatform,
-    addAssetType,removeAssetType,addPlatform,removePlatform,resetAssetCfg}
+    ASSET_TYPES,getPlatforms,assetColor}
 }
 }).mount('#app')
 
