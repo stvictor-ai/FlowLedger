@@ -2080,7 +2080,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.05.30-3' // 每次部署递增末位，方便区分加载到哪一版
+  const APP_VERSION='v2026.05.30-4' // 每次部署递增末位，方便区分加载到哪一版
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const snapshots=ref([])
@@ -2178,76 +2178,76 @@ setup(){
     {symbol:'XRP',icon:'💧',source:'binance',pair:'XRPUSDT',decimals:3,cat:'加密'},
     {symbol:'ADA',icon:'🔵',source:'binance',pair:'ADAUSDT',decimals:3,cat:'加密'},
     {symbol:'DOGE',icon:'🐕',source:'binance',pair:'DOGEUSDT',decimals:4,cat:'加密'},
-    // US Stocks — Yahoo
-    {symbol:'NVDA',icon:'🟢',source:'yahoo',pair:'NVDA',decimals:1,cat:'美股'},
-    {symbol:'AAPL',icon:'🍎',source:'yahoo',pair:'AAPL',decimals:1,cat:'美股'},
-    {symbol:'MSFT',icon:'💻',source:'yahoo',pair:'MSFT',decimals:1,cat:'美股'},
-    {symbol:'TSLA',icon:'🚗',source:'yahoo',pair:'TSLA',decimals:1,cat:'美股'},
-    {symbol:'GOOGL',icon:'🔍',source:'yahoo',pair:'GOOGL',decimals:1,cat:'美股'},
-    {symbol:'AMZN',icon:'📦',source:'yahoo',pair:'AMZN',decimals:1,cat:'美股'},
-    {symbol:'META',icon:'👤',source:'yahoo',pair:'META',decimals:1,cat:'美股'},
-    {symbol:'AMD',icon:'🔴',source:'yahoo',pair:'AMD',decimals:1,cat:'美股'},
-    // Index & Commodities
-    {symbol:'SPX',icon:'💹',source:'yahoo',pair:'^GSPC',decimals:0,cat:'指数'},
-    {symbol:'NASDAQ',icon:'📊',source:'yahoo',pair:'^IXIC',decimals:0,cat:'指数'},
-    {symbol:'DOW',icon:'🏛',source:'yahoo',pair:'^DJI',decimals:0,cat:'指数'},
-    {symbol:'Gold',icon:'🥇',source:'yahoo',pair:'GC=F',decimals:0,cat:'商品'},
-    {symbol:'Silver',icon:'🥈',source:'yahoo',pair:'SI=F',decimals:1,cat:'商品'},
-    {symbol:'USOIL',icon:'🛢',source:'yahoo',pair:'CL=F',decimals:1,cat:'商品'},
-    {symbol:'VIX',icon:'⚡',source:'yahoo',pair:'^VIX',decimals:1,cat:'指数'},
-    // HK Stocks — Yahoo
-    {symbol:'Tencent',icon:'💬',source:'yahoo',pair:'0700.HK',decimals:1,cat:'港股'},
-    {symbol:'Alibaba',icon:'🛒',source:'yahoo',pair:'9988.HK',decimals:1,cat:'港股'},
-    {symbol:'Meituan',icon:'🍚',source:'yahoo',pair:'3690.HK',decimals:1,cat:'港股'},
-    {symbol:'Xiaomi',icon:'📱',source:'yahoo',pair:'1810.HK',decimals:1,cat:'港股'},
-    // A-Share — Yahoo
-    {symbol:'Kweichow',icon:'🍶',source:'yahoo',pair:'600519.SS',decimals:1,cat:'大A'},
-    {symbol:'CATL',icon:'🔋',source:'yahoo',pair:'300750.SZ',decimals:1,cat:'大A'},
-    {symbol:'BYD',icon:'⚡',source:'yahoo',pair:'002594.SZ',decimals:1,cat:'大A'},
+    // US Stocks — Eastmoney
+    {symbol:'NVDA',icon:'🟢',source:'eastmoney',emid:'105.NVDA',decimals:1,cat:'美股'},
+    {symbol:'AAPL',icon:'🍎',source:'eastmoney',emid:'105.AAPL',decimals:1,cat:'美股'},
+    {symbol:'MSFT',icon:'💻',source:'eastmoney',emid:'105.MSFT',decimals:1,cat:'美股'},
+    {symbol:'TSLA',icon:'🚗',source:'eastmoney',emid:'105.TSLA',decimals:1,cat:'美股'},
+    {symbol:'GOOGL',icon:'🔍',source:'eastmoney',emid:'105.GOOGL',decimals:1,cat:'美股'},
+    {symbol:'AMZN',icon:'📦',source:'eastmoney',emid:'105.AMZN',decimals:1,cat:'美股'},
+    {symbol:'META',icon:'👤',source:'eastmoney',emid:'105.META',decimals:1,cat:'美股'},
+    {symbol:'AMD',icon:'🔴',source:'eastmoney',emid:'105.AMD',decimals:1,cat:'美股'},
+    // Index — Eastmoney
+    {symbol:'SPX',icon:'💹',source:'eastmoney',emid:'100.SPX',decimals:0,cat:'指数'},
+    {symbol:'NASDAQ',icon:'📊',source:'eastmoney',emid:'100.NDX',decimals:0,cat:'指数'},
+    {symbol:'DOW',icon:'🏛',source:'eastmoney',emid:'100.DJIA',decimals:0,cat:'指数'},
+    // Commodities — Eastmoney
+    {symbol:'Gold',icon:'🥇',source:'eastmoney',emid:'101.GC00Y',decimals:1,cat:'商品'},
+    {symbol:'Silver',icon:'🥈',source:'eastmoney',emid:'101.SI00Y',decimals:2,cat:'商品'},
+    {symbol:'USOIL',icon:'🛢',source:'eastmoney',emid:'102.CL00Y',decimals:1,cat:'商品'},
+    // HK Stocks — Eastmoney
+    {symbol:'Tencent',icon:'💬',source:'eastmoney',emid:'116.00700',decimals:1,cat:'港股'},
+    {symbol:'Alibaba',icon:'🛒',source:'eastmoney',emid:'116.09988',decimals:1,cat:'港股'},
+    {symbol:'Meituan',icon:'🍚',source:'eastmoney',emid:'116.03690',decimals:1,cat:'港股'},
+    {symbol:'Xiaomi',icon:'📱',source:'eastmoney',emid:'116.01810',decimals:1,cat:'港股'},
+    // A-Share — Eastmoney
+    {symbol:'Kweichow',icon:'🍶',source:'eastmoney',emid:'1.600519',decimals:1,cat:'大A'},
+    {symbol:'CATL',icon:'🔋',source:'eastmoney',emid:'0.300750',decimals:1,cat:'大A'},
+    {symbol:'BYD',icon:'⚡',source:'eastmoney',emid:'0.002594',decimals:1,cat:'大A'},
   ]
-  // Track last price for change calculation
-  let tickerPrev={}
   async function fetchTickerPrices(){
     const results=[]
     const selected=new Set(tickerSelected.value)
     const active=TICKER_LIST.filter(t=>selected.has(t.symbol))
     if(!active.length){tickerData.value=[];return}
-    // Binance 24hr ticker (price + daily change)
-    try{
-      const res=await Promise.race([fetch('https://api.binance.com/api/v3/ticker/24hr'),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
-      if(res&&res.ok){
-        const data=await res.json()
-        const binanceItems=active.filter(t=>t.source==='binance')
-        binanceItems.forEach(t=>{
-          const row=data.find(d=>d.symbol===t.pair)
-          if(row){
-            const price=Number(row.lastPrice)
-            const chg=Number(row.priceChangePercent)
-            results.push({symbol:t.symbol,icon:t.icon,price:price>=1?price.toFixed(t.decimals):price.toPrecision(4),chg:Number(chg.toFixed(1))})
-          }
-        })
-      }
-    }catch(e){/* binance failed, continue to try yahoo */}
-    // Yahoo Finance for stocks/commodities
-    const yahooItems=active.filter(t=>t.source==='yahoo')
-    for(const t of yahooItems){
+    const fmtPrice=(price,dec)=>price>=1?price.toFixed(dec):price.toPrecision(4)
+    // 加密：Binance 24hr（价格 + 当日涨跌幅）
+    const binanceItems=active.filter(t=>t.source==='binance')
+    if(binanceItems.length){
       try{
-        const res=await Promise.race([fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${t.pair}?interval=1d&range=2d`),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
+        const res=await Promise.race([fetch('https://api.binance.com/api/v3/ticker/24hr'),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
         if(res&&res.ok){
           const data=await res.json()
-          const result=data?.chart?.result?.[0]
-          if(result){
-            const meta=result.meta
-            const price=meta.regularMarketPrice
-            const prev=meta.previousClose||tickerPrev[t.symbol]||price
-            const chg=prev?((price-prev)/prev*100).toFixed(1):0
-            tickerPrev[t.symbol]=price
-            results.push({symbol:t.symbol,icon:t.icon,price:price>=1?price.toFixed(t.decimals):price.toPrecision(4),chg:Number(chg)})
-          }
+          binanceItems.forEach(t=>{
+            const row=data.find(d=>d.symbol===t.pair)
+            if(row)results.push({symbol:t.symbol,icon:t.icon,price:fmtPrice(Number(row.lastPrice),t.decimals),chg:Number(Number(row.priceChangePercent).toFixed(1))})
+          })
         }
-      }catch(e){/* individual ticker failed */}
+      }catch(e){}
     }
-    if(results.length)tickerData.value=results
+    // 股票/指数/商品：东方财富批量取价（一次请求拿全部）
+    const emItems=active.filter(t=>t.source==='eastmoney'&&t.emid)
+    if(emItems.length){
+      try{
+        const secids=emItems.map(t=>t.emid).join(',')
+        const res=await Promise.race([fetch(`https://push2delay.eastmoney.com/api/qt/ulist.np/get?secids=${secids}&fields=f12,f13,f14,f2,f3,f1`),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
+        if(res&&res.ok){
+          const data=await res.json()
+          const raw=data?.data?.diff
+          const diff=Array.isArray(raw)?raw:Object.values(raw||{})
+          emItems.forEach(t=>{
+            const row=diff.find(d=>`${d.f13}.${d.f12}`===t.emid)
+            if(row&&row.f2!=null)results.push({symbol:t.symbol,icon:t.icon,price:fmtPrice(row.f2/Math.pow(10,row.f1||2),t.decimals),chg:Number(((row.f3||0)/100).toFixed(1))})
+          })
+        }
+      }catch(e){}
+    }
+    // 按 TICKER_LIST 顺序排列
+    if(results.length){
+      const order=active.map(t=>t.symbol)
+      results.sort((a,b)=>order.indexOf(a.symbol)-order.indexOf(b.symbol))
+      tickerData.value=results
+    }
   }
 
   // Onboarding
