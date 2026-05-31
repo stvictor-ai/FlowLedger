@@ -749,6 +749,82 @@ tr.row-unmatched td{opacity:.35}
     </div>
   </header>
 
+  <!-- ===== POSITIONS ===== -->
+  <section class="panel section-stats section-not-records section-not-data" v-if="dashVisible('positions')">
+    <div class="panel-header" @click="showPosForm=!showPosForm" style="cursor:pointer">
+      <div class="panel-collapse-toggle"><span :class="['arrow',{open:showPosForm}]">&#9654;</span> <div><h2>{{ t('posTitle') }}</h2><p class="hint">{{ t('posCount',{n:positions.length}) }}<span v-if="positions.length"> · {{ t('posTotalCost') }} {{ fmt(posSummary.totalCost) }} · {{ t('posTotalValue') }} {{ fmt(posSummary.totalValue) }} · <span :style="{color:posSummary.pl>=0?'var(--green)':'var(--red)'}">{{ t('posPL') }} {{ posSummary.pl>=0?'+':'' }}{{ fmt(posSummary.pl) }} ({{ posSummary.plPct }}%)</span></span></p></div></div>
+    </div>
+    <div :class="['panel-collapse-body',{collapsed:!showPosForm}]">
+      <!-- Add form -->
+      <div class="form-grid" style="margin-bottom:12px">
+        <div class="form-group" style="position:relative">
+          <label>{{ t('posSymbol') }}</label>
+          <input class="form-input" v-model="posSymbolSearch" @focus="showSymbolPicker=true" @input="onPosSearchInput" :placeholder="t('posSymbolPlaceholder')">
+          <div v-if="showSymbolPicker" class="symbol-picker-dropdown">
+            <div class="symbol-picker-list">
+              <!-- 搜索结果（东方财富，支持中文名/代码） -->
+              <template v-if="posSymbolSearch.trim()">
+                <div v-if="posSearching" class="symbol-option" style="color:var(--muted)">{{ t('posSearching') }}</div>
+                <div v-else-if="!posSearchResults.length" class="symbol-option" style="color:var(--muted)">{{ t('posNoResult') }}</div>
+                <div v-for="it in posSearchResults" :key="it.secid" class="symbol-option" @click="selectEmResult(it)">
+                  <span class="symbol-option-icon" style="font-size:10px;font-weight:700;color:var(--accent)">{{ it.typeName }}</span>
+                  <span class="symbol-option-name">{{ it.name }}</span>
+                  <span class="symbol-option-pair">{{ it.code }} · {{ it.currency }}</span>
+                </div>
+              </template>
+              <!-- 空时：加密货币快捷入口 -->
+              <template v-else>
+                <div style="font-size:10px;color:var(--dim);padding:4px 10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">{{ t('posCryptoQuick') }}</div>
+                <div v-for="t in cryptoQuickList" :key="t.symbol" class="symbol-option" @click="selectCryptoQuick(t)">
+                  <span class="symbol-option-icon">{{ t.icon }}</span><span class="symbol-option-name">{{ t.symbol }}</span><span class="symbol-option-pair">USDT</span>
+                </div>
+              </template>
+            </div>
+            <div class="symbol-picker-backdrop" @click="showSymbolPicker=false"></div>
+          </div>
+        </div>
+        <div class="form-group"><label>{{ t('posName') }}</label><input class="form-input" v-model="posForm.name" :placeholder="t('posNamePlaceholder')"></div>
+        <div class="form-group"><label>{{ t('posQty') }}</label><input class="form-input" type="number" v-model="posForm.qty" :placeholder="t('posQtyPlaceholder')" @keyup.enter="addPosition" step="any"></div>
+        <div class="form-group"><label>{{ t('posAvgCost') }}</label><input class="form-input" type="number" v-model="posForm.avgCost" :placeholder="t('posAvgCostPlaceholder')" step="any"></div>
+        <div class="form-group"><label>{{ t('posCurrency') }}</label><select class="form-input" v-model="posForm.currency"><option>CNY</option><option>USD</option><option>HKD</option><option>USDT</option></select></div>
+        <div class="form-group" v-if="posForm.secid" style="font-size:11px;color:var(--muted);align-self:end;padding-bottom:8px">{{ posForm.assetType }} · {{ posForm.secid }}</div>
+        <button class="btn btn-primary btn-sm" @click="addPosition" style="align-self:end">{{ t('posAdd') }}</button>
+      </div>
+      <!-- Positions table (desktop) -->
+      <div class="table-wrap" v-if="positions.length">
+        <table><thead><tr><th>{{ t('posSymbolCol') }}</th><th style="text-align:right">{{ t('posQtyCol') }}</th><th style="text-align:right">{{ t('posAvgCostCol') }}</th><th style="text-align:right">{{ t('posPriceCol') }}</th><th style="text-align:right">{{ t('posValueCol') }} (CNY)</th><th style="text-align:right">{{ t('posPLCol') }} (CNY)</th><th style="text-align:center">{{ t('posActionCol') }}</th></tr></thead>
+        <tbody><tr v-for="p in posRows" :key="p.id">
+          <td><span v-if="p.icon" style="margin-right:4px;font-size:14px">{{ p.icon }}</span><strong>{{ p.symbol }}</strong><span v-if="p.name&&p.name!==p.symbol" style="color:var(--muted);margin-left:6px;font-size:11px">{{ p.name }}</span></td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.qty }}</td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.hasCost?fmt(p.avgCost):'-' }}<span v-if="p.hasCost&&p.currency!=='CNY'" style="font-size:10px;color:var(--dim);margin-left:3px">{{ p.currency }}</span></td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.price?fmt(p.price):t('posFetching') }}<span v-if="p.price&&p.currency!=='CNY'" style="font-size:10px;color:var(--dim);margin-left:3px">{{ p.currency }}</span></td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600">{{ p.value?fmt(p.value):'-' }}</td>
+          <td :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:p.pl>=0?'var(--green)':'var(--red)'}">
+            <template v-if="p.hasCost">{{ p.pl>=0?'+':'' }}{{ fmt(p.pl) }}</template><template v-else>-</template><br><span style="font-size:10px">{{ p.hasCost&&p.plPct!='0'?p.plPct+'%':'' }}</span>
+          </td>
+          <td style="text-align:center"><button class="btn btn-ghost btn-xs" @click="removePosition(p.id)" style="color:var(--red)" :title="t('posManualSource')">✕</button></td>
+        </tr></tbody></table>
+      </div>
+      <!-- Position cards (mobile) -->
+      <div class="record-cards" v-if="positions.length">
+        <div v-for="p in posRows" :key="p.id" class="record-card" style="cursor:default">
+          <div class="record-card-top">
+            <span class="record-card-date"><span v-if="p.icon">{{ p.icon }}</span> {{ p.symbol }} <span v-if="p.name&&p.name!==p.symbol" style="font-size:10px;color:var(--dim)">{{ p.name }}</span></span>
+            <button class="record-card-del" @click="removePosition(p.id)">✕</button>
+          </div>
+          <div style="font-size:11px;color:var(--muted)">{{ p.qty }} {{ t('posQtyCol') }}<span v-if="p.hasCost"> × {{ fmt(p.avgCost) }}{{ p.currency!=='CNY'?' '+p.currency:'' }} = {{ t('posTotalCost') }} {{ fmt(p.cost) }} CNY</span></div>
+          <div style="display:flex;gap:12px;margin-top:6px;font-size:12px">
+            <span>{{ t('posPriceCol') }} <strong>{{ p.price?fmt(p.price):'…' }}</strong><span v-if="p.price&&p.currency!=='CNY'" style="font-size:10px;color:var(--dim)"> {{ p.currency }}</span></span>
+            <span>{{ t('posValueCol') }} <strong>{{ fmt(p.value) }}</strong> <span style="font-size:10px;color:var(--dim)">CNY</span></span>
+            <span v-if="p.hasCost" :style="{color:p.pl>=0?'var(--green)':'var(--red)'}">{{ t('posPL') }} <strong>{{ p.pl>=0?'+':'' }}{{ fmt(p.pl) }} ({{ p.plPct }}%)</strong></span>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm mt-8" @click="fetchPosPrices" v-if="positions.length">{{ t('posRefreshPrice') }}</button>
+      <div v-if="!positions.length" style="text-align:center;color:var(--muted);padding:20px">{{ t('posEmpty') }}</div>
+    </div>
+  </section>
+
   <!-- ===== SUMMARY (统一净值视角) ===== -->
   <div class="summary-grid section-records section-stats section-data">
     <div class="summary-card"><p class="label">{{ t('totalIn') }}</p><p class="value text-red">{{ fmt(totalIn) }}</p></div>
@@ -963,82 +1039,6 @@ tr.row-unmatched td{opacity:.35}
           </div>
         </template>
       </div>
-    </div>
-  </section>
-
-  <!-- ===== POSITIONS ===== -->
-  <section class="panel section-stats section-not-records section-not-data" v-if="dashVisible('positions')">
-    <div class="panel-header" @click="showPosForm=!showPosForm" style="cursor:pointer">
-      <div class="panel-collapse-toggle"><span :class="['arrow',{open:showPosForm}]">&#9654;</span> <div><h2>{{ t('posTitle') }}</h2><p class="hint">{{ t('posCount',{n:positions.length}) }}<span v-if="positions.length"> · {{ t('posTotalCost') }} {{ fmt(posSummary.totalCost) }} · {{ t('posTotalValue') }} {{ fmt(posSummary.totalValue) }} · <span :style="{color:posSummary.pl>=0?'var(--green)':'var(--red)'}">{{ t('posPL') }} {{ posSummary.pl>=0?'+':'' }}{{ fmt(posSummary.pl) }} ({{ posSummary.plPct }}%)</span></span></p></div></div>
-    </div>
-    <div :class="['panel-collapse-body',{collapsed:!showPosForm}]">
-      <!-- Add form -->
-      <div class="form-grid" style="margin-bottom:12px">
-        <div class="form-group" style="position:relative">
-          <label>{{ t('posSymbol') }}</label>
-          <input class="form-input" v-model="posSymbolSearch" @focus="showSymbolPicker=true" @input="onPosSearchInput" :placeholder="t('posSymbolPlaceholder')">
-          <div v-if="showSymbolPicker" class="symbol-picker-dropdown">
-            <div class="symbol-picker-list">
-              <!-- 搜索结果（东方财富，支持中文名/代码） -->
-              <template v-if="posSymbolSearch.trim()">
-                <div v-if="posSearching" class="symbol-option" style="color:var(--muted)">{{ t('posSearching') }}</div>
-                <div v-else-if="!posSearchResults.length" class="symbol-option" style="color:var(--muted)">{{ t('posNoResult') }}</div>
-                <div v-for="it in posSearchResults" :key="it.secid" class="symbol-option" @click="selectEmResult(it)">
-                  <span class="symbol-option-icon" style="font-size:10px;font-weight:700;color:var(--accent)">{{ it.typeName }}</span>
-                  <span class="symbol-option-name">{{ it.name }}</span>
-                  <span class="symbol-option-pair">{{ it.code }} · {{ it.currency }}</span>
-                </div>
-              </template>
-              <!-- 空时：加密货币快捷入口 -->
-              <template v-else>
-                <div style="font-size:10px;color:var(--dim);padding:4px 10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">{{ t('posCryptoQuick') }}</div>
-                <div v-for="t in cryptoQuickList" :key="t.symbol" class="symbol-option" @click="selectCryptoQuick(t)">
-                  <span class="symbol-option-icon">{{ t.icon }}</span><span class="symbol-option-name">{{ t.symbol }}</span><span class="symbol-option-pair">USDT</span>
-                </div>
-              </template>
-            </div>
-            <div class="symbol-picker-backdrop" @click="showSymbolPicker=false"></div>
-          </div>
-        </div>
-        <div class="form-group"><label>{{ t('posName') }}</label><input class="form-input" v-model="posForm.name" :placeholder="t('posNamePlaceholder')"></div>
-        <div class="form-group"><label>{{ t('posQty') }}</label><input class="form-input" type="number" v-model="posForm.qty" :placeholder="t('posQtyPlaceholder')" @keyup.enter="addPosition" step="any"></div>
-        <div class="form-group"><label>{{ t('posAvgCost') }}</label><input class="form-input" type="number" v-model="posForm.avgCost" :placeholder="t('posAvgCostPlaceholder')" step="any"></div>
-        <div class="form-group"><label>{{ t('posCurrency') }}</label><select class="form-input" v-model="posForm.currency"><option>CNY</option><option>USD</option><option>HKD</option><option>USDT</option></select></div>
-        <div class="form-group" v-if="posForm.secid" style="font-size:11px;color:var(--muted);align-self:end;padding-bottom:8px">{{ posForm.assetType }} · {{ posForm.secid }}</div>
-        <button class="btn btn-primary btn-sm" @click="addPosition" style="align-self:end">{{ t('posAdd') }}</button>
-      </div>
-      <!-- Positions table (desktop) -->
-      <div class="table-wrap" v-if="positions.length">
-        <table><thead><tr><th>{{ t('posSymbolCol') }}</th><th style="text-align:right">{{ t('posQtyCol') }}</th><th style="text-align:right">{{ t('posAvgCostCol') }}</th><th style="text-align:right">{{ t('posPriceCol') }}</th><th style="text-align:right">{{ t('posValueCol') }} (CNY)</th><th style="text-align:right">{{ t('posPLCol') }} (CNY)</th><th style="text-align:center">{{ t('posActionCol') }}</th></tr></thead>
-        <tbody><tr v-for="p in posRows" :key="p.id">
-          <td><span v-if="p.icon" style="margin-right:4px;font-size:14px">{{ p.icon }}</span><strong>{{ p.symbol }}</strong><span v-if="p.name&&p.name!==p.symbol" style="color:var(--muted);margin-left:6px;font-size:11px">{{ p.name }}</span></td>
-          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.qty }}</td>
-          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.hasCost?fmt(p.avgCost):'-' }}<span v-if="p.hasCost&&p.currency!=='CNY'" style="font-size:10px;color:var(--dim);margin-left:3px">{{ p.currency }}</span></td>
-          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.price?fmt(p.price):t('posFetching') }}<span v-if="p.price&&p.currency!=='CNY'" style="font-size:10px;color:var(--dim);margin-left:3px">{{ p.currency }}</span></td>
-          <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600">{{ p.value?fmt(p.value):'-' }}</td>
-          <td :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:p.pl>=0?'var(--green)':'var(--red)'}">
-            <template v-if="p.hasCost">{{ p.pl>=0?'+':'' }}{{ fmt(p.pl) }}</template><template v-else>-</template><br><span style="font-size:10px">{{ p.hasCost&&p.plPct!='0'?p.plPct+'%':'' }}</span>
-          </td>
-          <td style="text-align:center"><button class="btn btn-ghost btn-xs" @click="removePosition(p.id)" style="color:var(--red)" :title="t('posManualSource')">✕</button></td>
-        </tr></tbody></table>
-      </div>
-      <!-- Position cards (mobile) -->
-      <div class="record-cards" v-if="positions.length">
-        <div v-for="p in posRows" :key="p.id" class="record-card" style="cursor:default">
-          <div class="record-card-top">
-            <span class="record-card-date"><span v-if="p.icon">{{ p.icon }}</span> {{ p.symbol }} <span v-if="p.name&&p.name!==p.symbol" style="font-size:10px;color:var(--dim)">{{ p.name }}</span></span>
-            <button class="record-card-del" @click="removePosition(p.id)">✕</button>
-          </div>
-          <div style="font-size:11px;color:var(--muted)">{{ p.qty }} {{ t('posQtyCol') }}<span v-if="p.hasCost"> × {{ fmt(p.avgCost) }}{{ p.currency!=='CNY'?' '+p.currency:'' }} = {{ t('posTotalCost') }} {{ fmt(p.cost) }} CNY</span></div>
-          <div style="display:flex;gap:12px;margin-top:6px;font-size:12px">
-            <span>{{ t('posPriceCol') }} <strong>{{ p.price?fmt(p.price):'…' }}</strong><span v-if="p.price&&p.currency!=='CNY'" style="font-size:10px;color:var(--dim)"> {{ p.currency }}</span></span>
-            <span>{{ t('posValueCol') }} <strong>{{ fmt(p.value) }}</strong> <span style="font-size:10px;color:var(--dim)">CNY</span></span>
-            <span v-if="p.hasCost" :style="{color:p.pl>=0?'var(--green)':'var(--red)'}">{{ t('posPL') }} <strong>{{ p.pl>=0?'+':'' }}{{ fmt(p.pl) }} ({{ p.plPct }}%)</strong></span>
-          </div>
-        </div>
-      </div>
-      <button class="btn btn-ghost btn-sm mt-8" @click="fetchPosPrices" v-if="positions.length">{{ t('posRefreshPrice') }}</button>
-      <div v-if="!positions.length" style="text-align:center;color:var(--muted);padding:20px">{{ t('posEmpty') }}</div>
     </div>
   </section>
 
@@ -1767,7 +1767,7 @@ const I18N={
     mobileDetail:'详情',
     batchUndoWarningOverwrite:'撤销覆盖导入会恢复到该次导入前的完整账本，并覆盖之后的记录改动。继续吗？',
     batchUndoWarningMerge:'撤销合并导入会删除该批次新增的记录。继续吗？',
-    posTitle:'持仓追踪',
+    posTitle:'持仓管理',
     posCount:'持仓 {{n}} 只',
     posTotalCost:'总成本',
     posTotalValue:'市值',
@@ -2043,7 +2043,7 @@ const I18N={
     mobileDetail:'Details',
     batchUndoWarningOverwrite:'Undoing overwrite import will restore the full ledger before that import. Recent changes will be lost. Continue?',
     batchUndoWarningMerge:'Undoing merge import will remove records added in that batch. Continue?',
-    posTitle:'Positions',
+    posTitle:'Holdings',
     posCount:'{{n}} holdings',
     posTotalCost:'Total Cost',
     posTotalValue:'Market Value',
@@ -2087,7 +2087,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.05.30-1' // 每次部署递增末位，方便区分加载到哪一版
+  const APP_VERSION='v2026.05.30-2' // 每次部署递增末位，方便区分加载到哪一版
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const snapshots=ref([])
@@ -2101,7 +2101,7 @@ setup(){
   function saveDashboard(){localStorage.setItem(DASH_K,JSON.stringify(dashPanels.value))}
   const dashPanels=ref(loadDashboard())
   const showDashCfg=ref(false)
-  const dashLabels={periodStats:'盈亏统计',assetAlloc:'资产配置',positions:'持仓追踪',insights:'建议与复盘',behavior:'行为分析'}
+  const dashLabels={periodStats:'盈亏统计',assetAlloc:'资产配置',positions:'持仓管理',insights:'建议与复盘',behavior:'行为分析'}
   function dashVisible(key){return dashPanels.value.includes(key)}
   function toggleDashPanel(key){
     const i=dashPanels.value.indexOf(key)
