@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# CryptoFlow 一键部署脚本
+# 投记 一键部署脚本
 # 使用方法：
 #   1. 修改下面的配置项
 #   2. scp deploy.sh 和 index.html 到服务器
@@ -17,11 +17,11 @@ SYNC_PASS="changeme123" # 同步密码（请修改！）
 DOMAIN="_"              # 域名，没有就填 _
 # ==============================
 
-SITE_DIR="/var/www/cryptoflow"
+SITE_DIR="/var/www/touji"
 SERVER_DIR="$SITE_DIR/server"
 
 echo "========================================="
-echo "  CryptoFlow 部署开始"
+echo "  投记 部署开始"
 echo "  网站端口: $SITE_PORT"
 echo "  同步端口: $SYNC_PORT (内部)"
 echo "========================================="
@@ -46,7 +46,7 @@ echo "[3/7] 创建同步服务..."
 
 cat > "$SERVER_DIR/package.json" << 'PKGEOF'
 {
-  "name": "cryptoflow-sync",
+  "name": "touji-sync",
   "type": "module",
   "dependencies": { "express": "^4.18.0" }
 }
@@ -103,7 +103,7 @@ npm install --production 2>&1 | tail -1
 # ---------- 5. 配置 nginx ----------
 echo "[5/7] 配置 nginx..."
 
-cat > /etc/nginx/conf.d/cryptoflow.conf << NGXEOF
+cat > /etc/nginx/conf.d/touji.conf << NGXEOF
 server {
     listen ${SITE_PORT};
     server_name ${DOMAIN};
@@ -145,12 +145,12 @@ if ! command -v pm2 &> /dev/null; then
 fi
 
 # 停掉旧的（如果有）
-pm2 delete cryptoflow-sync 2>/dev/null || true
+pm2 delete touji-sync 2>/dev/null || true
 
 # 启动
 cd "$SERVER_DIR"
 SYNC_USER="$SYNC_USER" SYNC_PASS="$SYNC_PASS" PORT="$SYNC_PORT" \
-  pm2 start server.js --name cryptoflow-sync \
+  pm2 start server.js --name touji-sync \
   --env SYNC_USER="$SYNC_USER" \
   --env SYNC_PASS="$SYNC_PASS" \
   --env PORT="$SYNC_PORT"
@@ -180,7 +180,7 @@ echo ""
 echo "  记得在阿里云控制台防火墙放行端口 ${SITE_PORT}"
 echo ""
 echo "  常用命令:"
-echo "    pm2 logs cryptoflow-sync   # 查看同步服务日志"
-echo "    pm2 restart cryptoflow-sync # 重启同步服务"
+echo "    pm2 logs touji-sync   # 查看同步服务日志"
+echo "    pm2 restart touji-sync # 重启同步服务"
 echo "    pm2 status                  # 查看服务状态"
 echo "========================================="

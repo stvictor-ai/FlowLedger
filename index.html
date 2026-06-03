@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="投记">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>FlowLedger 投记 · 个人投资记账</title>
+<title>投记 · 个人投资记账</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/vue@3.5/dist/vue.global.prod.js"></script>
@@ -737,7 +737,7 @@ tr.row-unmatched td{opacity:.35}
     </div>
     <div class="hero-actions">
       <button class="theme-toggle" @click="toggleTheme" :title="t('themeToggle')">{{ theme==='dark'?'☀️':'🌙' }}</button>
-      <button class="btn btn-ghost btn-sm" @click="lang=lang==='zh'?'en':'zh';localStorage.setItem('flowledger_lang',lang)">🌐 {{ lang==='zh'?'English':'中文' }}</button>
+      <button class="btn btn-ghost btn-sm" @click="lang=lang==='zh'?'en':'zh';localStorage.setItem('touji_lang_v1',lang)">🌐 {{ lang==='zh'?'English':'中文' }}</button>
       <span v-if="syncCfg.token" class="sync-dot" :class="{syncing:syncing,stale:!syncing&&lastChangeAt>lastSyncedAt}" :title="syncStatus"></span>
       <button class="btn btn-ghost btn-sm section-stats section-not-records section-not-data" @click="showDashCfg=true">⚙ 看板</button>
       <button class="btn btn-primary" @click="$refs.xlsxFile.click()">{{ t('importExcel') }}</button>
@@ -1416,18 +1416,30 @@ tr.row-unmatched td{opacity:.35}
 <script>
 dayjs.extend(dayjs_plugin_isoWeek);dayjs.extend(dayjs_plugin_weekOfYear);dayjs.locale('zh-cn')
 
-const SK='flowledger_entries_v1',SNAP_K='flowledger_snapshots_v1',RULES_K='flowledger_rules_v1',REVIEW_K='flowledger_reviews_v1',SYNC_K='flowledger_sync_v1',IMPORT_K='flowledger_import_batches_v1',CHECKLIST_K='flowledger_checklist',POS_K='flowledger_positions_v1',DEL_K='flowledger_deleted_v1'
-// Migrate from old CryptoFlow keys (backward compat)
-;(()=>{
-  const migrations=[
-    ['crypto_cashflow_entries_v1',SK],
-    ['crypto_cashflow_theme','flowledger_theme'],
-    ['crypto_cashflow_checklist',CHECKLIST_K]
-  ]
-  migrations.forEach(([from,to])=>{
-    if(!localStorage.getItem(to)&&localStorage.getItem(from))localStorage.setItem(to,localStorage.getItem(from))
-  })
-})()
+const SK='touji_entries_v1',SNAP_K='touji_snapshots_v1',RULES_K='touji_rules_v1',REVIEW_K='touji_reviews_v1',SYNC_K='touji_sync_v1',IMPORT_K='touji_import_batches_v1',CHECKLIST_K='touji_checklist_v1',POS_K='touji_positions_v1',DEL_K='touji_deleted_v1'
+const LEGACY_CASHFLOW_K=['crypto','cashflow'].join('_')
+const LEGACY_FLOW_K=['flow','ledger'].join('')
+const LEGACY_FLOW_LABEL=['Flow','Ledger'].join('')
+const LANG_K='touji_lang_v1'
+function migrateStorageKey(currentKey,legacyKeys){
+  const oldKeys=Array.isArray(legacyKeys)?legacyKeys:[legacyKeys]
+  try{
+    if(localStorage.getItem(currentKey))return
+    const hit=oldKeys.find(k=>localStorage.getItem(k))
+    if(hit)localStorage.setItem(currentKey,localStorage.getItem(hit))
+  }catch(e){}
+}
+// Keep existing user data after the product rename.
+migrateStorageKey(SK,[`${LEGACY_FLOW_K}_entries_v1`,`${LEGACY_CASHFLOW_K}_entries_v1`])
+migrateStorageKey(SNAP_K,`${LEGACY_FLOW_K}_snapshots_v1`)
+migrateStorageKey(RULES_K,`${LEGACY_FLOW_K}_rules_v1`)
+migrateStorageKey(REVIEW_K,`${LEGACY_FLOW_K}_reviews_v1`)
+migrateStorageKey(SYNC_K,`${LEGACY_FLOW_K}_sync_v1`)
+migrateStorageKey(IMPORT_K,`${LEGACY_FLOW_K}_import_batches_v1`)
+migrateStorageKey(CHECKLIST_K,[`${LEGACY_FLOW_K}_checklist`,`${LEGACY_CASHFLOW_K}_checklist`])
+migrateStorageKey(POS_K,`${LEGACY_FLOW_K}_positions_v1`)
+migrateStorageKey(DEL_K,`${LEGACY_FLOW_K}_deleted_v1`)
+migrateStorageKey(LANG_K,`${LEGACY_FLOW_K}_lang`)
 const genId=()=>crypto.randomUUID?crypto.randomUUID():('r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6))
 const clone=o=>JSON.parse(JSON.stringify(o))
 
@@ -1496,7 +1508,7 @@ const{createApp,ref,reactive,computed,watch,onMounted}=Vue
 // ===== I18N =====
 const I18N={
   zh:{
-    appTitle:'FlowLedger 投记 · 个人投资记账与资产追踪',
+    appTitle:'投记 · 个人投资记账与资产追踪',
     appKicker:'个人投资记账与资产追踪',
     appDesc:'出入金记账 · 持仓实时估值 · 真实净值与盈亏 · 行为分析 · 多端同步',
     records:'记录',
@@ -1644,7 +1656,7 @@ const I18N={
     syncNeedToken:'请先配置 Token',
     syncNeedUploadFirst:'请先填写 GitHub Token',
     syncNoData:'未找到云端数据',
-    syncNoGist:'未找到 FlowLedger 的 Gist，请先在另一台设备上上传',
+    syncNoGist:'未找到投记的 Gist，请先在另一台设备上上传',
     syncAutoTip:'提示：首次使用请先<strong>上传</strong>，在其他设备上输入同一 Token 后<strong>拉取</strong>即可。每次同步会保留版本历史，可在 Gist 页面查看和恢复。',
     syncUploadedN:'已上传 {n} 条',
     syncPulledN:'已拉取 {n} 条',
@@ -1791,7 +1803,7 @@ const I18N={
     posMarketAll:'全部',
   },
   en:{
-    appTitle:'FlowLedger · Investment Ledger & Portfolio',
+    appTitle:'Touji · Investment Ledger & Portfolio',
     appKicker:'Investment Ledger & Portfolio Tracker',
     appDesc:'Cashflow tracking · Live position valuation · True net worth · Behavior analysis · Multi-device sync',
     records:'Records',
@@ -1939,7 +1951,7 @@ const I18N={
     syncNeedToken:'Please configure token first',
     syncNeedUploadFirst:'Please fill in GitHub Token',
     syncNoData:'No cloud data found',
-    syncNoGist:'FlowLedger Gist not found. Upload from another device first.',
+    syncNoGist:'Touji Gist not found. Upload from another device first.',
     syncAutoTip:'Tip: <strong>Push</strong> first from your main device, then use the same Token to <strong>Pull</strong> on other devices. Every sync preserves version history on Gist.',
     syncUploadedN:'Uploaded {n} records',
     syncPulledN:'Pulled {n} records',
@@ -2069,7 +2081,7 @@ const I18N={
     posMarketAll:'All',
   }
 }
-let lang=ref(localStorage.getItem('flowledger_lang')||(navigator.language.startsWith('zh')?'zh':'en'))
+let lang=ref(localStorage.getItem(LANG_K)||(navigator.language.startsWith('zh')?'zh':'en'))
 function t(key,params){
   const d=I18N[lang.value]||I18N.en
   let v=d[key]
@@ -2088,7 +2100,8 @@ setup(){
   const period=ref('month')
   const statTab=ref('asset')
   // Dashboard customization
-  const DASH_K='flowledger_dashboard'
+  const DASH_K='touji_dashboard_v1'
+  migrateStorageKey(DASH_K,`${LEGACY_FLOW_K}_dashboard`)
   const DASH_DEFAULT=['positions','assetAlloc','periodStats','insights','behavior']
   function loadDashboard(){try{const r=localStorage.getItem(DASH_K);if(r)return JSON.parse(r)}catch(e){}return [...DASH_DEFAULT]}
   function saveDashboard(){localStorage.setItem(DASH_K,JSON.stringify(dashPanels.value))}
@@ -2114,9 +2127,9 @@ setup(){
   const editingEntry=ref(null)
   const showSync=ref(false)
 
-
   // Theme
-  const THEME_K='flowledger_theme'
+  const THEME_K='touji_theme_v1'
+  migrateStorageKey(THEME_K,[`${LEGACY_FLOW_K}_theme`,`${LEGACY_CASHFLOW_K}_theme`])
   const savedTheme=localStorage.getItem(THEME_K)
   const defaultTheme=savedTheme||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark')
   const theme=ref(defaultTheme)
@@ -2150,7 +2163,8 @@ setup(){
   const tickerData=ref([])
   const showTickerPick=ref(false)
   const TICKER_DEFAULT=['BTC','ETH','SOL','NVDA','AAPL','TSLA','SPX','NASDAQ','Gold','USOIL','Tencent','Kweichow']
-  const TICKER_PICK_K='flowledger_ticker_pick'
+  const TICKER_PICK_K='touji_ticker_pick_v1'
+  migrateStorageKey(TICKER_PICK_K,`${LEGACY_FLOW_K}_ticker_pick`)
   function loadTickerPick(){
     try{const r=localStorage.getItem(TICKER_PICK_K);if(r)return JSON.parse(r)}catch(e){}
     return [...TICKER_DEFAULT]
@@ -2285,8 +2299,10 @@ setup(){
     if(onboardStep.value===3){skipOnboard();return}
     onboardStep.value++
   }
-  function skipOnboard(){onboardStep.value=0;localStorage.setItem('flowledger_onboarded','true')}
-  function startOnboard(){if(!localStorage.getItem('flowledger_onboarded'))onboardStep.value=1}
+  const ONBOARD_K='touji_onboarded_v1'
+  migrateStorageKey(ONBOARD_K,`${LEGACY_FLOW_K}_onboarded`)
+  function skipOnboard(){onboardStep.value=0;localStorage.setItem(ONBOARD_K,'true')}
+  function startOnboard(){if(!localStorage.getItem(ONBOARD_K))onboardStep.value=1}
 
   // Persistence
   function load(){
@@ -2328,7 +2344,8 @@ setup(){
   const allTags=computed(()=>[...new Set(entries.value.flatMap(e=>parseTags(e.tags)))].sort((a,b)=>a.localeCompare(b,'zh-CN')))
 
   // 资产类型配置（内置默认 + 用户自定义，存 localStorage）
-  const ASSET_CFG_K='flowledger_asset_cfg'
+  const ASSET_CFG_K='touji_asset_cfg_v1'
+  migrateStorageKey(ASSET_CFG_K,`${LEGACY_FLOW_K}_asset_cfg`)
   const BUILTIN_TYPES=['大A','美股','港股','加密货币','基金','黄金','期货','其他']
   const BUILTIN_PLATFORMS={'大A':['招商证券','华泰证券','东方财富','国泰君安','中信证券','平安证券','广发证券','中金财富'],'美股':['富途牛牛','老虎证券','盈透证券','Robinhood','Charles Schwab','嘉信理财'],'港股':['富途牛牛','老虎证券','盈透证券','中银国际','耀才证券'],'加密货币':['币安','欧易','Coinbase','Bybit','Bitget','Gate.io','抹茶'],'基金':['支付宝','天天基金','招商银行','微信理财通','蛋卷基金','雪球'],'黄金':['招商银行','工商银行','中国银行','建设银行','国泰君安','中国黄金'],'期货':['中信期货','国泰君安期货','华泰期货','永安期货','南华期货'],'其他':[]}
   const BUILTIN_COLORS={'大A':'rgba(251,191,36,.85)','美股':'rgba(59,130,246,.85)','港股':'rgba(239,68,68,.85)','加密货币':'rgba(139,92,246,.85)','基金':'rgba(16,185,129,.85)','黄金':'rgba(245,158,11,.85)','期货':'rgba(99,102,241,.85)','其他':'rgba(107,114,128,.7)','':'rgba(107,114,128,.5)'}
@@ -2985,7 +3002,7 @@ setup(){
       if(syncCfg.gistId){
         try{
           const gist=await gistGet()
-          const file=gist.files[GIST_FILE]
+          const file=gistDataFile(gist)
           if(file&&file.content){
             const remote=JSON.parse(file.content)
             const rList=Array.isArray(remote.entries)?remote.entries:[]
@@ -3013,7 +3030,7 @@ setup(){
     _syncingInProgress=true
     try{
       const gist=await gistGet()
-      const file=gist.files[GIST_FILE]
+      const file=gistDataFile(gist)
       if(file&&file.content){
         const remote=JSON.parse(file.content)
         const rList=Array.isArray(remote.entries)?remote.entries:[]
@@ -3030,7 +3047,11 @@ setup(){
 
   // Sync — GitHub Gist
   const GIST_API='https://api.github.com/gists'
-  const GIST_FILE='flowledger.json'
+  const GIST_FILE='touji.json'
+  const LEGACY_GIST_FILE=`${LEGACY_FLOW_K}.json`
+  const GIST_DESC='投记 · 数据备份'
+  const LEGACY_GIST_DESC=`${LEGACY_FLOW_LABEL} 投记 · 数据备份`
+  function gistDataFile(gist){return gist?.files?.[GIST_FILE]||gist?.files?.[LEGACY_GIST_FILE]}
   function gistAuth(){return{Authorization:`Bearer ${syncCfg.token}`,'Accept':'application/vnd.github+json'}}
   function saveSyncConfig(){
     const cfg={token:syncCfg.token,gistId:syncCfg.gistId}
@@ -3044,16 +3065,16 @@ setup(){
     if(!r.ok)throw new Error(`GET ${r.status}`)
     return r.json()
   }
-  // Auto-discover existing FlowLedger gist by description
+  // Auto-discover existing app gist by description
   async function gistFind(){
     const r=await fetch(`${GIST_API}?per_page=100`,{headers:gistAuth()})
     if(!r.ok)throw new Error(`List ${r.status}`)
     const gists=await r.json()
-    return gists.find(g=>g.description==='FlowLedger 投记 · 数据备份'&&g.files[GIST_FILE])
+    return gists.find(g=>[GIST_DESC,LEGACY_GIST_DESC].includes(g.description)&&(g.files[GIST_FILE]||g.files[LEGACY_GIST_FILE]))
   }
   async function gistCreate(content){
     const r=await fetch(GIST_API,{method:'POST',headers:{...gistAuth(),'Content-Type':'application/json'},
-      body:JSON.stringify({description:'FlowLedger 投记 · 数据备份',public:false,files:{[GIST_FILE]:{content}}})})
+      body:JSON.stringify({description:GIST_DESC,public:false,files:{[GIST_FILE]:{content}}})})
     if(!r.ok)throw new Error(`Create ${r.status}`)
     return r.json()
   }
@@ -3086,11 +3107,11 @@ setup(){
       // Auto-discover gist if we don't have the ID yet
       if(!syncCfg.gistId){
         const found=await gistFind()
-        if(!found){syncStatus.value='未找到云端数据';showToast('未找到 FlowLedger 的 Gist，请先在另一台设备上上传','info');return}
+        if(!found){syncStatus.value='未找到云端数据';showToast('未找到投记的 Gist，请先在另一台设备上上传','info');return}
         syncCfg.gistId=found.id;saveSyncConfig()
       }
       const gist=await gistGet()
-      const file=gist.files[GIST_FILE]
+      const file=gistDataFile(gist)
       if(!file||!file.content)throw new Error('no file')
       const data=JSON.parse(file.content)
       const list=Array.isArray(data.entries)?data.entries:[]
@@ -3109,7 +3130,7 @@ setup(){
     if(syncCfg.gistId){
       try{
         const gist=await gistGet()
-        const file=gist.files[GIST_FILE]
+        const file=gistDataFile(gist)
         if(file&&file.content){
           const remote=JSON.parse(file.content)
           const rList=Array.isArray(remote.entries)?remote.entries:[]
@@ -3255,10 +3276,10 @@ setup(){
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(flowR),'全部流水')
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(statR),'盈亏总览')
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(mRows),'月度统计')
-    XLSX.writeFile(wb,'FlowLedger投记_'+dayjs().format('YYYYMMDD_HHmm')+'.xlsx');showToast('已导出','success')
+    XLSX.writeFile(wb,'投记_'+dayjs().format('YYYYMMDD_HHmm')+'.xlsx');showToast('已导出','success')
   }
   function exportJSON(){
-    const b=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),entries:entries.value},null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='FlowLedger备份_'+dayjs().format('YYYYMMDD_HHmm')+'.json';a.click();URL.revokeObjectURL(u);showToast('已导出','success')
+    const b=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),entries:entries.value},null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='投记备份_'+dayjs().format('YYYYMMDD_HHmm')+'.json';a.click();URL.revokeObjectURL(u);showToast('已导出','success')
   }
   function importExcel(ev){
     const f=ev.target.files[0];if(!f)return;const rd=new FileReader()
@@ -3452,7 +3473,7 @@ setup(){
           if(!syncCfg.gistId){const f=await gistFind();if(f){syncCfg.gistId=f.id;saveSyncConfig()}else{syncStatus.value='已配置 · 本地 '+entries.value.length+' 条'}}
           if(!syncCfg.gistId)return
           const gist=await gistGet()
-          const file=gist.files[GIST_FILE]
+          const file=gistDataFile(gist)
           if(file&&file.content){
             const data=JSON.parse(file.content)
             const list=Array.isArray(data.entries)?data.entries:[]

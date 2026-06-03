@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flowledger-v5';
+const CACHE_NAME = 'touji-v2';
 
 // CDN assets: cache-first (immutable, versioned URLs)
 const CDN_ASSETS = [

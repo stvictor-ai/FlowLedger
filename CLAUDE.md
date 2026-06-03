@@ -1,10 +1,10 @@
-# FlowLedger 投记 · 个人投资记账与资产追踪
+# 投记 · 个人投资记账与资产追踪
 
 ## 项目概述
 个人投资记账与资产追踪工具。以"统一净值视角"为核心：出入金记账提供成本与已实现盈亏，持仓按实时行情估值提供未实现盈亏，合并算出真实净值与真实收益率（真实总收益 = 已出金 + 当前持仓市值 − 已入金）。支持大A、美股、港股、加密货币、基金、黄金、期货等资产类型，覆盖记录管理、持仓追踪、盈亏统计、行为分析、复盘建议、数据备份与云同步。单文件 HTML 应用，可静态部署。
 
 ## 技术栈
-- **单文件 `index.html`**（约 1800 行），无需构建工具
+- **单文件 `index.html`**（约 3600 行），无需构建工具
 - Vue 3（CDN）、Chart.js（CDN）、SheetJS/xlsx（CDN）、Day.js（CDN）
 - 数据存储：浏览器 localStorage
 - 云同步：GitHub Gist API（Bearer Token 认证，免费、带版本历史）
@@ -13,7 +13,7 @@
 
 ## 文件结构
 ```
-FlowLedger/
+touji/
 ├── index.html      # 主应用（前端全部代码）
 ├── manifest.json   # PWA 配置
 ├── sw.js           # Service Worker 离线缓存
@@ -82,8 +82,8 @@ FlowLedger/
 
 ## 数据模型
 ```javascript
-// localStorage key: flowledger_entries_v1
-// 兼容迁移旧 key: crypto_cashflow_entries_v1
+// localStorage key: touji_entries_v1
+// 兼容迁移旧版数据 key
 [{
   id,           // UUID
   date,         // "YYYY-MM-DD"
@@ -97,7 +97,7 @@ FlowLedger/
   tags          // 行为标签数组，如 ["定投", "补仓", "FOMO"]
 }]
 
-// 导入历史 key: flowledger_import_batches_v1
+// 导入历史 key: touji_import_batches_v1
 // 用于记录每次 Excel/JSON 导入批次，支持一键撤销。
 ```
 
