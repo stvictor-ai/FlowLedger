@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>投记 · 个人投资记账</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/vue@3.5/dist/vue.global.prod.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/dayjs@1.11/dayjs.min.js"></script>
@@ -306,6 +306,10 @@ tr.row-unmatched td{opacity:.35}
 .import-status.new{background:var(--green-dim);color:var(--green);border-color:rgba(52,211,153,.24)}
 .import-status.duplicate{background:var(--overlay);color:var(--muted)}
 .import-status.similar{background:var(--accent-dim);color:var(--accent);border-color:rgba(240,168,32,.24)}
+.import-status.remote{background:var(--blue-dim);color:var(--blue);border-color:rgba(56,189,248,.24)}
+.import-status.local{background:rgba(167,139,250,.12);color:var(--purple);border-color:rgba(167,139,250,.24)}
+.import-status.delete{background:var(--red-dim);color:var(--red);border-color:rgba(248,113,113,.24)}
+.import-status.conflict{background:var(--accent-dim);color:var(--accent);border-color:rgba(240,168,32,.24)}
 .import-reason{font-size:11px;color:var(--muted);text-align:right;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .import-empty{padding:18px;text-align:center;color:var(--muted);font-size:12px}
 
@@ -351,6 +355,8 @@ tr.row-unmatched td{opacity:.35}
 }
 .record-card-tag.tag-in{background:var(--red-dim);color:var(--red);border:1px solid rgba(248,113,113,.2)}
 .record-card-tag.tag-out{background:var(--green-dim);color:var(--green);border:1px solid rgba(52,211,153,.2)}
+.record-card-tag.tag-buy{background:rgba(96,165,250,.15);color:#60a5fa;border:1px solid rgba(96,165,250,.2)}
+.record-card-tag.tag-sell{background:rgba(167,139,250,.15);color:#a78bfa;border:1px solid rgba(167,139,250,.2)}
 .record-card-amount{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;margin-bottom:4px}
 .record-card-rate{font-size:12px;color:var(--dim);margin-bottom:10px}
 .record-card-bottom{display:flex;justify-content:space-between;align-items:center}
@@ -475,7 +481,7 @@ tr.row-unmatched td{opacity:.35}
   display:inline-block;transition:transform .2s;font-size:12px;color:var(--muted);
 }
 .panel-collapse-toggle .arrow.open{transform:rotate(90deg)}
-.panel-collapse-body{overflow:hidden;transition:max-height .3s ease,opacity .2s;max-height:500px;opacity:1}
+.panel-collapse-body{overflow:hidden;transition:max-height .3s ease,opacity .2s;max-height:3000px;opacity:1}
 .panel-collapse-body.collapsed{max-height:0;opacity:0;margin:0;padding:0}
 
 /* ===== MONTH GROUP ===== */
@@ -631,45 +637,17 @@ tr.row-unmatched td{opacity:.35}
   .ticker-item{font-size:11px;padding:4px 10px}
 }
 .ticker-picker{
-  position:fixed;inset:0;z-index:310;background:rgba(0,0,0,.5);
-  display:flex;align-items:flex-end;justify-content:center;
+  position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.55);
+  display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;overflow:auto;
 }
 .ticker-picker-box{
   background:var(--panel);border:1px solid var(--border-light);
-  border-radius:18px 18px 0 0;width:100%;max-width:520px;max-height:75vh;
+  border-radius:14px;width:100%;max-width:560px;max-height:calc(100vh - 40px);
   overflow-y:auto;padding:20px;animation:slideUp .3s ease;
 }
 
 /* ===== ASSET CARD ===== */
 .asset-card{min-width:120px}
-
-/* ===== ONBOARDING ===== */
-.onboard-overlay{
-  position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.65);
-  transition:opacity .3s;
-}
-.onboard-spotlight{
-  position:absolute;border-radius:16px;
-  box-shadow:0 0 0 9999px rgba(0,0,0,.65);
-  pointer-events:none;transition:all .35s cubic-bezier(.16,1,.3,1);
-  z-index:301;
-}
-.onboard-tooltip{
-  position:fixed;z-index:302;background:var(--panel);border:1px solid var(--border-light);
-  border-radius:18px;padding:24px;max-width:360px;width:calc(100vw - 40px);
-  box-shadow:0 20px 60px rgba(0,0,0,.5);transition:all .35s cubic-bezier(.16,1,.3,1);
-}
-.onboard-step-title{font-size:18px;font-weight:800;margin-bottom:8px;color:var(--text)}
-.onboard-step-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px}
-.onboard-step-actions{display:flex;gap:8px;align-items:center}
-.onboard-step-actions .btn{min-height:40px;font-size:13px;font-weight:600}
-.onboard-dots{display:flex;gap:6px;justify-content:center;margin-top:14px}
-.onboard-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background .3s}
-.onboard-dot.active{background:var(--accent)}
-@media(max-width:680px){
-  .onboard-tooltip{max-width:100vw;border-radius:20px 20px 0 0;bottom:0!important;left:0!important;right:0!important;top:auto!important;padding:20px 20px calc(20px + env(safe-area-inset-bottom))}
-  .onboard-spotlight{border-radius:12px}
-}
 
 /* ===== RATE INPUT ===== */
 .rate-input-wrap{display:flex;gap:6px;align-items:center}
@@ -683,12 +661,297 @@ tr.row-unmatched td{opacity:.35}
 .text-green{color:var(--green)}.text-red{color:var(--red)}.text-blue{color:var(--blue)}.text-muted{color:var(--muted)}
 .mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}
 .mono{font-variant-numeric:tabular-nums}
+.showcase-mode .privacy-number,
+.showcase-mode input[type="number"]{
+  color:transparent!important;text-shadow:0 0 8px var(--muted);caret-color:var(--accent);
+}
+.showcase-badge{
+  display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(214,163,74,.32);
+  background:var(--accent-dim);color:var(--accent);border-radius:var(--radius-sm);
+  padding:0 10px;min-height:34px;font-size:12px;font-weight:800;
+}
+.pos-flow-meta{margin-top:4px;color:var(--muted);font-size:11px;line-height:1.45}
+.pos-actions{display:flex;justify-content:center;gap:5px;flex-wrap:wrap}
+.quick-ticket{display:grid;grid-template-columns:310px minmax(0,1fr);gap:14px;align-items:start}
+.quick-side,.quick-main{display:grid;gap:10px}
+.quick-action-tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.quick-action-card{
+  border:1px solid var(--border);background:var(--card);color:var(--text);
+  border-radius:var(--radius-sm);padding:10px;text-align:left;cursor:pointer;
+  display:grid;gap:5px;min-height:74px;transition:background .16s,border-color .16s,transform .16s;
+}
+.quick-action-card:hover{border-color:var(--border-light);transform:translateY(-1px)}
+.quick-action-card.active{border-color:rgba(214,163,74,.55);background:var(--accent-dim)}
+.quick-action-card strong{font-size:14px;line-height:1}
+.quick-action-card span{font-size:11px;color:var(--muted);line-height:1.35}
+.quick-action-card.active strong{color:var(--accent)}
+.quick-action-explain{
+  border:1px solid rgba(79,183,197,.22);background:var(--blue-dim);border-radius:var(--radius-sm);
+  padding:10px 11px;color:var(--muted);font-size:12px;line-height:1.55;
+}
+.quick-action-explain strong{display:block;color:var(--text);font-size:12px;margin-bottom:3px}
+.quick-amount-card{
+  border:1px solid var(--border);border-radius:var(--radius);background:var(--card);
+  padding:12px;display:grid;gap:9px;
+}
+.quick-amount-row{display:grid;grid-template-columns:128px minmax(0,1fr);gap:8px;align-items:center}
+.quick-amount-row .form-input{min-height:48px;font-size:19px;font-weight:800}
+.quick-amount-row select.form-input{font-size:15px;font-weight:800}
+.quick-trade-total{
+  border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--input-bg);
+  padding:12px 13px;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:58px;
+}
+.quick-trade-total span{display:block;font-size:11px;color:var(--muted);font-weight:800;margin-bottom:4px}
+.quick-trade-total strong{font-size:21px;font-variant-numeric:tabular-nums}
+.quick-trade-total p{margin:0;color:var(--muted);font-size:11px;line-height:1.45;text-align:right}
+.quick-meta-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.quick-note-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(220px,.7fr);gap:8px}
+.quick-chip-row,.quick-template-row{display:flex;flex-wrap:wrap;gap:6px}
+.quick-template{
+  display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);
+  background:var(--card);border-radius:var(--radius-sm);padding:7px 10px;
+  color:var(--text);font-size:12px;font-weight:700;cursor:pointer;
+}
+.quick-template:hover,.quick-template.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
+.quick-ticket-foot{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}
+.quick-hint{font-size:11px;color:var(--muted);line-height:1.5}
+.ledger-toolbar{
+  display:grid;grid-template-columns:180px 150px minmax(220px,1fr) auto;gap:8px;align-items:end;margin-bottom:10px;
+}
+.ledger-advanced{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:8px;margin:8px 0 10px}
+.ledger-chip-groups{display:grid;gap:8px;margin-bottom:12px}
+.month-ledger-list{display:grid;gap:5px}
+.month-ledger-row{
+  border:1px solid var(--border);background:var(--card);border-radius:var(--radius);
+  overflow:hidden;
+}
+.month-ledger-summary{
+  display:grid;grid-template-columns:minmax(190px,1.1fr) minmax(180px,.9fr) repeat(3,minmax(110px,.55fr));
+  gap:12px;align-items:center;padding:12px 14px;cursor:pointer;
+}
+.month-ledger-summary:hover{background:var(--overlay-hover)}
+.month-ledger-title{display:flex;align-items:center;gap:10px;min-width:0}
+.month-ledger-title strong{font-size:17px;font-variant-numeric:tabular-nums}
+.month-ledger-count{font-size:12px;color:var(--muted)}
+.month-ledger-tags{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
+.month-ledger-tags .tag-chip{font-size:10px;padding:2px 6px}
+.month-ledger-metric{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:baseline;justify-content:end;font-variant-numeric:tabular-nums}
+.month-ledger-metric span{font-size:12px;color:var(--muted);text-align:right}
+.month-ledger-metric strong{text-align:right;font-size:14px}
+.month-detail{border-top:1px solid var(--border);background:rgba(0,0,0,.06);padding:8px}
+.cashflow-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.cashflow-card{
+  border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--card);
+  padding:11px 12px;min-width:0;
+}
+.cashflow-card p{margin:0;color:var(--muted);font-size:11px;font-weight:800}
+.cashflow-card strong{display:block;margin-top:5px;font-size:18px;font-variant-numeric:tabular-nums}
+
+/* ===== TERMINAL DENSE REDESIGN ===== */
+:root{
+  --accent:#d6a34a;--accent-dim:rgba(214,163,74,.11);--accent-glow:rgba(214,163,74,.18);
+  --blue:#4fb7c5;--blue-dim:rgba(79,183,197,.09);
+  --purple:#7f90c8;--purple-dim:rgba(127,144,200,.09);
+  --green:#42c98b;--green-dim:rgba(66,201,139,.09);
+  --red:#e36b6b;--red-dim:rgba(227,107,107,.09);
+  --bg:#080a0f;--panel:#10131a;--card:#171b24;--input-bg:#0b0e14;
+  --border:#252b37;--border-light:#343d4e;
+  --text:#f3f4f6;--muted:#8c95a5;--dim:#5f6878;
+  --radius:10px;--radius-sm:6px;
+  --overlay:rgba(255,255,255,.025);--overlay-hover:rgba(255,255,255,.055);
+  --shadow:rgba(0,0,0,.28);--shadow-light:rgba(0,0,0,.12);
+}
+[data-theme="light"]{
+  --accent:#a46f24;--accent-dim:rgba(164,111,36,.09);--accent-glow:rgba(164,111,36,.16);
+  --blue:#237e8a;--blue-dim:rgba(35,126,138,.08);
+  --purple:#6872a9;--purple-dim:rgba(104,114,169,.08);
+  --green:#247a52;--green-dim:rgba(36,122,82,.08);
+  --red:#b94b4b;--red-dim:rgba(185,75,75,.08);
+  --bg:#f4f1eb;--panel:#fbfaf7;--card:#ffffff;--input-bg:#f1ede5;
+  --border:#d9d3c8;--border-light:#c9c0b2;
+  --text:#25221d;--muted:#716b62;--dim:#9d9588;
+  --overlay:rgba(0,0,0,.025);--overlay-hover:rgba(0,0,0,.05);
+  --shadow:rgba(80,60,30,.08);--shadow-light:rgba(80,60,30,.04);
+}
+body{
+  background:
+    linear-gradient(180deg,rgba(214,163,74,.06),transparent 280px),
+    linear-gradient(90deg,rgba(255,255,255,.026) 1px,transparent 1px),
+    var(--bg);
+  background-size:auto,48px 48px,auto;
+  text-wrap:pretty;
+}
+.app{max-width:1440px;padding:16px 18px 88px 250px}
+.terminal-rail{
+  position:fixed;left:18px;top:16px;bottom:18px;width:214px;z-index:90;
+  border:1px solid var(--border);background:rgba(16,19,26,.92);
+  backdrop-filter:blur(16px);border-radius:var(--radius);padding:12px;
+  display:flex;flex-direction:column;gap:16px;
+}
+[data-theme="light"] .terminal-rail{background:rgba(251,250,247,.92)}
+.terminal-brand{display:flex;align-items:center;gap:10px;padding:4px 2px 12px;border-bottom:1px solid var(--border)}
+.terminal-brand img{width:34px;height:34px;border-radius:8px}
+.terminal-brand strong{display:block;font-size:17px;line-height:1}
+.terminal-brand span{display:block;margin-top:3px;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.terminal-nav{display:grid;gap:4px}
+.terminal-nav a{
+  min-height:38px;border-radius:var(--radius-sm);padding:0 10px;display:flex;align-items:center;gap:10px;
+  color:var(--muted);text-decoration:none;font-size:13px;font-weight:700;transition:background .16s,color .16s,border-color .16s;
+}
+.terminal-nav a:hover{background:var(--card);color:var(--text)}
+.terminal-nav span{
+  width:22px;height:22px;border:1px solid var(--border);border-radius:6px;display:grid;place-items:center;
+  color:var(--accent);font:700 10px/1 'SFMono-Regular',ui-monospace,monospace;
+}
+.terminal-rail-meta{margin-top:auto;border-top:1px solid var(--border);padding-top:12px;display:grid;grid-template-columns:1fr auto;gap:7px 10px;align-items:center}
+.terminal-rail-meta p{margin:0;color:var(--muted);font-size:11px}
+.terminal-rail-meta strong{font:700 11px/1 'SFMono-Regular',ui-monospace,monospace;color:var(--text);text-align:right;max-width:112px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ticker-bar{
+  position:sticky;top:16px;z-index:80;margin-bottom:12px;padding:6px 0;border-radius:var(--radius);
+  background:rgba(16,19,26,.9);backdrop-filter:blur(14px);box-shadow:0 16px 36px rgba(0,0,0,.18);
+}
+[data-theme="light"] .ticker-bar{background:rgba(251,250,247,.9)}
+.ticker-item{font-size:12px;padding:5px 14px}
+.ticker-picker-box{border-radius:14px;max-width:560px}
+.hero{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:16px;
+  padding:16px 18px;border-radius:var(--radius);margin-bottom:12px;
+  background:linear-gradient(135deg,rgba(79,183,197,.08),transparent 46%),linear-gradient(180deg,var(--card),var(--panel));
+  box-shadow:none;
+}
+.hero::before{display:none}
+.hero-info .kicker{letter-spacing:0;text-transform:none;font-size:12px;margin-bottom:7px}
+.hero-info h1{font-size:28px;line-height:1.15;letter-spacing:0;margin-bottom:7px}
+.hero-info .sub{font-size:13px;max-width:760px}
+.hero-quote{
+  margin-top:12px;padding:10px 12px;border-left:0;border:1px solid var(--border);background:var(--overlay);
+  border-radius:var(--radius-sm);font-size:12px;color:var(--muted);max-width:760px;
+}
+.hero-quote::before{display:none}
+.hero-actions{justify-content:flex-end;max-width:430px}
+.btn{border-radius:var(--radius-sm);box-shadow:none;min-height:36px}
+.btn:hover{box-shadow:none;transform:translateY(-1px)}
+.btn-primary{background:var(--accent);color:#171106;box-shadow:none}
+.btn-primary:hover{box-shadow:none}
+.btn-ghost{background:var(--card)}
+.theme-toggle{border:1px solid var(--border);background:var(--card);border-radius:var(--radius-sm);height:36px;min-width:36px}
+.sync-dot{width:8px;height:8px}
+.summary-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.summary-card{
+  border-radius:var(--radius);padding:14px;min-height:112px;background:rgba(23,27,36,.74);box-shadow:none;
+}
+[data-theme="light"] .summary-card{background:var(--card)}
+.summary-card:hover{transform:none;box-shadow:none;border-color:var(--border-light)}
+.summary-card::after{height:0}
+.summary-card:nth-child(1){border-color:rgba(214,163,74,.45);background:rgba(214,163,74,.1)}
+.summary-card:nth-child(1) .value{color:var(--accent)}
+.summary-card .label{font-size:11px;letter-spacing:0;text-transform:none;margin-bottom:8px}
+.summary-card .value{font-family:'SFMono-Regular',ui-monospace,monospace;font-size:22px;line-height:1.15;word-break:break-word}
+.summary-card .sub-metric{font-family:'SFMono-Regular',ui-monospace,monospace;font-size:12px}
+.panel{
+  border-radius:var(--radius);padding:14px;margin-bottom:12px;background:rgba(16,19,26,.92);
+  box-shadow:none;
+}
+[data-theme="light"] .panel{background:rgba(251,250,247,.95)}
+.panel:hover{border-color:var(--border)}
+.panel-header{margin-bottom:12px}
+.panel-header h2{font-size:15px}
+.panel-header .hint{font-size:11px}
+.panel-actions{gap:6px}
+.form-grid,.filter-grid{gap:8px}
+.form-group label{font-size:11px;letter-spacing:0;text-transform:none}
+.form-input,td input,td select{
+  border-radius:var(--radius-sm);background:var(--input-bg);border-color:var(--border);
+}
+.form-input{padding:9px 10px}
+.chip{border-radius:var(--radius-sm);background:var(--card);font-size:11px;padding:4px 9px}
+.pill{border-radius:var(--radius-sm);background:var(--blue-dim);color:var(--blue);border-color:rgba(79,183,197,.28)}
+.table-wrap{border:1px solid var(--border);border-radius:var(--radius);overflow:auto;background:var(--card)}
+table{min-width:720px}
+th,td{padding:9px 10px}
+th{background:var(--card);letter-spacing:0;text-transform:none}
+tbody tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+.month-group-header,.month-group-header-mobile{
+  border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--card);
+}
+.stats-layout{grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr);gap:12px}
+.compare-grid{gap:8px}
+.compare-card,.insight-panel,.behavior-metric,.filtered-stats,.fs-cell,.import-summary-cell,.import-impact div,.detail-cell{
+  border-radius:var(--radius-sm);background:var(--card);box-shadow:none;
+}
+.chart-wrap{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);padding:10px}
+.record-card{border-radius:var(--radius);background:var(--card);box-shadow:none}
+.mobile-tabs{border-top:1px solid var(--border);background:rgba(16,19,26,.92);backdrop-filter:blur(14px)}
+[data-theme="light"] .mobile-tabs{background:rgba(251,250,247,.92)}
+.mobile-tabs-inner{max-width:520px;margin:0 auto}
+.mob-tab{border-radius:var(--radius-sm)}
+.modal-box{border-radius:14px 14px 0 0;background:var(--panel)}
+.symbol-picker-dropdown,.ticker-picker-box{background:var(--panel);border-color:var(--border-light)}
+.rate-fetch-btn{border-radius:var(--radius-sm)}
+
+@media(max-width:1120px){
+  .app{padding-left:18px}
+  .terminal-rail{display:none}
+  .hero{grid-template-columns:1fr}
+  .hero-actions{justify-content:flex-start;max-width:none}
+  .quick-ticket{grid-template-columns:1fr}
+  .ledger-toolbar{grid-template-columns:1fr 1fr}
+  .ledger-advanced{grid-template-columns:1fr 1fr}
+  .month-ledger-summary{grid-template-columns:1fr 1fr;gap:8px}
+  .month-ledger-tags{grid-column:1/-1}
+  .cashflow-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .app{padding:10px 10px 84px}
+  .ticker-bar{top:8px;margin-bottom:10px}
+  .hero{padding:12px;margin-bottom:10px}
+  .hero-info h1{font-size:21px}
+  .hero-info .sub{display:block;font-size:12px}
+  .hero-actions{gap:6px}
+  .hero-actions .btn{min-height:40px}
+  .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .summary-card{min-height:92px;padding:10px}
+  .summary-card .value{font-size:17px}
+  .panel{padding:12px;margin-bottom:10px}
+  .quick-action-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .quick-action-card{min-height:68px}
+  .quick-amount-row,.quick-meta-grid,.quick-note-grid,.quick-ticket-foot{grid-template-columns:1fr}
+  .quick-ticket-foot .btn{width:100%;justify-content:center}
+  .ledger-toolbar,.ledger-advanced,.month-ledger-summary,.cashflow-overview{grid-template-columns:1fr}
+  .month-ledger-metric{grid-template-columns:auto auto;justify-content:space-between}
+  .table-wrap{border:0;background:transparent}
+  .stats-layout{grid-template-columns:1fr}
+  .chart-wrap{padding:8px}
+}
+@media(max-width:680px){
+  .section-records .month-ledger-list{display:none}
+}
 </style>
 </head>
 <body>
-<div id="app" :class="['app', mobileTab ? 'mob-tab-'+mobileTab : '']">
+<div id="app" :class="['app', mobileTab ? 'mob-tab-'+mobileTab : '', { 'showcase-mode': showcaseMode }]">
   <!-- Toast -->
   <div v-if="toast.show" :class="['toast',toast.type]">{{ toast.message }}</div>
+
+  <aside class="terminal-rail section-records section-stats section-data">
+    <div class="terminal-brand">
+      <img src="icon.svg" alt="投记">
+      <div><strong>投记</strong><span>{{ APP_VERSION }}</span></div>
+    </div>
+    <nav class="terminal-nav" aria-label="投记工作台导航">
+      <a href="#overview"><span>01</span>总览</a>
+      <a href="#positions"><span>02</span>持仓</a>
+      <a href="#records"><span>03</span>流水</a>
+      <a href="#analytics"><span>04</span>统计</a>
+      <a href="#review"><span>05</span>复盘</a>
+      <a href="#data-safe"><span>06</span>数据</a>
+    </nav>
+    <div class="terminal-rail-meta">
+      <p>同步</p><strong>{{ syncStatus }}</strong>
+      <p>本地记录</p><strong>{{ entries.length }} 条</strong>
+      <p>持仓</p><strong>{{ positions.length }} 只</strong>
+    </div>
+  </aside>
 
   <!-- ===== PRICE TICKER ===== -->
   <div class="ticker-bar" style="display:flex;align-items:center;gap:0">
@@ -712,6 +975,9 @@ tr.row-unmatched td{opacity:.35}
       </template>
       <span v-if="!tickerData.length" class="ticker-item" style="border:none">⏳ 加载行情中…</span>
     </div>
+  </div>
+
+  <teleport to="body">
     <!-- Ticker Picker -->
     <div v-if="showTickerPick" class="ticker-picker" @click.self="showTickerPick=false">
       <div class="ticker-picker-box">
@@ -725,10 +991,10 @@ tr.row-unmatched td{opacity:.35}
         <button class="btn btn-primary btn-sm" @click="showTickerPick=false" style="width:100%">完成</button>
       </div>
     </div>
-  </div>
+  </teleport>
 
   <!-- ===== HERO ===== -->
-  <header class="hero section-records section-stats section-data">
+  <header id="overview" class="hero section-records section-stats section-data">
     <div class="hero-info">
       <p class="kicker">{{ t('appKicker') }} <span style="opacity:.45;font-weight:400;margin-left:4px">{{ APP_VERSION }}</span></p>
       <h1>{{ t('appKicker') }}</h1>
@@ -738,21 +1004,27 @@ tr.row-unmatched td{opacity:.35}
     <div class="hero-actions">
       <button class="theme-toggle" @click="toggleTheme" :title="t('themeToggle')">{{ theme==='dark'?'☀️':'🌙' }}</button>
       <button class="btn btn-ghost btn-sm" @click="lang=lang==='zh'?'en':'zh';localStorage.setItem('touji_lang_v1',lang)">🌐 {{ lang==='zh'?'English':'中文' }}</button>
+      <button :class="['btn','btn-sm',showcaseMode?'btn-primary':'btn-ghost']" @click="toggleShowcase" title="隐藏真实金额，适合公开展示">👁 {{ showcaseMode?'展示中':'展示模式' }}</button>
       <span v-if="syncCfg.token" class="sync-dot" :class="{syncing:syncing,stale:!syncing&&lastChangeAt>lastSyncedAt}" :title="syncStatus"></span>
       <button class="btn btn-ghost btn-sm section-stats section-not-records section-not-data" @click="showDashCfg=true">⚙ 看板</button>
-      <button class="btn btn-primary" @click="$refs.xlsxFile.click()">{{ t('importExcel') }}</button>
-      <button class="btn btn-ghost" @click="$refs.jsonFile.click()">{{ t('importJSON') }}</button>
-      <button class="btn btn-ghost" @click="exportExcel">{{ t('exportExcel') }}</button>
-      <button class="btn btn-ghost" @click="exportJSON">{{ t('exportJSON') }}</button>
       <input ref="xlsxFile" type="file" accept=".xlsx,.xls,.csv" hidden @change="importExcel">
       <input ref="jsonFile" type="file" accept=".json" hidden @change="importJSON">
     </div>
   </header>
 
+  <!-- ===== SUMMARY (统一净值视角) ===== -->
+  <div class="summary-grid section-records section-stats section-data">
+    <div class="summary-card"><p class="label">{{ t('trueReturn') }}</p><p :class="['value', trueReturn>=0?'text-green':'text-red']">{{ (trueReturn>=0?'+':'')+fmt(trueReturn) }}</p><p class="sub-metric privacy-number" :class="trueROI>=0?'text-green':'text-red'">{{ fmtPct(trueROI*100,1) }}</p></div>
+    <div class="summary-card"><p class="label">{{ t('holdingsValue') }}</p><p class="value">{{ fmt(holdingsValue) }}</p></div>
+    <div class="summary-card"><p class="label">{{ t('totalIn') }}</p><p class="value text-red">{{ fmt(totalIn) }}</p></div>
+    <div class="summary-card"><p class="label">{{ t('totalOut') }}</p><p class="value text-green">{{ fmt(totalOut) }}</p></div>
+    <div v-if="realizedPL!==0" class="summary-card"><p class="label">已实现盈亏</p><p :class="['value',realizedPL>=0?'text-green':'text-red']">{{ (realizedPL>=0?'+':'')+fmt(realizedPL) }}</p></div>
+  </div>
+
   <!-- ===== POSITIONS ===== -->
-  <section class="panel section-stats section-not-records section-not-data" v-if="dashVisible('positions')">
+  <section id="positions" class="panel section-stats section-not-records section-not-data" v-if="dashVisible('positions')">
     <div class="panel-header" @click="showPosForm=!showPosForm" style="cursor:pointer">
-      <div class="panel-collapse-toggle"><span :class="['arrow',{open:showPosForm}]">&#9654;</span> <div><h2>{{ t('posTitle') }}</h2><p class="hint">{{ t('posCount',{n:positions.length}) }}<span v-if="positions.length"> · {{ t('posTotalCost') }} {{ fmt(posSummary.totalCost) }} · {{ t('posTotalValue') }} {{ fmt(posSummary.totalValue) }} · <span :style="{color:posSummary.pl>=0?'var(--green)':'var(--red)'}">{{ t('posPL') }} {{ posSummary.pl>=0?'+':'' }}{{ fmt(posSummary.pl) }} ({{ posSummary.plPct }}%)</span></span></p></div></div>
+      <div class="panel-collapse-toggle"><span :class="['arrow',{open:showPosForm}]">&#9654;</span> <div><h2>{{ t('posTitle') }}</h2><p class="hint">{{ t('posCount',{n:positions.length}) }}<span v-if="positions.length"> · {{ t('posTotalCost') }} {{ fmt(posSummary.totalCost) }} · {{ t('posTotalValue') }} {{ fmt(posSummary.totalValue) }} · <span :style="{color:posSummary.pl>=0?'var(--green)':'var(--red)'}">{{ t('posPL') }} {{ posSummary.pl>=0?'+':'' }}{{ fmt(posSummary.pl) }} ({{ fmtPct(posSummary.plPct,1) }})</span></span></p></div></div>
     </div>
     <div :class="['panel-collapse-body',{collapsed:!showPosForm}]">
       <!-- Add form -->
@@ -796,20 +1068,68 @@ tr.row-unmatched td{opacity:.35}
         <div class="form-group" v-if="posForm.secid" style="font-size:11px;color:var(--muted);align-self:end;padding-bottom:8px">{{ posForm.assetType }} · {{ posForm.secid }}</div>
         <button class="btn btn-primary btn-sm" @click="addPosition" style="align-self:end">{{ t('posAdd') }}</button>
       </div>
+      <!-- Position allocation chart -->
+      <div v-if="posRows.some(p=>p.value>0)" style="margin-bottom:16px">
+        <div class="stats-layout" style="align-items:flex-start">
+          <div class="chart-wrap" style="max-height:260px"><canvas ref="posPieChart"></canvas></div>
+          <div class="compare-grid" style="align-content:start">
+            <div v-for="(p,i) in posRows.filter(r=>r.value>0).slice(0,6)" :key="p.id" class="compare-card" style="padding:8px 12px">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                <span :style="{width:'8px',height:'8px',borderRadius:'50%',background:POS_PIE_COLORS[i%POS_PIE_COLORS.length],flexShrink:0,display:'inline-block'}"></span>
+                <p style="font-weight:700;font-size:12px;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.name&&p.name!==p.symbol?p.name:p.symbol }}</p>
+              </div>
+              <div style="font-size:11px;color:var(--muted);display:grid;grid-template-columns:1fr 1fr;gap:2px 6px">
+                <span>市值</span><span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--text)">{{ fmt(p.value) }}</span>
+                <template v-if="p.hasCost"><span>浮盈</span><span :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:p.pl>=0?'var(--green)':'var(--red)'}">{{ (p.pl>=0?'+':'')+fmt(p.pl) }}</span></template>
+                <span>占比</span><span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)">{{ fmtPct(posSummary.totalValue?p.value/posSummary.totalValue*100:0,1) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- Positions table (desktop) -->
       <div class="table-wrap" v-if="positions.length">
-        <table><thead><tr><th>{{ t('posSymbolCol') }}</th><th style="text-align:right">{{ t('posQtyCol') }}</th><th style="text-align:right">{{ t('posAvgCostCol') }}</th><th style="text-align:right">{{ t('posPriceCol') }}</th><th style="text-align:right">{{ t('posValueCol') }} (CNY)</th><th style="text-align:right">{{ t('posPLCol') }} (CNY)</th><th style="text-align:center">{{ t('posActionCol') }}</th></tr></thead>
-        <tbody><tr v-for="p in posRows" :key="p.id">
+        <table><thead><tr><th>{{ t('posSymbolCol') }}</th><th style="text-align:right">{{ t('posQtyCol') }}</th><th style="text-align:right">{{ t('posAvgCostCol') }}</th><th style="text-align:right">{{ t('posPriceCol') }}</th><th style="text-align:right">{{ t('posValueCol') }} (CNY)</th><th style="text-align:right">{{ t('posPLCol') }} (CNY)</th><th style="text-align:right">{{ t('posFlowCol') }}</th><th style="text-align:center">{{ t('posActionCol') }}</th></tr></thead>
+        <tbody>
+          <template v-for="p in posRows" :key="p.id">
+          <tr>
           <td><span v-if="p.icon" style="margin-right:4px;font-size:14px">{{ p.icon }}</span><strong>{{ p.symbol }}</strong><span v-if="p.name&&p.name!==p.symbol" style="color:var(--muted);margin-left:6px;font-size:11px">{{ p.name }}</span></td>
           <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.qty }}</td>
           <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.hasCost?fmt(p.avgCost):'-' }}<span v-if="p.hasCost&&p.currency!=='CNY'" style="font-size:10px;color:var(--dim);margin-left:3px">{{ p.currency }}</span></td>
           <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.price?fmt(p.price):t('posFetching') }}<span v-if="p.price&&p.currency!=='CNY'" style="font-size:10px;color:var(--dim);margin-left:3px">{{ p.currency }}</span></td>
           <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600">{{ p.value?fmt(p.value):'-' }}</td>
           <td :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:p.pl>=0?'var(--green)':'var(--red)'}">
-            <template v-if="p.hasCost">{{ p.pl>=0?'+':'' }}{{ fmt(p.pl) }}</template><template v-else>-</template><br><span style="font-size:10px">{{ p.hasCost&&p.plPct!='0'?p.plPct+'%':'' }}</span>
+            <template v-if="p.hasCost">{{ p.pl>=0?'+':'' }}{{ fmt(p.pl) }}</template><template v-else>-</template><br><span class="privacy-number" style="font-size:10px">{{ p.hasCost&&p.plPct!='0'?fmtPct(p.plPct,1):'' }}</span>
           </td>
-          <td style="text-align:center"><button class="btn btn-ghost btn-xs" @click="removePosition(p.id)" style="color:var(--red)" :title="t('posManualSource')">✕</button></td>
-        </tr></tbody></table>
+          <td style="text-align:right;font-variant-numeric:tabular-nums;cursor:pointer" @click="togglePosFlow(p.id)">
+            <strong>{{ p.flow.count }}</strong> {{ t('records') }}<br>
+            <span :style="{color:p.flow.netInvested>=0?'var(--red)':'var(--green)',fontSize:'11px'}">{{ t('posNetInvested') }} {{ fmt(p.flow.netInvested) }}</span>
+            <span v-if="p.flow.count" style="font-size:10px;color:var(--accent);margin-left:4px">{{ expandedPosFlows.has(p.id)?'▲':'▼' }}</span>
+          </td>
+          <td>
+            <div class="pos-actions">
+              <button class="btn btn-ghost btn-xs" @click="createPositionFlow(p,'buy')">{{ t('posFlowBuy') }}</button>
+              <button class="btn btn-ghost btn-xs" @click="createPositionFlow(p,'sell')">{{ t('posFlowSell') }}</button>
+              <button class="btn btn-ghost btn-xs" @click="removePosition(p.id)" style="color:var(--red)" :title="t('posManualSource')">✕</button>
+            </div>
+          </td>
+          </tr>
+          <tr v-if="expandedPosFlows.has(p.id)&&p.flow.rows.length">
+            <td colspan="8" style="padding:0 0 8px 16px;background:var(--bg-card)">
+              <div style="display:flex;flex-direction:column;gap:3px;max-height:200px;overflow-y:auto;padding:6px 0">
+                <div v-for="r in p.flow.rows" :key="r.id" style="display:flex;gap:10px;align-items:center;font-size:11px;color:var(--muted)">
+                  <span style="min-width:80px">{{ r.date }}</span>
+                  <span :class="['record-card-tag',r.type==='入金'?'tag-in':r.type==='出金'?'tag-out':r.type==='买入'?'tag-buy':'tag-sell']" style="font-size:10px;padding:1px 6px">{{ r.type }}</span>
+                  <span style="min-width:60px;text-align:right;font-variant-numeric:tabular-nums" :style="{color:r.type==='入金'||r.type==='买入'?'var(--red)':r.type==='出金'||r.type==='卖出'?'var(--green)':'inherit'}">{{ fmt(amountCNY(r)) }}</span>
+                  <span v-if="r.tradeQty" style="color:var(--dim)">× {{ r.tradeQty }}</span>
+                  <span v-if="r.realizedPL!=null" :style="{color:r.realizedPL>=0?'var(--green)':'var(--red)',fontWeight:600}">{{ r.realizedPL>=0?'+':'' }}{{ fmt(r.realizedPL) }}</span>
+                  <span style="color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.note }}</span>
+                </div>
+              </div>
+            </td>
+          </tr>
+          </template>
+        </tbody></table>
       </div>
       <!-- Position cards (mobile) -->
       <div class="record-cards" v-if="positions.length">
@@ -822,7 +1142,23 @@ tr.row-unmatched td{opacity:.35}
           <div style="display:flex;gap:12px;margin-top:6px;font-size:12px">
             <span>{{ t('posPriceCol') }} <strong>{{ p.price?fmt(p.price):'…' }}</strong><span v-if="p.price&&p.currency!=='CNY'" style="font-size:10px;color:var(--dim)"> {{ p.currency }}</span></span>
             <span>{{ t('posValueCol') }} <strong>{{ fmt(p.value) }}</strong> <span style="font-size:10px;color:var(--dim)">CNY</span></span>
-            <span v-if="p.hasCost" :style="{color:p.pl>=0?'var(--green)':'var(--red)'}">{{ t('posPL') }} <strong>{{ p.pl>=0?'+':'' }}{{ fmt(p.pl) }} ({{ p.plPct }}%)</strong></span>
+            <span v-if="p.hasCost" :style="{color:p.pl>=0?'var(--green)':'var(--red)'}">{{ t('posPL') }} <strong>{{ p.pl>=0?'+':'' }}{{ fmt(p.pl) }} ({{ fmtPct(p.plPct,1) }})</strong></span>
+          </div>
+          <div class="pos-flow-meta" :style="p.flow.count?'cursor:pointer':''" @click="p.flow.count&&togglePosFlow(p.id)">
+            {{ t('posFlowLinked') }} {{ p.flow.count }} {{ t('records') }} · {{ t('posNetInvested') }} {{ fmt(p.flow.netInvested) }}
+            <span v-if="p.flow.count" style="color:var(--accent);margin-left:4px">{{ expandedPosFlows.has(p.id)?'▲':'▼' }}</span>
+          </div>
+          <div v-if="expandedPosFlows.has(p.id)&&p.flow.rows.length" style="margin-top:6px;display:flex;flex-direction:column;gap:3px">
+            <div v-for="r in p.flow.rows" :key="r.id" style="display:flex;gap:8px;align-items:center;font-size:11px;color:var(--muted)">
+              <span>{{ r.date }}</span>
+              <span :class="['record-card-tag',r.type==='入金'?'tag-in':r.type==='出金'?'tag-out':r.type==='买入'?'tag-buy':'tag-sell']" style="font-size:10px;padding:1px 6px">{{ r.type }}</span>
+              <span :style="{color:r.type==='入金'||r.type==='买入'?'var(--red)':r.type==='出金'||r.type==='卖出'?'var(--green)':'inherit',fontVariantNumeric:'tabular-nums'}">{{ fmt(amountCNY(r)) }}</span>
+              <span v-if="r.realizedPL!=null" :style="{color:r.realizedPL>=0?'var(--green)':'var(--red)',fontWeight:600}">{{ r.realizedPL>=0?'+':'' }}{{ fmt(r.realizedPL) }}</span>
+            </div>
+          </div>
+          <div class="pos-actions" style="justify-content:flex-start;margin-top:8px">
+            <button class="btn btn-ghost btn-xs" @click="createPositionFlow(p,'buy')">{{ t('posFlowBuy') }}</button>
+            <button class="btn btn-ghost btn-xs" @click="createPositionFlow(p,'sell')">{{ t('posFlowSell') }}</button>
           </div>
         </div>
       </div>
@@ -831,44 +1167,107 @@ tr.row-unmatched td{opacity:.35}
     </div>
   </section>
 
-  <!-- ===== SUMMARY (统一净值视角) ===== -->
-  <div class="summary-grid section-records section-stats section-data">
-    <div class="summary-card"><p class="label">{{ t('totalIn') }}</p><p class="value text-red">{{ fmt(totalIn) }}</p></div>
-    <div class="summary-card"><p class="label">{{ t('totalOut') }}</p><p class="value text-green">{{ fmt(totalOut) }}</p></div>
-    <div class="summary-card"><p class="label">{{ t('holdingsValue') }}</p><p class="value">{{ fmt(holdingsValue) }}</p></div>
-    <div class="summary-card"><p class="label">{{ t('trueReturn') }}</p><p :class="['value', trueReturn>=0?'text-green':'text-red']">{{ (trueReturn>=0?'+':'')+fmt(trueReturn) }}</p><p class="sub-metric" :class="trueROI>=0?'text-green':'text-red'">{{ (trueROI*100).toFixed(1) }}%</p></div>
-  </div>
-
   <!-- ===== QUICK ADD ===== -->
   <section class="panel section-records section-not-stats section-not-data quick-add-panel">
-    <h2 style="margin-bottom:14px">{{ t('quickAdd') }}</h2>
-    <div class="form-grid">
-      <div class="form-group"><label>{{ t('date') }}</label><input class="form-input" type="date" v-model="form.date"></div>
-      <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="form.assetType"><option value="">{{ t("uncategorized") }}</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select></div>
-      <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="form.exchange" placeholder="选择或输入" list="dl-ex"><datalist id="dl-ex"><option v-for="ex in platformSuggestions" :key="ex" :value="ex"></option></datalist></div>
-      <div class="form-group">
-        <label>{{ t('amount') }}</label>
-        <div style="display:flex;gap:6px">
-          <select class="form-input" v-model="form.currency" style="width:110px;flex-shrink:0"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select>
-          <input class="form-input" type="number" step="0.01" v-model.number="form.amount" placeholder="1000" inputmode="decimal" style="flex:1;min-width:0">
+    <div class="panel-header" style="margin-bottom:12px">
+      <div><h2>{{ t('quickAdd') }}</h2><p class="hint">先选动作，再填金额；常用模板会自动带出平台、资产和标签。</p></div>
+    </div>
+    <div class="quick-ticket">
+      <div class="quick-side">
+        <div class="quick-action-tabs">
+          <button v-for="a in quickActions" :key="a.key" :class="['quick-action-card',{active:quickAction===a.key}]" @click="setQuickAction(a.key)">
+            <strong>{{ a.label }}</strong>
+            <span>{{ a.short }}</span>
+          </button>
         </div>
-        <div v-if="form.currency!=='CNY'" style="display:flex;gap:6px;margin-top:6px;align-items:center">
-          <span style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0">{{ t('rate') }}</span>
-          <input class="form-input" type="number" step="0.0001" v-model="form.rate" :placeholder="form.currency==='HKD'?'0.92':'7.25'" inputmode="decimal" style="flex:1;min-width:0">
-          <button class="rate-fetch-btn" @click="fetchRate(form.currency,'form')" :disabled="rateLoading">{{ rateLoading?'获取中…':'获取汇率' }}</button>
+        <div class="quick-action-explain">
+          <strong>{{ quickActionInfo.title }}</strong>
+          {{ quickActionInfo.desc }}
         </div>
-        <p class="rate-hint" v-if="form.currency!=='CNY'&&form.rate&&form.amount">本笔 ≈ {{ fmt(form.amount*Number(form.rate)) }} 元（1 {{ form.currency }} = {{ form.rate }} CNY）</p>
+
+        <div>
+          <label style="display:block;font-size:11px;color:var(--muted);font-weight:800;margin-bottom:7px">常用标签</label>
+          <div class="quick-chip-row">
+            <span v-for="tag in quickTagOptions" :key="tag" :class="['chip',{active:quickTagActive(tag)}]" @click="toggleQuickTag(tag)">{{ tag }}</span>
+          </div>
+        </div>
+
+        <div v-if="quickTemplates.length">
+          <label style="display:block;font-size:11px;color:var(--muted);font-weight:800;margin-bottom:7px">常用模板</label>
+          <div class="quick-template-row">
+            <span v-for="tpl in quickTemplates" :key="tpl.key" class="quick-template" @click="applyQuickTemplate(tpl)">{{ tpl.label }}</span>
+          </div>
+        </div>
       </div>
-      <div class="form-group"><label>{{ form.type==='入金'?'投入理由':'出金备注' }}</label><input class="form-input" v-model="form.note" :placeholder="form.type==='入金'?'为什么要入这笔？如：定投/补仓/看好行情':'收款渠道/备注'"></div>
-      <div class="form-group"><label>{{ t('tagStats') }}</label><input class="form-input" v-model="form.tagText" list="dl-tags" placeholder="定投，补仓，FOMO"><datalist id="dl-tags"><option v-for="t in allTags" :key="t" :value="t"></option></datalist></div>
-      <div class="form-group"><label>类型</label><select class="form-input" v-model="form.type"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option></select></div>
-      <button class="btn btn-primary" @click="addEntry">{{ t('add') }}</button>
-      <button class="btn btn-ghost" @click="copyLast" :disabled="!entries.length">{{ t('copyLast') }}</button>
+
+      <div class="quick-main">
+        <div class="quick-amount-card">
+          <label style="font-size:11px;color:var(--muted);font-weight:800">{{ quickAmountLabel }}</label>
+          <div class="quick-amount-row" v-if="quickAction==='deposit'||quickAction==='withdraw'">
+            <select class="form-input" v-model="form.currency"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select>
+            <input class="form-input" type="number" step="0.01" v-model.number="form.amount" placeholder="1000" inputmode="decimal" @keyup.enter="addEntry(true)">
+          </div>
+          <div v-else class="quick-trade-total">
+            <div>
+              <span>成交金额</span>
+              <strong>{{ tradeAmountPreview ? fmt(tradeAmountPreview) : '-' }} {{ form.currency||'CNY' }}</strong>
+            </div>
+            <p>由成交价格和数量自动计算，无需手填金额。</p>
+          </div>
+          <div v-if="form.currency!=='CNY'" style="display:flex;gap:6px;align-items:center">
+            <span style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0">{{ t('rate') }}</span>
+            <input class="form-input" type="number" step="0.0001" v-model="form.rate" :placeholder="form.currency==='HKD'?'0.92':'7.25'" inputmode="decimal" style="flex:1;min-width:0">
+            <button class="rate-fetch-btn" @click="fetchRate(form.currency,'form')" :disabled="rateLoading">{{ rateLoading?'获取中…':'获取汇率' }}</button>
+          </div>
+          <p class="rate-hint" v-if="form.currency!=='CNY'&&form.rate&&form.amount">本笔 ≈ {{ fmt(form.amount*Number(form.rate)) }} 元（1 {{ form.currency }} = {{ form.rate }} CNY）</p>
+        </div>
+
+        <div class="quick-meta-grid">
+          <div class="form-group" v-if="quickAction==='buy'||quickAction==='sell'">
+            <label>{{ quickAction==='buy'?'买入标的':'卖出标的' }}</label>
+            <select class="form-input" v-model="form.targetMarket" @change="resetQuickTargetSearch">
+              <option v-for="m in quickTargetMarkets" :key="m.v" :value="m.v">{{ m.l }}</option>
+            </select>
+            <input class="form-input" v-model="quickTargetQuery" @input="onQuickTargetInput" :placeholder="quickTargetPlaceholder" style="margin-top:6px">
+            <select class="form-input" v-model="form.targetKey" @change="applyQuickTarget" style="margin-top:6px">
+              <option value="">{{ quickTargetSearching?'搜索中…':'选择标的/持仓' }}</option>
+              <option v-for="item in quickTargetOptions" :key="item.key" :value="item.key">{{ item.label }}</option>
+            </select>
+            <p class="hint" style="margin-top:4px">{{ quickTargetHint }}</p>
+          </div>
+          <div class="form-group" v-if="quickAction==='buy'||quickAction==='sell'">
+            <label>{{ quickAction==='buy'?'买入价格':'卖出价格' }}</label>
+            <input class="form-input" type="number" step="any" v-model.number="form.tradePrice" :placeholder="form.currency+' 单价'" inputmode="decimal" @input="syncTradeAmount">
+          </div>
+          <div class="form-group" v-if="quickAction==='buy'||quickAction==='sell'">
+            <label>{{ quickAction==='buy'?'买入数量/份额':'卖出数量/份额' }}</label>
+            <input class="form-input" type="number" step="any" v-model.number="form.tradeQty" placeholder="如：100 / 0.01" inputmode="decimal" @input="syncTradeAmount">
+            <p class="hint" style="margin-top:4px" v-if="form.tradePrice&&form.tradeQty">金额会自动按 单价 × 数量 计算。</p>
+          </div>
+          <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="form.exchange" placeholder="选择或输入" list="dl-ex"><datalist id="dl-ex"><option v-for="ex in platformSuggestions" :key="ex" :value="ex"></option></datalist></div>
+          <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="form.assetType"><option value="">{{ t("uncategorized") }}</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select></div>
+          <div class="form-group"><label>{{ t('date') }}</label><input class="form-input" type="date" v-model="form.date"></div>
+        </div>
+
+        <div class="quick-note-grid">
+          <div class="form-group"><label>{{ quickNoteLabel }}</label><input class="form-input" v-model="form.note" :placeholder="quickNotePlaceholder"></div>
+          <div class="form-group"><label>{{ t('tagStats') }}</label><input class="form-input" v-model="form.tagText" list="dl-tags" placeholder="可手填多个标签"><datalist id="dl-tags"><option v-for="t in allTags" :key="t" :value="t"></option></datalist></div>
+        </div>
+
+        <div class="quick-ticket-foot">
+          <button class="btn btn-ghost" @click="copyLast" :disabled="!entries.length">{{ t('copyLast') }}</button>
+          <p class="quick-hint">保存并继续会保留平台、资产、标签和动作，只清空金额与备注，适合连续补录。</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+            <button class="btn btn-ghost" @click="addEntry(false)" :disabled="!quickCanSave">保存</button>
+            <button class="btn btn-primary" @click="addEntry(true)" :disabled="!quickCanSave">保存并继续</button>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- ===== SYNC PANEL ===== -->
-  <section class="panel section-records section-not-stats section-not-data">
+  <section id="sync" class="panel section-records section-not-stats section-not-data">
     <div class="panel-header" @click="showSync=!showSync" style="cursor:pointer">
       <div class="panel-collapse-toggle">
         <span :class="['arrow',{open:showSync}]">&#9654;</span>
@@ -900,13 +1299,13 @@ tr.row-unmatched td{opacity:.35}
         <button class="btn btn-ghost btn-sm" @click="syncAuto" v-if="syncCfg.token">{{ t('syncAuto') }}</button>
       </div>
       <p class="hint" style="margin-top:10px;font-size:12px">
-        提示：首次使用请先<strong>上传</strong>，在其他设备上输入同一 Token 后<strong>拉取</strong>即可。每次同步会保留版本历史，可在 Gist 页面查看和恢复。
+        提示：拉取会先预览云端与本地差异，确认后再合并；上传前如果发现云端有新内容，也会先提醒，避免手机和电脑互相覆盖。
       </p>
     </div>
   </section>
 
   <!-- ===== FLOW TABLE ===== -->
-  <section class="panel section-records section-not-stats section-not-data">
+  <section id="records" class="panel section-records section-not-stats section-not-data">
     <div class="panel-header">
       <div><h2>{{ t('flowRecords') }}</h2><p class="hint">筛选不隐藏，命中高亮，未命中变淡。</p></div>
       <div class="panel-actions">
@@ -917,33 +1316,36 @@ tr.row-unmatched td{opacity:.35}
         <button class="btn btn-ghost btn-sm" @click="clearData">{{ t('clearAllRecords') }}</button>
       </div>
     </div>
-    <!-- Filter toggle (mobile) -->
-    <button :class="['filter-toggle-btn',{'has-filter':activeFilterCount>0}]" @click="showFilters=!showFilters">
-      {{ showFilters?'收起筛选':'展开筛选' }}{{ activeFilterCount?' ('+activeFilterCount+')':'' }}
-    </button>
-    <!-- Filters -->
-    <div :class="{'filter-collapsed':!showFilters}">
-      <div class="filter-grid">
+    <!-- Compact Filters -->
+    <div>
+      <div class="ledger-toolbar">
         <div class="form-group"><label>{{ t('month') }}</label><select class="form-input" v-model="filters.month"><option value="">{{ t('typeAll') }}</option><option v-for="m in allMonths" :key="m" :value="m">{{ m }}</option></select></div>
-        <div class="form-group"><label>类型</label><select class="form-input" v-model="filters.type"><option value="">{{ t('typeAll') }}</option><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option></select></div>
-        <div class="form-group" style="grid-column:span 2"><label>{{ t('keyword') }}</label><input class="form-input" v-model="filters.keyword" placeholder="交易所/备注关键词"></div>
+        <div class="form-group"><label>类型</label><select class="form-input" v-model="filters.type"><option value="">{{ t('typeAll') }}</option><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></select></div>
+        <div class="form-group"><label>{{ t('keyword') }}</label><input class="form-input" v-model="filters.keyword" placeholder="交易所 / 备注 / 标签"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;align-items:end">
+          <button :class="['btn','btn-ghost','btn-sm',{'has-filter':activeFilterCount>0}]" @click="showFilters=!showFilters">{{ showFilters?'收起':'更多筛选' }}{{ activeFilterCount?' · '+activeFilterCount:'' }}</button>
+          <button class="btn btn-ghost btn-sm" @click="clearFilters">{{ t('clearFilters') }}</button>
+        </div>
+      </div>
+      <div v-if="showFilters" class="ledger-advanced">
         <div class="form-group"><label>{{ t('dateFrom') }}</label><input class="form-input" type="date" v-model="filters.dateFrom"></div>
         <div class="form-group"><label>{{ t('dateTo') }}</label><input class="form-input" type="date" v-model="filters.dateTo"></div>
         <div class="form-group"><label>最小金额(CNY)</label><input class="form-input" type="number" v-model.number="filters.amountMin" placeholder=">= 0" inputmode="numeric"></div>
         <div class="form-group"><label>最大金额(CNY)</label><input class="form-input" type="number" v-model.number="filters.amountMax" placeholder="不限" inputmode="numeric"></div>
-        <button class="btn btn-ghost btn-sm" @click="clearFilters">{{ t('clearFilters') }}</button>
       </div>
-      <div class="filter-exchange" v-if="allAssetTypes.length">
-        <span class="filter-title">{{ t('assetType') }}</span>
-        <span v-for="at in allAssetTypes" :key="at" :class="['chip',{active:filters.assetTypes.includes(at)}]" @click="toggleAssetType(at)">{{ at }}</span>
-      </div>
-      <div class="filter-exchange" v-if="allTags.length">
-        <span class="filter-title">{{ t('tagStats') }}</span>
-        <span v-for="tag in allTags" :key="tag" :class="['chip',{active:filters.tags.includes(tag)}]" @click="toggleTag(tag)">#{{ tag }}</span>
-      </div>
-      <div class="filter-exchange" v-if="allExchanges.length">
-        <span class="filter-title">账户/平台</span>
-        <span v-for="ex in allExchanges" :key="ex" :class="['chip',{active:filters.exchanges.includes(ex)}]" @click="toggleEx(ex)">{{ ex }}</span>
+      <div v-if="showFilters" class="ledger-chip-groups">
+        <div class="filter-exchange" v-if="allAssetTypes.length">
+          <span class="filter-title">{{ t('assetType') }}</span>
+          <span v-for="at in allAssetTypes" :key="at" :class="['chip',{active:filters.assetTypes.includes(at)}]" @click="toggleAssetType(at)">{{ at }}</span>
+        </div>
+        <div class="filter-exchange" v-if="allExchanges.length">
+          <span class="filter-title">账户/平台</span>
+          <span v-for="ex in allExchanges" :key="ex" :class="['chip',{active:filters.exchanges.includes(ex)}]" @click="toggleEx(ex)">{{ ex }}</span>
+        </div>
+        <div class="filter-exchange" v-if="allTags.length">
+          <span class="filter-title">{{ t('tagStats') }}</span>
+          <span v-for="tag in allTags" :key="tag" :class="['chip',{active:filters.tags.includes(tag)}]" @click="toggleTag(tag)">#{{ tag }}</span>
+        </div>
       </div>
     </div>
     <!-- Filtered Stats Bar -->
@@ -956,39 +1358,42 @@ tr.row-unmatched td{opacity:.35}
         <div class="fs-cell"><p>{{ t('typeIn') }}</p><strong class="text-red">{{ fmt(filteredStats.inTotal) }}</strong></div>
         <div class="fs-cell"><p>{{ t('typeOut') }}</p><strong class="text-green">{{ fmt(filteredStats.outTotal) }}</strong></div>
         <div class="fs-cell"><p>净盈亏</p><strong :style="{color:filteredStats.net>=0?'var(--blue)':'var(--red)'}">{{ (filteredStats.net>=0?'+':'')+fmt(filteredStats.net) }}</strong></div>
-        <div class="fs-cell"><p>{{ t('roi') }}</p><strong :style="{color:filteredStats.inTotal&&filteredStats.outTotal/filteredStats.inTotal>=1?'var(--green)':'var(--red)'}">{{ filteredStats.inTotal?((filteredStats.outTotal/filteredStats.inTotal)*100).toFixed(1)+'%':'-' }}</strong></div>
+        <div class="fs-cell"><p>{{ t('roi') }}</p><strong class="privacy-number" :style="{color:filteredStats.inTotal&&filteredStats.outTotal/filteredStats.inTotal>=1?'var(--green)':'var(--red)'}">{{ filteredStats.inTotal?fmtPct((filteredStats.outTotal/filteredStats.inTotal)*100,1):'-' }}</strong></div>
       </div>
     </div>
-    <!-- Desktop Table (grouped by month) -->
-    <div class="table-wrap">
-      <div v-if="!entries.length" style="text-align:center;color:var(--muted);padding:32px">{{ t('emptyStateHint') }}<br><button class="btn btn-ghost btn-sm mt-12" @click="loadDemo">📊 加载演示数据</button></div>
+    <!-- Month Ledger -->
+    <div class="month-ledger-list">
+      <div v-if="!entries.length" style="text-align:center;color:var(--muted);padding:32px">{{ t('emptyStateHint') }}<br><button class="btn btn-ghost btn-sm mt-12" @click="loadDemo">加载演示数据</button></div>
       <div v-else-if="hasActiveFilter&&!matchCount" style="text-align:center;color:var(--muted);padding:32px">{{ t('noMatch') }}</div>
-      <div v-for="g in groupedEntries" :key="g.key">
-        <div class="month-group-header" @click="toggleMonth(g.key)">
-          <div class="month-group-left">
+      <div v-for="g in groupedEntries" :key="g.key" class="month-ledger-row">
+        <div class="month-ledger-summary" @click="toggleMonth(g.key)">
+          <div class="month-ledger-title">
             <span :class="['arrow',{open:isMonthOpen(g.key)}]">&#9654;</span>
-            <span class="month-group-key">{{ g.key }}</span>
-            <span class="month-group-count">{{ hasActiveFilter ? g.matchedCount+'/'+g.entries.length : g.entries.length }} 笔</span>
+            <strong>{{ g.key }}</strong>
+            <span class="month-ledger-count">{{ hasActiveFilter ? g.matchedCount+'/'+g.entries.length : g.entries.length }} 笔</span>
           </div>
-          <div class="month-group-stats">
-            <span>入 <span class="val" style="color:var(--red)">{{ fmt(g.inTotal) }}</span></span>
-            <span>出 <span class="val" style="color:var(--green)">{{ fmt(g.outTotal) }}</span></span>
-            <span>净 <span class="val" :style="{color:g.net>=0?'var(--blue)':'var(--red)'}">{{ (g.net>=0?'+':'')+fmt(g.net) }}</span></span>
+          <div class="month-ledger-tags">
+            <span v-for="tag in g.summaryTags" :key="tag" class="tag-chip">{{ tag }}</span>
           </div>
+          <div class="month-ledger-metric"><span>入</span><strong style="color:var(--red)">{{ fmt(g.inTotal) }}</strong></div>
+          <div class="month-ledger-metric"><span>出</span><strong style="color:var(--green)">{{ fmt(g.outTotal) }}</strong></div>
+          <div class="month-ledger-metric"><span>净</span><strong :style="{color:g.net>=0?'var(--blue)':'var(--red)'}">{{ (g.net>=0?'+':'')+fmt(g.net) }}</strong></div>
         </div>
-        <table v-show="isMonthOpen(g.key)">
+        <div class="month-detail" v-show="isMonthOpen(g.key)">
+          <div class="table-wrap">
+            <table>
           <thead><tr><th>{{ t('date') }}</th><th>资产 / 平台</th><th style="text-align:right">{{ t('amount') }}</th><th>备注/理由</th><th>类型</th><th>{{ t('actions') }}</th></tr></thead>
           <tbody>
             <tr v-for="e in g.entries" :key="e.id" :class="rowClass(e)" :id="'row-'+e.id">
               <td><input type="date" :value="e.date" @change="updateField(e.id,'date',$event.target.value)"></td>
               <td style="min-width:140px">
-                <select :value="e.assetType||''" @change="updateField(e.id,'assetType',$event.target.value)" style="width:100%;margin-bottom:3px"><option value="">其他</option><option value="大A">大A</option><option value="美股">美股</option><option value="港股">港股</option><option value="加密货币">加密货币</option><option value="基金">基金</option><option value="黄金">黄金</option><option value="期货">期货</option><option value="其他">其他</option></select>
+                <select :value="normalizeAssetType(e.assetType)||''" @change="updateField(e.id,'assetType',$event.target.value)" style="width:100%;margin-bottom:3px"><option value="">其他</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select>
                 <input type="text" :value="e.exchange" @change="updateField(e.id,'exchange',$event.target.value)" placeholder="账户/平台" style="width:100%;font-size:11px;color:var(--muted)">
               </td>
               <td style="text-align:right;min-width:130px">
                 <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">
                   <select :value="e.currency||'CNY'" @change="updateField(e.id,'currency',$event.target.value)" style="width:52px;font-size:11px;color:var(--muted)"><option value="CNY">CNY</option><option value="USD">USD</option><option value="HKD">HKD</option><option value="USDT">USDT</option></select>
-                  <input type="number" step="0.01" :value="e.amount" @change="updateField(e.id,'amount',$event.target.value)" style="text-align:right;font-weight:700;width:90px" :style="{color:e.type==='入金'?'var(--red)':'var(--green)'}">
+                  <input type="number" step="0.01" :value="e.amount" @change="updateField(e.id,'amount',$event.target.value)" style="text-align:right;font-weight:700;width:90px" :style="{color:e.type==='入金'?'var(--red)':e.type==='出金'?'var(--green)':e.type==='买入'?'#60a5fa':'#a78bfa'}">
                 </div>
                 <div v-if="e.currency&&e.currency!=='CNY'" style="font-size:10px;color:var(--muted);text-align:right;margin-top:2px">
                   汇率 <input type="number" step="0.0001" :value="e.rate" @change="updateField(e.id,'rate',$event.target.value)" style="width:52px;font-size:10px;color:var(--muted);text-align:right">
@@ -997,13 +1402,19 @@ tr.row-unmatched td{opacity:.35}
               </td>
               <td>
                 <input type="text" :value="e.note" @change="updateField(e.id,'note',$event.target.value)" style="min-width:100px">
+                <div v-if="e.tradeQty||e.tradePrice" class="pos-flow-meta">
+                  成交 {{ e.tradeQty||'-' }} × {{ e.tradePrice?fmt(e.tradePrice):'-' }} {{ e.currency||'CNY' }}
+                  <span v-if="e.type==='卖出'&&e.realizedPL!=null" :style="{color:e.realizedPL>=0?'var(--green)':'var(--red)',fontWeight:700}"> · {{ e.realizedPL>=0?'+':'' }}{{ fmt(e.realizedPL) }}</span>
+                </div>
                 <div class="tag-strip" v-if="parseTags(e.tags).length"><span v-for="tag in parseTags(e.tags)" :key="tag" class="tag-chip">#{{ tag }}</span></div>
               </td>
-              <td><select :value="e.type" @change="updateField(e.id,'type',$event.target.value)"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option></select></td>
+              <td><select :value="e.type" @change="updateField(e.id,'type',$event.target.value)"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></select></td>
               <td><span class="action-link del" @click="removeEntry(e.id)">{{ t('delete') }}</span></td>
             </tr>
           </tbody>
-        </table>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
     <!-- Mobile Cards (grouped by month) -->
@@ -1025,15 +1436,19 @@ tr.row-unmatched td{opacity:.35}
           <div v-for="e in g.entries" :key="e.id" :class="['record-card',rowClass(e)]" @click="openEditModal(e)">
             <div class="record-card-top">
               <span class="record-card-date">{{ e.date }}</span>
-              <span :class="['record-card-tag',e.type==='入金'?'tag-in':'tag-out']">{{ e.type }}</span>
+              <span :class="['record-card-tag',e.type==='入金'?'tag-in':e.type==='出金'?'tag-out':e.type==='买入'?'tag-buy':'tag-sell']">{{ e.type }}</span>
             </div>
-            <div :class="['record-card-amount']" :style="{color:e.type==='入金'?'var(--red)':'var(--green)'}">
+            <div :class="['record-card-amount']" :style="{color:e.type==='入金'?'var(--red)':e.type==='出金'?'var(--green)':e.type==='买入'?'#60a5fa':'#a78bfa'}">
               {{ fmt(e.amount) }} {{ e.currency&&e.currency!=='CNY'?e.currency:'元' }}
               <span v-if="e.currency&&e.currency!=='CNY'&&e.rate" style="font-size:13px;color:var(--muted);font-weight:400"> ≈{{ fmt(amountCNY(e)) }}元</span>
             </div>
             <div class="record-card-rate" v-if="e.assetType||e.exchange">
               <span v-if="e.assetType" style="background:var(--accent-dim);color:var(--accent);padding:1px 7px;border-radius:5px;font-size:10px;font-weight:700;margin-right:6px">{{ e.assetType }}</span>
               <span v-if="e.exchange">{{ e.exchange }}</span>
+            </div>
+            <div class="pos-flow-meta" v-if="e.tradeQty||e.tradePrice">
+              成交 {{ e.tradeQty||'-' }} × {{ e.tradePrice?fmt(e.tradePrice):'-' }} {{ e.currency||'CNY' }}
+              <span v-if="e.type==='卖出'&&e.realizedPL!=null" :style="{color:e.realizedPL>=0?'var(--green)':'var(--red)',fontWeight:700,marginLeft:'8px'}">{{ e.realizedPL>=0?'盈利 +':'亏损 ' }}{{ fmt(Math.abs(e.realizedPL)) }}</span>
             </div>
             <div class="tag-strip" v-if="parseTags(e.tags).length"><span v-for="tag in parseTags(e.tags)" :key="tag" class="tag-chip">#{{ tag }}</span></div>
             <div class="record-card-bottom">
@@ -1044,34 +1459,6 @@ tr.row-unmatched td{opacity:.35}
             </div>
           </div>
         </template>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== ASSET ALLOCATION OVERVIEW ===== -->
-  <section class="panel section-stats section-not-records section-not-data" v-if="dashVisible('assetAlloc')&&assetTypeRows.length">
-    <div class="panel-header"><h2>{{ t('assetAlloc') }}</h2><p class="hint">各类资产的投入分布与盈亏情况（折合 CNY）</p></div>
-    <div class="stats-layout">
-      <div>
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <button :class="['btn btn-sm',pieMode==='in'?'btn-primary':'btn-ghost']" @click="pieMode='in'">{{ t('investDist') }}</button>
-          <button :class="['btn btn-sm',pieMode==='net'?'btn-primary':'btn-ghost']" @click="pieMode='net'">{{ t('netDist') }}</button>
-        </div>
-        <div class="chart-wrap" style="max-height:280px"><canvas ref="pieChart"></canvas></div>
-      </div>
-      <div class="compare-grid" style="align-content:start">
-        <div v-for="row in assetTypeRows" :key="row.assetType" class="compare-card asset-card">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-            <span :style="{width:'8px',height:'8px',borderRadius:'50%',background:assetColor(row.assetType),flexShrink:0,display:'inline-block'}"></span>
-            <p style="font-weight:700;font-size:13px;margin:0">{{ row.assetType||'未分类' }}</p>
-          </div>
-          <div style="font-size:11px;color:var(--muted);display:grid;grid-template-columns:1fr 1fr;gap:3px 6px">
-            <span>{{ t('deposit') }}</span><span style="text-align:right;color:var(--red);font-variant-numeric:tabular-nums">{{ fmt(row.inTotal) }}</span>
-            <span>{{ t('withdraw') }}</span><span style="text-align:right;color:var(--green);font-variant-numeric:tabular-nums">{{ fmt(row.outTotal) }}</span>
-            <span>盈亏</span><span :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:row.net>=0?'var(--blue)':'var(--red)'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span>
-            <span>{{ t('roiRate') }}</span><span :style="{textAlign:'right',fontVariantNumeric:'tabular-nums',color:row.inTotal&&row.outTotal/row.inTotal>=1?'var(--green)':'var(--red)'}">{{ row.inTotal?((row.outTotal/row.inTotal)*100).toFixed(0)+'%':'-' }}</span>
-          </div>
-        </div>
       </div>
     </div>
   </section>
@@ -1094,14 +1481,36 @@ tr.row-unmatched td{opacity:.35}
     <div class="chart-wrap">
       <canvas ref="trendChart"></canvas>
     </div>
-    <!-- Period table -->
-    <div class="table-wrap" style="margin-bottom:14px"><table>
-      <thead><tr><th>{{ {month:'月份',week:'周',year:'年份'}[period] }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th><th style="text-align:right">{{ t('cumPL') }}</th></tr></thead>
-      <tbody><tr v-for="row in periodRows" :key="row.key"><td class="mono">{{ row.key }}</td><td class="mono" style="text-align:right">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td><td class="mono" style="text-align:right" :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.cum) }}</td></tr></tbody>
-    </table></div>
-    <div class="stats-cards" style="margin-bottom:8px">
-      <div v-for="row in periodRows" :key="row.key" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">{{ row.key }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div><div class="stat-card-row"><span>{{ t('cumPL') }}</span><span :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.cum) }}</span></div></div>
+    <div v-if="period==='month'" class="cashflow-overview">
+      <div class="cashflow-card"><p>本年入金</p><strong class="text-red">{{ fmt(cashflowOverview.yearIn) }}</strong></div>
+      <div class="cashflow-card"><p>本年出金</p><strong class="text-green">{{ fmt(cashflowOverview.yearOut) }}</strong></div>
+      <div class="cashflow-card"><p>本年净额</p><strong :style="{color:cashflowOverview.yearNet>=0?'var(--blue)':'var(--red)'}">{{ (cashflowOverview.yearNet>=0?'+':'')+fmt(cashflowOverview.yearNet) }}</strong></div>
+      <div class="cashflow-card"><p>累计净额</p><strong :style="{color:cashflowOverview.cum>=0?'var(--blue)':'var(--red)'}">{{ (cashflowOverview.cum>=0?'+':'')+fmt(cashflowOverview.cum) }}</strong></div>
     </div>
+    <details style="margin:10px 0 14px">
+      <summary style="font-size:12px;color:var(--muted);cursor:pointer;user-select:none;letter-spacing:.3px">查看明细数据</summary>
+      <div style="margin-top:10px">
+        <div v-if="period==='month'" class="table-wrap" style="margin-bottom:14px"><table>
+          <thead><tr><th>月份</th><th style="text-align:right">笔数</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th><th style="text-align:right">{{ t('cumPL') }}</th></tr></thead>
+          <tbody><tr v-for="row in cashflowRows" :key="row.key"><td class="mono">{{ row.key }}</td><td class="mono" style="text-align:right">{{ row.count }}</td><td class="mono" style="text-align:right;color:var(--red)">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right;color:var(--green)">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</td><td class="mono" style="text-align:right" :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ (row.cum>=0?'+':'')+fmt(row.cum) }}</td></tr></tbody>
+        </table></div>
+        <div v-if="period==='month'" class="stats-cards" style="margin-bottom:8px">
+          <div v-for="row in cashflowRows" :key="row.key" class="stat-card">
+            <div class="stat-card-header"><span class="stat-card-key">{{ row.key }} · {{ row.count }} 笔</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div>
+            <div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div>
+            <div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
+            <div class="stat-card-row"><span>{{ t('cumPL') }}</span><span :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ (row.cum>=0?'+':'')+fmt(row.cum) }}</span></div>
+          </div>
+        </div>
+        <div v-if="period!=='month'" class="table-wrap" style="margin-bottom:14px"><table>
+          <thead><tr><th>{{ {month:'月份',week:'周',year:'年份'}[period] }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th><th style="text-align:right">{{ t('cumPL') }}</th></tr></thead>
+          <tbody><tr v-for="row in periodRows" :key="row.key"><td class="mono">{{ row.key }}</td><td class="mono" style="text-align:right">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td><td class="mono" style="text-align:right" :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.cum) }}</td></tr></tbody>
+        </table></div>
+        <div v-if="period!=='month'" class="stats-cards" style="margin-bottom:8px">
+          <div v-for="row in periodRows" :key="row.key" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">{{ row.key }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div><div class="stat-card-row"><span>{{ t('cumPL') }}</span><span :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.cum) }}</span></div></div>
+        </div>
+      </div>
+    </details>
     <!-- Tab bar for breakdown views -->
     <div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid var(--border);padding-bottom:0">
       <button :class="['btn btn-sm',statTab==='asset'?'btn-primary':'btn-ghost']" @click="statTab='asset'" style="border-radius:8px 8px 0 0;font-size:12px">{{ t('assetType') }}</button>
@@ -1109,7 +1518,7 @@ tr.row-unmatched td{opacity:.35}
       <button v-if="tagRows.length" :class="['btn btn-sm',statTab==='tag'?'btn-primary':'btn-ghost']" @click="statTab='tag'" style="border-radius:8px 8px 0 0;font-size:12px">{{ t('tagStats') }}</button>
     </div>
     <!-- Asset type breakdown -->
-    <div v-if="statTab==='asset'"><div class="table-wrap"><table><thead><tr><th>{{ t('assetType') }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th><th style="text-align:right">{{ t('roiRate') }}</th></tr></thead><tbody><tr v-for="row in assetTypeRows" :key="row.assetType"><td style="font-weight:600">{{ row.assetType||'未分类' }}</td><td class="mono" style="text-align:right;color:var(--red)">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right;color:var(--green)">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td><td class="mono" style="text-align:right" :style="{color:row.inTotal&&row.outTotal/row.inTotal>=1?'var(--green)':'var(--red)'}">{{ row.inTotal?((row.outTotal/row.inTotal)*100).toFixed(0)+'%':'-' }}</td></tr></tbody></table></div><div class="stats-cards"><div v-for="row in assetTypeRows" :key="row.assetType" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">{{ row.assetType||'未分类' }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div></div></div></div>
+    <div v-if="statTab==='asset'"><div class="table-wrap"><table><thead><tr><th>{{ t('assetType') }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th><th style="text-align:right">{{ t('roiRate') }}</th></tr></thead><tbody><tr v-for="row in assetTypeRows" :key="row.assetType"><td style="font-weight:600">{{ row.assetType||'未分类' }}</td><td class="mono" style="text-align:right;color:var(--red)">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right;color:var(--green)">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td><td class="mono privacy-number" style="text-align:right" :style="{color:row.inTotal&&row.outTotal/row.inTotal>=1?'var(--green)':'var(--red)'}">{{ row.inTotal?fmtPct((row.outTotal/row.inTotal)*100,0):'-' }}</td></tr></tbody></table></div><div class="stats-cards"><div v-for="row in assetTypeRows" :key="row.assetType" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">{{ row.assetType||'未分类' }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div></div></div></div>
     <!-- Account/Exchange breakdown -->
     <div v-if="statTab==='account'"><div class="table-wrap"><table><thead><tr><th>{{ t('exchange') }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th></tr></thead><tbody><tr v-for="row in exchangeRows" :key="row.exchange"><td style="font-weight:600">{{ row.exchange }}</td><td class="mono" style="text-align:right;color:var(--red)">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right;color:var(--green)">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td></tr></tbody></table></div><div class="stats-cards"><div v-for="row in exchangeRows" :key="row.exchange" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">{{ row.exchange }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div></div></div></div>
     <!-- Tag breakdown -->
@@ -1117,8 +1526,30 @@ tr.row-unmatched td{opacity:.35}
   </section>
 
   <!-- ===== INSIGHT & REVIEW ===== -->
-  <section class="panel section-stats section-not-records section-not-data" v-if="dashVisible('insights')">
-    <div class="panel-header"><h2>{{ t('insights') }}</h2></div>
+  <section id="review" class="panel section-stats section-not-records section-not-data" v-if="dashVisible('insights')">
+    <div class="panel-header"><h2>建议 · 行为 · 复盘</h2></div>
+
+    <!-- Behavior: psychology tags + advice -->
+    <template v-if="behaviorAnalysis">
+      <div class="tag-list" style="margin-bottom:10px">
+        <span v-for="(t,i) in psychoTags" :key="i" :class="['psych-tag',t.type]" :title="t.tip">
+          <span class="tag-dot"></span>{{ t.text }}
+        </span>
+      </div>
+      <ul class="insight-list">
+        <li v-for="(a,i) in behaviorAdvice" :key="i">{{ a }}</li>
+      </ul>
+      <div class="behavior-metrics" style="margin:14px 0">
+        <div class="behavior-metric"><p>{{ t('avgInterval') }}</p><strong>{{ behaviorAnalysis.avgInterval }} 天</strong></div>
+        <div class="behavior-metric"><p>{{ t('denseCount') }}</p><strong>{{ behaviorAnalysis.denseCount }} 次</strong></div>
+        <div class="behavior-metric"><p>{{ t('maxSingle') }}</p><strong>{{ fmt(behaviorAnalysis.maxAmount) }}</strong></div>
+        <div class="behavior-metric"><p>{{ t('avgAmount') }}</p><strong>{{ fmt(behaviorAnalysis.avgAmount) }}</strong></div>
+        <div class="behavior-metric"><p>{{ t('maxStreak') }}</p><strong>{{ behaviorAnalysis.maxStreak }} 笔</strong></div>
+        <div class="behavior-metric"><p>{{ t('totalCount') }}</p><strong>{{ behaviorAnalysis.totalIn }} 笔</strong></div>
+      </div>
+    </template>
+
+    <!-- Insight: cash flow suggestions + large tx -->
     <p class="insight-summary">{{ insightSummary }}</p>
     <ul class="insight-list"><li v-for="(a,i) in insightAdvice" :key="i">{{ a }}</li></ul>
     <h4>{{ t('largeTxWarn') }}</h4>
@@ -1126,75 +1557,25 @@ tr.row-unmatched td{opacity:.35}
       <li v-for="(t,i) in largeTxList" :key="i">{{ t }}</li>
       <li v-if="!largeTxList.length" style="color:var(--muted)">{{ t('noLargeTx') }}</li>
     </ul>
-    <h4>{{ t('rules') }}</h4>
-    <div class="insight-config">
-      <div class="form-group"><label>{{ t('ruleLossWarn') }}</label><input class="form-input" type="number" v-model.number="rules.lossWarn"></div>
-      <div class="form-group"><label>{{ t('ruleLossCritical') }}</label><input class="form-input" type="number" v-model.number="rules.lossCritical"></div>
-      <div class="form-group"><label>{{ t('ruleRoiWarn') }}</label><input class="form-input" type="number" step="0.01" v-model.number="rules.roiWarn"></div>
-      <div class="form-group"><label>{{ t('ruleInflowRatio') }}</label><input class="form-input" type="number" step="0.1" v-model.number="rules.inflowRatio"></div>
-      <div class="form-group"><label>{{ t('ruleLargeTx') }}</label><input class="form-input" type="number" v-model.number="rules.largeTx"></div>
-      <div class="form-group"><label>{{ t('ruleLossStreak') }}</label><input class="form-input" type="number" v-model.number="rules.lossStreak"></div>
-      <button class="btn btn-ghost btn-sm" @click="saveRules">{{ t('saveRules') }}</button>
-    </div>
-    <h4>{{ t('reviewChecklist') }}</h4>
-    <div v-for="(item,i) in reviewChecklist" :key="i" :class="['check-item',{done:item.checked}]">
-      <input type="checkbox" v-model="item.checked" @change="saveChecklist">
-      <span>{{ item.text }}</span>
-    </div>
-    <h4>{{ t('reviewNote') }}</h4>
+    <details style="margin:14px 0 0">
+      <summary style="font-size:12px;color:var(--muted);cursor:pointer;user-select:none;letter-spacing:.3px;text-transform:uppercase">{{ t('rules') }}</summary>
+      <div class="insight-config" style="margin-top:10px">
+        <div class="form-group"><label>{{ t('ruleLossWarn') }}</label><input class="form-input" type="number" v-model.number="rules.lossWarn"></div>
+        <div class="form-group"><label>{{ t('ruleLossCritical') }}</label><input class="form-input" type="number" v-model.number="rules.lossCritical"></div>
+        <div class="form-group"><label>{{ t('ruleRoiWarn') }}</label><input class="form-input" type="number" step="0.01" v-model.number="rules.roiWarn"></div>
+        <div class="form-group"><label>{{ t('ruleInflowRatio') }}</label><input class="form-input" type="number" step="0.1" v-model.number="rules.inflowRatio"></div>
+        <div class="form-group"><label>{{ t('ruleLargeTx') }}</label><input class="form-input" type="number" v-model.number="rules.largeTx"></div>
+        <div class="form-group"><label>{{ t('ruleLossStreak') }}</label><input class="form-input" type="number" v-model.number="rules.lossStreak"></div>
+        <button class="btn btn-ghost btn-sm" @click="saveRules">{{ t('saveRules') }}</button>
+      </div>
+    </details>
+    <h4 style="margin-top:18px">{{ t('reviewNote') }}</h4>
     <textarea class="form-input" v-model="reviewNote" :placeholder="t('reviewNote')" rows="3"></textarea>
     <div class="note-actions"><button class="btn btn-ghost btn-sm" @click="saveReviewNote">{{ t('saveReviewNote') }}</button><small class="note-hint">{{ reviewSavedAt }}</small></div>
   </section>
 
-  <!-- ===== BEHAVIOR ANALYSIS ===== -->
-  <section class="panel section-stats section-not-records section-not-data" v-if="dashVisible('behavior')&&behaviorAnalysis">
-    <div class="panel-header"><h2>{{ t('behaviorAnalysis') }}</h2></div>
-
-    <!-- Top: Psychology tags + advice (full width) -->
-    <div style="margin-bottom:18px">
-      <h4 style="font-size:12px;color:var(--muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:.3px">{{ t('psychoProfile') }}</h4>
-      <div class="tag-list">
-        <span v-for="(t,i) in psychoTags" :key="i" :class="['psych-tag',t.type]" :title="t.tip">
-          <span class="tag-dot"></span>{{ t.text }}
-        </span>
-      </div>
-      <ul class="insight-list" style="margin-top:10px">
-        <li v-for="(a,i) in behaviorAdvice" :key="i">{{ a }}</li>
-      </ul>
-    </div>
-
-    <!-- Middle: Key metrics (full width grid) -->
-    <div class="behavior-metrics" style="margin-bottom:18px">
-      <div class="behavior-metric"><p>{{ t('avgInterval') }}</p><strong>{{ behaviorAnalysis.avgInterval }} 天</strong></div>
-      <div class="behavior-metric"><p>{{ t('denseCount') }}</p><strong>{{ behaviorAnalysis.denseCount }} 次</strong></div>
-      <div class="behavior-metric"><p>{{ t('maxSingle') }}</p><strong>{{ fmt(behaviorAnalysis.maxAmount) }}</strong></div>
-      <div class="behavior-metric"><p>{{ t('avgAmount') }}</p><strong>{{ fmt(behaviorAnalysis.avgAmount) }}</strong></div>
-      <div class="behavior-metric"><p>{{ t('maxStreak') }}</p><strong>{{ behaviorAnalysis.maxStreak }} 笔</strong></div>
-      <div class="behavior-metric"><p>{{ t('totalCount') }}</p><strong>{{ behaviorAnalysis.totalIn }} 笔</strong></div>
-    </div>
-
-    <!-- Bottom: Charts side by side -->
-    <div class="stats-layout">
-      <div>
-        <h4 style="font-size:12px;color:var(--muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:.3px">{{ t('weekdayDist') }}</h4>
-        <div class="chart-wrap" style="max-height:220px">
-          <canvas ref="weekdayChart"></canvas>
-        </div>
-      </div>
-      <div>
-        <h4 style="font-size:12px;color:var(--muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:.3px">{{ t('amountRange') }}</h4>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <div v-for="r in behaviorAnalysis.ranges" :key="r.label" style="flex:1;min-width:60px;text-align:center;padding:10px 4px;border-radius:8px;border:1px solid var(--border);background:var(--card)">
-            <div style="font-size:18px;font-weight:700;font-variant-numeric:tabular-nums" :style="{color:r.count?'var(--text)':'var(--dim)'}">{{ r.count }}</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:4px">{{ r.label }}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- ===== SNAPSHOTS ===== -->
-  <section class="panel section-data section-not-records section-not-stats">
+  <section id="data-safe" class="panel section-data section-not-records section-not-stats">
     <div class="panel-header">
       <h2>{{ t('dataMgmt') }}</h2>
       <div class="panel-actions">
@@ -1203,6 +1584,14 @@ tr.row-unmatched td{opacity:.35}
         <button class="btn btn-ghost btn-sm" @click="clearImportBatches" v-if="importBatches.length">{{ t('clearImportHistory') }}</button>
       </div>
     </div>
+    <!-- 导入 / 导出 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+      <button class="btn btn-primary" style="padding:14px;font-size:14px;justify-content:center" @click="$refs.xlsxFile.click()">⬆ {{ t('importExcel') }}</button>
+      <button class="btn btn-ghost" style="padding:14px;font-size:14px;justify-content:center" @click="$refs.jsonFile.click()">⬆ {{ t('importJSON') }}</button>
+      <button class="btn btn-ghost" style="padding:14px;font-size:14px;justify-content:center" @click="exportExcel">⬇ {{ t('exportExcel') }}</button>
+      <button class="btn btn-ghost" style="padding:14px;font-size:14px;justify-content:center" @click="exportJSON">⬇ {{ t('exportJSON') }}</button>
+    </div>
+    <h4 style="font-size:12px;color:var(--muted);margin:0 0 8px;text-transform:uppercase;letter-spacing:.3px">快照备份</h4>
     <p class="hint mb-12">每次修改自动保存快照，最多 10 份。</p>
     <div v-if="!snapshots.length" style="color:var(--muted);font-size:12px;padding:16px 0;text-align:center">{{ t('noSnapshots') }}</div>
     <div v-for="(s,i) in snapshots" :key="i" class="snap-row">
@@ -1283,6 +1672,61 @@ tr.row-unmatched td{opacity:.35}
     </div>
   </div>
 
+  <!-- ===== SYNC PREVIEW MODAL ===== -->
+  <div v-if="syncPreview" class="modal-mask import-preview-mask" @click.self="cancelSyncPreview">
+    <div class="modal-box import-preview-box">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">{{ syncPreview.title }}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">
+            Gist {{ syncPreview.gistId||'未创建' }} · {{ syncPreview.updatedAt||'等待首次上传' }}
+          </div>
+        </div>
+        <button class="modal-close" @click="cancelSyncPreview">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="import-summary-grid">
+          <div class="import-summary-cell"><p>云端新增</p><strong class="text-green">{{ syncPreview.summary.remoteOnly }}</strong></div>
+          <div class="import-summary-cell"><p>云端更新</p><strong style="color:var(--blue)">{{ syncPreview.summary.remoteNewer }}</strong></div>
+          <div class="import-summary-cell"><p>本地新增</p><strong>{{ syncPreview.summary.localOnly }}</strong></div>
+          <div class="import-summary-cell"><p>本地更新</p><strong style="color:var(--purple)">{{ syncPreview.summary.localNewer }}</strong></div>
+          <div class="import-summary-cell"><p>删除/冲突</p><strong class="text-red">{{ syncPreview.summary.remoteDeleted+syncPreview.summary.localDeleted+syncPreview.summary.conflict }}</strong></div>
+        </div>
+
+        <div class="import-impact">
+          <div><p>本地记录</p><strong>{{ entries.length }}</strong></div>
+          <div><p>云端记录</p><strong>{{ syncPreview.remoteCount }}</strong></div>
+          <div><p>合并后</p><strong>{{ syncPreview.mergedCount }}</strong></div>
+          <div><p>保留本地改动</p><strong>{{ syncPreview.summary.localOnly+syncPreview.summary.localNewer+syncPreview.summary.localDeleted }}</strong></div>
+        </div>
+
+        <div class="import-option" v-if="syncPreview.mode==='push'">
+          <span>云端已经有和本地不同的数据。建议先合并再上传；只有确认本机数据才是唯一正确版本时，才强制上传覆盖云端。</span>
+        </div>
+        <div class="import-option" v-else>
+          <span>确认后会按每条记录的更新时间合并：更新的一边胜出，本地新增会保留，已删除记录会同步到另一台设备。</span>
+        </div>
+
+        <div class="import-preview-list">
+          <div v-if="!syncPreviewRows.length" class="import-empty">本地和云端没有发现差异</div>
+          <div v-for="row in syncPreviewRows" :key="row.key" class="import-preview-row">
+            <span :class="['import-status',row.status]">{{ row.label }}</span>
+            <div class="import-preview-main">
+              <div class="import-preview-title">{{ row.entry.date }} · {{ row.entry.type }} · {{ fmt(row.entry.amount) }} {{ row.entry.currency||'CNY' }}</div>
+              <div class="import-preview-sub">{{ row.entry.assetType||'未分类' }} · {{ row.entry.exchange||'未知平台' }}{{ row.entry.note?' · '+row.entry.note:'' }}</div>
+            </div>
+            <div class="import-reason">{{ row.reason }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" style="flex:1" @click="cancelSyncPreview">{{ t('cancel') }}</button>
+        <button class="btn btn-danger" style="flex:1" v-if="syncPreview.mode==='push'" @click="confirmSyncForcePush">强制上传</button>
+        <button class="btn btn-primary" style="flex:2" @click="confirmSyncMerge">{{ syncPreview.mode==='push'?'合并后上传':'确认合并' }}</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== MOBILE ADD MODAL ===== -->
   <div v-if="showMobileAdd" class="modal-mask" @click.self="showMobileAdd=false">
     <div class="modal-box">
@@ -1323,7 +1767,7 @@ tr.row-unmatched td{opacity:.35}
       <div class="modal-head"><div class="modal-title">记录详情</div><button class="modal-close" @click="editingEntry=null">&times;</button></div>
       <div class="modal-body">
         <div class="detail-hero" v-if="editingDetail">
-          <div class="detail-amount" :style="{color:editingEntry.type==='入金'?'var(--red)':'var(--green)'}">{{ fmt(editingEntry.amount) }} {{ editingEntry.currency&&editingEntry.currency!=='CNY'?editingEntry.currency:'元' }}</div>
+          <div class="detail-amount" :style="{color:editingEntry.type==='入金'?'var(--red)':editingEntry.type==='出金'?'var(--green)':editingEntry.type==='买入'?'#60a5fa':'#a78bfa'}">{{ fmt(editingEntry.amount) }} {{ editingEntry.currency&&editingEntry.currency!=='CNY'?editingEntry.currency:'元' }}</div>
           <div class="detail-meta">
             折合 {{ fmt(editingDetail.cny) }} CNY · {{ editingEntry.assetType||'未分类' }} · {{ editingEntry.exchange||'未知平台' }}
           </div>
@@ -1340,10 +1784,10 @@ tr.row-unmatched td{opacity:.35}
         <div class="related-list" v-if="editingDetail&&editingDetail.related.length">
           <div v-for="r in editingDetail.related" :key="r.id" class="related-row">
             <span>{{ r.date }} · {{ r.assetType||'未分类' }} · {{ r.exchange||'未知平台' }}</span>
-            <strong :style="{color:r.type==='入金'?'var(--red)':'var(--green)'}">{{ r.type==='入金'?'-':'+' }}{{ fmt(amountCNY(r)) }}</strong>
+            <strong :style="{color:r.type==='入金'?'var(--red)':r.type==='出金'?'var(--green)':r.type==='买入'?'#60a5fa':'#a78bfa'}">{{ r.type }}</strong> {{ fmt(amountCNY(r)) }}
           </div>
         </div>
-        <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option></select></div>
+        <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></select></div>
         <div class="form-group"><label>{{ t('date') }}</label><input class="form-input" type="date" v-model="editingEntry.date"></div>
         <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="editingEntry.assetType"><option value="">{{ t("uncategorized") }}</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select></div>
         <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="editingEntry.exchange" list="dl-ex3"><datalist id="dl-ex3"><option v-for="ex in editPlatformSuggestions" :key="ex" :value="ex"></option></datalist></div>
@@ -1366,22 +1810,6 @@ tr.row-unmatched td{opacity:.35}
       <div class="modal-foot">
         <button class="btn btn-danger" style="flex:1" @click="removeEntry(editingEntry.id);editingEntry=null">{{ t('delete') }}</button>
         <button class="btn btn-primary" style="flex:2" @click="saveEditEntry">{{ t('save') }}</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Onboarding Tour -->
-  <div v-if="onboardStep>0" class="onboard-overlay" @click.self="nextOnboardStep">
-    <div class="onboard-spotlight" :style="spotlightStyle"></div>
-    <div class="onboard-tooltip" :style="tooltipStyle">
-      <div class="onboard-step-title">{{ onboardStep===1?t('onboardStep1Title'):onboardStep===2?t('onboardStep2Title'):t('onboardStep3Title') }}</div>
-      <div class="onboard-step-desc">{{ onboardStep===1?t('onboardStep1Desc'):onboardStep===2?t('onboardStep2Desc'):t('onboardStep3Desc') }}</div>
-      <div class="onboard-step-actions">
-        <button class="btn btn-primary" @click="nextOnboardStep">{{ onboardStep===3?t('done'):t('next') }}</button>
-        <button class="btn btn-ghost" @click="skipOnboard">{{ t('skip') }}</button>
-      </div>
-      <div class="onboard-dots">
-        <div v-for="i in 3" :class="['onboard-dot',{active:i===onboardStep}]" :key="i"></div>
       </div>
     </div>
   </div>
@@ -1445,7 +1873,7 @@ const clone=o=>JSON.parse(JSON.stringify(o))
 
 // Demo data — 空数组，用户自行录入或从 Gist 拉取
 const PRELOADED=[]
-const DEMO_ENTRIES=[{date:"2025-10-08",amount:10000,rate:"",exchange:"招商证券",note:"沪深300定投",type:"入金",assetType:"大A",currency:"CNY"},{date:"2025-10-15",amount:500,rate:7.18,exchange:"富途",note:"买入AAPL",type:"入金",assetType:"美股",currency:"USD"},{date:"2025-10-22",amount:2000,rate:"",exchange:"币安",note:"入金试水",type:"入金",assetType:"加密货币",currency:"CNY"},{date:"2025-11-12",amount:300,rate:7.15,exchange:"富途",note:"买入NVDA",type:"入金",assetType:"美股",currency:"USD"},{date:"2025-11-20",amount:12000,rate:"",exchange:"招商证券",note:"部分止盈",type:"出金",assetType:"大A",currency:"CNY"},{date:"2025-12-03",amount:1000,rate:"",exchange:"欧易",note:"定投BTC",type:"入金",assetType:"加密货币",currency:"CNY"},{date:"2026-01-15",amount:1500,rate:"",exchange:"币安",note:"",type:"出金",assetType:"加密货币",currency:"CNY"},{date:"2026-02-10",amount:8000,rate:"",exchange:"招商证券",note:"",type:"出金",assetType:"大A",currency:"CNY"}]
+const DEMO_ENTRIES=[{date:"2025-10-08",amount:10000,rate:"",exchange:"招商证券",note:"沪深300定投",type:"入金",assetType:"沪深市",currency:"CNY"},{date:"2025-10-15",amount:500,rate:7.18,exchange:"富途",note:"买入AAPL",type:"入金",assetType:"美股",currency:"USD"},{date:"2025-10-22",amount:2000,rate:"",exchange:"币安",note:"入金试水",type:"入金",assetType:"加密货币",currency:"CNY"},{date:"2025-11-12",amount:300,rate:7.15,exchange:"富途",note:"买入NVDA",type:"入金",assetType:"美股",currency:"USD"},{date:"2025-11-20",amount:12000,rate:"",exchange:"招商证券",note:"部分止盈",type:"出金",assetType:"沪深市",currency:"CNY"},{date:"2025-12-03",amount:1000,rate:"",exchange:"欧易",note:"定投BTC",type:"入金",assetType:"加密货币",currency:"CNY"},{date:"2026-01-15",amount:1500,rate:"",exchange:"币安",note:"",type:"出金",assetType:"加密货币",currency:"CNY"},{date:"2026-02-10",amount:8000,rate:"",exchange:"招商证券",note:"",type:"出金",assetType:"沪深市",currency:"CNY"}]
 
 function normDate(s){
   if(s instanceof Date&&!isNaN(s))return s.toISOString().slice(0,10)
@@ -1470,7 +1898,13 @@ function normNum(v){
 }
 function normType(v){
   const s=String(v||'入金').trim()
+  if(s==='买入')return'买入'
+  if(s==='卖出')return'卖出'
   return ['出金','取出','提现','赎回'].includes(s)?'出金':'入金'
+}
+function normalizeAssetType(v){
+  const s=String(v||'').trim()
+  return s==='大A'||s==='A股'||s==='沪深A股'?'沪深市':s
 }
 function parseTags(v){
   if(Array.isArray(v))return[...new Set(v.map(t=>String(t||'').trim()).filter(Boolean))].slice(0,8)
@@ -1484,11 +1918,19 @@ function normRow(row){
   const exchange=row.exchange||row['交易所']||row['账户/平台']||row['账户']||''
   const note=row.note||row['备注']||row['理由/备注']||''
   const type=normType(row.type||row['类型']||'入金')
-  const assetType=row.assetType||row['资产类型']||''
+  const assetType=normalizeAssetType(row.assetType||row['资产类型']||'')
   const currency=String(row.currency||row['货币']||'CNY').trim().toUpperCase()
   const tags=parseTags(row.tags||row['标签']||row.tagText||row['Tag']||row['Tags'])
   if(!date||!amt)return null
-  return{id:row.id||genId(),date,amount:amt,rate:rate===''?'':normNum(rate),exchange,note,type,assetType,currency,tags,updatedAt:row.updatedAt||0}
+  const tradeQty=row.tradeQty!=null?normNum(row.tradeQty):''
+  const tradePrice=row.tradePrice!=null?normNum(row.tradePrice):''
+  const rpl=row.realizedPL!=null?Number(row.realizedPL)||0:undefined
+  return{id:row.id||genId(),date,amount:amt,rate:rate===''?'':normNum(rate),exchange,note,type,assetType,currency,tags,
+    tradeQty:tradeQty||'',tradePrice:tradePrice||'',
+    targetSymbol:row.targetSymbol||'',targetName:row.targetName||'',
+    positionId:row.positionId||'',
+    ...(rpl!=null?{realizedPL:rpl}:{}),
+    updatedAt:row.updatedAt||0}
 }
 
 function defRules(){return{lossWarn:3000,lossCritical:5000,roiWarn:0.6,inflowRatio:1.8,largeTx:5000,lossStreak:2}}
@@ -1508,9 +1950,9 @@ const{createApp,ref,reactive,computed,watch,onMounted}=Vue
 // ===== I18N =====
 const I18N={
   zh:{
-    appTitle:'投记 · 个人投资记账与资产追踪',
-    appKicker:'个人投资记账与资产追踪',
-    appDesc:'出入金记账 · 持仓实时估值 · 真实净值与盈亏 · 行为分析 · 多端同步',
+    appTitle:'投记 · 投资账户记账与持仓管理',
+    appKicker:'投资账户记账与持仓管理',
+    appDesc:'记录投资账户的每一笔出入金。通过买入 / 卖出记录自动同步持仓数量与加权成本，实时拉取股票、基金、加密货币等资产价格，计算持仓浮盈与已实现盈亏，汇总出你的真实净值与收益率。',
     records:'记录',
     stats:'统计',
     data:'数据',
@@ -1530,6 +1972,8 @@ const I18N={
     note:'备注 / 理由',
     typeIn:'入金',
     typeOut:'出金',
+    typeBuy:'买入',
+    typeSell:'卖出',
     typeAll:'全部',
     save:'保存',
     cancel:'取消',
@@ -1591,9 +2035,6 @@ const I18N={
     totalCount:'总投入笔数',
     weekdayDist:'星期分布',
     amountRange:'金额区间',
-    assetAlloc:'资产配置总览',
-    investDist:'投入分布',
-    netDist:'净值分布',
     assetDesc:'各类资产的投入分布与盈亏情况（折合 CNY）',
     flowRecords:'流水记录',
     expandAll:'展开全部',
@@ -1756,12 +2197,6 @@ const I18N={
     skip:'跳过',
     done:'完成',
     dontShow:'不再显示',
-    onboardStep1Title:'记录第一笔出入金',
-    onboardStep1Desc:'在这里录入你的投入或取出记录，支持多种资产和货币。',
-    onboardStep2Title:'查看盈亏统计',
-    onboardStep2Desc:'图表和指标帮你一目了然看清整体资金情况。',
-    onboardStep3Title:'开启多端同步',
-    onboardStep3Desc:'用 GitHub Token 同步数据到 Gist，手机电脑随时同步。',
     edit:'编辑',
     editEntry:'编辑记录',
     saveEdit:'保存修改',
@@ -1791,6 +2226,11 @@ const I18N={
     posPriceCol:'现价',
     posValueCol:'市值',
     posPLCol:'盈亏',
+    posFlowCol:'关联流水',
+    posFlowBuy:'买入流水',
+    posFlowSell:'卖出流水',
+    posFlowLinked:'关联',
+    posNetInvested:'净投入',
     posActionCol:'操作',
     posFetching:'获取中…',
     posCustom:'自定义标的',
@@ -1825,6 +2265,8 @@ const I18N={
     note:'Note / Reason',
     typeIn:'Deposit',
     typeOut:'Withdraw',
+    typeBuy:'Buy',
+    typeSell:'Sell',
     typeAll:'All',
     save:'Save',
     cancel:'Cancel',
@@ -1886,9 +2328,6 @@ const I18N={
     totalCount:'Total Deposits',
     weekdayDist:'Weekday Distribution',
     amountRange:'Amount Range',
-    assetAlloc:'Asset Allocation',
-    investDist:'Deposit Distribution',
-    netDist:'Net Value Distribution',
     assetDesc:'Asset distribution and P&L breakdown (in CNY)',
     flowRecords:'Flow Records',
     expandAll:'Expand All',
@@ -2034,12 +2473,6 @@ const I18N={
     skip:'Skip',
     done:'Done',
     dontShow:'Don\'t show again',
-    onboardStep1Title:'Log Your First Entry',
-    onboardStep1Desc:'Record deposits and withdrawals here. Supports multiple assets and currencies.',
-    onboardStep2Title:'Track P&L',
-    onboardStep2Desc:'Charts and metrics give you a clear view of your overall performance.',
-    onboardStep3Title:'Enable Multi-Device Sync',
-    onboardStep3Desc:'Sync data via GitHub Gist with a personal access token. Free and secure.',
     edit:'Edit',
     editEntry:'Edit Entry',
     saveEdit:'Save Changes',
@@ -2069,6 +2502,11 @@ const I18N={
     posPriceCol:'Price',
     posValueCol:'Value',
     posPLCol:'P&L',
+    posFlowCol:'Linked Flows',
+    posFlowBuy:'Buy Flow',
+    posFlowSell:'Sell Flow',
+    posFlowLinked:'Linked',
+    posNetInvested:'Net Invested',
     posActionCol:'Action',
     posFetching:'Fetching…',
     posCustom:'Custom Symbol',
@@ -2092,7 +2530,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.05.30-4' // 每次部署递增末位，方便区分加载到哪一版
+  const APP_VERSION='v2026.06.05-10' // 每次部署递增末位，方便区分加载到哪一版
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const snapshots=ref([])
@@ -2102,12 +2540,12 @@ setup(){
   // Dashboard customization
   const DASH_K='touji_dashboard_v1'
   migrateStorageKey(DASH_K,`${LEGACY_FLOW_K}_dashboard`)
-  const DASH_DEFAULT=['positions','assetAlloc','periodStats','insights','behavior']
+  const DASH_DEFAULT=['positions','periodStats','insights']
   function loadDashboard(){try{const r=localStorage.getItem(DASH_K);if(r)return JSON.parse(r)}catch(e){}return [...DASH_DEFAULT]}
   function saveDashboard(){localStorage.setItem(DASH_K,JSON.stringify(dashPanels.value))}
   const dashPanels=ref(loadDashboard())
   const showDashCfg=ref(false)
-  const dashLabels={periodStats:'盈亏统计',assetAlloc:'资产配置',positions:'持仓管理',insights:'建议与复盘',behavior:'行为分析'}
+  const dashLabels={periodStats:'盈亏统计',positions:'持仓管理',insights:'建议 · 行为 · 复盘'}
   function dashVisible(key){return dashPanels.value.includes(key)}
   function toggleDashPanel(key){
     const i=dashPanels.value.indexOf(key)
@@ -2123,9 +2561,17 @@ setup(){
   function resetDashboard(){dashPanels.value=[...DASH_DEFAULT];saveDashboard()}
   const mobileTab=ref('records')
   const showMobileAdd=ref(false)
-  const showFilters=ref(window.innerWidth>680)
+  const showFilters=ref(false)
   const editingEntry=ref(null)
   const showSync=ref(false)
+  const SHOWCASE_K='touji_showcase_v1'
+  const showcaseMode=ref(localStorage.getItem(SHOWCASE_K)==='true')
+  function toggleShowcase(){
+    showcaseMode.value=!showcaseMode.value
+    localStorage.setItem(SHOWCASE_K,showcaseMode.value?'true':'false')
+    Vue.nextTick(()=>{renderChart();renderPosPieChart()})
+    showToast(showcaseMode.value?'已开启展示模式，真实金额已隐藏':'已关闭展示模式','info')
+  }
 
   // Theme
   const THEME_K='touji_theme_v1'
@@ -2143,11 +2589,52 @@ setup(){
     theme.value=theme.value==='dark'?'light':'dark'
     applyTheme(theme.value)
     localStorage.setItem(THEME_K,theme.value)
-    Vue.nextTick(()=>{renderChart();renderWeekdayChart();renderPieChart()})
+    Vue.nextTick(()=>{renderChart();renderPosPieChart()})
   }
   const toast=reactive({show:false,message:'',type:'info'})
-  const form=reactive({date:dayjs().format('YYYY-MM-DD'),amount:'',rate:'',exchange:'',note:'',type:'入金',assetType:'',currency:'CNY',tagText:''})
+  const form=reactive({date:dayjs().format('YYYY-MM-DD'),amount:'',rate:'',exchange:'',note:'',type:'入金',assetType:'',currency:'CNY',tagText:'',positionId:'',targetKey:'',targetMarket:'沪深市',tradeQty:'',tradePrice:''})
   const filters=reactive({month:'',type:'',keyword:'',dateFrom:'',dateTo:'',amountMin:'',amountMax:'',exchanges:[],assetTypes:[],tags:[]})
+  const quickAction=ref('deposit')
+  const quickActions=[
+    {key:'deposit',label:'入金',short:'钱进入投资账户',title:'入金是什么？',desc:'记录你把现金转入某个投资账户，比如工资转入东方财富、给币安充值、往基金账户打钱。它增加投入本金。'},
+    {key:'withdraw',label:'出金',short:'钱离开投资账户',title:'出金是什么？',desc:'记录你从投资账户取回现金，比如卖出后提现、赎回基金到账、从交易所转回银行卡。它减少占用资金。'},
+    {key:'buy',label:'买入',short:'买入某个标的',title:'买入是什么？',desc:'记录你用账户内资金购入某个资产，自动更新持仓数量和加权均价，不影响入金/出金统计。'},
+    {key:'sell',label:'卖出',short:'卖出某个标的',title:'卖出是什么？',desc:'记录你卖出持有资产，自动减少持仓数量并计算已实现盈亏，不影响入金/出金统计。'}
+  ]
+  const quickActionInfo=computed(()=>quickActions.find(a=>a.key===quickAction.value)||quickActions[0])
+  const quickTagOptions=['定投','补仓','止盈','FOMO','工资入金','转出','买入','卖出']
+  const quickAmountLabel=computed(()=>quickAction.value==='withdraw'?'取出金额':quickAction.value==='deposit'?'投入金额':'成交金额')
+  const tradeAmountPreview=computed(()=>{
+    const price=Number(form.tradePrice)||0
+    const qty=Number(form.tradeQty)||0
+    return price>0&&qty>0?Number((price*qty).toFixed(6)):0
+  })
+  const quickCanSave=computed(()=>{
+    if(quickAction.value==='buy'||quickAction.value==='sell')return !!form.targetKey&&tradeAmountPreview.value>0
+    return Number(form.amount)>0
+  })
+  const quickNoteLabel=computed(()=>quickAction.value==='withdraw'||quickAction.value==='sell'?'出金备注':'投入理由')
+  const quickNotePlaceholder=computed(()=>{
+    if(quickAction.value==='buy')return'为什么买入？如：定投 / 补仓 / 看好基本面'
+    if(quickAction.value==='sell')return'为什么卖出？如：止盈 / 止损 / 调仓'
+    return form.type==='入金'?'为什么要入这笔？如：定投 / 补仓 / 工资入金':'收款渠道 / 取出原因'
+  })
+  function setQuickAction(action){
+    quickAction.value=action
+    form.type=action==='withdraw'?'出金':action==='deposit'?'入金':action==='buy'?'买入':'卖出'
+    let tags=parseTags(form.tagText).filter(t=>!['买入','卖出'].includes(t))
+    form.tagText=tags.join('，')
+    const tag=action==='buy'?'买入':action==='sell'?'卖出':''
+    if(tag&&!quickTagActive(tag))toggleQuickTag(tag)
+    if(action==='buy'||action==='sell')applyQuickTarget()
+  }
+  function quickTagActive(tag){return parseTags(form.tagText).includes(tag)}
+  function toggleQuickTag(tag){
+    const tags=parseTags(form.tagText)
+    const i=tags.indexOf(tag)
+    if(i>=0)tags.splice(i,1);else tags.push(tag)
+    form.tagText=tags.join('，')
+  }
   const rules=reactive(defRules())
   const syncCfg=reactive({token:'',gistId:''})
   const syncStatus=ref('未配置')
@@ -2157,6 +2644,7 @@ setup(){
   const reviewNote=ref('')
   const reviewSavedAt=ref('')
   const importPreview=ref(null)
+  const syncPreview=ref(null)
   let toastT=null
 
   // Price Ticker
@@ -2177,7 +2665,7 @@ setup(){
     saveTickerPick();fetchTickerPrices()
   }
   const tickerCategories=computed(()=>{
-    const cats=['加密','美股','港股','大A','指数','商品']
+    const cats=['加密','美股','港股','沪深市','指数','商品']
     return cats.map(name=>{
       const items=TICKER_LIST.filter(t=>t.cat===name)
       return{name,items}
@@ -2215,9 +2703,9 @@ setup(){
     {symbol:'Meituan',icon:'🍚',source:'eastmoney',emid:'116.03690',decimals:1,cat:'港股'},
     {symbol:'Xiaomi',icon:'📱',source:'eastmoney',emid:'116.01810',decimals:1,cat:'港股'},
     // A-Share — Eastmoney
-    {symbol:'Kweichow',icon:'🍶',source:'eastmoney',emid:'1.600519',decimals:1,cat:'大A'},
-    {symbol:'CATL',icon:'🔋',source:'eastmoney',emid:'0.300750',decimals:1,cat:'大A'},
-    {symbol:'BYD',icon:'⚡',source:'eastmoney',emid:'0.002594',decimals:1,cat:'大A'},
+    {symbol:'Kweichow',icon:'🍶',source:'eastmoney',emid:'1.600519',decimals:1,cat:'沪深市'},
+    {symbol:'CATL',icon:'🔋',source:'eastmoney',emid:'0.300750',decimals:1,cat:'沪深市'},
+    {symbol:'BYD',icon:'⚡',source:'eastmoney',emid:'0.002594',decimals:1,cat:'沪深市'},
   ]
   async function fetchTickerPrices(){
     const results=[]
@@ -2264,49 +2752,18 @@ setup(){
     }
   }
 
-  // Onboarding
-  const onboardStep=ref(0)
-  const spotlightStyle=computed(()=>{
-    if(!onboardStep.value)return{display:'none'}
-    const isMobile=window.innerWidth<=680
-    const targets=isMobile
-      ?[null,{sel:'.fab',pad:8},{sel:'.summary-grid',pad:8},{sel:'.panel-header',pad:8}]
-      :[null,{sel:'.quick-add-panel',pad:8},{sel:'.summary-grid',pad:8},{sel:'.panel-header',pad:8}]
-    const t=targets[onboardStep.value];if(!t)return{display:'none'}
-    const el=document.querySelector(t.sel);if(!el)return{display:'none'}
-    const r=el.getBoundingClientRect()
-    return{left:Math.max(0,r.left-t.pad)+'px',top:Math.max(0,r.top-t.pad)+'px',width:r.width+t.pad*2+'px',height:r.height+t.pad*2+'px'}
-  })
-  const tooltipStyle=computed(()=>{
-    const isMobile=window.innerWidth<=680
-    if(isMobile)return{bottom:'0',left:'0',right:'0',top:'auto'}
-    // Desktop: position below spotlight
-    const s=spotlightStyle.value||{}
-    if(!s.top)return{top:'50%',left:'50%',transform:'translate(-50%,-50%)'}
-    const spotTop=parseFloat(s.top),spotHeight=parseFloat(s.height)||0,spotLeft=parseFloat(s.left),spotWidth=parseFloat(s.width)||0
-    const top=spotTop+spotHeight+16
-    const left=Math.max(16,Math.min(window.innerWidth-376,spotLeft+spotWidth/2-180))
-    return{top:top+'px',left:left+'px'}
-  })
-  function nextOnboardStep(){
-    const isMobile=window.innerWidth<=680
-    // 进入第3步（多端同步）前：展开同步面板并定位
-    if(onboardStep.value===2){
-      showSync.value=true
-      if(isMobile)mobileTab.value='records'
-      else Vue.nextTick(()=>document.querySelector('.panel-header')?.scrollIntoView({behavior:'smooth',block:'center'}))
-    }
-    if(onboardStep.value===3){skipOnboard();return}
-    onboardStep.value++
+  function scrollPageToElement(el,block='center'){
+    if(!el)return
+    const rect=el.getBoundingClientRect()
+    const target=block==='center'
+      ? rect.top+window.pageYOffset-(window.innerHeight-rect.height)/2
+      : rect.top+window.pageYOffset
+    window.scrollTo({top:Math.max(0,target),behavior:'smooth'})
   }
-  const ONBOARD_K='touji_onboarded_v1'
-  migrateStorageKey(ONBOARD_K,`${LEGACY_FLOW_K}_onboarded`)
-  function skipOnboard(){onboardStep.value=0;localStorage.setItem(ONBOARD_K,'true')}
-  function startOnboard(){if(!localStorage.getItem(ONBOARD_K))onboardStep.value=1}
 
   // Persistence
   function load(){
-    try{const r=localStorage.getItem(SK);if(r)entries.value=JSON.parse(r).map(e=>({...e,tags:parseTags(e.tags||e.tagText||e['标签'])}))}catch(e){}
+    try{const r=localStorage.getItem(SK);if(r)entries.value=JSON.parse(r).map(e=>({...e,assetType:normalizeAssetType(e.assetType),tags:parseTags(e.tags||e.tagText||e['标签'])}))}catch(e){}
     if(!entries.value.length){entries.value=PRELOADED.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1);save()}
     try{const r=localStorage.getItem(SNAP_K);if(r)snapshots.value=JSON.parse(r)}catch(e){}
     try{const r=localStorage.getItem(IMPORT_K);if(r)importBatches.value=JSON.parse(r)}catch(e){}
@@ -2332,7 +2789,8 @@ setup(){
   }
 
   function showToast(msg,type='info'){toast.message=msg;toast.type=type;toast.show=true;if(toastT)clearTimeout(toastT);toastT=setTimeout(()=>toast.show=false,2500)}
-  function fmt(v){if(v==null||isNaN(v))return'-';return Number(v).toLocaleString(lang==='zh'?'zh-CN':'en-US',{maximumFractionDigits:2})}
+  function fmt(v){if(showcaseMode.value)return'••••';if(v==null||isNaN(v))return'-';return Number(v).toLocaleString(lang==='zh'?'zh-CN':'en-US',{maximumFractionDigits:2})}
+  function fmtPct(v,digits=1){if(showcaseMode.value)return'••••';if(v==null||isNaN(v))return'-';return Number(v).toFixed(digits)+'%'}
   // Convert entry amount to CNY (for non-CNY currencies with rate)
   function amountCNY(e){const amt=Number(e.amount)||0;const cur=e.currency||'CNY';if(cur!=='CNY'&&e.rate&&Number(e.rate)>0)return amt*Number(e.rate);return amt}
 
@@ -2340,24 +2798,45 @@ setup(){
   const sortedEntries=computed(()=>[...entries.value].sort((a,b)=>a.date<b.date?1:-1))
   const allExchanges=computed(()=>[...new Set(entries.value.map(e=>e.exchange).filter(Boolean))].sort())
   const allMonths=computed(()=>[...new Set(entries.value.map(e=>e.date?e.date.slice(0,7):'').filter(Boolean))].sort())
-  const allAssetTypes=computed(()=>{const present=new Set(entries.value.map(e=>e.assetType).filter(Boolean));return ASSET_TYPES.value.filter(t=>present.has(t))})
+  const allAssetTypes=computed(()=>{const present=new Set(entries.value.map(e=>normalizeAssetType(e.assetType)).filter(Boolean));return ASSET_TYPES.value.filter(t=>present.has(t))})
   const allTags=computed(()=>[...new Set(entries.value.flatMap(e=>parseTags(e.tags)))].sort((a,b)=>a.localeCompare(b,'zh-CN')))
+  const quickTemplates=computed(()=>{
+    const seen=new Set(),items=[]
+    sortedEntries.value.forEach(e=>{
+      const tags=parseTags(e.tags).filter(t=>!String(t).startsWith('持仓:')).slice(0,2)
+      const key=[e.type,e.assetType||'',e.exchange||'',e.currency||'CNY',tags.join(',')].join('|')
+      if(seen.has(key))return
+      seen.add(key)
+      const action=tags.includes('买入')?'buy':tags.includes('卖出')?'sell':(e.type==='出金'?'withdraw':'deposit')
+      items.push({
+        key,label:`${e.exchange||'未知平台'} · ${e.assetType||'未分类'}${tags.length?' · '+tags.join('/') : ''}`,
+        action,type:e.type,assetType:e.assetType||'',exchange:e.exchange||'',currency:e.currency||'CNY',rate:e.rate||'',tagText:tags.join('，')
+      })
+    })
+    return items.slice(0,6)
+  })
+  function applyQuickTemplate(tpl){
+    setQuickAction(tpl.action)
+    form.type=tpl.type;form.assetType=tpl.assetType;form.exchange=tpl.exchange;form.currency=tpl.currency;form.rate=tpl.rate
+    form.tagText=tpl.tagText;form.note='';form.targetKey='';form.positionId=''
+    showToast('已套用常用模板','info')
+  }
 
   // 资产类型配置（内置默认 + 用户自定义，存 localStorage）
   const ASSET_CFG_K='touji_asset_cfg_v1'
   migrateStorageKey(ASSET_CFG_K,`${LEGACY_FLOW_K}_asset_cfg`)
-  const BUILTIN_TYPES=['大A','美股','港股','加密货币','基金','黄金','期货','其他']
-  const BUILTIN_PLATFORMS={'大A':['招商证券','华泰证券','东方财富','国泰君安','中信证券','平安证券','广发证券','中金财富'],'美股':['富途牛牛','老虎证券','盈透证券','Robinhood','Charles Schwab','嘉信理财'],'港股':['富途牛牛','老虎证券','盈透证券','中银国际','耀才证券'],'加密货币':['币安','欧易','Coinbase','Bybit','Bitget','Gate.io','抹茶'],'基金':['支付宝','天天基金','招商银行','微信理财通','蛋卷基金','雪球'],'黄金':['招商银行','工商银行','中国银行','建设银行','国泰君安','中国黄金'],'期货':['中信期货','国泰君安期货','华泰期货','永安期货','南华期货'],'其他':[]}
-  const BUILTIN_COLORS={'大A':'rgba(251,191,36,.85)','美股':'rgba(59,130,246,.85)','港股':'rgba(239,68,68,.85)','加密货币':'rgba(139,92,246,.85)','基金':'rgba(16,185,129,.85)','黄金':'rgba(245,158,11,.85)','期货':'rgba(99,102,241,.85)','其他':'rgba(107,114,128,.7)','':'rgba(107,114,128,.5)'}
+  const BUILTIN_TYPES=['沪深市','美股','港股','加密货币','基金','黄金','期货','其他']
+  const BUILTIN_PLATFORMS={'沪深市':['招商证券','华泰证券','东方财富','国泰君安','中信证券','平安证券','广发证券','中金财富'],'美股':['富途牛牛','老虎证券','盈透证券','Robinhood','Charles Schwab','嘉信理财'],'港股':['富途牛牛','老虎证券','盈透证券','中银国际','耀才证券'],'加密货币':['币安','欧易','Coinbase','Bybit','Bitget','Gate.io','抹茶'],'基金':['支付宝','天天基金','招商银行','微信理财通','蛋卷基金','雪球'],'黄金':['招商银行','工商银行','中国银行','建设银行','国泰君安','中国黄金'],'期货':['中信期货','国泰君安期货','华泰期货','永安期货','南华期货'],'其他':[]}
+  const BUILTIN_COLORS={'沪深市':'rgba(251,191,36,.85)','美股':'rgba(59,130,246,.85)','港股':'rgba(239,68,68,.85)','加密货币':'rgba(139,92,246,.85)','基金':'rgba(16,185,129,.85)','黄金':'rgba(245,158,11,.85)','期货':'rgba(99,102,241,.85)','其他':'rgba(107,114,128,.7)','':'rgba(107,114,128,.5)'}
   function loadAssetCfg(){
     try{
       const r=localStorage.getItem(ASSET_CFG_K)
       if(r){
         const cfg=JSON.parse(r)
         return{
-          types:cfg.types||[...BUILTIN_TYPES],
-          platforms:{...BUILTIN_PLATFORMS,...cfg.platforms},
-          colors:{...BUILTIN_COLORS,...cfg.colors}
+          types:[...(cfg.types||BUILTIN_TYPES).map(normalizeAssetType).filter((t,i,a)=>t&&a.indexOf(t)===i)],
+          platforms:{...BUILTIN_PLATFORMS,...cfg.platforms,'沪深市':cfg.platforms?.['沪深市']||cfg.platforms?.['大A']||BUILTIN_PLATFORMS['沪深市']},
+          colors:{...BUILTIN_COLORS,...cfg.colors,'沪深市':cfg.colors?.['沪深市']||cfg.colors?.['大A']||BUILTIN_COLORS['沪深市']}
         }
       }
     }catch(e){}
@@ -2366,8 +2845,9 @@ setup(){
   const assetCfg=reactive(loadAssetCfg())
   function saveAssetCfg(){localStorage.setItem(ASSET_CFG_K,JSON.stringify({types:assetCfg.types,platforms:assetCfg.platforms,colors:assetCfg.colors}))}
   const ASSET_TYPES=computed(()=>assetCfg.types)
-  function getPlatforms(assetType){return assetCfg.platforms[assetType]||[]}
-  function assetColor(type){return assetCfg.colors[type]||assetCfg.colors['']}
+  function getPlatforms(assetType){return assetCfg.platforms[normalizeAssetType(assetType)]||[]}
+  function assetColor(type){return assetCfg.colors[normalizeAssetType(type)]||assetCfg.colors['']}
+  const POS_PIE_COLORS=['#60a5fa','#f59e0b','#10b981','#f87171','#a78bfa','#34d399','#fbbf24','#818cf8','#fb923c','#2dd4bf']
   const platformSuggestions=computed(()=>{
     const preset=getPlatforms(form.assetType)
     const used=allExchanges.value.filter(ex=>!preset.includes(ex))
@@ -2444,6 +2924,8 @@ setup(){
   const roi=computed(()=>totalIn.value?totalOut.value/totalIn.value:0)
   // 统一净值视角：当前持仓市值 + 真实总收益（含未实现盈亏）
   const holdingsValue=computed(()=>posSummary.value.totalValue)
+  const realizedPL=computed(()=>entries.value.filter(e=>e.type==='卖出'&&e.realizedPL).reduce((s,e)=>s+(e.realizedPL||0),0))
+  // realizedPL 不计入 trueReturn，避免卖出后出金的场景双重计算
   const trueReturn=computed(()=>totalOut.value+holdingsValue.value-totalIn.value)
   const trueROI=computed(()=>totalIn.value?trueReturn.value/totalIn.value:0)
 
@@ -2479,13 +2961,18 @@ setup(){
   function scrollToFirstMatch(){
     const first=sortedEntries.value.find(e=>matchedIds.value.has(e.id))
     if(!first){showToast('无匹配','info');return}
-    const y=first.date?first.date.slice(0,4):'未知'
-    const s=new Set(expandedMonths.value);s.add(y);expandedMonths.value=s
-    Vue.nextTick(()=>{const el=document.getElementById('row-'+first.id);if(el)el.scrollIntoView({behavior:'smooth',block:'center'})})
+    const m=first.date?first.date.slice(0,7):'未知'
+    const s=new Set(expandedMonths.value);s.add(m);expandedMonths.value=s
+    Vue.nextTick(()=>scrollPageToElement(document.getElementById('row-'+first.id)))
   }
   // Month groups for flow records
   const expandedMonths=ref(new Set())
   const hasActiveFilter=computed(()=>!!(filters.month||filters.type||filters.keyword||filters.dateFrom||filters.dateTo||filters.amountMin||filters.amountMax||filters.exchanges.length||filters.assetTypes.length||filters.tags.length))
+  function topLabels(list,limit=4){
+    const map=new Map()
+    list.filter(Boolean).forEach(v=>map.set(v,(map.get(v)||0)+1))
+    return[...map.entries()].sort((a,b)=>b[1]-a[1]).slice(0,limit).map(([k,n])=>`${k} ${n}`)
+  }
   const groupedEntries=computed(()=>{
     const map=new Map()
     const filtering=hasActiveFilter.value
@@ -2496,10 +2983,17 @@ setup(){
       const matched=!filtering||matchedIds.value.has(e.id)
       if(matched){
         g.matchedCount++
-        if(e.type==='入金')g.inTotal+=amountCNY(e);else g.outTotal+=amountCNY(e)
+        if(e.type==='入金')g.inTotal+=amountCNY(e);else if(e.type==='出金')g.outTotal+=amountCNY(e)
       }
     })
-    return[...map.values()].filter(g=>!filtering||g.matchedCount>0).sort((a,b)=>b.key.localeCompare(a.key)).map(g=>({...g,net:g.outTotal-g.inTotal}))
+    return[...map.values()].filter(g=>!filtering||g.matchedCount>0).sort((a,b)=>b.key.localeCompare(a.key)).map(g=>{
+      const visible=filtering?g.entries.filter(e=>matchedIds.value.has(e.id)):g.entries
+      const tags=[
+        ...topLabels(visible.map(e=>e.assetType||'未分类'),2),
+        ...topLabels(visible.map(e=>e.exchange||'未知平台'),2)
+      ].slice(0,4)
+      return{...g,net:g.outTotal-g.inTotal,summaryTags:tags}
+    })
   })
   function toggleMonth(m){const s=expandedMonths.value;if(s.has(m))s.delete(m);else s.add(m);expandedMonths.value=new Set(s)}
   function isMonthOpen(m){return expandedMonths.value.has(m)}
@@ -2576,19 +3070,21 @@ setup(){
   const positions=ref([])
   const posForm=reactive({symbol:'',name:'',qty:'',avgCost:'',currency:'CNY',assetType:'',icon:'',source:'eastmoney',secid:''})
   const showPosForm=ref(false)
+  const expandedPosFlows=ref(new Set())
+  function togglePosFlow(id){const s=new Set(expandedPosFlows.value);s.has(id)?s.delete(id):s.add(id);expandedPosFlows.value=s}
   const showSymbolPicker=ref(false)
   const posSymbolSearch=ref('')
   const posPrices=ref({})
   const posSearchResults=ref([])
   const posSearching=ref(false)
   const posMarket=ref('') // 市场筛选：''=全部，否则为 assetType 值
-  const POS_MARKETS=[{l:'A股',v:'大A'},{l:'港股',v:'港股'},{l:'美股',v:'美股'},{l:'基金',v:'基金'}]
+  const POS_MARKETS=[{l:'沪深市',v:'沪深市'},{l:'港股',v:'港股'},{l:'美股',v:'美股'},{l:'基金',v:'基金'}]
   // 按所选市场过滤搜索结果
-  const posResultsShown=computed(()=>posMarket.value?posSearchResults.value.filter(it=>it.assetType===posMarket.value):posSearchResults.value)
+  const posResultsShown=computed(()=>posMarket.value?posSearchResults.value.filter(it=>normalizeAssetType(it.assetType)===posMarket.value):posSearchResults.value)
   function findTicker(sym){return TICKER_LIST.find(t=>t.symbol.toUpperCase()===sym.toUpperCase())}
   // 东方财富：市场号 → 币种 / 资产类型
   const EM_CCY={'0':'CNY','1':'CNY','105':'USD','106':'USD','107':'USD','116':'HKD','153':'USD','155':'USD'}
-  const EM_ASSET={'0':'大A','1':'大A','116':'港股','105':'美股','106':'美股','107':'美股','153':'美股','155':'美股'}
+  const EM_ASSET={'0':'沪深市','1':'沪深市','116':'港股','105':'美股','106':'美股','107':'美股','153':'美股','155':'美股'}
   function emCurrency(mkt){return EM_CCY[String(mkt)]||'CNY'}
   function emAsset(mkt,typeName){return EM_ASSET[String(mkt)]||(typeName&&typeName.includes('基金')?'基金':'其他')}
   // JSONP 搜索（<script> 注入，绕过 CORS；东方财富支持中文名/代码）
@@ -2657,6 +3153,7 @@ setup(){
         const raw=JSON.parse(r)
         // 迁移旧持仓：推断 source。加密(Binance)保留，其余视为待重选的股票
         positions.value=raw.map(p=>{
+          p={...p,assetType:normalizeAssetType(p.assetType)}
           if(p.source==='eastmoney'||p.source==='binance')return p // 已是新格式
           const t=findTicker(p.symbol)
           if(t&&t.source==='binance')return{...p,source:'binance',secid:'',currency:p.currency||'USDT',assetType:p.assetType||'加密货币'}
@@ -2670,13 +3167,244 @@ setup(){
   function addPosition(){
     if(!posForm.symbol.trim()||!Number(posForm.qty)){showToast('请选择标的并填写份额','error');return}
     const avg=posForm.avgCost===''||posForm.avgCost==null?null:Number(posForm.avgCost)
-    positions.value.push({id:genId(),symbol:posForm.symbol.trim(),name:posForm.name.trim()||posForm.symbol.trim(),icon:posForm.icon,qty:Number(posForm.qty),avgCost:avg,currency:posForm.currency,assetType:posForm.assetType,source:posForm.source,secid:posForm.secid})
+    positions.value.push({id:genId(),symbol:posForm.symbol.trim(),name:posForm.name.trim()||posForm.symbol.trim(),icon:posForm.icon,qty:Number(posForm.qty),avgCost:avg,currency:posForm.currency,assetType:normalizeAssetType(posForm.assetType),source:posForm.source,secid:posForm.secid})
     savePositions()
     posForm.symbol='';posForm.name='';posForm.qty='';posForm.avgCost='';posForm.icon='';posForm.secid='';posForm.source='eastmoney'
     posSymbolSearch.value='';posSearchResults.value=[];showPosForm.value=false;showToast('已添加持仓','success')
   }
   function removePosition(id){if(!confirm('确定删除持仓？'))return;positions.value=positions.value.filter(p=>p.id!==id);savePositions();showToast('已删除','success')}
   function updatePosition(id,key,val){const p=positions.value.find(x=>x.id===id);if(!p)return;if(key==='qty'||key==='avgCost')p[key]=Number(val)||0;else p[key]=val;savePositions()}
+  function positionTag(p){return `持仓:${String(p.symbol||'').trim().toUpperCase()}`}
+  const quickTargetMarkets=[
+    {l:'沪深市',v:'沪深市'},
+    {l:'港股',v:'港股'},
+    {l:'美股',v:'美股'},
+    {l:'基金',v:'基金'},
+    {l:'加密货币',v:'加密货币'},
+    {l:'黄金/商品',v:'黄金'}
+  ]
+  const quickTargetQuery=ref('')
+  const quickTargetResults=ref([])
+  const quickTargetSearching=ref(false)
+  let _quickTargetTimer=null
+  const quickTargetPlaceholder=computed(()=>{
+    if(form.targetMarket==='加密货币')return'输入币种，如 BTC / ETH / SOL'
+    if(form.targetMarket==='黄金')return'输入商品，如 Gold / Silver / Oil'
+    return'输入代码或名称，如 600519 / 腾讯 / AAPL'
+  })
+  const quickTargetHint=computed(()=>{
+    if(['沪深市','港股','美股','基金'].includes(form.targetMarket))return'先选市场，再输入代码或名称搜索；也会保留该市场下的持仓和历史标的。'
+    return'先选市场，再从常用列表或历史标的里选择；选中后会自动带出资产类型、币种和标签。'
+  })
+  function targetMarketOf(item){return normalizeAssetType(item.assetType||'')||quickTargetAssetType(item)||''}
+  function targetMatchesMarket(item,market=form.targetMarket){
+    const at=targetMarketOf(item)
+    if(market==='黄金')return at==='黄金'||at==='其他'
+    return at===market
+  }
+  function quickTargetAssetType(t){
+    if(!t)return''
+    if(t.cat==='加密')return'加密货币'
+    if(['美股','港股','沪深市'].includes(t.cat))return t.cat
+    if(t.cat==='商品')return t.symbol==='Gold'?'黄金':'其他'
+    return''
+  }
+  function quickTargetCurrency(t){
+    const at=quickTargetAssetType(t)
+    if(at==='加密货币')return'USDT'
+    if(at==='美股')return'USD'
+    if(at==='港股')return'HKD'
+    return'CNY'
+  }
+  function inferEntryTarget(e){
+    const tags=parseTags(e.tags)
+    const common=new Set([...quickTagOptions,'转出','工资入金','定投','补仓','止盈','FOMO'])
+    let symbol='',name=''
+    const pos=tags.find(t=>String(t).startsWith('持仓:'))
+    if(pos){symbol=String(pos).slice(3).trim().toUpperCase();name=symbol}
+    if(!symbol){
+      const code=tags.find(t=>/^[A-Za-z0-9._-]{2,16}$/.test(t)&&!common.has(t))
+      if(code){symbol=String(code).trim().toUpperCase();name=symbol}
+    }
+    if(!name){
+      const named=tags.find(t=>!common.has(t)&&!String(t).startsWith('持仓:')&&!ASSET_TYPES.value.includes(t))
+      if(named)name=String(named).trim()
+    }
+    if(!symbol){
+      const m=String(e.note||'').match(/[（(]([A-Za-z0-9._-]{2,16})[）)]/)
+      if(m){symbol=m[1].toUpperCase();if(!name)name=symbol}
+    }
+    if(!name&&!symbol)return null
+    return{
+      name:name||symbol,symbol:symbol||name,assetType:normalizeAssetType(e.assetType)||'',currency:e.currency||'CNY',
+      exchange:e.exchange||'',count:1,lastDate:e.date||''
+    }
+  }
+  function quickPositionItems(){
+    return positions.value.map(p=>({
+      key:'pos:'+p.id,label:`${p.name||p.symbol} · ${p.symbol}（持仓）`,
+      name:p.name||p.symbol,symbol:String(p.symbol||'').trim().toUpperCase(),assetType:normalizeAssetType(p.assetType)||'',currency:p.currency||'CNY',
+      exchange:'',positionId:p.id,source:'position',avgCost:p.avgCost,price:posPrices.value[posKey(p)]||''
+    })).filter(item=>targetMatchesMarket(item))
+  }
+  function quickFlowItems(){
+    const flowMap=new Map()
+    sortedEntries.value.forEach(e=>{
+      const t=inferEntryTarget(e)
+      if(!t)return
+      const key=(t.symbol||t.name).toUpperCase()
+      if(!flowMap.has(key))flowMap.set(key,{...t,key:'flow:'+key,count:0})
+      const row=flowMap.get(key)
+      row.count++
+      if(!row.assetType&&t.assetType)row.assetType=t.assetType
+      if(!row.currency&&t.currency)row.currency=t.currency
+      if(!row.exchange&&t.exchange)row.exchange=t.exchange
+      if(t.lastDate&&t.lastDate>row.lastDate)row.lastDate=t.lastDate
+    })
+    return[...flowMap.values()].filter(item=>targetMatchesMarket(item)).slice(0,16).map(t=>({
+      ...t,label:`${t.name}${t.symbol&&t.symbol!==t.name?' · '+t.symbol:''}（历史 ${t.count} 笔）`,source:'flow'
+    }))
+  }
+  function quickCommonItems(used){
+    return TICKER_LIST
+      .filter(t=>['加密','美股','港股','沪深市','商品'].includes(t.cat))
+      .filter(t=>targetMatchesMarket({assetType:quickTargetAssetType(t)}))
+      .filter(t=>!used.has(String(t.symbol).toUpperCase()))
+      .slice(0,28)
+      .map(t=>({
+        key:'ticker:'+t.symbol,label:`${t.symbol} · ${quickTargetAssetType(t)||t.cat}`,
+        name:t.symbol,symbol:t.symbol,assetType:quickTargetAssetType(t),currency:quickTargetCurrency(t),
+        exchange:'',source:t.source,secid:t.emid||''
+      }))
+  }
+  const quickTargetOptions=computed(()=>{
+    const posItems=quickPositionItems()
+    const flowItems=quickFlowItems()
+    const resultItems=quickTargetResults.value.map(r=>({
+      key:r.key||('search:'+(r.secid||r.symbol||r.code||r.name)),
+      label:r.label||`${r.name||r.symbol} · ${r.symbol||r.code||''}${r.currency?' · '+r.currency:''}`,
+      name:r.name||r.symbol||r.code,
+      symbol:String(r.symbol||r.code||r.name||'').trim().toUpperCase(),
+      assetType:normalizeAssetType(r.assetType)||form.targetMarket,
+      currency:r.currency||'CNY',
+      exchange:'',
+      secid:r.secid||'',
+      source:r.source||'search'
+    })).filter(item=>targetMatchesMarket(item))
+    const used=new Set([...posItems,...flowItems,...resultItems].map(i=>String(i.symbol||i.name).toUpperCase()))
+    return[...posItems,...flowItems,...resultItems,...quickCommonItems(used)]
+  })
+  function resetQuickTargetSearch(){
+    form.targetKey='';form.positionId='';quickTargetQuery.value='';quickTargetResults.value=[];quickTargetSearching.value=false
+    form.assetType=form.targetMarket==='黄金'?'黄金':form.targetMarket
+    if(form.targetMarket==='加密货币')form.currency='USDT'
+    else if(form.targetMarket==='美股')form.currency='USD'
+    else if(form.targetMarket==='港股')form.currency='HKD'
+    else form.currency='CNY'
+    if(form.currency!=='CNY'&&!form.rate)form.rate=fxRates[form.currency]||RATE_FALLBACK[form.currency]||''
+  }
+  function onQuickTargetInput(){
+    form.targetKey=''
+    const q=quickTargetQuery.value.trim()
+    clearTimeout(_quickTargetTimer)
+    quickTargetResults.value=[]
+    if(!q){quickTargetSearching.value=false;return}
+    if(['加密货币','黄金'].includes(form.targetMarket)){
+      const key=q.toUpperCase()
+      quickTargetResults.value=TICKER_LIST
+        .filter(t=>targetMatchesMarket({assetType:quickTargetAssetType(t)}))
+        .filter(t=>t.symbol.toUpperCase().includes(key))
+        .map(t=>({key:'ticker:'+t.symbol,label:`${t.symbol} · ${quickTargetAssetType(t)||t.cat}`,name:t.symbol,symbol:t.symbol,assetType:quickTargetAssetType(t),currency:quickTargetCurrency(t),source:t.source,secid:t.emid||''}))
+      return
+    }
+    quickTargetSearching.value=true
+    _quickTargetTimer=setTimeout(async()=>{
+      const rows=await emSearch(q)
+      if(quickTargetQuery.value.trim()!==q)return
+      quickTargetResults.value=rows
+        .filter(it=>normalizeAssetType(it.assetType)===form.targetMarket)
+        .map(it=>({key:'search:'+it.secid,label:`${it.name} · ${it.code} · ${it.currency}`,name:it.name,symbol:it.code,assetType:normalizeAssetType(it.assetType),currency:it.currency,secid:it.secid,source:'eastmoney'}))
+      quickTargetSearching.value=false
+    },300)
+  }
+  const quickSelectedTarget=computed(()=>quickTargetOptions.value.find(x=>x.key===form.targetKey)||null)
+  const quickSelectedPosition=computed(()=>positions.value.find(p=>p.id===form.positionId)||null)
+  function syncTradeAmount(){
+    if(!(quickAction.value==='buy'||quickAction.value==='sell'))return
+    if(tradeAmountPreview.value>0)form.amount=tradeAmountPreview.value
+  }
+  function applyQuickPosition(){
+    const p=quickSelectedPosition.value
+    if(!p)return
+    form.assetType=p.assetType||form.assetType
+    form.currency=p.currency||form.currency
+    if(form.currency!=='CNY'&&!form.rate)form.rate=fxRates[form.currency]||RATE_FALLBACK[form.currency]||''
+    if(!form.exchange)form.exchange='持仓联动'
+    if(!form.tradePrice&&(p.avgCost||posPrices.value[posKey(p)]))form.tradePrice=posPrices.value[posKey(p)]||p.avgCost
+    if(!form.note&&(quickAction.value==='buy'||quickAction.value==='sell'))form.note=`${quickAction.value==='buy'?'买入':'卖出'} ${p.name||p.symbol} (${p.symbol})`
+    const tags=parseTags(form.tagText)
+    ;[positionTag(p),String(p.symbol||'').trim().toUpperCase()].filter(Boolean).forEach(tag=>{if(!tags.includes(tag))tags.push(tag)})
+    form.tagText=tags.join('，')
+    syncTradeAmount()
+  }
+  function applyQuickTarget(){
+    const item=quickTargetOptions.value.find(x=>x.key===form.targetKey)
+    if(!item){
+      form.positionId=''
+      return
+    }
+    form.positionId=item.positionId||''
+    if(item.positionId){
+      applyQuickPosition()
+      return
+    }
+    if(item.assetType)form.assetType=item.assetType
+    if(item.currency)form.currency=item.currency
+    if(form.currency!=='CNY'&&!form.rate)form.rate=fxRates[form.currency]||RATE_FALLBACK[form.currency]||''
+    if(!form.exchange&&item.exchange)form.exchange=item.exchange
+    if(!form.tradePrice&&(item.price||item.avgCost))form.tradePrice=item.price||item.avgCost
+    const actionTag=quickAction.value==='buy'?'买入':quickAction.value==='sell'?'卖出':''
+    const tags=parseTags(form.tagText).filter(t=>!['买入','卖出'].includes(t))
+    ;[actionTag,item.symbol,`标的:${item.symbol||item.name}`].filter(Boolean).forEach(tag=>{if(!tags.includes(tag))tags.push(tag)})
+    form.tagText=tags.join('，')
+    if(!form.note&&(quickAction.value==='buy'||quickAction.value==='sell'))form.note=`${quickAction.value==='buy'?'买入':'卖出'} ${item.name||item.symbol}`
+    syncTradeAmount()
+  }
+  function entryLinkedToPosition(e,p){
+    const symbol=String(p.symbol||'').trim().toUpperCase()
+    if(!symbol)return false
+    const tags=parseTags(e.tags).map(t=>t.toUpperCase())
+    if(tags.includes(positionTag(p).toUpperCase())||tags.includes(symbol))return true
+    const note=String(e.note||'').toUpperCase()
+    return note.includes(symbol)
+  }
+  function positionFlowStats(p){
+    const rows=entries.value.filter(e=>entryLinkedToPosition(e,p))
+    const inTotal=rows.filter(e=>e.type==='入金'||e.type==='买入').reduce((s,e)=>s+amountCNY(e),0)
+    const outTotal=rows.filter(e=>e.type==='出金'||e.type==='卖出').reduce((s,e)=>s+amountCNY(e),0)
+    return{count:rows.length,inTotal,outTotal,netInvested:inTotal-outTotal,rows}
+  }
+  function createPositionFlow(p,kind){
+    const isBuy=kind==='buy'
+    const currency=p.currency||'CNY'
+    const unit=isBuy?(p.avgCost||p.price||0):(p.price||p.avgCost||0)
+    const suggested=unit&&p.qty?Number((unit*p.qty).toFixed(2)):''
+    const raw=prompt(`${isBuy?'买入':'卖出'} ${p.name||p.symbol} 的${currency}金额`,suggested)
+    if(raw===null)return
+    const amount=normNum(raw)
+    if(!amount){showToast('请输入有效金额','error');return}
+    const type=isBuy?'买入':'卖出'
+    const rate=currency==='CNY'?'':(fxRates[currency]||RATE_FALLBACK[currency]||'')
+    const note=`${isBuy?'买入':'卖出'} ${p.name||p.symbol} (${p.symbol})`
+    snap()
+    entries.value.unshift({
+      id:genId(),date:dayjs().format('YYYY-MM-DD'),amount,rate,exchange:'持仓联动',note,type,
+      assetType:p.assetType||'',currency,tags:[positionTag(p),String(p.symbol||'').trim().toUpperCase(),isBuy?'买入':'卖出'].filter(Boolean),
+      updatedAt:Date.now()
+    })
+    save()
+    showToast(`已生成${isBuy?'买入':'卖出'}流水`,'success')
+  }
   // currency→CNY 汇率访问器（兜底 1）
   function fx(cur){return fxRates[cur]||1}
   const posSummary=computed(()=>{
@@ -2692,17 +3420,57 @@ setup(){
     })
     return{totalCost,totalValue,pl:totalValue-totalCost,plPct:hasCostCount&&totalCost?((totalValue-totalCost)/totalCost*100).toFixed(1):'0'}
   })
-  const posRows=computed(()=>positions.value.map(p=>{
-    const r=fx(p.currency)
-    const hasCost=p.avgCost!=null
-    const cost=p.qty*(hasCost?p.avgCost:0)*r      // CNY 折合
-    const price=posPrices.value[posKey(p)]         // 原币种现价
-    const value=price?p.qty*price*r:0              // CNY 市值
-    const pl=value-cost                            // CNY 盈亏
-    return{...p,cost,price:price||0,value,pl,hasCost,plPct:hasCost&&cost?((pl/cost)*100).toFixed(1):'0'}
-  }))
+  const posRows=computed(()=>positions.value
+    .filter(p=>!posMarket.value||normalizeAssetType(p.assetType)===posMarket.value)
+    .map(p=>{
+      const r=fx(p.currency)
+      const hasCost=p.avgCost!=null
+      const cost=p.qty*(hasCost?p.avgCost:0)*r
+      const price=posPrices.value[posKey(p)]
+      const value=price?p.qty*price*r:0
+      const pl=value-cost
+      return{...p,cost,price:price||0,value,pl,hasCost,plPct:hasCost&&cost?((pl/cost)*100).toFixed(1):'0',flow:positionFlowStats(p)}
+    }))
   // 持仓价格缓存的 key：股票用 secid，加密用 symbol
   function posKey(p){return p.source==='eastmoney'?p.secid:p.symbol}
+  function upsertPositionFromTrade(entry,target){
+    if(entry.type!=='买入'&&entry.type!=='卖出')return
+    const qty=Number(entry.tradeQty)||0
+    const price=Number(entry.tradePrice)||0
+    if(!qty||!price||!target)return
+    const symbol=String(target.symbol||target.name||'').trim().toUpperCase()
+    if(!symbol)return
+    let p=entry.positionId?positions.value.find(x=>x.id===entry.positionId):null
+    if(!p)p=positions.value.find(x=>String(x.symbol||'').trim().toUpperCase()===symbol&&normalizeAssetType(x.assetType)===normalizeAssetType(entry.assetType))
+    if(entry.type==='买入'){
+      if(p){
+        const oldQty=Number(p.qty)||0
+        const oldAvg=p.avgCost==null?price:Number(p.avgCost)||0
+        const newQty=oldQty+qty
+        p.qty=Number(newQty.toFixed(8))
+        p.avgCost=newQty?Number(((oldQty*oldAvg+qty*price)/newQty).toFixed(8)):price
+        p.currency=entry.currency||p.currency
+        p.assetType=normalizeAssetType(entry.assetType)||p.assetType
+        if(target.secid)p.secid=target.secid
+      }else{
+        const ticker=findTicker(symbol)
+        positions.value.push({
+          id:genId(),symbol,name:target.name||symbol,icon:ticker?.icon||'',qty:Number(qty.toFixed(8)),avgCost:price,
+          currency:entry.currency||'CNY',assetType:normalizeAssetType(entry.assetType)||'',source:target.source==='eastmoney'?'eastmoney':(entry.assetType==='加密货币'?'binance':'eastmoney'),
+          secid:target.secid||''
+        })
+      }
+    }else if(p){
+      if(p.avgCost!=null){
+        const costPer=amountCNY({amount:p.avgCost,currency:p.currency||'CNY',rate:fx(p.currency||'CNY')})
+        const sellPer=amountCNY({amount:price,currency:entry.currency||'CNY',rate:entry.rate||fx(entry.currency||'CNY')})
+        const sellQty=Math.min(qty,Number(p.qty)||0)
+        entry.realizedPL=Number(((sellPer-costPer)*sellQty).toFixed(2))
+      }
+      p.qty=Math.max(0,Number(((Number(p.qty)||0)-qty).toFixed(8)))
+    }
+    savePositions()
+  }
   async function fetchPosPrices(){
     if(!positions.value.length)return
     const results={}
@@ -2726,7 +3494,14 @@ setup(){
     if(Object.keys(results).length)Object.assign(posPrices.value,results)
   }
 
-  function addEntry(){
+  function addEntry(keepContext=false){
+    if((quickAction.value==='buy'||quickAction.value==='sell')&&form.targetKey)applyQuickTarget()
+    else if((quickAction.value==='buy'||quickAction.value==='sell')&&form.positionId)applyQuickPosition()
+    if(quickAction.value==='buy'||quickAction.value==='sell'){
+      syncTradeAmount()
+      if(!form.targetKey){showToast('请先选择标的','error');return}
+      if(!Number(form.tradeQty)||!Number(form.tradePrice)){showToast('请填写成交价格和数量','error');return}
+    }
     if(!form.amount||form.amount<=0){showToast('请输入有效金额','error');return}
     // Calm-down check
     const warns=getDepositWarnings()
@@ -2735,38 +3510,76 @@ setup(){
       if(!confirm(msg))return
     }
     snap()
-    entries.value.unshift({id:genId(),date:form.date||dayjs().format('YYYY-MM-DD'),amount:Number(form.amount),rate:form.rate?Number(form.rate):'',exchange:form.exchange.trim(),note:form.note.trim(),type:form.type,assetType:form.assetType,currency:form.currency||'CNY',tags:parseTags(form.tagText),updatedAt:Date.now()})
-    save();form.amount='';form.note='';form.tagText='';showToast('已添加','success')
+    const p=quickSelectedPosition.value
+    const target=quickSelectedTarget.value
+    const tags=parseTags(form.tagText)
+    const actionTag=quickAction.value==='buy'?'买入':quickAction.value==='sell'?'卖出':''
+    if(actionTag&&!tags.includes(actionTag))tags.push(actionTag)
+    if(p){[positionTag(p),String(p.symbol||'').trim().toUpperCase()].filter(Boolean).forEach(tag=>{if(!tags.includes(tag))tags.push(tag)})}
+    const note=(form.note||(!p?'':`${quickAction.value==='sell'?'卖出':'买入'} ${p.name||p.symbol} (${p.symbol})`)).trim()
+    const entry={id:genId(),date:form.date||dayjs().format('YYYY-MM-DD'),amount:Number(form.amount),rate:form.rate?Number(form.rate):'',exchange:form.exchange.trim(),note,type:form.type,assetType:normalizeAssetType(form.assetType),currency:form.currency||'CNY',tags,tradeQty:Number(form.tradeQty)||'',tradePrice:Number(form.tradePrice)||'',targetSymbol:target?.symbol||'',targetName:target?.name||'',targetMarket:form.targetMarket||'',positionId:form.positionId||'',updatedAt:Date.now()}
+    entries.value.unshift(entry)
+    upsertPositionFromTrade(entry,target)
+    save();form.amount='';form.note='';form.tradeQty='';form.tradePrice=''
+    if(!keepContext){form.tagText='';form.positionId='';form.targetKey='';form.targetMarket='沪深市';quickTargetQuery.value='';quickTargetResults.value=[]}
+    showToast(keepContext?'已保存，可继续录入':'已添加','success')
   }
-  function mobileAddEntry(){const before=entries.value.length;addEntry();if(entries.value.length>before)showMobileAdd.value=false}
-  function copyLast(){const e=sortedEntries.value[0];if(!e)return;form.date=e.date;form.amount=e.amount;form.rate=e.rate||'';form.exchange=e.exchange;form.note='';form.type=e.type;form.assetType=e.assetType||'';form.currency=e.currency||'CNY';form.tagText=tagsText(e.tags);showToast('已复制','info')}
-  function removeEntry(id){if(!confirm('确认删除？'))return;snap();entries.value=entries.value.filter(e=>e.id!==id);recordDeleted([id]);save();showToast('已删除','success')}
+  function mobileAddEntry(){const before=entries.value.length;addEntry(false);if(entries.value.length>before)showMobileAdd.value=false}
+  function copyLast(){const e=sortedEntries.value[0];if(!e)return;form.date=e.date;form.amount=e.amount;form.rate=e.rate||'';form.exchange=e.exchange;form.note='';form.type=e.type;form.assetType=normalizeAssetType(e.assetType)||'';form.currency=e.currency||'CNY';form.tagText=tagsText(e.tags);form.tradeQty=e.tradeQty||'';form.tradePrice=e.tradePrice||'';form.targetKey='';form.positionId='';quickAction.value=e.type==='买入'?'buy':e.type==='卖出'?'sell':(e.type==='出金'?'withdraw':'deposit');showToast('已复制','info')}
+  function removeEntry(id){
+    const e=entries.value.find(x=>x.id===id);if(!e)return
+    const isTrade=e.type==='买入'||e.type==='卖出'
+    const msg=isTrade?`确认删除此条${e.type}记录？\n注意：持仓数量不会自动回退，请手动核对持仓。`:'确认删除？'
+    if(!confirm(msg))return
+    snap();entries.value=entries.value.filter(x=>x.id!==id);recordDeleted([id]);save();showToast('已删除','success')
+  }
   function updateField(id,key,val){
     const e=entries.value.find(x=>x.id===id);if(!e)return
-    const next=(key==='amount'||key==='rate')?(val===''?'':Number(val)):val
+    const next=(key==='amount'||key==='rate')?(val===''?'':Number(val)):(key==='assetType'?normalizeAssetType(val):val)
     if(e[key]===next)return
     snap();e[key]=next;e.updatedAt=Date.now();save()
   }
-  function loadDemo(){if(!confirm('加载演示数据会覆盖当前记录，继续吗？'))return;entries.value=DEMO_ENTRIES.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1);save();showToast('已加载演示数据','success')}
+  function loadDemo(){if(!confirm('加载演示数据会覆盖当前记录，并先生成一份快照。继续吗？'))return;snap();entries.value=DEMO_ENTRIES.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1);save();showToast('已加载演示数据','success')}
   function clearData(){if(!confirm('确认清空所有记录？'))return;snap();recordDeleted(entries.value.map(e=>e.id));entries.value=[];save();showToast('已清空','success')}
 
   // Period Stats
   const periodRows=computed(()=>{
     const map=new Map()
-    entries.value.forEach(e=>{const k=pKey(e.date,period.value);if(!k)return;if(!map.has(k))map.set(k,{key:k,inTotal:0,outTotal:0});const r=map.get(k);if(e.type==='入金')r.inTotal+=amountCNY(e);else r.outTotal+=amountCNY(e)})
+    entries.value.forEach(e=>{if(e.type!=='入金'&&e.type!=='出金')return;const k=pKey(e.date,period.value);if(!k)return;if(!map.has(k))map.set(k,{key:k,inTotal:0,outTotal:0});const r=map.get(k);if(e.type==='入金')r.inTotal+=amountCNY(e);else r.outTotal+=amountCNY(e)})
     const rows=[...map.values()].sort((a,b)=>a.key<b.key?-1:1);let cum=0
     rows.forEach(r=>{r.net=r.outTotal-r.inTotal;cum+=r.net;r.cum=cum});return rows
+  })
+  const cashflowRows=computed(()=>{
+    const map=new Map()
+    entries.value.forEach(e=>{
+      if(e.type!=='入金'&&e.type!=='出金')return
+      const k=e.date?e.date.slice(0,7):'未知'
+      if(!map.has(k))map.set(k,{key:k,count:0,inTotal:0,outTotal:0})
+      const r=map.get(k);r.count++
+      if(e.type==='入金')r.inTotal+=amountCNY(e);else r.outTotal+=amountCNY(e)
+    })
+    const rows=[...map.values()].sort((a,b)=>a.key<b.key?-1:1);let cum=0
+    rows.forEach(r=>{r.net=r.outTotal-r.inTotal;cum+=r.net;r.cum=cum})
+    return rows
+  })
+  const cashflowOverview=computed(()=>{
+    const year=dayjs().format('YYYY')
+    const yearRows=cashflowRows.value.filter(r=>r.key.startsWith(year))
+    const yearIn=yearRows.reduce((s,r)=>s+r.inTotal,0)
+    const yearOut=yearRows.reduce((s,r)=>s+r.outTotal,0)
+    const last=cashflowRows.value[cashflowRows.value.length-1]
+    return{yearIn,yearOut,yearNet:yearOut-yearIn,cum:last?last.cum:0}
   })
 
   const exchangeRows=computed(()=>{
     const map=new Map()
-    entries.value.forEach(e=>{const k=e.exchange||'未知';if(!map.has(k))map.set(k,{exchange:k,inTotal:0,outTotal:0});const r=map.get(k);if(e.type==='入金')r.inTotal+=amountCNY(e);else r.outTotal+=amountCNY(e)})
+    entries.value.forEach(e=>{if(e.type!=='入金'&&e.type!=='出金')return;const k=e.exchange||'未知';if(!map.has(k))map.set(k,{exchange:k,inTotal:0,outTotal:0});const r=map.get(k);if(e.type==='入金')r.inTotal+=amountCNY(e);else r.outTotal+=amountCNY(e)})
     return[...map.values()].map(r=>({...r,net:r.outTotal-r.inTotal})).sort((a,b)=>b.inTotal-a.inTotal)
   })
   const assetTypeRows=computed(()=>{
     const ORDER=[...ASSET_TYPES.value,'']
     const map=new Map()
-    entries.value.forEach(e=>{const k=e.assetType||'';if(!map.has(k))map.set(k,{assetType:k,inTotal:0,outTotal:0});const r=map.get(k);if(e.type==='入金')r.inTotal+=amountCNY(e);else r.outTotal+=amountCNY(e)})
+    entries.value.forEach(e=>{if(e.type!=='入金'&&e.type!=='出金')return;const k=e.assetType||'';if(!map.has(k))map.set(k,{assetType:k,inTotal:0,outTotal:0});const r=map.get(k);if(e.type==='入金')r.inTotal+=amountCNY(e);else r.outTotal+=amountCNY(e)})
     const rows=[...map.values()].map(r=>({...r,net:r.outTotal-r.inTotal}))
     return rows.sort((a,b)=>{const ia=ORDER.indexOf(a.assetType),ib=ORDER.indexOf(b.assetType);return(ia<0?99:ia)-(ib<0?99:ib)})
   })
@@ -2776,7 +3589,7 @@ setup(){
       parseTags(e.tags).forEach(tag=>{
         if(!map.has(tag))map.set(tag,{tag,count:0,inTotal:0,outTotal:0})
         const r=map.get(tag);r.count++
-        if(e.type==='入金')r.inTotal+=amountCNY(e);else r.outTotal+=amountCNY(e)
+        if(e.type==='入金')r.inTotal+=amountCNY(e);else if(e.type==='出金')r.outTotal+=amountCNY(e)
       })
     })
     return[...map.values()].map(r=>({...r,net:r.outTotal-r.inTotal})).sort((a,b)=>Math.abs(b.net)-Math.abs(a.net))
@@ -2792,7 +3605,7 @@ setup(){
 
   const largeTxList=computed(()=>{
     const th=rules.largeTx||5000
-    return entries.value.filter(e=>amountCNY(e)>=th).sort((a,b)=>amountCNY(b)-amountCNY(a)).slice(0,6).map(e=>{
+    return entries.value.filter(e=>(e.type==='入金'||e.type==='出金')&&amountCNY(e)>=th).sort((a,b)=>amountCNY(b)-amountCNY(a)).slice(0,6).map(e=>{
       const original=e.currency&&e.currency!=='CNY'?`（${fmt(e.amount)} ${e.currency}）`:''
       return`${e.date} ${e.exchange||''} ${e.type} ${fmt(amountCNY(e))}元${original}`
     })
@@ -2962,29 +3775,104 @@ setup(){
   }
   function clearImportBatches(){if(!confirm('清空导入历史？不会删除账本记录。'))return;importBatches.value=[];localStorage.removeItem(IMPORT_K);showToast('导入历史已清空','success')}
 
-  // Timestamp-based merge: same ID → keep newer; different IDs → union；
-  // 墓碑（deletedIds）确保已删除记录不会被对端"复活"，且删除能跨设备传播
-  function mergeByTimestamp(local,remote,remoteDeleted){
-    // 1. 合并对端墓碑（每个 id 取最新删除时间）
-    if(remoteDeleted&&typeof remoteDeleted==='object'){
-      let changed=false
-      for(const id in remoteDeleted){
-        if(!deletedIds.value[id]||remoteDeleted[id]>deletedIds.value[id]){deletedIds.value[id]=remoteDeleted[id];changed=true}
-      }
-      if(changed)saveDeleted()
+  // Timestamp-based merge: same ID → keep newer; different IDs → union.
+  // 墓碑（deletedIds）确保已删除记录不会被对端"复活"，且删除能跨设备传播。
+  function normalizeDeletedMap(map){
+    const out={}
+    if(map&&typeof map==='object'){
+      Object.entries(map).forEach(([id,ts])=>{
+        const n=Number(ts)||0
+        if(id&&n>0)out[id]=n
+      })
     }
-    const del=deletedIds.value
-    // 2. 按 id 取并集，同 id 保留 updatedAt 更新的
-    const map=new Map()
-    local.forEach(e=>map.set(e.id,e))
-    remote.forEach(e=>{
-      const ex=map.get(e.id)
-      if(!ex){map.set(e.id,e)}
-      else if((e.updatedAt||0)>(ex.updatedAt||0)){map.set(e.id,e)}
+    return out
+  }
+  function mergedDeletedMap(remoteDeleted){
+    const out={...normalizeDeletedMap(deletedIds.value)}
+    Object.entries(normalizeDeletedMap(remoteDeleted)).forEach(([id,ts])=>{
+      if(!out[id]||ts>out[id])out[id]=ts
     })
-    // 3. 剔除被墓碑标记的记录（删除时间晚于该记录最后修改时间才算删除生效，
-    //    若记录在删除后又被编辑过 updatedAt>删除时间 则视为有意复活，保留）
-    return [...map.values()].filter(e=>{const d=del[e.id];return !(d&&d>=(e.updatedAt||0))}).map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1)
+    return out
+  }
+  function saveMergedDeleted(remoteDeleted){
+    const next=mergedDeletedMap(remoteDeleted)
+    const changed=JSON.stringify(next)!==JSON.stringify(normalizeDeletedMap(deletedIds.value))
+    if(changed){deletedIds.value=next;saveDeleted()}
+    return next
+  }
+  function normalizedEntryMap(list){
+    const map=new Map()
+    ;(Array.isArray(list)?list:[]).forEach(row=>{
+      const n=normRow(row)
+      if(n&&n.id)map.set(n.id,n)
+    })
+    return map
+  }
+  function syncEntryFingerprint(entry){
+    const e=normRow(entry)
+    if(!e)return''
+    return JSON.stringify({
+      date:e.date,amount:e.amount,rate:e.rate||'',exchange:e.exchange||'',note:e.note||'',
+      type:e.type,assetType:e.assetType||'',currency:e.currency||'CNY',tags:parseTags(e.tags)
+    })
+  }
+  function entriesDiffer(a,b){return syncEntryFingerprint(a)!==syncEntryFingerprint(b)}
+  function mergeEntriesByTimestamp(local,remote,del){
+    const map=new Map()
+    normalizedEntryMap(local).forEach((e,id)=>map.set(id,e))
+    normalizedEntryMap(remote).forEach((e,id)=>{
+      const ex=map.get(id)
+      if(!ex)map.set(id,e)
+      else if((e.updatedAt||0)>(ex.updatedAt||0))map.set(id,e)
+    })
+    return [...map.values()].filter(e=>{
+      const d=del[e.id]
+      return !(d&&d>=(e.updatedAt||0))
+    }).map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1)
+  }
+  function mergeByTimestamp(local,remote,remoteDeleted){
+    return mergeEntriesByTimestamp(local,remote,saveMergedDeleted(remoteDeleted))
+  }
+  function syncSummaryTotal(s){
+    return s.remoteOnly+s.localOnly+s.remoteNewer+s.localNewer+s.remoteDeleted+s.localDeleted+s.conflict
+  }
+  function syncHasIncoming(s){return s.remoteOnly+s.remoteNewer+s.remoteDeleted+s.conflict>0}
+  function analyzeSyncDiff(local,remote,remoteDeleted){
+    const localMap=normalizedEntryMap(local)
+    const remoteMap=normalizedEntryMap(remote)
+    const localDeleted=normalizeDeletedMap(deletedIds.value)
+    const remoteDel=normalizeDeletedMap(remoteDeleted)
+    const ids=new Set([...localMap.keys(),...remoteMap.keys(),...Object.keys(localDeleted),...Object.keys(remoteDel)])
+    const summary={remoteOnly:0,localOnly:0,remoteNewer:0,localNewer:0,remoteDeleted:0,localDeleted:0,conflict:0}
+    const rows=[]
+    const add=(kind,status,label,entry,reason)=>{
+      if(!entry)return
+      summary[kind]++
+      rows.push({key:`${kind}-${entry.id}`,status,label,entry,reason,date:entry.date||''})
+    }
+    ids.forEach(id=>{
+      const l=localMap.get(id),r=remoteMap.get(id)
+      const ld=localDeleted[id]||0,rd=remoteDel[id]||0
+      if(rd&&(!l||rd>=(l.updatedAt||0))){
+        if(l)add('remoteDeleted','delete','云端删除',l,'合并后本地也删除')
+        return
+      }
+      if(ld&&(!r||ld>=(r.updatedAt||0))){
+        if(r)add('localDeleted','delete','本地删除',r,'合并后云端也删除')
+        return
+      }
+      if(r&&!l){add('remoteOnly','remote','云端新增',r,'合并后添加到本地');return}
+      if(l&&!r){add('localOnly','local','本地新增',l,'合并后保留并上传');return}
+      if(l&&r&&entriesDiffer(l,r)){
+        const lt=l.updatedAt||0,rt=r.updatedAt||0
+        if(rt>lt)add('remoteNewer','remote','云端更新',r,'云端更新时间更新')
+        else if(lt>rt)add('localNewer','local','本地更新',l,'本地更新时间更新')
+        else add('conflict','conflict','待确认',l,'时间相同但内容不同，默认保留本地')
+      }
+    })
+    rows.sort((a,b)=>b.date.localeCompare(a.date))
+    const merged=mergeEntriesByTimestamp(local,remote,mergedDeletedMap(remoteDeleted))
+    return{summary,rows,merged}
   }
   // Debounced auto-sync: 3s after last change → silent pull + push
   let _autoPushTimer=null
@@ -3053,11 +3941,11 @@ setup(){
   const LEGACY_GIST_DESC=`${LEGACY_FLOW_LABEL} 投记 · 数据备份`
   function gistDataFile(gist){return gist?.files?.[GIST_FILE]||gist?.files?.[LEGACY_GIST_FILE]}
   function gistAuth(){return{Authorization:`Bearer ${syncCfg.token}`,'Accept':'application/vnd.github+json'}}
-  function saveSyncConfig(){
+  function saveSyncConfig(silent=false){
     const cfg={token:syncCfg.token,gistId:syncCfg.gistId}
     localStorage.setItem(SYNC_K,JSON.stringify(cfg))
     syncStatus.value=cfg.token?'已配置':'未配置'
-    showToast('同步配置已保存','success')
+    if(!silent)showToast('同步配置已保存','success')
   }
   async function gistGet(){
     if(!syncCfg.gistId)return null
@@ -3084,62 +3972,159 @@ setup(){
     if(!r.ok)throw new Error(`Update ${r.status}`)
     return r.json()
   }
+  function syncPayload(){
+    return JSON.stringify({version:1,updatedAt:new Date().toISOString(),entries:entries.value,deletedIds:deletedIds.value},null,2)
+  }
+  async function discoverGist(){
+    if(syncCfg.gistId)return true
+    const found=await gistFind()
+    if(!found)return false
+    syncCfg.gistId=found.id;saveSyncConfig(true)
+    return true
+  }
+  async function loadRemoteSyncData({discover=true}={}){
+    if(discover){
+      const ok=await discoverGist()
+      if(!ok)return null
+    }else if(!syncCfg.gistId)return null
+    const gist=await gistGet()
+    const file=gistDataFile(gist)
+    if(!file||!file.content)return{gist,data:{entries:[],deletedIds:{}},list:[],deletedIds:{}}
+    const data=JSON.parse(file.content)
+    const list=Array.isArray(data.entries)?data.entries:[]
+    return{gist,data,list,deletedIds:data.deletedIds||{}}
+  }
+  async function uploadCurrentSyncData(){
+    if(syncCfg.gistId){
+      await gistUpdate(syncPayload())
+    }else{
+      const gist=await gistCreate(syncPayload())
+      syncCfg.gistId=gist.id
+      saveSyncConfig(true)
+    }
+    lastSyncedAt.value=Date.now()
+    syncStatus.value=`已上传 ${entries.value.length} 条 · ${new Date().toLocaleTimeString()}`
+  }
+  function openSyncPreview(mode,remoteCtx){
+    const ctx=remoteCtx||{gist:null,data:{entries:[],deletedIds:{}},list:[],deletedIds:{}}
+    const analysis=analyzeSyncDiff(entries.value,ctx.list,ctx.deletedIds)
+    syncPreview.value={
+      mode,
+      title:mode==='push'?'上传前发现云端差异':'云端同步预览',
+      gistId:ctx.gist?.id||syncCfg.gistId,
+      updatedAt:ctx.gist?.updated_at?new Date(ctx.gist.updated_at).toLocaleString():'',
+      remoteCount:ctx.list.length,
+      mergedCount:analysis.merged.length,
+      remoteData:ctx.data,
+      summary:analysis.summary,
+      rows:analysis.rows
+    }
+  }
+  const syncPreviewRows=computed(()=>syncPreview.value?syncPreview.value.rows:[])
+  function cancelSyncPreview(){syncPreview.value=null}
+  async function confirmSyncForcePush(){
+    if(!syncPreview.value)return
+    syncPreview.value=null
+    syncing.value=true;syncStatus.value='上传中…'
+    try{
+      await uploadCurrentSyncData()
+      showToast('已强制上传到云端','success')
+    }catch(e){
+      syncStatus.value='上传失败（检查 Token 权限）'
+      showToast('上传失败，请检查 Token 是否有效','error')
+    }finally{syncing.value=false}
+  }
+  async function confirmSyncMerge(){
+    if(!syncPreview.value)return
+    const preview=syncPreview.value
+    const remote=preview.remoteData||{}
+    const list=Array.isArray(remote.entries)?remote.entries:[]
+    const pushAfter=preview.mode==='push'
+    syncPreview.value=null
+    syncing.value=true;_syncingInProgress=true
+    try{
+      const merged=mergeByTimestamp(entries.value,list,remote.deletedIds)
+      const changed=merged.length!==entries.value.length||merged.some((e,i)=>e.id!==entries.value[i]?.id||e.updatedAt!==entries.value[i]?.updatedAt)
+      if(changed)snap()
+      entries.value=merged
+      localStorage.setItem(SK,JSON.stringify(entries.value))
+      if(pushAfter){
+        syncStatus.value='合并后上传中…'
+        await uploadCurrentSyncData()
+        showToast(`已合并并上传，当前 ${entries.value.length} 条`,'success')
+      }else{
+        lastSyncedAt.value=Date.now()
+        syncStatus.value=`已合并 ${entries.value.length} 条 · ${new Date().toLocaleTimeString()}`
+        showToast(`已合并云端数据，当前 ${entries.value.length} 条`,'success')
+      }
+    }catch(e){
+      syncStatus.value='合并失败'
+      showToast('合并失败，请稍后重试','error')
+    }finally{_syncingInProgress=false;syncing.value=false}
+  }
   async function syncPush(){
     if(!syncCfg.token){syncStatus.value='请先配置 Token';showToast('请先填写 GitHub Token','error');return}
-    syncStatus.value='上传中…'
+    syncStatus.value='检查云端…';syncing.value=true
     try{
-      const payload=JSON.stringify({version:1,updatedAt:new Date().toISOString(),entries:entries.value,deletedIds:deletedIds.value},null,2)
-      if(syncCfg.gistId){
-        await gistUpdate(payload)
-      }else{
-        const gist=await gistCreate(payload)
-        syncCfg.gistId=gist.id
-        saveSyncConfig()
+      const remote=await loadRemoteSyncData({discover:true})
+      if(remote){
+        const analysis=analyzeSyncDiff(entries.value,remote.list,remote.deletedIds)
+        if(syncHasIncoming(analysis.summary)){
+          openSyncPreview('push',remote)
+          syncStatus.value='发现云端差异，等待确认'
+          return
+        }
       }
-      syncStatus.value=`已上传 ${entries.value.length} 条 ${new Date().toLocaleTimeString()}`
+      syncStatus.value='上传中…'
+      await uploadCurrentSyncData()
       showToast('上传成功','success')
     }catch(e){syncStatus.value='上传失败（检查 Token 权限）';showToast('上传失败，请检查 Token 是否有效','error')}
+    finally{syncing.value=false}
   }
   async function syncPull(){
     if(!syncCfg.token){syncStatus.value='请先配置 Token';showToast('请先填写 GitHub Token','error');return}
-    syncStatus.value='拉取中…'
+    syncStatus.value='读取云端…';syncing.value=true
     try{
-      // Auto-discover gist if we don't have the ID yet
-      if(!syncCfg.gistId){
-        const found=await gistFind()
-        if(!found){syncStatus.value='未找到云端数据';showToast('未找到投记的 Gist，请先在另一台设备上上传','info');return}
-        syncCfg.gistId=found.id;saveSyncConfig()
+      const remote=await loadRemoteSyncData({discover:true})
+      if(!remote){syncStatus.value='未找到云端数据';showToast('未找到投记的 Gist，请先在另一台设备上上传','info');return}
+      const analysis=analyzeSyncDiff(entries.value,remote.list,remote.deletedIds)
+      if(!syncSummaryTotal(analysis.summary)){
+        syncStatus.value=`已是最新 · 云端 ${remote.list.length} 条`
+        lastSyncedAt.value=Date.now()
+        showToast('本地和云端已经一致','info')
+        return
       }
-      const gist=await gistGet()
-      const file=gistDataFile(gist)
-      if(!file||!file.content)throw new Error('no file')
-      const data=JSON.parse(file.content)
-      const list=Array.isArray(data.entries)?data.entries:[]
-      entries.value=mergeByTimestamp(entries.value,list,data.deletedIds);save()
-      syncStatus.value=`已拉取 ${list.length} 条 · ${new Date(gist.updated_at).toLocaleString()}`
-      showToast(`拉取成功，${list.length} 条记录`,'success')
+      openSyncPreview('pull',remote)
+      syncStatus.value='发现差异，等待确认'
     }catch(e){syncStatus.value='拉取失败';showToast('拉取失败，请检查 Token 是否有效','error')}
+    finally{syncing.value=false}
   }
   async function syncAuto(){
     if(!syncCfg.token){showToast('请先配置 Token','error');return}
-    // Auto-discover gist if needed
-    if(!syncCfg.gistId){
-      try{const found=await gistFind();if(found){syncCfg.gistId=found.id;saveSyncConfig()}}catch(e){}
-    }
-    // Pull first, merge by timestamp, then push
-    if(syncCfg.gistId){
-      try{
-        const gist=await gistGet()
-        const file=gistDataFile(gist)
-        if(file&&file.content){
-          const remote=JSON.parse(file.content)
-          const rList=Array.isArray(remote.entries)?remote.entries:[]
-          entries.value=mergeByTimestamp(entries.value,rList,remote.deletedIds)
-          save()
+    if(_syncingInProgress)return
+    _syncingInProgress=true;syncing.value=true;syncStatus.value='同步中…'
+    try{
+      const remote=await loadRemoteSyncData({discover:true})
+      if(remote){
+        const analysis=analyzeSyncDiff(entries.value,remote.list,remote.deletedIds)
+        if(analysis.summary.conflict){
+          openSyncPreview('push',remote)
+          syncStatus.value='发现冲突，等待确认'
+          return
         }
-      }catch(e){/* pull failed, continue with push */}
-    }
-    await syncPush()
+        const merged=mergeByTimestamp(entries.value,remote.list,remote.deletedIds)
+        if(merged.length!==entries.value.length||merged.some((e,i)=>e.id!==entries.value[i]?.id||e.updatedAt!==entries.value[i]?.updatedAt)){
+          entries.value=merged
+          localStorage.setItem(SK,JSON.stringify(entries.value))
+        }
+      }
+      await uploadCurrentSyncData()
+      syncStatus.value=`已同步 ${entries.value.length} 条 · ${new Date().toLocaleTimeString()}`
+      showToast('一键同步完成','success')
+    }catch(e){
+      syncStatus.value='同步失败'
+      showToast('同步失败，请检查网络或 Token','error')
+    }finally{_syncingInProgress=false;syncing.value=false}
   }
 
   // Import/Export
@@ -3260,25 +4245,45 @@ setup(){
   }
   function exportExcel(){
     if(!entries.value.length){showToast('无数据','info');return}
-    const inR=[],outR=[],flowR=[]
+    if(showcaseMode.value&&!confirm('展示模式只隐藏页面显示，导出的 Excel 会包含真实数据。继续导出吗？'))return
+    const inR=[],outR=[],tradeR=[],flowR=[]
     sortedEntries.value.forEach(e=>{
       const base={'日期':e.date,'资产类型':e.assetType||'','账户/平台':e.exchange,'货币':e.currency||'CNY','金额':e.amount,'汇率':e.rate||'','折合CNY':amountCNY(e),'类型':e.type,'标签':tagsText(e.tags)}
-      flowR.push({...base,'备注':e.note,'月份(yyyy-MM)':e.date?e.date.slice(0,7):''})
-      if(e.type==='入金')inR.push({...base,'投入理由':e.note});else outR.push({...base,'备注':e.note})
+      const tradeExtra={'标的代码':e.targetSymbol||'','成交数量':e.tradeQty||'','成交单价':e.tradePrice||'','已实现盈亏':e.realizedPL!=null?e.realizedPL:''}
+      flowR.push({...base,...tradeExtra,'备注':e.note,'月份(yyyy-MM)':e.date?e.date.slice(0,7):''})
+      if(e.type==='入金')inR.push({...base,'投入理由':e.note})
+      else if(e.type==='出金')outR.push({...base,'备注':e.note})
+      else tradeR.push({...base,...tradeExtra,'备注':e.note})
     })
     let cum=0;const mRows=[];const mm=new Map()
-    entries.value.forEach(e=>{const k=e.date?e.date.slice(0,7):'';if(!k)return;if(!mm.has(k))mm.set(k,{m:k,i:0,o:0});const r=mm.get(k);e.type==='入金'?r.i+=amountCNY(e):r.o+=amountCNY(e)})
+    entries.value.forEach(e=>{
+      if(e.type!=='入金'&&e.type!=='出金')return
+      const k=e.date?e.date.slice(0,7):'';if(!k)return
+      if(!mm.has(k))mm.set(k,{m:k,i:0,o:0});const r=mm.get(k)
+      if(e.type==='入金')r.i+=amountCNY(e);else r.o+=amountCNY(e)
+    })
     ;[...mm.values()].sort((a,b)=>a.m<b.m?-1:1).forEach(r=>{const n=r.o-r.i;cum+=n;mRows.push({'月份':r.m,'入金合计':r.i,'出金合计':r.o,'月度盈亏':n,'累计盈亏':cum})})
-    const statR=[{'统计项':'总入金','金额（元）':totalIn.value},{'统计项':'总出金','金额（元）':totalOut.value},{'统计项':'净盈亏','金额（元）':netPL.value},{'统计项':'回本比例','金额（元）':roi.value}]
+    const statR=[
+      {'统计项':'总入金','金额（元）':totalIn.value},
+      {'统计项':'总出金','金额（元）':totalOut.value},
+      {'统计项':'净盈亏','金额（元）':netPL.value},
+      {'统计项':'回本比例','金额（元）':roi.value},
+      {'统计项':'持仓市值','金额（元）':holdingsValue.value},
+      {'统计项':'已实现盈亏','金额（元）':realizedPL.value},
+      {'统计项':'真实收益','金额（元）':trueReturn.value},
+      {'统计项':'真实收益率','金额（元）':trueROI.value}
+    ]
     const wb=XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(inR),'投入记录')
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(outR),'取出记录')
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(inR),'入金记录')
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(outR),'出金记录')
+    if(tradeR.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(tradeR),'买卖记录')
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(flowR),'全部流水')
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(statR),'盈亏总览')
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(mRows),'月度统计')
     XLSX.writeFile(wb,'投记_'+dayjs().format('YYYYMMDD_HHmm')+'.xlsx');showToast('已导出','success')
   }
   function exportJSON(){
+    if(showcaseMode.value&&!confirm('展示模式只隐藏页面显示，导出的 JSON 会包含真实数据。继续导出吗？'))return
     const b=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),entries:entries.value},null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='投记备份_'+dayjs().format('YYYYMMDD_HHmm')+'.json';a.click();URL.revokeObjectURL(u);showToast('已导出','success')
   }
   function importExcel(ev){
@@ -3301,12 +4306,11 @@ setup(){
 
   // Chart
   const trendChart=ref(null)
-  const weekdayChart=ref(null)
-  const pieChart=ref(null)
+
+  const posPieChart=ref(null)
   let chartInstance=null
-  let weekdayChartInstance=null
-  let pieChartInstance=null
-  const pieMode=ref('in')
+
+  let posPieChartInstance=null
 
   function renderChart(){
     if(!trendChart.value||typeof Chart==='undefined')return
@@ -3341,66 +4345,32 @@ setup(){
             backgroundColor:isLight?'rgba(255,255,255,.95)':'rgba(20,24,32,.95)',
             borderColor:isLight?'rgba(0,0,0,.1)':'rgba(255,255,255,.08)',borderWidth:1,
             titleColor:isLight?'#1a1d23':'#e8eaed',bodyColor:isLight?'#5f6878':'#8b95a5',padding:12,
-            callbacks:{label:ctx=>`${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString(lang==='zh'?'zh-CN':'en-US',{maximumFractionDigits:0})}`}
+            callbacks:{label:ctx=>`${ctx.dataset.label}: ${showcaseMode.value?'••••':Number(ctx.raw).toLocaleString(lang==='zh'?'zh-CN':'en-US',{maximumFractionDigits:0})}`}
           }
         },
         scales:{
           x:{ticks:{color:tickColor,font:{size:10},maxRotation:45},grid:{color:gridColor},border:{color:borderColor}},
-          y:{ticks:{color:tickColor,font:{size:10},callback:v=>v>=1000||v<=-1000?(v/1000)+'k':v},grid:{color:gridColor},border:{color:borderColor}}
+          y:{ticks:{color:tickColor,font:{size:10},callback:v=>showcaseMode.value?'••':(v>=1000||v<=-1000?(v/1000)+'k':v)},grid:{color:gridColor},border:{color:borderColor}}
         }
       }
     })
   }
 
-  function renderWeekdayChart(){
-    if(!weekdayChart.value||typeof Chart==='undefined'||!behaviorAnalysis.value)return
-    if(weekdayChartInstance){weekdayChartInstance.destroy();weekdayChartInstance=null}
-    const b=behaviorAnalysis.value
-    const isLight=theme.value==='light'
-    const tickColor=isLight?'#9ca3b0':'#4a5568'
-    const gridColor=isLight?'rgba(0,0,0,.06)':'rgba(255,255,255,.04)'
-    weekdayChartInstance=new Chart(weekdayChart.value,{
-      type:'bar',
-      data:{
-        labels:[t('mon'),t('tue'),t('wed'),t('thu'),t('fri'),t('sat'),t('sun')],
-        datasets:[
-          {label:t('count'),data:[b.dayDist[1].count,b.dayDist[2].count,b.dayDist[3].count,b.dayDist[4].count,b.dayDist[5].count,b.dayDist[6].count,b.dayDist[0].count],
-           backgroundColor:['rgba(43,192,228,.5)','rgba(43,192,228,.5)','rgba(43,192,228,.5)','rgba(43,192,228,.5)','rgba(43,192,228,.5)','rgba(248,113,113,.5)','rgba(248,113,113,.5)'],
-           borderColor:['rgba(43,192,228,.8)','rgba(43,192,228,.8)','rgba(43,192,228,.8)','rgba(43,192,228,.8)','rgba(43,192,228,.8)','rgba(248,113,113,.8)','rgba(248,113,113,.8)'],
-           borderWidth:1,borderRadius:4,yAxisID:'y'},
-          {label:t('amount'),data:[b.dayDist[1].total,b.dayDist[2].total,b.dayDist[3].total,b.dayDist[4].total,b.dayDist[5].total,b.dayDist[6].total,b.dayDist[0].total],
-           type:'line',borderColor:'rgba(240,168,32,.8)',backgroundColor:'transparent',tension:.3,pointRadius:3,borderWidth:2,yAxisID:'y1'}
-        ]
-      },
-      options:{
-        responsive:true,maintainAspectRatio:false,
-        plugins:{
-          legend:{position:'top',labels:{color:tickColor,font:{size:11},boxWidth:12,padding:12,usePointStyle:true}},
-          tooltip:{backgroundColor:isLight?'rgba(255,255,255,.95)':'rgba(20,24,32,.95)',titleColor:isLight?'#1a1d23':'#e8eaed',bodyColor:isLight?'#5f6878':'#8b95a5',borderColor:isLight?'rgba(0,0,0,.1)':'rgba(255,255,255,.08)',borderWidth:1,padding:10}
-        },
-        scales:{
-          x:{ticks:{color:tickColor,font:{size:11}},grid:{display:false}},
-          y:{position:'left',ticks:{color:tickColor,font:{size:10},stepSize:1},grid:{color:gridColor},title:{display:true,text:t('count'),color:tickColor,font:{size:10}}},
-          y1:{position:'right',ticks:{color:tickColor,font:{size:10},callback:v=>v>=1000?(v/1000)+'k':v},grid:{display:false},title:{display:true,text:t('amount'),color:tickColor,font:{size:10}}}
-        }
-      }
-    })
-  }
 
-  function renderPieChart(){
-    if(!pieChart.value||typeof Chart==='undefined'||!assetTypeRows.value.length)return
-    if(pieChartInstance){pieChartInstance.destroy();pieChartInstance=null}
-    const rows=assetTypeRows.value.filter(r=>r.inTotal>0)
+  function renderPosPieChart(){
+    if(!posPieChart.value||typeof Chart==='undefined')return
+    if(posPieChartInstance){posPieChartInstance.destroy();posPieChartInstance=null}
+    const rows=posRows.value.filter(p=>p.value>0)
     if(!rows.length)return
     const isLight=theme.value==='light'
     const tickColor=isLight?'#6b645a':'#8b95a5'
-    pieChartInstance=new Chart(pieChart.value,{
+    posPieChartInstance=new Chart(posPieChart.value,{
       type:'doughnut',
       data:{
-        labels:rows.map(r=>r.assetType||t('uncategorized')),
+        labels:rows.map(p=>p.name&&p.name!==p.symbol?p.name:p.symbol),
         datasets:[{
-          data:rows.map(r=>pieMode.value==='in'?r.inTotal:r.outTotal),
-          backgroundColor:rows.map(r=>assetColor(r.assetType)),
+          data:rows.map(p=>p.value),
+          backgroundColor:rows.map((_,i)=>POS_PIE_COLORS[i%POS_PIE_COLORS.length]),
           borderWidth:2,
           borderColor:isLight?'rgba(255,255,255,.8)':'rgba(18,22,30,.8)',
           hoverOffset:6
@@ -3409,12 +4379,17 @@ setup(){
       options:{
         responsive:true,maintainAspectRatio:false,cutout:'62%',
         plugins:{
-          legend:{position:'bottom',labels:{color:tickColor,font:{size:11},padding:14,usePointStyle:true,pointStyleWidth:8}},
+          legend:{position:'bottom',labels:{color:tickColor,font:{size:11},padding:10,usePointStyle:true,pointStyleWidth:8}},
           tooltip:{
             backgroundColor:isLight?'rgba(255,255,255,.95)':'rgba(20,24,32,.95)',
             borderColor:isLight?'rgba(0,0,0,.1)':'rgba(255,255,255,.08)',borderWidth:1,
             titleColor:isLight?'#1a1d23':'#e8eaed',bodyColor:isLight?'#5f6878':'#8b95a5',padding:12,
-            callbacks:{label:ctx=>{const total=ctx.dataset.data.reduce((s,v)=>s+v,0);const pct=total?((ctx.raw/total)*100).toFixed(1):'0';return` ${ctx.label}: ${Number(ctx.raw).toLocaleString(lang==='zh'?'zh-CN':'en-US',{maximumFractionDigits:0})} (${pct}%)`}}
+            callbacks:{label:ctx=>{
+              const total=ctx.dataset.data.reduce((s,v)=>s+v,0)
+              const pct=total?fmtPct((ctx.raw/total)*100,1):'0%'
+              const val=showcaseMode.value?'••••':Number(ctx.raw).toLocaleString(lang.value==='zh'?'zh-CN':'en-US',{maximumFractionDigits:0})
+              return` ${ctx.label}: ¥${val} (${pct})`
+            }}
           }
         }
       }
@@ -3426,8 +4401,6 @@ setup(){
     loadPositions()
     refreshFxRates() // 静默刷新全局汇率，供持仓市值折算
     if(positions.value.length)fetchPosPrices()
-    // Start onboarding after a short delay (wait for DOM)
-    setTimeout(()=>startOnboard(),600)
     // Fetch ticker prices
     fetchTickerPrices()
     let tickerTimer=setInterval(fetchTickerPrices,30000)
@@ -3442,10 +4415,11 @@ setup(){
         posPriceTimer=setInterval(()=>{if(positions.value.length)fetchPosPrices()},60000)
       }
     })
-    // Default expand: current year if has data, otherwise latest year with data
+    // Default expand: keep small datasets open, but imported ledgers stay scannable.
     const curMonth=dayjs().format('YYYY-MM')
     const months=[...new Set(entries.value.map(e=>e.date?e.date.slice(0,7):'').filter(Boolean))].sort().reverse()
-    expandedMonths.value=new Set([months.includes(curMonth)?curMonth:(months[0]||curMonth)])
+    const defaultMonth=months.includes(curMonth)?curMonth:(months[0]||curMonth)
+    expandedMonths.value=entries.value.length<=12?new Set([defaultMonth]):new Set()
     // Apply root class since #app mount element isn't compiled by Vue 3
     // Only apply mobile tab class when viewport is mobile (<680px)
     const appEl=document.getElementById('app')
@@ -3457,20 +4431,19 @@ setup(){
     watch(mobileTab,updateAppClass,{immediate:true})
     window.addEventListener('resize',updateAppClass)
     // Render charts after data loads
-    Vue.nextTick(()=>{renderChart();renderWeekdayChart();renderPieChart()})
+    Vue.nextTick(()=>{renderChart();renderPosPieChart()})
     watch(periodRows,()=>Vue.nextTick(renderChart))
-    watch(behaviorAnalysis,()=>Vue.nextTick(renderWeekdayChart))
-    watch(assetTypeRows,()=>Vue.nextTick(renderPieChart))
-    watch(pieMode,()=>Vue.nextTick(renderPieChart))
+
+    watch(posRows,()=>Vue.nextTick(renderPosPieChart))
     // Rerender charts on language change
-    watch(()=>lang.value,()=>{Vue.nextTick(()=>{renderChart();renderWeekdayChart();renderPieChart()})})
+    watch(()=>lang.value,()=>{Vue.nextTick(()=>{renderChart();renderPosPieChart()})})
     // 切换货币时自动拉取汇率（仅非CNY且汇率为空时）
     watch(()=>form.currency,cur=>{if(cur!=='CNY'&&!form.rate)fetchRate(cur,'form')})
     // Auto-sync from GitHub Gist on load (silent, timestamp merge)
     if(syncCfg.token){
       const doSync=async()=>{
         try{
-          if(!syncCfg.gistId){const f=await gistFind();if(f){syncCfg.gistId=f.id;saveSyncConfig()}else{syncStatus.value='已配置 · 本地 '+entries.value.length+' 条'}}
+          if(!syncCfg.gistId){const f=await gistFind();if(f){syncCfg.gistId=f.id;saveSyncConfig(true)}else{syncStatus.value='已配置 · 本地 '+entries.value.length+' 条'}}
           if(!syncCfg.gistId)return
           const gist=await gistGet()
           const file=gistDataFile(gist)
@@ -3493,20 +4466,21 @@ setup(){
     setInterval(()=>{if(!document.hidden)backgroundPull()},120000)
   })
 
-  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,mobileTab,showMobileAdd,showFilters,editingEntry,showSync,theme,toggleTheme,trendChart,weekdayChart,pieChart,pieMode,assetColor,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,
-    importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,syncing,lastSyncedAt,lastChangeAt,
-    totalIn,totalOut,netPL,roi,holdingsValue,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allMonths,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,exchangeRows,assetTypeRows,tagRows,periodCompare,largeTxList,insightSummary,insightAdvice,
+  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,mobileTab,showMobileAdd,showFilters,editingEntry,showSync,theme,toggleTheme,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,
+    importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
+    syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
+    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allMonths,quickAction,quickActions,quickActionInfo,quickAmountLabel,tradeAmountPreview,quickCanSave,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,largeTxList,insightSummary,insightAdvice,
     behaviorAnalysis,psychoTags,behaviorAdvice,
 
-    fmt,amountCNY,parseTags,rowClass,toggleEx,toggleAssetType,toggleTag,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,editingDetail,
+    fmt,fmtPct,amountCNY,parseTags,normalizeAssetType,rowClass,toggleEx,toggleAssetType,toggleTag,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,editingDetail,
     platformSuggestions,editPlatformSuggestions,rateLoading,fetchRate,
     groupedEntries,expandedMonths,toggleMonth,isMonthOpen,expandAllMonths,collapseAllMonths,
     addEntry,mobileAddEntry,copyLast,removeEntry,updateField,clearData,loadDemo,
     createSnap,restoreSnap,clearSnaps,undoImportBatch,clearImportBatches,
     saveSyncConfig,syncPush,syncPull,syncAuto,saveRules,saveReviewNote,saveChecklist,loadReview,
     exportExcel,exportJSON,importExcel,importJSON,showToast,dayjs,
-    onboardStep,spotlightStyle,tooltipStyle,nextOnboardStep,skipOnboard,t,lang,tickerData,showTickerPick,tickerSelected,tickerCategories,toggleTicker,
-    positions,posForm,posRows,posSummary,addPosition,removePosition,updatePosition,fetchPosPrices,showPosForm,posSymbolSearch,showSymbolPicker,posSearchResults,posSearching,posResultsShown,posMarket,POS_MARKETS,onPosSearchInput,selectEmResult,selectCryptoQuick,cryptoQuickList,
+    t,lang,tickerData,showTickerPick,tickerSelected,tickerCategories,toggleTicker,
+    positions,posForm,posRows,posSummary,addPosition,removePosition,updatePosition,createPositionFlow,fetchPosPrices,showPosForm,posSymbolSearch,showSymbolPicker,posSearchResults,posSearching,posResultsShown,posMarket,POS_MARKETS,onPosSearchInput,selectEmResult,selectCryptoQuick,cryptoQuickList,expandedPosFlows,togglePosFlow,
     showDashCfg,dashPanels,dashVisible,toggleDashPanel,moveDashPanel,resetDashboard,DASH_DEFAULT,dashLabels,
     ASSET_TYPES,getPlatforms,assetColor}
 }
@@ -3617,7 +4591,7 @@ if(q)q.textContent='「'+QUOTES[Math.floor(Math.random()*QUOTES.length)]+'」'
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js').catch(()=>{})
+    navigator.serviceWorker.register('./sw.js').then(reg=>reg.update()).catch(()=>{})
   })
 }
 </script>

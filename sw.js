@@ -1,4 +1,4 @@
-const CACHE_NAME = 'touji-v2';
+const CACHE_NAME = 'touji-v2026-06-05-10';
 
 // CDN assets: cache-first (immutable, versioned URLs)
 const CDN_ASSETS = [
