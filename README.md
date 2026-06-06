@@ -10,15 +10,7 @@
 
 ## 截图预览
 
-| 桌面端总览 | 持仓管理 |
-|:---:|:---:|
-| ![桌面端 Dashboard](screenshots/desktop-dashboard.png) | ![持仓管理](screenshots/positions.png) |
-
-| 盈亏统计 | 手机端 |
-|:---:|:---:|
-| ![盈亏统计](screenshots/pnl-stats.png) | ![手机端](screenshots/mobile.png) |
-
-> 截图存放于 `screenshots/` 目录，可替换为实际截图。
+![持仓管理](screenshots/positions.png)
 
 ---
 
