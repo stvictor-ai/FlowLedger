@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#0a0d12">
+<meta name="theme-color" content="#F5F5F5">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="投记">
@@ -52,36 +52,25 @@ button{cursor:pointer;border:none;background:none}
 }
 
 /* ===== LAYOUT ===== */
-.app{max-width:1200px;margin:0 auto;padding:28px 24px 80px;position:relative;z-index:1}
+.app{max-width:1200px;margin:0 auto;padding:16px 24px 80px;position:relative;z-index:1}
 
 /* ===== HERO ===== */
 .hero{
-  display:flex;justify-content:space-between;align-items:center;gap:24px;
-  padding:28px 32px;border-radius:var(--radius);
+  display:flex;justify-content:space-between;align-items:center;gap:16px;
+  padding:16px 24px;border-radius:var(--radius);
   background:#FFFFFF;
   border:1px solid var(--border);
-  box-shadow:0 2px 8px var(--shadow);
-  margin-bottom:20px;position:relative;overflow:hidden;
+  box-shadow:0 1px 4px var(--shadow);
+  margin-bottom:12px;position:relative;overflow:hidden;
 }
 .hero::before{display:none}
 .hero::after{display:none}
-.hero-info .kicker{text-transform:uppercase;letter-spacing:.25em;font-size:10px;color:var(--accent);margin-bottom:10px;font-weight:700}
-.hero-info h1{font-size:26px;font-weight:800;margin-bottom:6px;color:var(--text);letter-spacing:-.02em}
-.hero-info .sub{color:var(--muted);font-size:13px;max-width:480px;line-height:1.7}
-.hero-quote{
-  margin-top:14px;padding:14px 18px;border-left:3px solid var(--accent);
-  background:var(--accent-dim);
-  border-radius:0 10px 10px 0;font-size:15px;font-weight:500;line-height:1.5;
-  color:var(--text);max-width:560px;position:relative;
-}
-.hero-quote::before{
-  content:'"';position:absolute;top:-4px;left:8px;font-size:32px;
-  color:var(--accent);opacity:.4;font-family:Georgia,serif;font-weight:700;
-}
-@media(max-width:680px){
-  .hero-quote{display:none}
-}
-.hero-actions{display:flex;gap:10px;flex-wrap:wrap}
+.hero-info .kicker{text-transform:uppercase;letter-spacing:.25em;font-size:10px;color:var(--accent);margin-bottom:4px;font-weight:700}
+.hero-info h1{font-size:18px;font-weight:700;margin-bottom:0;color:var(--text);letter-spacing:-.01em}
+.hero-info .sub{display:none}
+.hero-quote{display:none}
+.hero-quote::before{display:none}
+.hero-actions{display:flex;gap:8px;flex-wrap:wrap}
 
 /* ===== BUTTONS ===== */
 .btn{
@@ -100,13 +89,13 @@ button{cursor:pointer;border:none;background:none}
 .btn-xs{padding:4px 10px;font-size:11px;border-radius:6px}
 
 /* ===== SUMMARY WRAP + HERO ===== */
-.summary-wrap{margin-bottom:20px}
+.summary-wrap{margin-bottom:12px}
 .summary-hero{
   display:flex;align-items:center;justify-content:space-between;
   background:#FFFFFF;
   border:1px solid var(--border);
-  border-radius:var(--radius);padding:28px 32px;margin-bottom:14px;
-  box-shadow:0 2px 8px var(--shadow);
+  border-radius:var(--radius);padding:20px 24px;margin-bottom:10px;
+  box-shadow:0 1px 4px var(--shadow);
   position:relative;overflow:hidden;
   transition:box-shadow .2s;
 }
@@ -122,7 +111,7 @@ button{cursor:pointer;border:none;background:none}
 .summary-hero:hover{box-shadow:0 4px 16px var(--shadow)}
 .hero-left{position:relative;z-index:1}
 .hero-label{color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-.hero-value{font-size:38px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.04em;line-height:1.1}
+.hero-value{font-size:32px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1}
 .hero-positive .hero-value{color:var(--green)}
 .hero-negative .hero-value{color:var(--red)}
 .hero-arrow{font-size:28px;margin-right:4px;vertical-align:middle}
@@ -133,12 +122,12 @@ button{cursor:pointer;border:none;background:none}
 .hero-context-label{font-size:11px;color:var(--muted);font-weight:500}
 
 /* ===== SUMMARY GRID ===== */
-.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .summary-card{
   background:#FFFFFF;
   border:1px solid var(--border);
-  padding:22px 24px;border-radius:var(--radius);position:relative;overflow:hidden;
-  box-shadow:0 2px 8px var(--shadow);
+  padding:16px 20px;border-radius:var(--radius);position:relative;overflow:hidden;
+  box-shadow:0 1px 4px var(--shadow);
   transition:box-shadow .2s;
 }
 .summary-card:hover{box-shadow:0 4px 16px var(--shadow)}
@@ -150,16 +139,16 @@ button{cursor:pointer;border:none;background:none}
 .summary-card:nth-child(2)::after{background:linear-gradient(90deg,var(--green),transparent);opacity:1}
 .summary-card:nth-child(3)::after{background:var(--accent-grad);opacity:1}
 .summary-card:nth-child(4)::after{background:linear-gradient(90deg,var(--blue),var(--accent));opacity:1}
-.summary-card .label{color:var(--muted);font-size:11px;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
-.summary-card .value{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.summary-card .label{color:var(--muted);font-size:11px;margin-bottom:6px;font-weight:600;letter-spacing:.3px}
+.summary-card .value{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .summary-card .sub-metric{font-size:13px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
 
 /* ===== PANEL ===== */
 .panel{
   background:#FFFFFF;
   border:1px solid var(--border);
-  border-radius:var(--radius);padding:24px;margin-bottom:20px;
-  box-shadow:0 2px 8px var(--shadow);
+  border-radius:var(--radius);padding:20px;margin-bottom:12px;
+  box-shadow:0 1px 4px var(--shadow);
   transition:border-color .2s,box-shadow .2s;
 }
 .panel:hover{border-color:var(--border-light);box-shadow:0 4px 16px var(--shadow)}
@@ -486,14 +475,6 @@ tr.row-unmatched td{opacity:.35}
 .behavior-metric p{margin:0;font-size:11px;color:var(--muted)}
 .behavior-metric strong{display:block;margin-top:4px;font-size:16px;font-variant-numeric:tabular-nums}
 
-/* ===== THEME TOGGLE ===== */
-.theme-toggle{
-  width:38px;height:38px;border-radius:50%;
-  background:var(--overlay);border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;cursor:pointer;transition:all .2s;flex-shrink:0;
-}
-.theme-toggle:hover{border-color:var(--accent);background:var(--accent-dim)}
 .sync-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);align-self:center;margin:0 4px;cursor:default;flex-shrink:0}
 .sync-dot.syncing{background:var(--accent);animation:syncPulse .8s ease-in-out infinite alternate}
 .sync-dot.stale{background:#f59e0b}
@@ -656,42 +637,6 @@ tr.row-unmatched td{opacity:.35}
   .compare-grid{grid-template-columns:1fr}
   .hero-actions{flex-wrap:wrap}
   .hero-actions .btn{flex:1 1 45%}
-}
-
-/* ===== PRICE TICKER ===== */
-.ticker-bar{
-  overflow:hidden;white-space:nowrap;padding:8px 0;margin-bottom:14px;
-  background:#FFFFFF;
-  border:1px solid var(--border);border-radius:14px;
-  position:relative;top:0;z-index:10;
-  box-shadow:0 2px 8px var(--shadow);
-}
-.ticker-track{display:inline-flex;animation:ticker-scroll 30s linear infinite}
-.ticker-item{
-  display:inline-flex;align-items:center;gap:7px;padding:5px 18px;
-  font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;
-  border-right:1px solid var(--border);flex-shrink:0;
-  transition:opacity .15s;
-}
-.ticker-item:hover{opacity:.7}
-.ticker-icon{font-size:16px}
-.ticker-price{color:var(--text);font-weight:700}
-.ticker-change{font-size:11px;font-weight:700;padding:2px 6px;border-radius:6px}
-.ticker-change.up{color:var(--green);background:rgba(52,211,153,.1)}
-.ticker-change.down{color:var(--red);background:rgba(248,113,113,.1)}
-@keyframes ticker-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.ticker-bar:hover .ticker-track{animation-play-state:paused}
-@media(max-width:680px){
-  .ticker-item{font-size:11px;padding:4px 10px}
-}
-.ticker-picker{
-  position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.55);
-  display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;overflow:auto;
-}
-.ticker-picker-box{
-  background:var(--panel);border:1px solid var(--border-light);
-  border-radius:14px;width:100%;max-width:560px;max-height:calc(100vh - 40px);
-  overflow-y:auto;padding:20px;animation:slideUp .3s ease;
 }
 
 /* ===== ASSET CARD ===== */
@@ -884,14 +829,6 @@ body{
   font-family:'SFMono-Regular',ui-monospace,monospace;font-size:10px;color:inherit;
   border:1px solid currentColor;border-radius:6px;padding:2px 5px;opacity:.8;
 }
-.ticker-bar{
-  position:relative;top:0;z-index:20;margin-bottom:12px;padding:7px 0;border-radius:var(--radius);
-  background:#FFFFFF;
-  box-shadow:0 2px 8px var(--shadow);
-  border:1px solid var(--border);
-}
-.ticker-item{font-size:12px;padding:5px 14px}
-.ticker-picker-box{border-radius:14px;max-width:560px}
 .hero{
   display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:16px;
   padding:16px 18px;border-radius:var(--radius);margin-bottom:12px;
@@ -915,7 +852,6 @@ body{
 .btn-primary{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(45,181,160,.25)}
 .btn-primary:hover{box-shadow:0 4px 16px rgba(45,181,160,.35);filter:brightness(1.05)}
 .btn-ghost{background:#FFFFFF;border:1px solid var(--border)}
-.theme-toggle{border:1px solid var(--border);background:#FFFFFF;border-radius:var(--radius-sm);height:36px;min-width:36px}
 .sync-dot{width:8px;height:8px}
 .summary-wrap{margin-bottom:12px}
 .summary-hero{
@@ -980,7 +916,7 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
 .mobile-tabs-inner{max-width:520px;margin:0 auto}
 .mob-tab{border-radius:var(--radius-sm)}
 .modal-box{border-radius:14px 14px 0 0;background:#FFFFFF}
-.symbol-picker-dropdown,.ticker-picker-box{background:#FFFFFF;border-color:var(--border)}
+.symbol-picker-dropdown{background:#FFFFFF;border-color:var(--border)}
 .rate-fetch-btn{border-radius:var(--radius-sm)}
 
 @media(max-width:1120px){
@@ -999,7 +935,6 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
 @media(max-width:760px){
   .app{padding:10px 10px 84px}
   .workspace-tabs{top:6px}
-  .ticker-bar{top:0;margin-bottom:10px}
   .hero{padding:12px;margin-bottom:10px}
   .hero-info h1{font-size:21px}
   .hero-info .sub{display:block;font-size:12px}
@@ -1052,45 +987,7 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
     </div>
   </aside>
 
-  <!-- ===== PRICE TICKER ===== -->
-  <div class="ticker-bar" style="display:flex;align-items:center;gap:0">
-    <button class="btn btn-ghost btn-xs" @click="showTickerPick=!showTickerPick" style="flex-shrink:0;margin-left:8px;font-size:16px;min-width:32px;min-height:32px;border-radius:8px;z-index:11" title="自选行情">⚙</button>
-    <div class="ticker-track" style="flex:1">
-      <template v-for="(item,i) in tickerData" :key="i">
-        <span class="ticker-item">
-          <span class="ticker-icon">{{ item.icon }}</span>
-          <span style="color:var(--muted);font-size:11px;margin-right:2px">{{ item.symbol }}</span>
-          <span class="ticker-price">{{ item.price }}</span>
-          <span :class="['ticker-change',item.chg>=0?'up':'down']">{{ item.chg>=0?'+':'' }}{{ item.chg }}%</span>
-        </span>
-      </template>
-      <template v-for="(item,i) in tickerData" :key="'dup'+i">
-        <span class="ticker-item">
-          <span class="ticker-icon">{{ item.icon }}</span>
-          <span style="color:var(--muted);font-size:11px;margin-right:2px">{{ item.symbol }}</span>
-          <span class="ticker-price">{{ item.price }}</span>
-          <span :class="['ticker-change',item.chg>=0?'up':'down']">{{ item.chg>=0?'+':'' }}{{ item.chg }}%</span>
-        </span>
-      </template>
-      <span v-if="!tickerData.length" class="ticker-item" style="border:none">⏳ 加载行情中…</span>
-    </div>
-  </div>
-
-  <teleport to="body">
-    <!-- Ticker Picker -->
-    <div v-if="showTickerPick" class="ticker-picker" @click.self="showTickerPick=false">
-      <div class="ticker-picker-box">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><strong style="font-size:15px">自选行情</strong><button class="modal-close" @click="showTickerPick=false">&times;</button></div>
-        <div v-for="cat in tickerCategories" :key="cat.name" style="margin-bottom:12px">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">{{ cat.name }}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:5px">
-            <span v-for="t in cat.items" :key="t.symbol" :class="['chip',{active:tickerSelected.includes(t.symbol)}]" @click="toggleTicker(t.symbol)" style="cursor:pointer;font-size:11px;padding:4px 8px">{{ t.icon }} {{ t.symbol }}</span>
-          </div>
-        </div>
-        <button class="btn btn-primary btn-sm" @click="showTickerPick=false" style="width:100%">完成</button>
-      </div>
-    </div>
-  </teleport>
+  <!-- PRICE TICKER (hidden) -->
 
   <nav class="workspace-tabs" aria-label="投记工作区">
     <button v-for="tab in workspaceTabs" :key="tab.key" :class="['workspace-tab',{active:activeTab===tab.key}]" @click="setActiveTab(tab.key)">
@@ -1107,7 +1004,6 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
       <blockquote class="hero-quote" id="heroQuote"></blockquote>
     </div>
     <div class="hero-actions">
-      <button class="theme-toggle" @click="toggleTheme" :title="t('themeToggle')">{{ theme==='dark'?'☀️':'🌙' }}</button>
       <button class="btn btn-ghost btn-sm" @click="lang=lang==='zh'?'en':'zh';localStorage.setItem('touji_lang_v1',lang)">🌐 {{ lang==='zh'?'English':'中文' }}</button>
       <button :class="['btn','btn-sm',showcaseMode?'btn-primary':'btn-ghost']" @click="toggleShowcase" title="隐藏真实金额，适合公开展示">👁 {{ showcaseMode?'展示中':'展示模式' }}</button>
       <span v-if="syncCfg.token" class="sync-dot" :class="{syncing:syncing,stale:!syncing&&lastChangeAt>lastSyncedAt}" :title="syncStatus"></span>
@@ -2130,8 +2026,8 @@ const I18N={
     netPL:'净盈亏',
     roi:'回本比例',
     holdingsValue:'持仓市值',
-    trueReturn:'真实收益',
-    trueROI:'真实收益率',
+    trueReturn:'出入金净盈亏',
+    trueROI:'净盈亏率',
     roiRate:'回本率',
     periodMonth:'月度',
     periodWeek:'周',
@@ -2420,8 +2316,8 @@ const I18N={
     netPL:'Net P&L',
     roi:'ROI',
     holdingsValue:'Holdings Value',
-    trueReturn:'True Return',
-    trueROI:'True ROI',
+    trueReturn:'Net P&L',
+    trueROI:'Net P&L Rate',
     roiRate:'Return Rate',
     periodMonth:'Monthly',
     periodWeek:'Weekly',
@@ -2701,24 +2597,11 @@ setup(){
     showToast(showcaseMode.value?'已开启展示模式，真实金额已隐藏':'已关闭展示模式','info')
   }
 
-  // Theme
-  const THEME_K='touji_theme_v1'
-  migrateStorageKey(THEME_K,[`${LEGACY_FLOW_K}_theme`,`${LEGACY_CASHFLOW_K}_theme`])
-  const savedTheme=localStorage.getItem(THEME_K)
-  const defaultTheme=savedTheme||(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark')
-  const theme=ref(defaultTheme)
-  function applyTheme(t){
-    document.documentElement.dataset.theme=t
-    const mc=document.querySelector('meta[name="theme-color"]')
-    if(mc)mc.content=t==='light'?'#f5f0e8':'#0a0d12'
-  }
-  applyTheme(defaultTheme)
-  function toggleTheme(){
-    theme.value=theme.value==='dark'?'light':'dark'
-    applyTheme(theme.value)
-    localStorage.setItem(THEME_K,theme.value)
-    Vue.nextTick(()=>{renderChart();renderPosPieChart()})
-  }
+  // Theme：Finebank 浅色为唯一主题（深色主题已随改版下线）
+  const theme=ref('light')
+  document.documentElement.dataset.theme='light'
+  const themeMeta=document.querySelector('meta[name="theme-color"]')
+  if(themeMeta)themeMeta.content='#F5F5F5'
   const toast=reactive({show:false,message:'',type:'info'})
   const ACTIVE_TAB_K='touji_active_tab_v1'
   const workspaceTabs=[
@@ -2800,30 +2683,7 @@ setup(){
   const syncPreview=ref(null)
   let toastT=null
 
-  // Price Ticker
-  const tickerData=ref([])
-  const showTickerPick=ref(false)
-  const TICKER_DEFAULT=['BTC','ETH','SOL','NVDA','AAPL','TSLA','SPX','NASDAQ','Gold','USOIL','Tencent','Kweichow']
-  const TICKER_PICK_K='touji_ticker_pick_v1'
-  migrateStorageKey(TICKER_PICK_K,`${LEGACY_FLOW_K}_ticker_pick`)
-  function loadTickerPick(){
-    try{const r=localStorage.getItem(TICKER_PICK_K);if(r)return JSON.parse(r)}catch(e){}
-    return [...TICKER_DEFAULT]
-  }
-  function saveTickerPick(){localStorage.setItem(TICKER_PICK_K,JSON.stringify(tickerSelected.value))}
-  const tickerSelected=ref(loadTickerPick())
-  function toggleTicker(sym){
-    const i=tickerSelected.value.indexOf(sym)
-    if(i>=0)tickerSelected.value.splice(i,1);else tickerSelected.value.push(sym)
-    saveTickerPick();fetchTickerPrices()
-  }
-  const tickerCategories=computed(()=>{
-    const cats=['加密','美股','港股','沪深市','指数','商品']
-    return cats.map(name=>{
-      const items=TICKER_LIST.filter(t=>t.cat===name)
-      return{name,items}
-    }).filter(c=>c.items.length)
-  })
+  // 标的元数据表（持仓搜索、快捷录入用；行情滚动条已下线）
   const TICKER_LIST=[
     // Crypto — Binance
     {symbol:'BTC',icon:'₿',source:'binance',pair:'BTCUSDT',decimals:0,cat:'加密'},
@@ -2860,51 +2720,6 @@ setup(){
     {symbol:'CATL',icon:'🔋',source:'eastmoney',emid:'0.300750',decimals:1,cat:'沪深市'},
     {symbol:'BYD',icon:'⚡',source:'eastmoney',emid:'0.002594',decimals:1,cat:'沪深市'},
   ]
-  async function fetchTickerPrices(){
-    const results=[]
-    const selected=new Set(tickerSelected.value)
-    const active=TICKER_LIST.filter(t=>selected.has(t.symbol))
-    if(!active.length){tickerData.value=[];return}
-    const fmtPrice=(price,dec)=>price>=1?price.toFixed(dec):price.toPrecision(4)
-    // 加密：Binance 24hr（价格 + 当日涨跌幅）
-    const binanceItems=active.filter(t=>t.source==='binance')
-    if(binanceItems.length){
-      try{
-        const res=await Promise.race([fetch('https://api.binance.com/api/v3/ticker/24hr'),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
-        if(res&&res.ok){
-          const data=await res.json()
-          binanceItems.forEach(t=>{
-            const row=data.find(d=>d.symbol===t.pair)
-            if(row)results.push({symbol:t.symbol,icon:t.icon,price:fmtPrice(Number(row.lastPrice),t.decimals),chg:Number(Number(row.priceChangePercent).toFixed(1))})
-          })
-        }
-      }catch(e){}
-    }
-    // 股票/指数/商品：东方财富批量取价（一次请求拿全部）
-    const emItems=active.filter(t=>t.source==='eastmoney'&&t.emid)
-    if(emItems.length){
-      try{
-        const secids=emItems.map(t=>t.emid).join(',')
-        const res=await Promise.race([fetch(`https://push2delay.eastmoney.com/api/qt/ulist.np/get?secids=${secids}&fields=f12,f13,f14,f2,f3,f1`),new Promise((_,r)=>setTimeout(()=>r(null),4000))])
-        if(res&&res.ok){
-          const data=await res.json()
-          const raw=data?.data?.diff
-          const diff=Array.isArray(raw)?raw:Object.values(raw||{})
-          emItems.forEach(t=>{
-            const row=diff.find(d=>`${d.f13}.${d.f12}`===t.emid)
-            if(row&&row.f2!=null)results.push({symbol:t.symbol,icon:t.icon,price:fmtPrice(row.f2/Math.pow(10,row.f1||2),t.decimals),chg:Number(((row.f3||0)/100).toFixed(1))})
-          })
-        }
-      }catch(e){}
-    }
-    // 按 TICKER_LIST 顺序排列
-    if(results.length){
-      const order=active.map(t=>t.symbol)
-      results.sort((a,b)=>order.indexOf(a.symbol)-order.indexOf(b.symbol))
-      tickerData.value=results
-    }
-  }
-
   function scrollPageToElement(el,block='center'){
     if(!el)return
     const rect=el.getBoundingClientRect()
@@ -4563,17 +4378,12 @@ setup(){
     loadPositions()
     refreshFxRates() // 静默刷新全局汇率，供持仓市值折算
     if(positions.value.length)fetchPosPrices()
-    // Fetch ticker prices
-    fetchTickerPrices()
-    let tickerTimer=setInterval(fetchTickerPrices,30000)
     let posPriceTimer=setInterval(()=>{if(positions.value.length)fetchPosPrices()},60000)
     // Pause polling when tab is hidden to save bandwidth/battery
     document.addEventListener('visibilitychange',()=>{
       if(document.hidden){
-        clearInterval(tickerTimer);clearInterval(posPriceTimer)
+        clearInterval(posPriceTimer)
       }else{
-        fetchTickerPrices()
-        tickerTimer=setInterval(fetchTickerPrices,30000)
         posPriceTimer=setInterval(()=>{if(positions.value.length)fetchPosPrices()},60000)
       }
     })
@@ -4626,7 +4436,7 @@ setup(){
     setInterval(()=>{if(!document.hidden)backgroundPull()},120000)
   })
 
-  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,mobileTab,activeTab,workspaceTabs,setActiveTab,showMobileAdd,showFilters,editingEntry,showSync,theme,toggleTheme,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,
+  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,mobileTab,activeTab,workspaceTabs,setActiveTab,showMobileAdd,showFilters,editingEntry,showSync,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allMonths,quickAction,quickActions,quickActionInfo,quickAmountLabel,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,largeTxList,insightSummary,insightAdvice,
@@ -4639,7 +4449,7 @@ setup(){
     createSnap,restoreSnap,clearSnaps,undoImportBatch,clearImportBatches,
     saveSyncConfig,syncPush,syncPull,syncAuto,saveRules,saveReviewNote,saveChecklist,loadReview,
     exportExcel,exportJSON,importExcel,importJSON,showToast,dayjs,
-    t,lang,tickerData,showTickerPick,tickerSelected,tickerCategories,toggleTicker,
+    t,lang,
     positions,posForm,posRows,posSummary,addPosition,removePosition,updatePosition,createPositionFlow,fetchPosPrices,showPosForm,posSymbolSearch,showSymbolPicker,posSearchResults,posSearching,posResultsShown,posMarket,POS_MARKETS,onPosSearchInput,selectEmResult,selectCryptoQuick,cryptoQuickList,expandedPosFlows,togglePosFlow,
     showDashCfg,dashPanels,dashVisible,toggleDashPanel,moveDashPanel,resetDashboard,DASH_DEFAULT,dashLabels,
     ASSET_TYPES,getPlatforms,assetColor}
