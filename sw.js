@@ -1,4 +1,8 @@
-const CACHE_NAME = 'touji-v2026-07-20-2';
+const CACHE_NAME = 'touji-v2026-07-20-3';
+
+const APP_ASSETS = [
+  './js/review-engine.js'
+];
 
 // CDN assets: cache-first (immutable, versioned URLs)
 const CDN_ASSETS = [
@@ -11,11 +15,11 @@ const CDN_ASSETS = [
   'https://cdn.jsdelivr.net/npm/chart.js@4.4/dist/chart.umd.min.js'
 ];
 
-// Install: pre-cache CDN assets only
+// Install: pre-cache the local review engine and CDN dependencies.
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => Promise.allSettled(CDN_ASSETS.map(url => cache.add(url))))
+      .then(cache => Promise.allSettled([...APP_ASSETS, ...CDN_ASSETS].map(url => cache.add(url))))
       .then(() => self.skipWaiting())
   );
 });
