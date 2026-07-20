@@ -1,4 +1,4 @@
-const CACHE_NAME = 'touji-v2026-06-16-10';
+const CACHE_NAME = 'touji-v2026-07-20-2';
 
 // CDN assets: cache-first (immutable, versioned URLs)
 const CDN_ASSETS = [
@@ -20,13 +20,13 @@ self.addEventListener('install', e => {
   );
 });
 
-// Activate: clean old caches
+// Activate: clear obsolete caches and take control without forcing a reload.
 self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)));
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', e => {

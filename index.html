@@ -1,17 +1,18 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="mist">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#F5F5F5">
+<meta name="theme-color" content="#EDF2F0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="投记">
 <link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>投记 · 个人投资记账</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+SC:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/vue@3.5/dist/vue.global.prod.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/dayjs@1.11/dayjs.min.js"></script>
@@ -37,7 +38,7 @@ button{cursor:pointer;border:none;background:none}
 :root{
   --accent:#2DB5A0;--accent-2:#25A08D;
   --accent-dim:rgba(45,181,160,.08);--accent-glow:rgba(45,181,160,.2);
-  --accent-grad:linear-gradient(135deg,#2DB5A0,#25A08D);
+  --accent-grad:#2DB5A0;
   --blue:#0EA5E9;--blue-dim:rgba(14,165,233,.07);
   --purple:#8B5CF6;--purple-dim:rgba(139,92,246,.07);
   --green:#10B981;--green-dim:rgba(16,185,129,.07);
@@ -66,7 +67,7 @@ button{cursor:pointer;border:none;background:none}
 .hero::before{display:none}
 .hero::after{display:none}
 .hero-info .kicker{text-transform:uppercase;letter-spacing:.25em;font-size:10px;color:var(--accent);margin-bottom:4px;font-weight:700}
-.hero-info h1{font-size:18px;font-weight:700;margin-bottom:0;color:var(--text);letter-spacing:-.01em}
+.hero-info h1{font-size:18px;font-weight:700;margin-bottom:0;color:var(--text);letter-spacing:0}
 .hero-info .sub{display:none}
 .hero-quote{display:none}
 .hero-quote::before{display:none}
@@ -111,7 +112,7 @@ button{cursor:pointer;border:none;background:none}
 .summary-hero:hover{box-shadow:0 4px 16px var(--shadow)}
 .hero-left{position:relative;z-index:1}
 .hero-label{color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-.hero-value{font-size:32px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.1}
+.hero-value{font-size:32px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:0;line-height:1.1}
 .hero-positive .hero-value{color:var(--green)}
 .hero-negative .hero-value{color:var(--red)}
 .hero-arrow{font-size:28px;margin-right:4px;vertical-align:middle}
@@ -135,12 +136,12 @@ button{cursor:pointer;border:none;background:none}
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
   background:var(--muted);opacity:.2;border-radius:2px 2px 0 0;
 }
-.summary-card:nth-child(1)::after{background:linear-gradient(90deg,var(--red),transparent);opacity:1}
-.summary-card:nth-child(2)::after{background:linear-gradient(90deg,var(--green),transparent);opacity:1}
+.summary-card:nth-child(1)::after{background:var(--red);opacity:1}
+.summary-card:nth-child(2)::after{background:var(--green);opacity:1}
 .summary-card:nth-child(3)::after{background:var(--accent-grad);opacity:1}
-.summary-card:nth-child(4)::after{background:linear-gradient(90deg,var(--blue),var(--accent));opacity:1}
+.summary-card:nth-child(4)::after{background:var(--blue);opacity:1}
 .summary-card .label{color:var(--muted);font-size:11px;margin-bottom:6px;font-weight:600;letter-spacing:.3px}
-.summary-card .value{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.summary-card .value{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:0}
 .summary-card .sub-metric{font-size:13px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums}
 
 /* ===== PANEL ===== */
@@ -665,43 +666,50 @@ tr.row-unmatched td{opacity:.35}
 }
 .pos-flow-meta{margin-top:4px;color:var(--muted);font-size:11px;line-height:1.45}
 .pos-actions{display:flex;justify-content:center;gap:5px;flex-wrap:wrap}
-.quick-ticket{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start;min-width:0}
+.quick-ticket{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start;min-width:0}
 .quick-ticket>*{max-width:100%;min-width:0}
-.quick-side,.quick-main{display:grid;gap:8px;min-width:0;align-content:start}
-.quick-side{overflow:visible}
-.quick-action-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;min-width:0}
+/* grid-template-columns 必须显式给单列 minmax(0,1fr)，否则默认 auto 列会按内容(max-content)撑开，
+   在高 dpr / 宽内容下溢出 300px 固定列，把动作卡挤到右侧盖住金额卡。 */
+.quick-side,.quick-main{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;align-content:start}
+.quick-side{
+  gap:16px;overflow:hidden;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;
+}
+.quick-main{gap:14px}
+.quick-action-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0;width:100%;box-sizing:border-box}
 .quick-action-card{
-  border:1px solid var(--border);background:var(--card);color:var(--text);
-  border-radius:var(--radius-sm);padding:8px 9px;text-align:left;cursor:pointer;
-  display:grid;gap:4px;min-height:58px;min-width:0;max-width:100%;overflow:hidden;transition:background .16s,border-color .16s,transform .16s;
+  border:1px solid var(--border);background:#FFFFFF;color:var(--text);
+  border-radius:var(--radius-sm);padding:12px;text-align:left;cursor:pointer;
+  display:grid;gap:4px;min-height:62px;min-width:0;max-width:100%;overflow:hidden;transition:background .16s,border-color .16s,box-shadow .16s;
 }
 .quick-action-card strong,.quick-action-card span{min-width:0;overflow:hidden;text-overflow:ellipsis}
-.quick-action-card:hover{border-color:var(--border-light);transform:translateY(-1px)}
-.quick-action-card.active{border-color:rgba(45,181,160,.55);background:var(--accent-dim)}
-.quick-action-card strong{font-size:13px;line-height:1}
-.quick-action-card span{font-size:10.5px;color:var(--muted);line-height:1.25}
+.quick-action-card:hover{border-color:var(--accent);box-shadow:0 1px 6px rgba(45,181,160,.15)}
+.quick-action-card.active{border-color:var(--accent);background:var(--accent-dim);box-shadow:inset 0 0 0 1px var(--accent)}
+.quick-action-card strong{font-size:13.5px;line-height:1.2}
+.quick-action-card span{font-size:10.5px;color:var(--muted);line-height:1.3}
 .quick-action-card.active strong{color:var(--accent)}
 .quick-action-explain{
-  border:1px solid rgba(14,165,233,.22);background:var(--blue-dim);border-radius:var(--radius-sm);
-  padding:10px 11px;color:var(--muted);font-size:12px;line-height:1.6;
+  border:none;background:transparent;border-left:3px solid var(--accent);border-radius:0;
+  padding:2px 0 2px 10px;color:var(--muted);font-size:12px;line-height:1.6;
   min-width:0;max-width:100%;overflow:visible;white-space:normal;overflow-wrap:anywhere;word-break:break-word;
 }
-.quick-action-explain strong{display:block;color:var(--text);font-size:12.5px;margin-bottom:4px}
+.quick-action-explain strong{display:block;color:var(--text);font-size:12.5px;margin-bottom:2px}
 .quick-amount-card{
-  border:1px solid var(--border);border-radius:var(--radius);background:var(--card);
-  padding:10px;display:grid;gap:7px;min-width:0;
+  border:1px solid rgba(45,181,160,.3);border-radius:var(--radius);background:var(--accent-dim);
+  padding:16px 18px;display:grid;gap:10px;min-width:0;
 }
-.quick-amount-row{display:grid;grid-template-columns:118px minmax(0,1fr);gap:7px;align-items:center;min-width:0}
-.quick-amount-row .form-input{min-height:42px;font-size:17px;font-weight:800}
-.quick-amount-row select.form-input{font-size:14px;font-weight:800}
+.quick-amount-row{display:grid;grid-template-columns:118px minmax(0,1fr);gap:8px;align-items:center;min-width:0}
+.quick-amount-row .form-input{min-height:48px;font-size:20px;font-weight:800;background:#FFFFFF}
+.quick-amount-row select.form-input{font-size:14px;font-weight:700}
 .quick-trade-total{
-  border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--input-bg);
-  padding:9px 11px;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;
+  border:1px solid var(--border);border-radius:var(--radius-sm);background:#FFFFFF;
+  padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;
 }
-.quick-trade-total span{display:block;font-size:11px;color:var(--muted);font-weight:800;margin-bottom:4px}
-.quick-trade-total strong{font-size:18px;font-variant-numeric:tabular-nums}
+.quick-trade-total span{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px}
+.quick-trade-total strong{font-size:20px;font-variant-numeric:tabular-nums;color:var(--accent)}
 .quick-trade-total p{margin:0;color:var(--muted);font-size:11px;line-height:1.45;text-align:right}
-.quick-meta-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:start;min-width:0}
+.quick-meta-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start;min-width:0}
 .quick-meta-grid .form-group,.quick-note-grid .form-group{min-width:0}
 .quick-meta-grid .form-input,.quick-note-grid .form-input{width:100%;min-width:0}
 .quick-note-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(180px,.65fr);gap:8px;align-items:start;min-width:0}
@@ -726,8 +734,12 @@ tr.row-unmatched td{opacity:.35}
 .quick-more-hint{color:var(--accent);font-size:11px;font-weight:500}
 .quick-more-body{overflow:hidden;transition:max-height .3s ease,opacity .2s;max-height:500px;opacity:1}
 .quick-more-body.collapsed{max-height:0;opacity:0;pointer-events:none}
-.quick-ticket-foot{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;min-width:0}
-.quick-hint{font-size:11px;color:var(--muted);line-height:1.5;min-width:0;overflow-wrap:anywhere}
+.quick-ticket-foot{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;min-width:0;
+  border-top:1px solid var(--border);padding-top:14px;margin-top:2px;
+}
+.quick-ticket-foot .btn-primary{padding:11px 26px;font-size:14px}
+.quick-hint{font-size:11px;color:var(--dim);line-height:1.5;min-width:0;overflow-wrap:anywhere}
 .quick-side label{margin-bottom:5px!important}
 .quick-side .chip{padding:4px 8px;font-size:11px}
 .ledger-toolbar{
@@ -766,7 +778,7 @@ tr.row-unmatched td{opacity:.35}
 :root{
   --accent:#2DB5A0;--accent-2:#25A08D;
   --accent-dim:rgba(45,181,160,.08);--accent-glow:rgba(45,181,160,.2);
-  --accent-grad:linear-gradient(135deg,#2DB5A0,#25A08D);
+  --accent-grad:#2DB5A0;
   --blue:#0EA5E9;--blue-dim:rgba(14,165,233,.07);
   --purple:#8B5CF6;--purple-dim:rgba(139,92,246,.07);
   --green:#10B981;--green-dim:rgba(16,185,129,.07);
@@ -867,7 +879,7 @@ body{
   border-color:rgba(239,68,68,.25);
 }
 .summary-hero:hover{transform:translateY(-1px);box-shadow:0 4px 16px var(--shadow)}
-.hero-value{font-family:'SFMono-Regular',ui-monospace,monospace;font-size:40px;line-height:1.1;word-break:break-word;letter-spacing:-.04em}
+.hero-value{font-family:'SFMono-Regular',ui-monospace,monospace;font-size:40px;line-height:1.1;word-break:break-word;letter-spacing:0}
 .hero-label{font-size:13px;letter-spacing:.5px}
 .hero-roi{font-family:'SFMono-Regular',ui-monospace,monospace;font-size:14px}
 .hero-context span:first-child{font-family:'SFMono-Regular',ui-monospace,monospace;font-size:18px}
@@ -944,6 +956,8 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
   .summary-card{min-height:92px;padding:10px}
   .summary-card .value{font-size:17px}
   .panel{padding:12px;margin-bottom:10px}
+  .quick-side{padding:12px;gap:12px}
+  .quick-ticket{gap:12px}
   .quick-action-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
   .quick-action-card{min-height:68px}
   .quick-chip-row{max-height:none;overflow:visible}
@@ -958,8 +972,1469 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
 @media(max-width:680px){
   .section-records .month-ledger-list{display:none}
 }
-.mobile-tabs{display:none!important}
-.fab{display:none!important}
+/* ===== TOUJI TERMINAL 2026 ===== */
+:root{
+  --accent:#D6A34A;
+  --accent-2:#4FB7C5;
+  --accent-dim:rgba(214,163,74,.12);
+  --accent-glow:rgba(214,163,74,.18);
+  --blue:#4FB7C5;
+  --blue-dim:rgba(79,183,197,.10);
+  --purple:#B8A7E8;
+  --purple-dim:rgba(184,167,232,.10);
+  --green:#42C98B;
+  --green-dim:rgba(66,201,139,.10);
+  --red:#E36B6B;
+  --red-dim:rgba(227,107,107,.10);
+  --bg:#080A0F;
+  --panel:#10131A;
+  --card:#13171F;
+  --input-bg:#171B24;
+  --border:#252B37;
+  --border-light:#384150;
+  --text:#F3F4F6;
+  --muted:#9AA3B2;
+  --dim:#667080;
+  --radius:8px;
+  --radius-sm:6px;
+  --overlay:rgba(255,255,255,.025);
+  --overlay-hover:rgba(255,255,255,.055);
+  --shadow:rgba(0,0,0,.32);
+  --shadow-light:rgba(0,0,0,.18);
+  --rail-bg:rgba(14,17,23,.96);
+  --nav-bg:rgba(14,17,23,.94);
+  --mobile-nav-bg:rgba(11,13,18,.97);
+  --surface-quiet:#0D1016;
+  --focus-bg:#1A1F29;
+  --table-head:#171B23;
+  --backdrop:rgba(2,3,5,.76);
+  --chart-tip:#171B24;
+  --chart-grid:rgba(140,149,165,.12);
+  --primary-ink:#17120A;
+}
+html[data-theme="ink"]{color-scheme:dark}
+html[data-theme="graphite"]{
+  color-scheme:dark;
+  --accent:#D1A459;
+  --accent-2:#65B8B4;
+  --accent-dim:rgba(209,164,89,.12);
+  --accent-glow:rgba(209,164,89,.17);
+  --blue:#65B8B4;
+  --blue-dim:rgba(101,184,180,.11);
+  --purple:#B1A0D4;
+  --purple-dim:rgba(177,160,212,.11);
+  --green:#58BE8B;
+  --green-dim:rgba(88,190,139,.11);
+  --red:#DA7175;
+  --red-dim:rgba(218,113,117,.11);
+  --bg:#1A1F24;
+  --panel:#22282F;
+  --card:#272E36;
+  --input-bg:#2D353E;
+  --border:#3A4650;
+  --border-light:#53616B;
+  --text:#F0F3F3;
+  --muted:#A8B1B6;
+  --dim:#75818A;
+  --overlay:rgba(255,255,255,.025);
+  --overlay-hover:rgba(255,255,255,.06);
+  --shadow:rgba(0,0,0,.25);
+  --shadow-light:rgba(0,0,0,.14);
+  --rail-bg:rgba(31,37,43,.97);
+  --nav-bg:rgba(31,37,43,.95);
+  --mobile-nav-bg:rgba(27,32,37,.98);
+  --surface-quiet:#1E242A;
+  --focus-bg:#333C45;
+  --table-head:#262D34;
+  --backdrop:rgba(10,13,16,.72);
+  --chart-tip:#2B333B;
+  --chart-grid:rgba(168,177,182,.15);
+  --primary-ink:#17120A;
+}
+html[data-theme="mist"]{
+  color-scheme:light;
+  --accent:#A46C1A;
+  --accent-2:#247D79;
+  --accent-dim:rgba(164,108,26,.10);
+  --accent-glow:rgba(164,108,26,.14);
+  --blue:#287D9A;
+  --blue-dim:rgba(40,125,154,.09);
+  --purple:#785FA3;
+  --purple-dim:rgba(120,95,163,.09);
+  --green:#23845A;
+  --green-dim:rgba(35,132,90,.09);
+  --red:#C04F55;
+  --red-dim:rgba(192,79,85,.09);
+  --bg:#E8ECEE;
+  --panel:#FAFBFB;
+  --card:#F2F5F5;
+  --input-bg:#EDF1F2;
+  --border:#D3DADD;
+  --border-light:#AAB6BB;
+  --text:#1D292E;
+  --muted:#59686E;
+  --dim:#8A979C;
+  --overlay:rgba(22,38,43,.025);
+  --overlay-hover:rgba(22,38,43,.055);
+  --shadow:rgba(28,42,47,.10);
+  --shadow-light:rgba(28,42,47,.06);
+  --rail-bg:rgba(248,250,250,.97);
+  --nav-bg:rgba(248,250,250,.96);
+  --mobile-nav-bg:rgba(248,250,250,.98);
+  --surface-quiet:#F3F6F6;
+  --focus-bg:#FFFFFF;
+  --table-head:#E9EEEE;
+  --backdrop:rgba(23,34,38,.48);
+  --chart-tip:#FFFFFF;
+  --chart-grid:rgba(62,78,84,.13);
+  --primary-ink:#FFFFFF;
+}
+html{background:var(--bg)}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'IBM Plex Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  letter-spacing:0;
+}
+button,input,select,textarea{letter-spacing:0}
+::selection{background:var(--accent-dim);color:var(--text)}
+::-webkit-scrollbar-thumb{background:var(--border-light)}
+.mono,.privacy-number,.hero-value,.summary-card .value,.cashflow-card strong,
+.month-ledger-metric strong,.compare-card strong,.fs-cell strong,.stat-card strong{
+  font-family:'JetBrains Mono','SFMono-Regular',ui-monospace,monospace;
+}
+.app{
+  width:100%;
+  max-width:1760px;
+  min-height:100vh;
+  margin:0 auto;
+  padding:18px 20px 80px 250px;
+}
+.terminal-rail{
+  display:flex;
+  position:fixed;
+  inset:18px auto 18px max(18px,calc((100vw - 1760px)/2 + 18px));
+  width:212px;
+  z-index:90;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:var(--rail-bg);
+  box-shadow:0 16px 40px var(--shadow);
+  padding:12px;
+  flex-direction:column;
+  gap:14px;
+  backdrop-filter:blur(14px);
+}
+.terminal-brand{padding:4px 4px 14px;border-bottom:1px solid var(--border)}
+.terminal-brand img{width:32px;height:32px;border-radius:6px;filter:saturate(.85)}
+.terminal-brand strong{font-size:17px;color:var(--text)}
+.terminal-brand span{color:var(--accent);font:600 9px/1.2 'JetBrains Mono',monospace;margin-top:5px}
+.terminal-nav{display:grid;gap:4px}
+.terminal-nav button{
+  width:100%;
+  min-height:48px;
+  display:grid;
+  grid-template-columns:28px minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+  padding:6px 8px;
+  border:1px solid transparent;
+  border-radius:var(--radius-sm);
+  color:var(--muted);
+  text-align:left;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.terminal-nav button:hover{background:var(--overlay-hover);color:var(--text)}
+.terminal-nav button.active{
+  color:var(--text);
+  border-color:rgba(214,163,74,.34);
+  background:var(--accent-dim);
+}
+.nav-glyph{
+  width:28px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--border);
+  border-radius:6px;
+  color:var(--accent);
+  font:700 14px/1 'JetBrains Mono',monospace;
+}
+.terminal-nav button.active .nav-glyph{border-color:rgba(214,163,74,.55);background:rgba(214,163,74,.10)}
+.terminal-nav .nav-copy{
+  width:auto;
+  height:auto;
+  min-width:0;
+  display:block;
+  padding:0;
+  border:0;
+  border-radius:0;
+  color:inherit;
+}
+.nav-copy strong{display:block;font-size:13px;font-weight:700;color:inherit}
+.nav-copy small{display:block;margin-top:2px;font-size:10px;color:var(--dim);font-weight:500}
+.terminal-nav button.active .nav-copy small{color:var(--accent)}
+.rail-entry-btn{
+  min-height:40px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--accent);
+  background:var(--accent);
+  color:var(--primary-ink);
+  font-weight:800;
+}
+.rail-entry-btn span{font:700 16px/1 'JetBrains Mono',monospace}
+.rail-theme{padding-top:2px}
+.rail-theme>p{
+  margin:0 0 7px;
+  color:var(--dim);
+  font:600 9px/1.2 'JetBrains Mono',monospace;
+}
+.theme-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.theme-option{
+  min-width:0;
+  min-height:42px;
+  display:grid;
+  place-items:center;
+  gap:3px;
+  padding:5px 2px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--card);
+  color:var(--muted);
+}
+.theme-option:hover{border-color:var(--border-light);color:var(--text)}
+.theme-option.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
+.theme-option small{font-size:8px;line-height:1}
+.theme-swatch{width:16px;height:16px;border:1px solid rgba(100,110,115,.35);border-radius:50%}
+.theme-swatch.mist{background:#EDF2F0}
+.theme-swatch.graphite{background:#1B2222}
+.theme-swatch.ink{background:#090D0C}
+.responsive-head{display:none}
+.terminal-rail-meta{
+  margin-top:auto;
+  padding:12px 4px 2px;
+  border-top:1px solid var(--border);
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.terminal-rail-meta p{
+  grid-column:1/-1;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:10px;
+  color:var(--muted);
+}
+.terminal-rail-meta>strong{
+  grid-column:1/-1;
+  max-width:none;
+  color:var(--dim);
+  font:500 9px/1.45 'JetBrains Mono',monospace;
+  text-align:left;
+  white-space:normal;
+}
+.terminal-rail-meta>div{
+  min-width:0;
+  padding:8px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--overlay);
+}
+.terminal-rail-meta>div span{display:block;font:700 15px/1 'JetBrains Mono',monospace}
+.terminal-rail-meta>div small{display:block;margin-top:5px;color:var(--dim);font-size:9px}
+.workspace-tabs{display:none}
+.hero{
+  min-height:86px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:16px;
+  padding:16px 18px;
+  margin-bottom:10px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:var(--panel);
+  box-shadow:none;
+  overflow:visible;
+}
+.hero-info .kicker{
+  margin:0 0 5px;
+  color:var(--accent);
+  font:600 9px/1.2 'JetBrains Mono',monospace;
+  text-transform:uppercase;
+  letter-spacing:0;
+}
+.hero-info .kicker span{color:var(--dim);margin-left:6px}
+.hero-info h1{margin:0;font-size:23px;line-height:1.2;color:var(--text);letter-spacing:0}
+.hero-info .sub{display:block;margin-top:5px;color:var(--muted);font-size:12px}
+.hero-quote{display:none}
+.hero-actions{display:flex;gap:7px;max-width:none}
+.btn{
+  min-height:36px;
+  padding:8px 13px;
+  border-radius:var(--radius-sm);
+  font-size:12px;
+  font-weight:700;
+  box-shadow:none;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.btn:hover{transform:none;box-shadow:none}
+.btn-primary{background:var(--accent);border:1px solid var(--accent);color:var(--primary-ink);box-shadow:none}
+.btn-primary:hover{background:var(--accent);box-shadow:none;filter:brightness(1.08)}
+.btn-ghost{background:var(--card);border:1px solid var(--border);color:var(--text)}
+.btn-ghost:hover{background:var(--overlay-hover);border-color:var(--border-light);color:var(--text)}
+.btn-danger{background:var(--red-dim);border:1px solid rgba(227,107,107,.35);color:var(--red)}
+.btn:disabled,.form-input:disabled{opacity:.48;cursor:not-allowed}
+.summary-wrap{
+  display:grid;
+  grid-template-columns:minmax(320px,1.15fr) minmax(430px,1fr);
+  gap:10px;
+  margin-bottom:10px;
+}
+.summary-hero{
+  min-height:168px;
+  margin:0;
+  padding:22px 24px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:var(--panel);
+  box-shadow:none;
+}
+.summary-hero:hover{transform:none;box-shadow:none}
+.summary-hero.hero-positive{border-color:rgba(66,201,139,.28)}
+.summary-hero.hero-negative{border-color:rgba(227,107,107,.28)}
+.summary-hero::after{top:auto;bottom:0;height:2px}
+.hero-label{font-size:10px;color:var(--muted);letter-spacing:0}
+.hero-value{font-size:38px;line-height:1.15;letter-spacing:0}
+.hero-arrow{font-size:21px}
+.hero-roi{font-size:12px}
+.hero-context span:first-child{font-family:'JetBrains Mono',monospace;font-size:15px}
+.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.summary-card{
+  min-height:79px;
+  padding:13px 14px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:var(--panel);
+  box-shadow:none;
+}
+.summary-card:hover{transform:none;border-color:var(--border-light);box-shadow:none}
+.summary-card::after{display:none}
+.summary-card .label{font-size:10px;color:var(--muted);letter-spacing:0}
+.summary-card .value{font-size:18px;letter-spacing:0}
+.overview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.panel{
+  padding:16px;
+  margin-bottom:10px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:var(--panel);
+  box-shadow:none;
+}
+.panel:hover{border-color:var(--border);box-shadow:none}
+.panel-header{align-items:flex-start;gap:12px;margin-bottom:14px}
+.panel-header h2{font-size:16px;line-height:1.3}
+.panel-header .hint{font-size:11px;line-height:1.55;color:var(--muted)}
+.module-kicker{
+  margin:0 0 4px;
+  color:var(--accent);
+  font:600 9px/1.2 'JetBrains Mono',monospace;
+}
+.overview-module{margin:0;padding:0;overflow:hidden}
+.overview-module .panel-header{padding:14px 15px 12px;margin:0;border-bottom:1px solid var(--border)}
+.overview-rows{display:grid}
+.overview-row{
+  width:100%;
+  min-height:62px;
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) minmax(120px,.65fr);
+  align-items:center;
+  gap:11px;
+  padding:9px 15px;
+  border-bottom:1px solid var(--border);
+  color:var(--text);
+  text-align:left;
+}
+.overview-row:last-child{border-bottom:0}
+.overview-row:hover{background:var(--overlay-hover)}
+.asset-mark,.flow-mark{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--input-bg);
+  color:var(--accent-2);
+  font:700 10px/1 'JetBrains Mono',monospace;
+  overflow:hidden;
+}
+.flow-入金{color:var(--red)}.flow-出金{color:var(--green)}
+.flow-买入{color:var(--accent-2)}.flow-卖出{color:var(--purple)}
+.overview-row-main,.overview-row-value{min-width:0}
+.overview-row-main strong,.overview-row-value strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.overview-row-main small,.overview-row-value small{display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dim);font-size:10px}
+.overview-row-value{text-align:right}
+.overview-row-value strong{font-family:'JetBrains Mono',monospace;font-size:11px}
+.text-command{
+  color:var(--accent);
+  font-size:11px;
+  font-weight:700;
+  white-space:nowrap;
+}
+.text-command:hover{color:var(--accent);filter:brightness(1.12)}
+.empty-block{min-height:180px;display:grid;place-content:center;justify-items:center;gap:7px;padding:24px;text-align:center}
+.empty-block strong{font-size:14px}.empty-block span{max-width:360px;color:var(--muted);font-size:11px}
+.form-grid,.filter-grid{gap:10px}
+.form-group label{
+  margin-bottom:5px;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:700;
+  text-transform:none;
+  letter-spacing:0;
+}
+.form-input,td input,td select{
+  min-height:38px;
+  padding:8px 10px;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  background-color:var(--input-bg);
+  color:var(--text);
+}
+.form-input:focus,td input:focus,td select:focus{
+  outline:none;
+  border-color:var(--accent);
+  background-color:var(--focus-bg);
+  box-shadow:0 0 0 2px var(--accent-glow);
+}
+.form-input::placeholder{color:var(--dim)}
+.form-input[readonly]{color:var(--muted)}
+select.form-input{background-color:var(--input-bg)}
+.chip,.pill,.tag-chip,.record-card-tag,.batch-badge,.import-status{
+  border-radius:6px;
+}
+.chip{padding:5px 9px;background:var(--card);border-color:var(--border);color:var(--muted)}
+.chip:hover{border-color:var(--border-light);color:var(--text)}
+.chip.active{background:var(--accent-dim);border-color:rgba(214,163,74,.38);color:var(--accent)}
+.pill{background:var(--blue-dim);border-color:rgba(79,183,197,.28);color:var(--accent-2)}
+.position-entry-block{
+  margin-bottom:14px;
+  padding:13px;
+  border:1px solid rgba(214,163,74,.24);
+  border-radius:var(--radius);
+  background:rgba(214,163,74,.045);
+}
+.quick-add-panel{padding:0;overflow:hidden}
+.quick-add-panel>.panel-header{padding:15px 16px 0}
+.quick-ticket{
+  display:grid;
+  grid-template-columns:260px minmax(0,1fr);
+  gap:0;
+  min-height:0;
+  border-top:1px solid var(--border);
+}
+.quick-side{
+  min-width:0;
+  padding:14px;
+  border-right:1px solid var(--border);
+  background:var(--surface-quiet);
+  overflow:visible;
+}
+.quick-action-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.quick-action-card{
+  min-height:66px;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  background:var(--card);
+  color:var(--text);
+  text-align:left;
+}
+.quick-action-card:hover{border-color:var(--border-light)}
+.quick-action-card.active{border-color:rgba(214,163,74,.62);background:var(--accent-dim);color:var(--accent)}
+.quick-action-card strong{display:block;font-size:13px}
+.quick-action-card span{display:block;margin-top:4px;color:var(--muted);font-size:10px}
+.quick-action-explain{
+  margin:10px 0 13px;
+  padding:10px;
+  border:1px solid rgba(79,183,197,.24);
+  border-radius:var(--radius-sm);
+  background:var(--blue-dim);
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.6;
+}
+.quick-action-explain strong{display:block;margin-bottom:3px;color:var(--accent-2)}
+.quick-template-row,.quick-chip-row{display:flex;flex-wrap:wrap;gap:6px;max-height:none;overflow:visible}
+.quick-template{
+  display:inline-flex;
+  min-height:29px;
+  align-items:center;
+  padding:4px 8px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--card);
+  color:var(--muted);
+  font-size:10px;
+  cursor:pointer;
+}
+.quick-template:hover{border-color:var(--accent);color:var(--accent)}
+.quick-main{min-width:0;padding:14px}
+.quick-amount-card{
+  padding:12px;
+  border:1px solid rgba(214,163,74,.30);
+  border-radius:var(--radius);
+  background:rgba(214,163,74,.035);
+}
+.quick-amount-row{grid-template-columns:170px minmax(0,1fr);gap:8px}
+.quick-amount-row .form-input{
+  min-height:46px;
+  background:var(--input-bg);
+  font-family:'JetBrains Mono',monospace;
+  font-size:15px;
+  font-weight:700;
+}
+.quick-trade-total{border-radius:6px;background:var(--input-bg);border-color:var(--border)}
+.quick-trade-total strong{font-family:'JetBrains Mono',monospace}
+.quick-meta-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.quick-meta-grid .form-group:first-child:nth-last-child(4){grid-row:span 2}
+.quick-note-grid{gap:10px}
+.quick-more-toggle{
+  margin:10px 0 0;
+  padding:9px 0;
+  border-top:1px solid var(--border);
+  color:var(--muted);
+  font-size:11px;
+}
+.quick-more-toggle:hover{color:var(--text)}
+.quick-more-body{padding-top:2px}
+.quick-ticket-foot{
+  grid-template-columns:auto minmax(190px,1fr) auto;
+  gap:10px;
+  padding-top:12px;
+  border-top:1px solid var(--border);
+}
+.quick-hint{color:var(--dim)}
+.trade-lock-note{
+  margin-bottom:12px;
+  padding:10px 11px;
+  border:1px solid rgba(214,163,74,.30);
+  border-radius:6px;
+  background:var(--accent-dim);
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.55;
+}
+.table-wrap{
+  margin-top:8px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:var(--card);
+  overflow:auto;
+}
+table{min-width:720px}
+th,td{padding:10px;border-bottom-color:var(--border);font-size:12px}
+th{
+  top:0;
+  background:var(--table-head);
+  color:var(--muted);
+  font-size:9px;
+  text-transform:none;
+  letter-spacing:0;
+}
+tbody tr:nth-child(even) td{background:rgba(255,255,255,.012)}
+tr:hover td,tbody tr:nth-child(even):hover td{background:var(--overlay-hover)}
+td input,td select{min-height:31px;padding:5px 7px}
+.chart-wrap,.compare-card,.cashflow-card,.behavior-metric,.filtered-stats,.fs-cell,
+.import-summary-cell,.import-impact,.detail-cell,.insight-panel,.record-card{
+  border-color:var(--border);
+  border-radius:var(--radius);
+  background:var(--card);
+  box-shadow:none;
+}
+.chart-wrap{height:300px;padding:12px}
+.stats-layout{gap:10px}
+.compare-grid,.cashflow-overview{gap:8px}
+.month-ledger-row{
+  border-color:var(--border);
+  border-radius:var(--radius);
+  background:var(--card);
+}
+.month-ledger-summary{padding:11px 13px}
+.month-ledger-summary:hover{background:var(--overlay-hover)}
+.month-detail{border-top-color:var(--border);background:var(--surface-quiet)}
+.month-ledger-title strong{font-family:'JetBrains Mono',monospace;font-size:14px}
+.ledger-toolbar{grid-template-columns:160px 140px minmax(220px,1fr) auto}
+.record-card{border-radius:var(--radius);padding:12px}
+.record-card-exchange{background:var(--overlay-hover)}
+.modal-mask{background:var(--backdrop);backdrop-filter:blur(5px);align-items:center;padding:18px}
+.modal-box,.import-preview-box{
+  width:min(680px,100%);
+  max-height:88vh;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:var(--panel);
+  box-shadow:0 24px 70px rgba(0,0,0,.58);
+}
+.modal-handle{display:none}
+.modal-head{padding:15px 17px;border-bottom:1px solid var(--border)}
+.modal-close{width:30px;height:30px;border-radius:6px;background:var(--card)}
+.modal-body{padding:16px 17px}
+.modal-body .form-group{margin-bottom:10px}
+.modal-foot{padding:12px 17px 16px;border-top:1px solid var(--border)}
+.import-preview-box{max-width:820px}
+.import-preview-list{border-radius:var(--radius);border-color:var(--border);background:var(--card)}
+.import-preview-row{border-bottom-color:var(--border)}
+.import-impact{background:var(--blue-dim)}
+.toast{top:18px;border:1px solid rgba(255,255,255,.16);border-radius:6px;box-shadow:0 10px 30px var(--shadow)}
+.toast.success{background:#183B2C;color:#A7E9C8}
+.toast.error{background:#492426;color:#FFC2C2}
+.toast.info{background:#17343A;color:#B9E7EC}
+.sync-dot{background:var(--green);box-shadow:0 0 0 3px rgba(66,201,139,.10)}
+.sync-dot.syncing{background:var(--accent-2)}.sync-dot.stale{background:var(--accent)}
+.text-green{color:var(--green)!important}.text-red{color:var(--red)!important}
+
+.review-head{align-items:flex-end}
+.review-range-tabs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  padding:4px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:var(--card);
+}
+.review-range-tabs button{
+  min-height:30px;
+  padding:5px 10px;
+  border-radius:6px;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:700;
+  white-space:nowrap;
+}
+.review-range-tabs button:hover{color:var(--text);background:var(--overlay-hover)}
+.review-range-tabs button.active{background:var(--accent);color:var(--primary-ink)}
+.review-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.review-summary-cell{
+  min-width:0;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  background:var(--card);
+}
+.review-summary-cell p{color:var(--muted);font-size:10px}
+.review-summary-cell strong{display:block;margin-top:7px;overflow:hidden;text-overflow:ellipsis;font:700 19px/1.2 'JetBrains Mono',monospace}
+.review-summary-cell small{display:block;margin-top:5px;color:var(--dim);font-size:9px}
+.review-layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border-top:1px solid var(--border)}
+.review-layout-secondary{margin-top:0}
+.review-block{min-width:0;padding:16px 4px 15px}
+.review-block:first-child{padding-right:16px;border-right:1px solid var(--border)}
+.review-block:last-child{padding-left:16px}
+.review-block-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:11px}
+.review-block-head h3{font-size:13px}
+.review-block-head small{color:var(--dim);font-size:9px}
+.review-block .tag-list{margin-bottom:11px}
+.review-block .behavior-metrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0}
+.review-block .behavior-metric{min-width:0;padding:9px;border-radius:6px}
+.review-block .behavior-metric strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.review-muted{color:var(--muted);font-size:11px}
+.review-recent-list{display:grid}
+.review-recent-row{
+  min-width:0;
+  display:grid;
+  grid-template-columns:30px minmax(0,1fr) auto;
+  align-items:center;
+  gap:9px;
+  min-height:48px;
+  padding:6px 0;
+  border-bottom:1px solid var(--border);
+}
+.review-recent-row:last-child{border-bottom:0}
+.review-recent-row .flow-mark{width:30px;height:30px}
+.review-recent-row>div{min-width:0}
+.review-recent-row>div strong,.review-recent-row>div small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.review-recent-row>div strong{font-size:11px}
+.review-recent-row>div small{margin-top:2px;color:var(--dim);font-size:9px}
+.review-recent-row>strong{font:700 10px/1 'JetBrains Mono',monospace}
+.review-block .insight-summary{margin-bottom:9px}
+.review-block .insight-list{margin-bottom:0}
+.review-behavior-advice{margin-top:8px!important;padding-top:8px;border-top:1px dashed var(--border)}
+.review-checklist{display:grid;gap:5px}
+.review-checklist label{
+  min-width:0;
+  display:grid;
+  grid-template-columns:18px minmax(0,1fr);
+  align-items:start;
+  gap:8px;
+  padding:7px 8px;
+  border-radius:6px;
+  color:var(--muted);
+  font-size:10px;
+  cursor:pointer;
+}
+.review-checklist label:hover{background:var(--overlay-hover);color:var(--text)}
+.review-checklist input{width:15px;height:15px;margin-top:1px;accent-color:var(--accent)}
+.review-checklist input:checked+span{text-decoration:line-through;color:var(--dim)}
+.review-details{padding:11px 4px;border-top:1px solid var(--border)}
+.review-details summary{color:var(--muted);font-size:10px;font-weight:700;cursor:pointer}
+.review-details .insight-list,.review-details .insight-config{margin-top:10px}
+.review-note{padding:16px 4px 2px;border-top:1px solid var(--border)}
+.review-note textarea{min-height:94px;resize:vertical}
+.review-empty{min-height:240px;border-top:1px solid var(--border)}
+
+@media(max-width:1180px){
+  .app{padding:12px 14px 82px}
+  .terminal-rail{display:none}
+  .responsive-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:8px;
+    padding:8px 10px;
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    background:var(--panel);
+  }
+  .responsive-brand{min-width:0;display:flex;align-items:baseline;gap:8px}
+  .responsive-brand strong{font-size:15px}
+  .responsive-brand small{color:var(--dim);font:600 9px/1 'JetBrains Mono',monospace}
+  .responsive-head .theme-options{display:flex}
+  .responsive-head .theme-option{min-width:52px;min-height:32px;display:flex;gap:5px;padding:4px 7px}
+  .workspace-tabs{
+    position:sticky;
+    top:8px;
+    z-index:80;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    margin:0 0 10px;
+    padding:6px;
+    overflow-x:auto;
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    background:var(--nav-bg);
+    box-shadow:0 10px 28px var(--shadow);
+    backdrop-filter:blur(14px);
+  }
+  .workspace-tab{
+    min-height:38px;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:0 10px;
+    border:1px solid transparent;
+    border-radius:6px;
+    color:var(--muted);
+    font-size:11px;
+    font-weight:700;
+    white-space:nowrap;
+  }
+  .workspace-tab code{border:0;padding:0;color:var(--accent);font:700 13px/1 'JetBrains Mono',monospace}
+  .workspace-tab.active{border-color:rgba(214,163,74,.34);background:var(--accent-dim);color:var(--text)}
+  .quick-ticket{grid-template-columns:230px minmax(0,1fr)}
+  .quick-meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ledger-toolbar{grid-template-columns:1fr 1fr}
+}
+@media(max-width:760px){
+  body{background-size:24px 24px}
+  .app{padding:9px 9px calc(78px + env(safe-area-inset-bottom))}
+  .workspace-tabs{
+    position:fixed;
+    inset:auto 0 0;
+    z-index:120;
+    display:grid;
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    gap:0;
+    margin:0;
+    padding:6px 5px calc(6px + env(safe-area-inset-bottom));
+    border-width:1px 0 0;
+    border-radius:0;
+    overflow:visible;
+    background:var(--mobile-nav-bg);
+  }
+  .workspace-tab{
+    min-width:0;
+    min-height:50px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:4px;
+    padding:4px 1px;
+    border-radius:6px;
+    font-size:9px;
+    overflow:hidden;
+  }
+  .workspace-tab code{font-size:13px}
+  .workspace-tab span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .responsive-head{margin-bottom:8px;padding:7px 9px}
+  .responsive-head .theme-option{min-width:32px;padding:4px}
+  .responsive-head .theme-option small{display:none}
+  .hero{min-height:0;grid-template-columns:1fr;padding:12px;margin-bottom:8px}
+  .hero-info h1{font-size:19px}
+  .hero-info .sub{font-size:11px}
+  .hero-actions{position:absolute;right:12px;top:12px}
+  .hero-actions .btn{min-width:36px;padding:6px 8px}
+  .summary-wrap{grid-template-columns:1fr;gap:8px;margin-bottom:8px}
+  .summary-hero{min-height:134px;padding:17px}
+  .hero-value{font-size:28px}
+  .summary-grid{gap:7px}
+  .summary-card{min-height:72px;padding:11px}
+  .summary-card .value{font-size:15px}
+  .overview-grid{grid-template-columns:1fr;gap:8px}
+  .panel{padding:12px;margin-bottom:8px}
+  .overview-module{padding:0}
+  .overview-row{grid-template-columns:32px minmax(0,1fr) minmax(92px,.6fr);padding:8px 11px}
+  .asset-mark,.flow-mark{width:32px;height:32px}
+  .quick-add-panel{padding:0}
+  .quick-add-panel>.panel-header{padding:13px 12px 0}
+  .quick-ticket{grid-template-columns:1fr}
+  .quick-side{padding:11px;border-right:0;border-bottom:1px solid var(--border)}
+  .quick-main{padding:11px}
+  .quick-action-tabs{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  .quick-action-card{min-height:56px;padding:7px}
+  .quick-action-card strong{font-size:12px}.quick-action-card span{font-size:8px}
+  .quick-action-explain{margin:8px 0 10px;padding:8px}
+  .quick-amount-row,.quick-meta-grid,.quick-note-grid,.quick-ticket-foot{grid-template-columns:1fr}
+  .quick-amount-row{grid-template-columns:115px minmax(0,1fr)}
+  .quick-ticket-foot>div{width:100%;display:grid!important;grid-template-columns:1fr 1fr}
+  .quick-ticket-foot .btn{width:100%;justify-content:center}
+  .position-entry-block{padding:10px}
+  .ledger-toolbar,.ledger-advanced,.month-ledger-summary,.cashflow-overview{grid-template-columns:1fr}
+  .ledger-toolbar>div:last-child{justify-content:stretch!important}
+  .ledger-toolbar>div:last-child .btn{flex:1;justify-content:center}
+  .month-ledger-tags{grid-column:auto}
+  .month-ledger-metric{grid-template-columns:auto auto;justify-content:space-between}
+  .section-records .month-ledger-list{display:none}
+  .section-records .record-cards{display:block}
+  .stats-layout,.overview-grid{grid-template-columns:1fr}
+  .chart-wrap{height:245px;padding:8px}
+  .panel-header{align-items:flex-start}
+  .panel-actions{width:100%}
+  .panel-actions .btn{flex:1;justify-content:center}
+  .import-summary-grid,.import-impact{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .import-preview-row{grid-template-columns:64px minmax(0,1fr)}
+  .import-reason{grid-column:2;text-align:left}
+  .modal-mask{align-items:flex-end;padding:0}
+  .modal-box,.import-preview-box{width:100%;max-height:91vh;border-radius:8px 8px 0 0;border-bottom:0}
+  .detail-grid{grid-template-columns:1fr}
+  .review-head{align-items:stretch}
+  .review-range-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%}
+  .review-range-tabs button{min-width:0;padding:5px 2px}
+  .review-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .review-summary-cell strong{font-size:16px}
+  .review-layout{grid-template-columns:1fr}
+  .review-block:first-child{padding-right:0;border-right:0}
+  .review-block:last-child{padding-left:0;border-top:1px solid var(--border)}
+  .review-block .behavior-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .review-recent-row{grid-template-columns:30px minmax(0,1fr) auto}
+}
+.mobile-tabs,.fab{display:none!important}
+
+/* ===== TOUJI WEALTH STUDIO ===== */
+html[data-theme="mist"]{
+  --accent:#0B6B63;
+  --accent-2:#C68A27;
+  --accent-dim:rgba(11,107,99,.09);
+  --accent-glow:rgba(11,107,99,.14);
+  --blue:#317FA3;
+  --blue-dim:rgba(49,127,163,.09);
+  --purple:#8067A8;
+  --purple-dim:rgba(128,103,168,.09);
+  --green:#16835B;
+  --green-dim:rgba(22,131,91,.09);
+  --red:#CC545C;
+  --red-dim:rgba(204,84,92,.09);
+  --bg:#EDF2F0;
+  --panel:#FFFFFF;
+  --card:#F6F9F8;
+  --input-bg:#F4F7F6;
+  --border:#DCE5E2;
+  --border-light:#B8CAC5;
+  --text:#172925;
+  --muted:#5D706B;
+  --dim:#899995;
+  --overlay:rgba(14,69,61,.025);
+  --overlay-hover:rgba(14,69,61,.055);
+  --shadow:rgba(24,58,50,.10);
+  --shadow-light:rgba(24,58,50,.06);
+  --rail-bg:rgba(255,255,255,.97);
+  --nav-bg:rgba(255,255,255,.96);
+  --mobile-nav-bg:rgba(255,255,255,.98);
+  --surface-quiet:#F0F6F4;
+  --focus-bg:#FFFFFF;
+  --table-head:#EFF5F3;
+  --chart-tip:#FFFFFF;
+  --chart-grid:rgba(48,79,72,.11);
+  --primary-ink:#FFFFFF;
+  --hero-bg:#153D37;
+  --hero-text:#F7FCFA;
+  --hero-muted:#B8D0CA;
+}
+html[data-theme="graphite"]{
+  --accent:#66C8BC;
+  --accent-2:#E0AD58;
+  --accent-dim:rgba(102,200,188,.11);
+  --accent-glow:rgba(102,200,188,.16);
+  --bg:#1B2222;
+  --panel:#242D2C;
+  --card:#2A3433;
+  --input-bg:#303B39;
+  --border:#3B4947;
+  --border-light:#576864;
+  --text:#F0F5F3;
+  --muted:#A5B4B0;
+  --dim:#74857F;
+  --rail-bg:rgba(35,44,43,.98);
+  --nav-bg:rgba(35,44,43,.96);
+  --mobile-nav-bg:rgba(30,38,37,.98);
+  --surface-quiet:#202927;
+  --focus-bg:#35413F;
+  --table-head:#293331;
+  --chart-tip:#2C3735;
+  --chart-grid:rgba(167,188,181,.13);
+  --primary-ink:#102B27;
+  --hero-bg:#122D2A;
+  --hero-text:#F5FBF9;
+  --hero-muted:#9EC6BE;
+}
+html[data-theme="ink"]{
+  --accent:#66C8BC;
+  --accent-2:#D7A14A;
+  --accent-dim:rgba(102,200,188,.10);
+  --accent-glow:rgba(102,200,188,.15);
+  --bg:#090D0C;
+  --panel:#111817;
+  --card:#151F1D;
+  --input-bg:#192421;
+  --border:#263430;
+  --border-light:#3B4D48;
+  --text:#F1F5F3;
+  --muted:#9DACA7;
+  --dim:#677873;
+  --rail-bg:rgba(15,22,20,.98);
+  --nav-bg:rgba(15,22,20,.96);
+  --mobile-nav-bg:rgba(11,17,15,.98);
+  --surface-quiet:#0D1412;
+  --focus-bg:#1D2926;
+  --table-head:#16201E;
+  --chart-tip:#192421;
+  --chart-grid:rgba(144,172,164,.12);
+  --primary-ink:#102B27;
+  --hero-bg:#102F2A;
+  --hero-text:#F5FBF9;
+  --hero-muted:#9BC4BB;
+}
+body{
+  background:var(--bg);
+  font-family:'IBM Plex Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  font-size:14px;
+}
+.mono,.privacy-number,.hero-value,.summary-card .value,.cashflow-card strong,
+.month-ledger-metric strong,.compare-card strong,.fs-cell strong,.stat-card strong,
+.review-summary-cell strong,.terminal-rail-meta>div span{
+  font-family:'Manrope','IBM Plex Sans SC',sans-serif;
+  font-variant-numeric:tabular-nums;
+}
+.terminal-brand span,.rail-entry-btn span,.rail-theme>p,.terminal-rail-meta>strong,
+.hero-info .kicker,.hero-context span:first-child,.module-kicker,.asset-mark,.flow-mark,
+.quick-amount-row .form-input,.quick-trade-total strong,.month-ledger-title strong,
+.review-recent-row>strong,.responsive-brand small,.workspace-tab code{
+  font-family:'Manrope','IBM Plex Sans SC',sans-serif;
+}
+.app{max-width:1680px;padding:24px 28px 92px 272px}
+.terminal-rail{
+  inset:24px auto 24px max(24px,calc((100vw - 1680px)/2 + 24px));
+  width:224px;
+  padding:16px;
+  gap:16px;
+  border-color:var(--border);
+  background:var(--rail-bg);
+  box-shadow:0 18px 48px var(--shadow);
+  backdrop-filter:blur(18px);
+}
+.terminal-brand{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  min-height:54px;
+  padding:2px 2px 14px;
+}
+.terminal-brand img{width:38px;height:38px;border-radius:8px;box-shadow:0 5px 14px var(--shadow)}
+.terminal-brand strong{font-size:19px;font-weight:700;letter-spacing:0}
+.terminal-brand span{margin-top:3px;color:var(--accent);font:700 8px/1.2 'Manrope',sans-serif}
+.terminal-nav{gap:5px}
+.terminal-nav button{
+  position:relative;
+  min-height:55px;
+  grid-template-columns:32px minmax(0,1fr);
+  gap:11px;
+  padding:7px 9px;
+  border:0;
+  overflow:hidden;
+}
+.terminal-nav button::before{
+  content:'';
+  position:absolute;
+  inset:9px auto 9px 0;
+  width:3px;
+  border-radius:3px;
+  background:transparent;
+}
+.terminal-nav button:hover{background:var(--overlay-hover)}
+.terminal-nav button.active{border-color:transparent;background:var(--accent-dim);color:var(--text)}
+.terminal-nav button.active::before{background:var(--accent)}
+.nav-glyph{
+  width:32px;
+  height:32px;
+  border-color:var(--border);
+  background:var(--card);
+  color:var(--muted);
+  font:700 14px/1 'Manrope',sans-serif;
+}
+.nav-glyph svg{width:17px;height:17px}
+.terminal-nav button.active .nav-glyph{
+  border-color:transparent;
+  background:var(--accent);
+  color:var(--primary-ink);
+}
+.nav-copy strong{font-size:13px;font-weight:700}
+.nav-copy small{margin-top:3px;font-size:9px}
+.terminal-nav button.active .nav-copy small{color:var(--muted)}
+.rail-entry-btn{
+  min-height:44px;
+  border:0;
+  background:var(--accent);
+  color:var(--primary-ink);
+  box-shadow:0 8px 18px var(--accent-glow);
+  transition:transform .18s,filter .18s,box-shadow .18s;
+}
+.rail-entry-btn:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 11px 23px var(--accent-glow)}
+.rail-theme{padding:8px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.rail-theme summary{
+  min-height:40px;
+  display:grid;
+  grid-template-columns:30px minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  padding:5px 7px;
+  border-radius:6px;
+  color:var(--muted);
+  cursor:pointer;
+  list-style:none;
+  transition:background .16s,color .16s;
+}
+.rail-theme summary::-webkit-details-marker,.responsive-theme-menu summary::-webkit-details-marker{display:none}
+.rail-theme summary:hover,.rail-theme[open] summary{background:var(--overlay-hover);color:var(--text)}
+.theme-summary-icon{
+  width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--card);
+  color:var(--accent);
+}
+.theme-summary-icon svg{width:16px;height:16px}
+.theme-summary-copy{min-width:0}
+.theme-summary-copy strong,.theme-summary-copy small{display:block}
+.theme-summary-copy strong{font-size:11px}
+.theme-summary-copy small{margin-top:2px;color:var(--dim);font-size:9px}
+.theme-caret{color:var(--dim);font-size:13px;transition:transform .18s}
+.rail-theme[open] .theme-caret{transform:rotate(180deg)}
+.rail-theme .theme-options{margin-top:7px;animation:toujiMenuIn .16s ease-out both}
+.theme-option{min-height:45px;background:transparent;border-color:transparent}
+.theme-option:hover{background:var(--overlay-hover);border-color:transparent}
+.theme-option.active{border-color:var(--border-light);background:var(--card);box-shadow:0 3px 9px var(--shadow-light)}
+.theme-swatch{width:18px;height:18px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.45)}
+.terminal-rail-meta{padding-top:13px}
+.terminal-rail-meta>div{padding:9px;background:var(--card);border:0}
+.terminal-rail-meta>div span{font-size:16px}
+.terminal-rail-meta{
+  grid-template-columns:1fr;
+  gap:6px;
+}
+.terminal-rail-meta>.rail-meta-counts{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  padding:2px 0 0;
+  border:0;
+  background:transparent;
+}
+.terminal-rail-meta>.rail-meta-counts span{
+  display:inline;
+  color:var(--dim);
+  font-family:'IBM Plex Sans SC','PingFang SC',sans-serif;
+  font-size:10px;
+  font-weight:600;
+  line-height:1.4;
+}
+.terminal-rail-meta>.rail-meta-counts span+span::before{
+  content:'';
+  display:inline-block;
+  width:3px;
+  height:3px;
+  margin:0 8px 2px 0;
+  border-radius:50%;
+  background:var(--border-light);
+}
+.hero{
+  min-height:104px;
+  padding:20px 22px;
+  margin-bottom:14px;
+  border-color:var(--border);
+  background:var(--panel);
+  box-shadow:0 8px 24px var(--shadow-light);
+}
+.hero::before{
+  content:'';
+  position:absolute;
+  inset:20px auto 20px 0;
+  width:4px;
+  border-radius:0 4px 4px 0;
+  background:var(--accent);
+}
+.hero-info{padding-left:6px}
+.hero-info .kicker{margin-bottom:7px;color:var(--accent);font:700 9px/1.2 'Manrope',sans-serif}
+.hero-info h1{font-size:28px;font-weight:700}
+.hero-info .sub{margin-top:7px;font-size:12px;color:var(--muted)}
+.hero-actions .btn{min-height:38px}
+.btn{
+  min-height:38px;
+  padding:8px 14px;
+  border-radius:7px;
+  font-weight:700;
+  transition:transform .16s,box-shadow .16s,background .16s,border-color .16s;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{border:0;background:var(--accent);color:var(--primary-ink);box-shadow:0 6px 15px var(--accent-glow)}
+.btn-primary:hover{box-shadow:0 9px 19px var(--accent-glow)}
+.btn-ghost{background:var(--panel);border-color:var(--border);box-shadow:0 2px 6px var(--shadow-light)}
+.btn-ghost:hover{background:var(--card);border-color:var(--border-light)}
+.summary-wrap{grid-template-columns:minmax(360px,1.15fr) minmax(440px,1fr);gap:12px;margin-bottom:14px}
+.summary-hero{
+  min-height:184px;
+  padding:25px 27px;
+  border:0;
+  background:var(--hero-bg);
+  color:var(--hero-text);
+  box-shadow:0 14px 32px var(--shadow);
+  overflow:hidden;
+}
+.summary-hero::before{
+  content:'';
+  position:absolute;
+  inset:0 auto 0 0;
+  width:5px;
+  display:block;
+  background:var(--accent-2);
+}
+.summary-hero::after{display:none}
+.summary-hero .hero-label,.summary-hero .hero-context-label{color:var(--hero-muted)}
+.summary-hero .hero-value{color:var(--hero-text);font-size:42px;font-weight:800}
+.summary-hero .hero-roi{font-weight:700}
+.summary-hero .text-green{color:#69D7A4!important}
+.summary-hero .text-red{color:#FF8A90!important}
+.summary-hero .hero-context span:first-child:not(.text-green):not(.text-red){color:#A7DDD4!important}
+.summary-grid{gap:12px}
+.summary-card{
+  position:relative;
+  min-height:86px;
+  padding:15px 16px;
+  border-color:var(--border);
+  background:var(--panel);
+  box-shadow:0 5px 16px var(--shadow-light);
+  overflow:hidden;
+}
+.summary-card::before{
+  content:'';
+  position:absolute;
+  inset:0 0 auto;
+  height:3px;
+  background:var(--accent);
+  opacity:.7;
+}
+.summary-card:nth-child(2)::before{background:var(--accent-2)}
+.summary-card:nth-child(3)::before{background:var(--blue)}
+.summary-card:nth-child(4)::before{background:var(--purple)}
+.summary-card:hover{transform:translateY(-2px);border-color:var(--border);box-shadow:0 10px 24px var(--shadow)}
+.summary-card .label{font-size:10px}
+.summary-card .value{margin-top:4px;font-size:20px;font-weight:800}
+.overview-grid{gap:12px;margin-bottom:14px}
+.panel{
+  padding:19px;
+  margin-bottom:14px;
+  border-color:var(--border);
+  background:var(--panel);
+  box-shadow:0 7px 22px var(--shadow-light);
+}
+.panel-header{margin-bottom:17px}
+.panel-header h2{font-size:18px;font-weight:700}
+.module-kicker{margin-bottom:6px;color:var(--accent);font:700 9px/1.2 'Manrope',sans-serif}
+.overview-module{box-shadow:0 7px 22px var(--shadow-light)}
+.overview-module .panel-header{padding:17px 18px 14px}
+.overview-row{min-height:68px;padding:11px 18px}
+.overview-row:hover{background:var(--surface-quiet)}
+.asset-mark,.flow-mark{
+  border:0;
+  background:var(--surface-quiet);
+  color:var(--accent);
+  font-family:'Manrope',sans-serif;
+}
+.overview-row-main strong,.overview-row-value strong{font-size:13px}
+.overview-row-main small,.overview-row-value small{font-size:10px}
+.form-group label{margin-bottom:6px;font-size:11px;color:var(--muted)}
+.form-input,td input,td select{
+  min-height:42px;
+  border-color:var(--border);
+  background:var(--input-bg);
+  transition:border-color .16s,box-shadow .16s,background .16s;
+}
+.form-input:hover,td input:hover,td select:hover{border-color:var(--border-light)}
+.form-input:focus,td input:focus,td select:focus{
+  border-color:var(--accent);
+  background:var(--focus-bg);
+  box-shadow:0 0 0 3px var(--accent-glow);
+}
+.chip{min-height:31px;padding:6px 10px;background:var(--panel)}
+.chip.active{border-color:var(--accent);background:var(--accent-dim)}
+.quick-add-panel{box-shadow:0 8px 25px var(--shadow-light)}
+.quick-add-panel>.panel-header{padding:18px 19px 0}
+.quick-ticket{grid-template-columns:276px minmax(0,1fr);border-top-color:var(--border)}
+.quick-side{padding:17px;background:var(--surface-quiet)}
+.quick-main{padding:18px}
+.quick-action-card{
+  min-height:72px;
+  padding:11px;
+  background:var(--panel);
+  border-color:var(--border);
+  box-shadow:0 3px 10px var(--shadow-light);
+}
+.quick-action-card:hover{transform:translateY(-1px);box-shadow:0 6px 14px var(--shadow-light)}
+.quick-action-card.active{
+  border-color:var(--accent);
+  background:var(--panel);
+  color:var(--accent);
+  box-shadow:inset 0 0 0 1px var(--accent),0 6px 14px var(--shadow-light);
+}
+.quick-action-card span{font-size:10px}
+.quick-action-explain{border:0;background:var(--panel);box-shadow:0 3px 10px var(--shadow-light)}
+.quick-action-explain strong{color:var(--accent)}
+.quick-template{background:var(--panel);box-shadow:0 2px 7px var(--shadow-light)}
+.quick-amount-card{
+  padding:15px;
+  border-color:var(--border);
+  background:var(--surface-quiet);
+}
+.quick-amount-row .form-input{min-height:50px;font-family:'Manrope','IBM Plex Sans SC',sans-serif;font-size:17px}
+.trade-lock-note{border-color:var(--border);background:var(--surface-quiet)}
+.table-wrap{border-color:var(--border);background:var(--panel);box-shadow:0 4px 14px var(--shadow-light)}
+th{height:42px;background:var(--table-head);font-size:10px;color:var(--muted)}
+td{height:48px}
+tbody tr:nth-child(even) td{background:var(--overlay)}
+tr:hover td,tbody tr:nth-child(even):hover td{background:var(--surface-quiet)}
+.month-ledger-row{border-color:var(--border);background:var(--panel);box-shadow:0 3px 10px var(--shadow-light)}
+.month-ledger-summary{min-height:60px;padding:13px 16px}
+.month-detail{background:var(--surface-quiet)}
+.chart-wrap,.compare-card,.cashflow-card,.behavior-metric,.filtered-stats,.fs-cell,
+.import-summary-cell,.import-impact,.detail-cell,.insight-panel,.record-card{
+  background:var(--card);
+  border-color:var(--border);
+}
+.chart-wrap{height:320px}
+.cashflow-card,.compare-card,.behavior-metric,.fs-cell{box-shadow:0 3px 10px var(--shadow-light)}
+.review-summary-grid{gap:10px;margin-bottom:14px}
+.review-summary-cell{padding:15px;background:var(--card);box-shadow:0 4px 13px var(--shadow-light)}
+.review-summary-cell p{font-size:11px}
+.review-summary-cell strong{margin-top:9px;font-size:22px;font-weight:800}
+.review-summary-cell small{font-size:10px}
+.review-range-tabs{padding:5px;background:var(--card)}
+.review-range-tabs button{min-height:32px;padding:5px 12px}
+.review-range-tabs button.active{box-shadow:0 4px 10px var(--accent-glow)}
+.review-block{padding-top:19px;padding-bottom:18px}
+.review-block-head h3{font-size:14px}
+.review-recent-row{min-height:53px}
+.review-checklist label{padding:9px 10px;font-size:11px}
+.review-note textarea{background:var(--input-bg)}
+.modal-box,.import-preview-box{box-shadow:0 28px 80px var(--shadow)}
+.toast{top:22px;border:0;box-shadow:0 14px 34px var(--shadow)}
+.toast.success{background:#176548;color:#F1FFF8}
+.toast.error{background:#A53F47;color:#FFF5F5}
+.toast.info{background:#154E4A;color:#F1FFFD}
+.toast{animation:toujiToastIn .22s ease-out both}
+.responsive-brand{display:flex;align-items:center;gap:9px}
+.responsive-brand img{width:30px;height:30px;border-radius:7px;box-shadow:0 3px 9px var(--shadow)}
+.responsive-brand>div{min-width:0}
+.responsive-brand strong,.responsive-brand small{display:block}
+.responsive-brand small{margin-top:2px;color:var(--accent);font-size:8px}
+.responsive-theme-menu{position:relative;margin-left:auto}
+.responsive-theme-menu summary{
+  min-height:36px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:6px 9px;
+  border:1px solid var(--border);
+  border-radius:7px;
+  background:var(--card);
+  color:var(--muted);
+  cursor:pointer;
+  list-style:none;
+}
+.responsive-theme-menu summary:hover,.responsive-theme-menu[open] summary{border-color:var(--border-light);color:var(--accent)}
+.responsive-theme-menu summary svg{width:16px;height:16px}
+.responsive-theme-menu summary span{font-size:10px;font-weight:700}
+.responsive-theme-menu .theme-options{
+  position:absolute;
+  top:calc(100% + 7px);
+  right:0;
+  z-index:140;
+  width:184px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:5px;
+  padding:7px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--panel);
+  box-shadow:0 14px 32px var(--shadow);
+  animation:toujiMenuIn .16s ease-out both;
+}
+.workspace-icon{display:grid;place-items:center;color:var(--accent)}
+.workspace-icon svg{width:16px;height:16px}
+.workspace-tab.active .workspace-icon{color:var(--accent)}
+button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
+.hero,.summary-wrap,.overview-grid,.quick-add-panel,#positions,#records,#review,#data-safe{
+  animation:toujiViewIn .26s cubic-bezier(.2,.75,.3,1) both;
+}
+.overview-row,.month-ledger-row,.record-card,.review-recent-row{
+  transition:background .16s,border-color .16s,transform .16s,box-shadow .16s;
+}
+.overview-row:hover,.review-recent-row:hover{transform:translateX(2px)}
+@keyframes toujiViewIn{
+  from{opacity:0;transform:translateY(7px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes toujiToastIn{
+  from{opacity:0;transform:translate(-50%,-8px)}
+  to{opacity:1;transform:translate(-50%,0)}
+}
+@keyframes toujiMenuIn{
+  from{opacity:0;transform:translateY(-4px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+@media(max-width:1180px){
+  .app{padding:14px 16px 88px}
+  .responsive-head{min-height:56px;padding:9px 12px;background:var(--panel);box-shadow:0 6px 18px var(--shadow-light)}
+  .responsive-brand strong{font-size:17px}
+  .responsive-head>.theme-options{display:none}
+  .workspace-tabs{top:8px;padding:7px;background:var(--nav-bg);box-shadow:0 10px 25px var(--shadow)}
+  .workspace-tab{min-height:42px;padding:0 12px}
+}
+@media(max-width:760px){
+  .app{padding:10px 10px calc(82px + env(safe-area-inset-bottom))}
+  .responsive-head{
+    min-height:50px;
+    margin-bottom:9px;
+    padding:7px 10px;
+    border-color:var(--border);
+    box-shadow:0 5px 15px var(--shadow-light);
+  }
+  .responsive-brand strong{font-size:16px}
+  .responsive-theme-menu summary{min-width:36px;justify-content:center;padding:6px}
+  .responsive-theme-menu summary span{display:none}
+  .responsive-theme-menu .theme-option{min-width:0;min-height:44px;display:grid;padding:5px 2px}
+  .responsive-theme-menu .theme-option small{display:block!important}
+  .workspace-tabs{
+    top:auto;
+    bottom:0;
+    height:auto;
+    min-height:66px;
+    padding:7px 5px calc(7px + env(safe-area-inset-bottom));
+    border-color:var(--border);
+    box-shadow:0 -8px 24px var(--shadow);
+  }
+  .workspace-tab{min-height:49px;font-size:9px}
+  .workspace-icon svg{width:17px;height:17px}
+  .workspace-tab.active{background:var(--accent-dim);border-color:transparent}
+  .workspace-tab.active code{color:var(--accent)}
+  .hero{
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:start;
+    padding:15px 14px;
+    margin-bottom:9px;
+  }
+  .hero::before{inset:15px auto 15px 0}
+  .hero-info h1{font-size:22px}
+  .hero-actions{
+    position:static;
+    width:auto;
+    max-width:none;
+    flex-wrap:nowrap;
+    justify-content:flex-end;
+    gap:5px;
+  }
+  .hero-actions .btn{
+    flex:0 0 auto;
+    width:auto;
+    min-width:36px;
+    min-height:34px;
+    padding:5px 7px;
+    font-size:10px;
+  }
+  .hero-actions .btn svg{width:14px;height:14px}
+  .summary-wrap{grid-template-columns:1fr;gap:9px;margin-bottom:9px}
+  .summary-hero{min-height:145px;padding:19px}
+  .summary-hero .hero-value{font-size:31px}
+  .summary-grid{gap:8px}
+  .summary-card{min-height:78px;padding:12px}
+  .summary-card .value{font-size:16px}
+  .overview-grid{gap:9px;margin-bottom:9px}
+  .panel{padding:14px;margin-bottom:9px;box-shadow:0 5px 16px var(--shadow-light)}
+  .panel-header{margin-bottom:14px}
+  .panel-header h2{font-size:16px}
+  .quick-add-panel>.panel-header{padding:15px 14px 0}
+  .quick-ticket{grid-template-columns:1fr}
+  .quick-side,.quick-main{padding:13px}
+  .quick-action-card{min-height:60px;box-shadow:none}
+  .quick-action-card span{font-size:8px}
+  .quick-amount-card{padding:11px}
+  .quick-amount-row .form-input{min-height:46px;font-size:15px}
+  .form-input,td input,td select{min-height:41px}
+  .review-summary-grid{gap:8px}
+  .review-summary-cell{padding:12px;box-shadow:none}
+  .review-summary-cell strong{font-size:18px}
+  .review-block{padding-top:16px;padding-bottom:15px}
+  .review-recent-row{min-height:50px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+@media(min-width:1181px) and (max-height:760px){
+  .terminal-rail{inset-block:14px;padding:12px;gap:9px}
+  .terminal-brand{min-height:45px;padding-bottom:9px}
+  .terminal-brand img{width:34px;height:34px}
+  .terminal-nav{gap:2px}
+  .terminal-nav button{min-height:45px}
+  .terminal-nav .nav-copy small{display:none}
+  .rail-entry-btn{min-height:39px}
+  .rail-theme{padding:5px 0}
+  .terminal-rail-meta{padding-top:8px}
+}
 </style>
 </head>
 <body>
@@ -970,43 +2445,78 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
   <aside class="terminal-rail section-records section-stats section-data">
     <div class="terminal-brand">
       <img src="icon.svg" alt="投记">
-      <div><strong>投记</strong><span>{{ APP_VERSION }}</span></div>
+      <div><strong>投记</strong><span>WEALTH JOURNAL</span></div>
     </div>
     <nav class="terminal-nav" aria-label="投记工作台导航">
-      <a href="#overview"><span>01</span>总览</a>
-      <a href="#positions"><span>02</span>持仓</a>
-      <a href="#records"><span>03</span>流水</a>
-      <a href="#analytics"><span>04</span>统计</a>
-      <a href="#review"><span>05</span>复盘</a>
-      <a href="#data-safe"><span>06</span>数据</a>
+      <button v-for="tab in workspaceTabs" :key="tab.key" :class="{active:activeTab===tab.key}" @click="setActiveTab(tab.key)" :aria-current="activeTab===tab.key?'page':null">
+        <span class="nav-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" v-html="tab.icon"></svg></span>
+        <span class="nav-copy"><strong>{{ tab.label }}</strong><small>{{ tab.caption }}</small></span>
+      </button>
     </nav>
+    <button class="rail-entry-btn" @click="setActiveTab('quick')"><span>＋</span>记一笔</button>
+    <details class="rail-theme">
+      <summary title="切换界面主题">
+        <span class="theme-summary-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="13.5" cy="6.5" r="2"/><circle cx="17.5" cy="10.5" r="2"/><circle cx="8.5" cy="7.5" r="2"/><path d="M12 2a10 10 0 1 0 10 10c0-1.1-.9-2-2-2h-1.4a2 2 0 0 1-1.8-2.9l.6-1.2A2.7 2.7 0 0 0 15 2H12Z"/></svg>
+        </span>
+        <span class="theme-summary-copy"><strong>界面主题</strong><small>{{ themeLabel }}</small></span>
+        <span class="theme-caret" aria-hidden="true">⌄</span>
+      </summary>
+      <div class="theme-options" role="group" aria-label="界面主题">
+        <button v-for="item in THEMES" :key="item.key" :class="['theme-option',{active:theme===item.key}]" @click="setTheme(item.key)" :title="'切换为'+item.label+'主题'" :aria-pressed="theme===item.key">
+          <span :class="['theme-swatch',item.key]" aria-hidden="true"></span>
+          <small>{{ item.label }}</small>
+        </button>
+      </div>
+    </details>
     <div class="terminal-rail-meta">
-      <p>同步</p><strong>{{ syncStatus }}</strong>
-      <p>本地记录</p><strong>{{ entries.length }} 条</strong>
-      <p>持仓</p><strong>{{ positions.length }} 只</strong>
+      <p><span :class="['sync-dot',{syncing,stale:!syncing&&lastChangeAt>lastSyncedAt}]"></span> 数据状态</p>
+      <strong>{{ syncStatus }}</strong>
+      <div class="rail-meta-counts">
+        <span>{{ entries.length }} 条流水</span>
+        <span>{{ positions.length }} 个持仓</span>
+      </div>
     </div>
   </aside>
 
   <!-- PRICE TICKER (hidden) -->
 
+  <div class="responsive-head section-records section-stats section-data">
+    <div class="responsive-brand"><img src="icon.svg" alt=""><div><strong>投记</strong><small>WEALTH JOURNAL</small></div></div>
+    <details class="responsive-theme-menu">
+      <summary title="切换界面主题" aria-label="切换界面主题">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="13.5" cy="6.5" r="2"/><circle cx="17.5" cy="10.5" r="2"/><circle cx="8.5" cy="7.5" r="2"/><path d="M12 2a10 10 0 1 0 10 10c0-1.1-.9-2-2-2h-1.4a2 2 0 0 1-1.8-2.9l.6-1.2A2.7 2.7 0 0 0 15 2H12Z"/></svg>
+        <span>{{ themeLabel }}</span>
+      </summary>
+      <div class="theme-options" role="group" aria-label="界面主题">
+        <button v-for="item in THEMES" :key="item.key" :class="['theme-option',{active:theme===item.key}]" @click="setTheme(item.key)" :aria-pressed="theme===item.key">
+          <span :class="['theme-swatch',item.key]" aria-hidden="true"></span>
+          <small>{{ item.label }}</small>
+        </button>
+      </div>
+    </details>
+  </div>
+
   <nav class="workspace-tabs" aria-label="投记工作区">
     <button v-for="tab in workspaceTabs" :key="tab.key" :class="['workspace-tab',{active:activeTab===tab.key}]" @click="setActiveTab(tab.key)">
-      <code>{{ tab.no }}</code>{{ tab.label }}
+      <span class="workspace-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" v-html="tab.icon"></svg></span><span>{{ tab.label }}</span>
     </button>
   </nav>
 
   <!-- ===== HERO ===== -->
   <header id="overview" class="hero section-records section-stats section-data" v-show="activeTab==='overview'">
     <div class="hero-info">
-      <p class="kicker">{{ t('appKicker') }} <span style="opacity:.45;font-weight:400;margin-left:4px">{{ APP_VERSION }}</span></p>
-      <h1>{{ t('appKicker') }}</h1>
-      <p class="sub">{{ t('appDesc') }}</p>
+      <p class="kicker">PORTFOLIO OVERVIEW <span>{{ APP_VERSION }}</span></p>
+      <h1>资产总览</h1>
+      <p class="sub">把分散在不同账户的投入、持仓与收益放在同一个视角里。</p>
       <blockquote class="hero-quote" id="heroQuote"></blockquote>
     </div>
     <div class="hero-actions">
-      <button class="btn btn-ghost btn-sm" @click="lang=lang==='zh'?'en':'zh';localStorage.setItem('touji_lang_v1',lang)">🌐 {{ lang==='zh'?'English':'中文' }}</button>
-      <button :class="['btn','btn-sm',showcaseMode?'btn-primary':'btn-ghost']" @click="toggleShowcase" title="隐藏真实金额，适合公开展示">👁 {{ showcaseMode?'展示中':'展示模式' }}</button>
-      <span v-if="syncCfg.token" class="sync-dot" :class="{syncing:syncing,stale:!syncing&&lastChangeAt>lastSyncedAt}" :title="syncStatus"></span>
+      <button class="btn btn-ghost btn-sm" @click="lang=lang==='zh'?'en':'zh';localStorage.setItem('touji_lang_v1',lang)" title="切换语言">{{ lang==='zh'?'EN':'中' }}</button>
+      <button :class="['btn','btn-sm',showcaseMode?'btn-primary':'btn-ghost']" @click="toggleShowcase" title="隐藏真实金额，适合公开展示">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+        {{ showcaseMode?'展示中':'隐藏金额' }}
+      </button>
       <input ref="xlsxFile" type="file" accept=".xlsx,.xls,.csv" hidden @change="importExcel">
       <input ref="jsonFile" type="file" accept=".json" hidden @change="importJSON">
     </div>
@@ -1046,13 +2556,46 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
     </div>
   </div>
 
+  <div class="overview-grid" v-show="activeTab==='overview'">
+    <section class="panel overview-module">
+      <div class="panel-header">
+        <div><p class="module-kicker">CORE HOLDINGS</p><h2>主要持仓</h2></div>
+        <button class="text-command" @click="setActiveTab('positions')">查看全部 <span>→</span></button>
+      </div>
+      <div class="overview-rows" v-if="posRows.length">
+        <button v-for="p in posRows.slice(0,5)" :key="p.id" class="overview-row" @click="setActiveTab('positions')">
+          <span class="asset-mark">{{ (p.symbol||'?').slice(0,2) }}</span>
+          <span class="overview-row-main"><strong>{{ p.name||p.symbol }}</strong><small>{{ p.symbol }} · {{ p.assetType||'未分类' }}</small></span>
+          <span class="overview-row-value"><strong>{{ fmt(p.value) }}</strong><small :class="p.pl>=0?'text-green':'text-red'">{{ p.hasCost?(p.pl>=0?'+':'')+fmt(p.pl):'待补成本' }}</small></span>
+        </button>
+      </div>
+      <div class="empty-block" v-else><strong>还没有持仓</strong><span>从“录入”添加第一笔买入，或在持仓页手动建立初始仓位。</span><button class="text-command" @click="setActiveTab('quick')">开始录入 →</button></div>
+    </section>
+    <section class="panel overview-module">
+      <div class="panel-header">
+        <div><p class="module-kicker">RECENT ACTIVITY</p><h2>最近流水</h2></div>
+        <button class="text-command" @click="setActiveTab('records')">查看全部 <span>→</span></button>
+      </div>
+      <div class="overview-rows" v-if="sortedEntries.length">
+        <button v-for="e in sortedEntries.slice(0,6)" :key="e.id" class="overview-row" @click="openEditModal(e)">
+          <span :class="['flow-mark','flow-'+e.type]">{{ e.type.slice(0,1) }}</span>
+          <span class="overview-row-main"><strong>{{ e.exchange||e.targetName||'未命名账户' }}</strong><small>{{ e.date }} · {{ e.assetType||'未分类' }}</small></span>
+          <span class="overview-row-value"><strong>{{ fmt(e.amount) }} {{ e.currency||'CNY' }}</strong><small>{{ e.note||tagsText(e.tags)||'无备注' }}</small></span>
+        </button>
+      </div>
+      <div class="empty-block" v-else><strong>账本还是空的</strong><span>第一笔可以是入金，也可以直接记录买入。</span><button class="text-command" @click="setActiveTab('quick')">记第一笔 →</button></div>
+    </section>
+  </div>
+
   <!-- ===== POSITIONS ===== -->
   <section id="positions" class="panel section-stats section-not-records section-not-data" v-show="activeTab==='positions'">
-    <div class="panel-header" @click="showPosForm=!showPosForm" style="cursor:pointer">
-      <div class="panel-collapse-toggle"><span :class="['arrow',{open:showPosForm}]">&#9654;</span> <div><h2>{{ t('posTitle') }}</h2><p class="hint">{{ t('posCount',{n:positions.length}) }}<span v-if="positions.length"> · {{ t('posTotalCost') }} {{ fmt(posSummary.totalCost) }} · {{ t('posTotalValue') }} {{ fmt(posSummary.totalValue) }} · <span :style="{color:posSummary.pl>=0?'var(--green)':'var(--red)'}">{{ t('posPL') }} {{ posSummary.pl>=0?'+':'' }}{{ fmt(posSummary.pl) }} ({{ fmtPct(posSummary.plPct,1) }})</span></span></p></div></div>
+    <div class="panel-header">
+      <div><p class="module-kicker">POSITIONS</p><h2>{{ t('posTitle') }}</h2><p class="hint">{{ t('posCount',{n:positions.length}) }}<span v-if="positions.length"> · {{ t('posTotalCost') }} {{ fmt(posSummary.totalCost) }} · {{ t('posTotalValue') }} {{ fmt(posSummary.totalValue) }} · <span :style="{color:posSummary.pl>=0?'var(--green)':'var(--red)'}">{{ t('posPL') }} {{ posSummary.pl>=0?'+':'' }}{{ fmt(posSummary.pl) }} ({{ fmtPct(posSummary.plPct,1) }})</span></span></p></div>
+      <div class="panel-actions"><button class="btn btn-ghost btn-sm" @click="fetchPosPrices" v-if="positions.length">刷新价格</button><button class="btn btn-primary btn-sm" @click="showPosForm=!showPosForm">{{ showPosForm?'收起':'＋ 新增持仓' }}</button></div>
     </div>
-    <div :class="['panel-collapse-body',{collapsed:!showPosForm}]">
+    <div>
       <!-- Add form -->
+      <div v-show="showPosForm" class="position-entry-block">
       <!-- 市场分类筛选 -->
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;align-items:center">
         <span style="font-size:11px;color:var(--muted);margin-right:2px">{{ t('posMarketLabel') }}</span>
@@ -1092,6 +2635,7 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
         <div class="form-group"><label>{{ t('posCurrency') }}</label><select class="form-input" v-model="posForm.currency"><option>CNY</option><option>USD</option><option>HKD</option><option>USDT</option></select></div>
         <div class="form-group" v-if="posForm.secid" style="font-size:11px;color:var(--muted);align-self:end;padding-bottom:8px">{{ posForm.assetType }} · {{ posForm.secid }}</div>
         <button class="btn btn-primary btn-sm" @click="addPosition" style="align-self:end">{{ t('posAdd') }}</button>
+      </div>
       </div>
       <!-- Position allocation chart -->
       <div v-if="posRows.some(p=>p.value>0)" style="margin-bottom:16px">
@@ -1187,7 +2731,6 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
           </div>
         </div>
       </div>
-      <button class="btn btn-ghost btn-sm mt-8" @click="fetchPosPrices" v-if="positions.length">{{ t('posRefreshPrice') }}</button>
       <div v-if="!positions.length" style="text-align:center;color:var(--muted);padding:20px">{{ t('posEmpty') }}</div>
     </div>
   </section>
@@ -1563,51 +3106,104 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
 
   <!-- ===== INSIGHT & REVIEW ===== -->
   <section id="review" class="panel section-stats section-not-records section-not-data" v-show="activeTab==='review'">
-    <div class="panel-header"><h2>建议 · 行为 · 复盘</h2></div>
+    <div class="panel-header review-head">
+      <div>
+        <p class="module-kicker">RECENT REVIEW</p>
+        <h2>近期复盘</h2>
+        <p class="hint">{{ reviewScopeText }} · 只分析当前窗口，旧数据仍完整保留</p>
+      </div>
+      <div class="review-range-tabs" role="group" aria-label="复盘时间范围">
+        <button v-for="item in REVIEW_RANGES" :key="item.key" :class="{active:reviewRange===item.key}" @click="setReviewRange(item.key)" :aria-pressed="reviewRange===item.key">{{ item.label }}</button>
+      </div>
+    </div>
 
-    <!-- Behavior: psychology tags + advice -->
-    <template v-if="behaviorAnalysis">
-      <div class="tag-list" style="margin-bottom:10px">
-        <span v-for="(t,i) in psychoTags" :key="i" :class="['psych-tag',t.type]" :title="t.tip">
-          <span class="tag-dot"></span>{{ t.text }}
-        </span>
+    <div class="review-summary-grid">
+      <div class="review-summary-cell"><p>记录</p><strong>{{ reviewSummary.count }}</strong><small>笔操作</small></div>
+      <div class="review-summary-cell"><p>净投入</p><strong :class="reviewSummary.netFunding>0?'text-red':reviewSummary.netFunding<0?'text-green':''">{{ fmt(reviewSummary.netFunding) }}</strong><small>入金减出金</small></div>
+      <div class="review-summary-cell"><p>买卖</p><strong>{{ reviewSummary.tradeCount }}</strong><small>{{ reviewSummary.buyCount }} 买 · {{ reviewSummary.sellCount }} 卖</small></div>
+      <div class="review-summary-cell"><p>已实现盈亏</p><strong :class="reviewSummary.realizedPL>=0?'text-green':'text-red'">{{ (reviewSummary.realizedPL>=0?'+':'')+fmt(reviewSummary.realizedPL) }}</strong><small>仅统计卖出记录</small></div>
+    </div>
+
+    <div v-if="!reviewSummary.count" class="empty-block review-empty">
+      <strong>近期还没有可复盘的操作</strong>
+      <span>切换更长时间范围查看历史，或从下一笔入金、出金、买入、卖出开始记录。</span>
+      <button class="btn btn-primary btn-sm" @click="setActiveTab('quick')">去记一笔</button>
+    </div>
+
+    <template v-else>
+      <div class="review-layout">
+        <section class="review-block">
+          <div class="review-block-head"><h3>行为信号</h3><small>基于所选范围内的入金节奏</small></div>
+          <template v-if="behaviorAnalysis">
+            <div class="tag-list">
+              <span v-for="(tag,i) in psychoTags" :key="i" :class="['psych-tag',tag.type]" :title="tag.tip">
+                <span class="tag-dot"></span>{{ tag.text }}
+              </span>
+            </div>
+            <div class="behavior-metrics">
+              <div class="behavior-metric"><p>{{ t('avgInterval') }}</p><strong>{{ behaviorAnalysis.avgInterval }} 天</strong></div>
+              <div class="behavior-metric"><p>{{ t('denseCount') }}</p><strong>{{ behaviorAnalysis.denseCount }} 次</strong></div>
+              <div class="behavior-metric"><p>{{ t('avgAmount') }}</p><strong>{{ fmt(behaviorAnalysis.avgAmount) }}</strong></div>
+              <div class="behavior-metric"><p>{{ t('maxSingle') }}</p><strong>{{ fmt(behaviorAnalysis.maxAmount) }}</strong></div>
+            </div>
+          </template>
+          <p v-else class="review-muted">这个范围内没有入金记录，暂时无法判断投入节奏。</p>
+        </section>
+
+        <section class="review-block">
+          <div class="review-block-head"><h3>最近操作</h3><small>最新 {{ recentReviewEntries.length }} 笔</small></div>
+          <div class="review-recent-list">
+            <div v-for="entry in recentReviewEntries" :key="entry.id" class="review-recent-row">
+              <span :class="['flow-mark','flow-'+entry.type]">{{ entry.type.slice(0,1) }}</span>
+              <div><strong>{{ entry.type }} · {{ entry.exchange||'未填写平台' }}</strong><small>{{ entry.date }} · {{ entry.assetType||'未分类' }}<template v-if="entry.note"> · {{ entry.note }}</template></small></div>
+              <strong :class="entry.type==='出金'||entry.type==='卖出'?'text-green':'text-red'">{{ fmt(amountCNY(entry)) }}</strong>
+            </div>
+          </div>
+        </section>
       </div>
-      <ul class="insight-list">
-        <li v-for="(a,i) in behaviorAdvice" :key="i">{{ a }}</li>
-      </ul>
-      <div class="behavior-metrics" style="margin:14px 0">
-        <div class="behavior-metric"><p>{{ t('avgInterval') }}</p><strong>{{ behaviorAnalysis.avgInterval }} 天</strong></div>
-        <div class="behavior-metric"><p>{{ t('denseCount') }}</p><strong>{{ behaviorAnalysis.denseCount }} 次</strong></div>
-        <div class="behavior-metric"><p>{{ t('maxSingle') }}</p><strong>{{ fmt(behaviorAnalysis.maxAmount) }}</strong></div>
-        <div class="behavior-metric"><p>{{ t('avgAmount') }}</p><strong>{{ fmt(behaviorAnalysis.avgAmount) }}</strong></div>
-        <div class="behavior-metric"><p>{{ t('maxStreak') }}</p><strong>{{ behaviorAnalysis.maxStreak }} 笔</strong></div>
-        <div class="behavior-metric"><p>{{ t('totalCount') }}</p><strong>{{ behaviorAnalysis.totalIn }} 笔</strong></div>
+
+      <div class="review-layout review-layout-secondary">
+        <section class="review-block">
+          <div class="review-block-head"><h3>本次结论</h3><small>{{ reviewRangeMeta.label }}</small></div>
+          <p class="insight-summary">{{ insightSummary }}</p>
+          <ul class="insight-list"><li v-for="(advice,i) in insightAdvice" :key="i">{{ advice }}</li></ul>
+          <ul v-if="behaviorAnalysis" class="insight-list review-behavior-advice"><li v-for="(advice,i) in behaviorAdvice" :key="i">{{ advice }}</li></ul>
+        </section>
+
+        <section class="review-block">
+          <div class="review-block-head"><h3>复盘清单</h3><small>完成即自动保存</small></div>
+          <div class="review-checklist">
+            <label v-for="(item,i) in reviewChecklist" :key="i">
+              <input type="checkbox" v-model="item.checked" @change="saveChecklist">
+              <span>{{ item.text }}</span>
+            </label>
+          </div>
+        </section>
       </div>
+
+      <details class="review-details">
+        <summary>{{ t('largeTxWarn') }} · {{ largeTxList.length }} 笔</summary>
+        <ul class="insight-list">
+          <li v-for="(item,i) in largeTxList" :key="i">{{ item }}</li>
+          <li v-if="!largeTxList.length" class="review-muted">{{ t('noLargeTx') }}</li>
+        </ul>
+      </details>
+      <details class="review-details">
+        <summary>{{ t('rules') }}</summary>
+        <div class="insight-config">
+          <div class="form-group"><label>已实现亏损提醒（元）</label><input class="form-input" type="number" v-model.number="rules.lossWarn"></div>
+          <div class="form-group"><label>已实现亏损强提醒（元）</label><input class="form-input" type="number" v-model.number="rules.lossCritical"></div>
+          <div class="form-group"><label>大额出入金阈值（元）</label><input class="form-input" type="number" v-model.number="rules.largeTx"></div>
+          <button class="btn btn-ghost btn-sm" @click="saveRules">{{ t('saveRules') }}</button>
+        </div>
+      </details>
     </template>
 
-    <!-- Insight: cash flow suggestions + large tx -->
-    <p class="insight-summary">{{ insightSummary }}</p>
-    <ul class="insight-list"><li v-for="(a,i) in insightAdvice" :key="i">{{ a }}</li></ul>
-    <h4>{{ t('largeTxWarn') }}</h4>
-    <ul class="insight-list">
-      <li v-for="(t,i) in largeTxList" :key="i">{{ t }}</li>
-      <li v-if="!largeTxList.length" style="color:var(--muted)">{{ t('noLargeTx') }}</li>
-    </ul>
-    <details style="margin:14px 0 0">
-      <summary style="font-size:12px;color:var(--muted);cursor:pointer;user-select:none;letter-spacing:.3px;text-transform:uppercase">{{ t('rules') }}</summary>
-      <div class="insight-config" style="margin-top:10px">
-        <div class="form-group"><label>{{ t('ruleLossWarn') }}</label><input class="form-input" type="number" v-model.number="rules.lossWarn"></div>
-        <div class="form-group"><label>{{ t('ruleLossCritical') }}</label><input class="form-input" type="number" v-model.number="rules.lossCritical"></div>
-        <div class="form-group"><label>{{ t('ruleRoiWarn') }}</label><input class="form-input" type="number" step="0.01" v-model.number="rules.roiWarn"></div>
-        <div class="form-group"><label>{{ t('ruleInflowRatio') }}</label><input class="form-input" type="number" step="0.1" v-model.number="rules.inflowRatio"></div>
-        <div class="form-group"><label>{{ t('ruleLargeTx') }}</label><input class="form-input" type="number" v-model.number="rules.largeTx"></div>
-        <div class="form-group"><label>{{ t('ruleLossStreak') }}</label><input class="form-input" type="number" v-model.number="rules.lossStreak"></div>
-        <button class="btn btn-ghost btn-sm" @click="saveRules">{{ t('saveRules') }}</button>
-      </div>
-    </details>
-    <h4 style="margin-top:18px">{{ t('reviewNote') }}</h4>
-    <textarea class="form-input" v-model="reviewNote" :placeholder="t('reviewNote')" rows="3"></textarea>
-    <div class="note-actions"><button class="btn btn-ghost btn-sm" @click="saveReviewNote">{{ t('saveReviewNote') }}</button><small class="note-hint">{{ reviewSavedAt }}</small></div>
+    <div class="review-note">
+      <div class="review-block-head"><h3>{{ t('reviewNote') }}</h3><small>{{ reviewRangeMeta.label }} · {{ dayjs().format('YYYY-MM') }}</small></div>
+      <textarea class="form-input" v-model="reviewNote" placeholder="这段时间做对了什么？哪一笔最值得复盘？下一次要坚持哪条规则？" rows="4"></textarea>
+      <div class="note-actions"><button class="btn btn-primary btn-sm" @click="saveReviewNote">{{ t('saveReviewNote') }}</button><small class="note-hint">{{ reviewSavedAt }}</small></div>
+    </div>
   </section>
 
   <!-- ===== SNAPSHOTS ===== -->
@@ -1628,7 +3224,7 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
       <button class="btn btn-ghost" style="padding:14px;font-size:14px;justify-content:center" @click="exportJSON">⬇ {{ t('exportJSON') }}</button>
     </div>
     <h4 style="font-size:12px;color:var(--muted);margin:0 0 8px;text-transform:uppercase;letter-spacing:.3px">快照备份</h4>
-    <p class="hint mb-12">每次修改自动保存快照，最多 10 份。</p>
+    <p class="hint mb-12">每次修改自动保存完整快照，最多保留 6 份。</p>
     <div v-if="!snapshots.length" style="color:var(--muted);font-size:12px;padding:16px 0;text-align:center">{{ t('noSnapshots') }}</div>
     <div v-for="(s,i) in snapshots" :key="i" class="snap-row">
       <div><div style="font-size:13px;font-weight:600">{{ s.at }}</div><div style="font-size:11px;color:var(--muted)">{{ (s.entries||[]).length }} 条记录</div></div>
@@ -1721,20 +3317,21 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
           <div class="import-summary-cell"><p>本地新增</p><strong>{{ syncPreview.summary.localOnly }}</strong></div>
           <div class="import-summary-cell"><p>本地更新</p><strong style="color:var(--purple)">{{ syncPreview.summary.localNewer }}</strong></div>
           <div class="import-summary-cell"><p>删除/冲突</p><strong class="text-red">{{ syncPreview.summary.remoteDeleted+syncPreview.summary.localDeleted+syncPreview.summary.conflict }}</strong></div>
+          <div class="import-summary-cell"><p>持仓变化</p><strong style="color:var(--accent)">{{ syncPreview.summary.positionChanges||0 }}</strong></div>
         </div>
 
         <div class="import-impact">
-          <div><p>本地记录</p><strong>{{ entries.length }}</strong></div>
-          <div><p>云端记录</p><strong>{{ syncPreview.remoteCount }}</strong></div>
-          <div><p>合并后</p><strong>{{ syncPreview.mergedCount }}</strong></div>
-          <div><p>保留本地改动</p><strong>{{ syncPreview.summary.localOnly+syncPreview.summary.localNewer+syncPreview.summary.localDeleted }}</strong></div>
+          <div><p>本地</p><strong>{{ entries.length }} 流水 / {{ positions.length }} 持仓</strong></div>
+          <div><p>云端</p><strong>{{ syncPreview.remoteCount }} 流水 / {{ syncPreview.remotePositionCount }} 持仓</strong></div>
+          <div><p>合并后</p><strong>{{ syncPreview.mergedCount }} 流水 / {{ syncPreview.mergedPositionCount }} 持仓</strong></div>
+          <div><p>本地保留</p><strong>{{ syncPreview.summary.localOnly+syncPreview.summary.localNewer+syncPreview.summary.localDeleted }} 条</strong></div>
         </div>
 
         <div class="import-option" v-if="syncPreview.mode==='push'">
           <span>云端已经有和本地不同的数据。建议先合并再上传；只有确认本机数据才是唯一正确版本时，才强制上传覆盖云端。</span>
         </div>
         <div class="import-option" v-else>
-          <span>确认后会按每条记录的更新时间合并：更新的一边胜出，本地新增会保留，已删除记录会同步到另一台设备。</span>
+          <span>确认后会同时合并流水与持仓：更新的一边胜出，本地新增会保留，删除也会同步到另一台设备。</span>
         </div>
 
         <div class="import-preview-list">
@@ -1753,39 +3350,6 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
         <button class="btn btn-ghost" style="flex:1" @click="cancelSyncPreview">{{ t('cancel') }}</button>
         <button class="btn btn-danger" style="flex:1" v-if="syncPreview.mode==='push'" @click="confirmSyncForcePush">强制上传</button>
         <button class="btn btn-primary" style="flex:2" @click="confirmSyncMerge">{{ syncPreview.mode==='push'?'合并后上传':'确认合并' }}</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== MOBILE ADD MODAL ===== -->
-  <div v-if="showMobileAdd" class="modal-mask" @click.self="showMobileAdd=false">
-    <div class="modal-box">
-      <div class="modal-handle"></div>
-      <div class="modal-head"><div class="modal-title">{{ t('newRecords') }}</div><button class="modal-close" @click="showMobileAdd=false">&times;</button></div>
-      <div class="modal-body">
-        <div class="form-group"><label>类型</label><select class="form-input" v-model="form.type"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option></select></div>
-        <div class="form-group"><label>{{ t('date') }}</label><input class="form-input" type="date" v-model="form.date"></div>
-        <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="form.assetType"><option value="">{{ t("uncategorized") }}</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select></div>
-        <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="form.exchange" list="dl-ex2" placeholder="选择或输入"><datalist id="dl-ex2"><option v-for="ex in platformSuggestions" :key="ex" :value="ex"></option></datalist></div>
-        <div class="form-group">
-          <label>{{ t('amount') }}</label>
-          <div style="display:flex;gap:6px">
-            <select class="form-input" v-model="form.currency" style="width:110px;flex-shrink:0"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select>
-            <input class="form-input" type="number" step="0.01" v-model.number="form.amount" inputmode="decimal" style="flex:1;min-width:0">
-          </div>
-          <div v-if="form.currency!=='CNY'" style="display:flex;gap:6px;margin-top:6px;align-items:center">
-            <span style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0">{{ t('rate') }}</span>
-            <input class="form-input" type="number" step="0.0001" v-model="form.rate" :placeholder="form.currency==='HKD'?'0.92':'7.25'" inputmode="decimal" style="flex:1;min-width:0">
-            <button class="rate-fetch-btn" @click="fetchRate(form.currency,'form')" :disabled="rateLoading">{{ rateLoading?'获取中…':'获取汇率' }}</button>
-          </div>
-          <p class="rate-hint" v-if="form.currency!=='CNY'&&form.rate&&form.amount">本笔 ≈ {{ fmt(form.amount*Number(form.rate)) }} 元（1 {{ form.currency }} = {{ form.rate }} CNY）</p>
-        </div>
-        <div class="form-group"><label>{{ form.type==='入金'?'投入理由':'出金备注' }}</label><input class="form-input" v-model="form.note" :placeholder="form.type==='入金'?'为什么要投入这笔？':'收款渠道/备注'"></div>
-        <div class="form-group"><label>{{ t('tagStats') }}</label><input class="form-input" v-model="form.tagText" list="dl-tags2" placeholder="定投，补仓，FOMO"><datalist id="dl-tags2"><option v-for="t in allTags" :key="t" :value="t"></option></datalist></div>
-      </div>
-      <div class="modal-foot">
-        <button class="btn btn-ghost" style="flex:1" @click="copyLast">{{ t('copyLast') }}</button>
-        <button class="btn btn-primary" style="flex:2" @click="mobileAddEntry" :disabled="!form.amount||form.amount<=0">{{ t('add') }}</button>
       </div>
     </div>
   </div>
@@ -1817,20 +3381,21 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
             <strong :style="{color:r.type==='入金'?'var(--red)':r.type==='出金'?'var(--green)':r.type==='买入'?'#60a5fa':'#a78bfa'}">{{ r.type }}</strong> {{ fmt(amountCNY(r)) }}
           </div>
         </div>
-        <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></select></div>
+        <div class="trade-lock-note" v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'">成交金额、币种和资产会参与持仓成本计算。需要改动时请删除后重新录入；日期、平台、备注和标签仍可编辑。</div>
+        <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></select></div>
         <div class="form-group"><label>{{ t('date') }}</label><input class="form-input" type="date" v-model="editingEntry.date"></div>
-        <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="editingEntry.assetType"><option value="">{{ t("uncategorized") }}</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select></div>
+        <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="editingEntry.assetType" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="">{{ t("uncategorized") }}</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select></div>
         <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="editingEntry.exchange" list="dl-ex3"><datalist id="dl-ex3"><option v-for="ex in editPlatformSuggestions" :key="ex" :value="ex"></option></datalist></div>
         <div class="form-group">
           <label>{{ t('amount') }}</label>
           <div style="display:flex;gap:6px">
-            <select class="form-input" v-model="editingEntry.currency" style="width:110px;flex-shrink:0"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select>
-            <input class="form-input" type="number" step="0.01" v-model.number="editingEntry.amount" inputmode="decimal" style="flex:1;min-width:0">
+            <select class="form-input" v-model="editingEntry.currency" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'" style="width:110px;flex-shrink:0"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select>
+            <input class="form-input" type="number" step="0.01" v-model.number="editingEntry.amount" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'" inputmode="decimal" style="flex:1;min-width:0">
           </div>
           <div v-if="editingEntry.currency&&editingEntry.currency!=='CNY'" style="display:flex;gap:6px;margin-top:6px;align-items:center">
             <span style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0">{{ t('rate') }}</span>
-            <input class="form-input" type="number" step="0.0001" v-model="editingEntry.rate" inputmode="decimal" style="flex:1;min-width:0">
-            <button class="rate-fetch-btn" @click="fetchRate(editingEntry.currency,'edit')" :disabled="rateLoading">{{ rateLoading?'获取中…':'获取汇率' }}</button>
+            <input class="form-input" type="number" step="0.0001" v-model="editingEntry.rate" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'" inputmode="decimal" style="flex:1;min-width:0">
+            <button class="rate-fetch-btn" @click="fetchRate(editingEntry.currency,'edit')" :disabled="rateLoading||editingEntry.type==='买入'||editingEntry.type==='卖出'">{{ rateLoading?'获取中…':'获取汇率' }}</button>
           </div>
           <p class="rate-hint" v-if="editingEntry.currency&&editingEntry.currency!=='CNY'&&editingEntry.rate&&editingEntry.amount">本笔 ≈ {{ fmt(amountCNY(editingEntry)) }} 元（1 {{ editingEntry.currency }} = {{ editingEntry.rate }} CNY）</p>
         </div>
@@ -1846,12 +3411,12 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
 
   <!-- Dashboard Config Modal -->
   <div v-if="showDashCfg" class="modal-mask" @click.self="showDashCfg=false">
-    <div class="modal-box" style="border-radius:20px 20px 0 0;max-width:440px">
+    <div class="modal-box" style="border-radius:8px;max-width:440px">
       <div class="modal-handle"></div>
       <div class="modal-head"><div class="modal-title">自定义看板</div><button class="modal-close" @click="showDashCfg=false">&times;</button></div>
       <div class="modal-body">
         <p style="font-size:12px;color:var(--muted);margin-bottom:14px">拖拽排序未支持，先用上下按钮调整。取消勾选的面板将隐藏。</p>
-        <div v-for="key in DASH_DEFAULT" :key="key" style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;border:1px solid var(--border);border-radius:10px;background:var(--card)">
+        <div v-for="key in DASH_DEFAULT" :key="key" style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;border:1px solid var(--border);border-radius:8px;background:var(--card)">
           <input type="checkbox" :checked="dashVisible(key)" @change="toggleDashPanel(key)" style="accent-color:var(--accent);width:18px;height:18px">
           <span style="flex:1;font-size:14px;font-weight:600">{{ dashLabels[key] }}</span>
           <button class="btn btn-ghost btn-xs" @click="moveDashPanel(key,-1)" :disabled="dashPanels.indexOf(key)<=0" style="font-size:16px">▲</button>
@@ -1862,19 +3427,12 @@ tbody tr:nth-child(even) td{background:rgba(0,0,0,.01)}
     </div>
   </div>
 
-  <!-- Mobile bottom tabs -->
-  <div class="mobile-tabs"><div class="mobile-tabs-inner">
-    <div :class="['mob-tab',{active:mobileTab==='records'}]" @click="mobileTab='records'"><span class="mob-tab-icon">📋</span>{{ t('records') }}</div>
-    <div :class="['mob-tab',{active:mobileTab==='stats'}]" @click="mobileTab='stats'"><span class="mob-tab-icon">📊</span>{{ t('stats') }}</div>
-    <div :class="['mob-tab',{active:mobileTab==='data'}]" @click="mobileTab='data'"><span class="mob-tab-icon">💾</span>{{ t('data') }}</div>
-  </div></div>
-  <button class="fab" @click="showMobileAdd=true">+</button>
 </div>
 
 <script>
 dayjs.extend(dayjs_plugin_isoWeek);dayjs.extend(dayjs_plugin_weekOfYear);dayjs.locale('zh-cn')
 
-const SK='touji_entries_v1',SNAP_K='touji_snapshots_v1',RULES_K='touji_rules_v1',REVIEW_K='touji_reviews_v1',SYNC_K='touji_sync_v1',IMPORT_K='touji_import_batches_v1',CHECKLIST_K='touji_checklist_v1',POS_K='touji_positions_v1',DEL_K='touji_deleted_v1'
+const SK='touji_entries_v1',SNAP_K='touji_snapshots_v1',RULES_K='touji_rules_v1',REVIEW_K='touji_reviews_v1',SYNC_K='touji_sync_v1',IMPORT_K='touji_import_batches_v1',CHECKLIST_K='touji_checklist_v1',POS_K='touji_positions_v1',DEL_K='touji_deleted_v1',POS_DEL_K='touji_position_deleted_v1'
 const LEGACY_CASHFLOW_K=['crypto','cashflow'].join('_')
 const LEGACY_FLOW_K=['flow','ledger'].join('')
 const LEGACY_FLOW_LABEL=['Flow','Ledger'].join('')
@@ -1897,6 +3455,7 @@ migrateStorageKey(IMPORT_K,`${LEGACY_FLOW_K}_import_batches_v1`)
 migrateStorageKey(CHECKLIST_K,[`${LEGACY_FLOW_K}_checklist`,`${LEGACY_CASHFLOW_K}_checklist`])
 migrateStorageKey(POS_K,`${LEGACY_FLOW_K}_positions_v1`)
 migrateStorageKey(DEL_K,`${LEGACY_FLOW_K}_deleted_v1`)
+migrateStorageKey(POS_DEL_K,`${LEGACY_FLOW_K}_position_deleted_v1`)
 migrateStorageKey(LANG_K,`${LEGACY_FLOW_K}_lang`)
 const genId=()=>crypto.randomUUID?crypto.randomUUID():('r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6))
 const clone=o=>JSON.parse(JSON.stringify(o))
@@ -1930,7 +3489,9 @@ function normType(v){
   const s=String(v||'入金').trim()
   if(s==='买入')return'买入'
   if(s==='卖出')return'卖出'
-  return ['出金','取出','提现','赎回'].includes(s)?'出金':'入金'
+  if(['出金','取出','提现','赎回'].includes(s))return'出金'
+  if(['入金','投入','充值','存入'].includes(s))return'入金'
+  return''
 }
 function normalizeAssetType(v){
   const s=String(v||'').trim()
@@ -1951,14 +3512,17 @@ function normRow(row){
   const assetType=normalizeAssetType(row.assetType||row['资产类型']||'')
   const currency=String(row.currency||row['货币']||'CNY').trim().toUpperCase()
   const tags=parseTags(row.tags||row['标签']||row.tagText||row['Tag']||row['Tags'])
-  if(!date||!amt)return null
-  const tradeQty=row.tradeQty!=null?normNum(row.tradeQty):''
-  const tradePrice=row.tradePrice!=null?normNum(row.tradePrice):''
-  const rpl=row.realizedPL!=null?Number(row.realizedPL)||0:undefined
+  if(!date||!amt||!type)return null
+  const rawQty=row.tradeQty??row['成交数量']??row['数量/份额']??''
+  const rawPrice=row.tradePrice??row['成交单价']??row['买入价格']??row['卖出价格']??''
+  const rawRpl=row.realizedPL??row['已实现盈亏']
+  const tradeQty=rawQty!==''?normNum(rawQty):''
+  const tradePrice=rawPrice!==''?normNum(rawPrice):''
+  const rpl=rawRpl!=null&&rawRpl!==''?Number(rawRpl)||0:undefined
   return{id:row.id||genId(),date,amount:amt,rate:rate===''?'':normNum(rate),exchange,note,type,assetType,currency,tags,
     tradeQty:tradeQty||'',tradePrice:tradePrice||'',
-    targetSymbol:row.targetSymbol||'',targetName:row.targetName||'',
-    positionId:row.positionId||'',
+    targetSymbol:row.targetSymbol||row['标的代码']||'',targetName:row.targetName||row['标的名称']||'',
+    targetMarket:row.targetMarket||row['标的市场']||'',positionId:row.positionId||'',
     ...(rpl!=null?{realizedPL:rpl}:{}),
     updatedAt:row.updatedAt||0}
 }
@@ -2026,8 +3590,8 @@ const I18N={
     netPL:'净盈亏',
     roi:'回本比例',
     holdingsValue:'持仓市值',
-    trueReturn:'出入金净盈亏',
-    trueROI:'净盈亏率',
+    trueReturn:'真实收益',
+    trueROI:'真实收益率',
     roiRate:'回本率',
     periodMonth:'月度',
     periodWeek:'周',
@@ -2037,12 +3601,14 @@ const I18N={
     cumPL:'累计盈亏',
     inTotal:'入金合计',
     outTotal:'出金合计',
+    curPeriodNet:'当前周期净盈亏',
     lastPeriod:'上个周期净盈亏',
     compareChange:'环比变化',
     exchangeStats:'账户 / 平台统计',
     assetStats:'资产类型统计',
     tagStats:'标签统计',
     largeTxWarn:'大额提醒',
+    noLargeTx:'暂无大额交易',
     insights:'建议与复盘',
     rules:'规则设置',
     saveRules:'保存规则',
@@ -2097,7 +3663,9 @@ const I18N={
     createSnap:'创建快照',
     clearSnaps:'清空快照',
     restoreSnap:'恢复',
-    manualSnapDesc:'手动备份当前数据，最多保留 10 份',
+    manualSnapDesc:'手动备份完整数据，最多保留 6 份',
+    noSnapshots:'暂无快照',
+    noImportHistory:'暂无导入历史',
     syncSettings:'GitHub Gist 同步',
     syncDesc:'多端同步数据。',
     syncFree:'（免费、安全、带版本历史）',
@@ -2387,7 +3955,7 @@ const I18N={
     createSnap:'Create Snapshot',
     clearSnaps:'Clear Snapshots',
     restoreSnap:'Restore',
-    manualSnapDesc:'Manually backup current data, up to 10 copies',
+    manualSnapDesc:'Back up all data, up to 6 copies',
     syncSettings:'GitHub Gist Sync',
     syncDesc:'Multi-device data sync.',
     syncFree:'(Free, secure, with version history)',
@@ -2554,9 +4122,10 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.06.16-10' // 每次部署递增末位，方便区分加载到哪一版
+  const APP_VERSION='v2026.07.20-2'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
+  const deletedPositionIds=ref({})
   const snapshots=ref([])
   const importBatches=ref([])
   const period=ref('month')
@@ -2566,7 +4135,7 @@ setup(){
   migrateStorageKey(DASH_K,`${LEGACY_FLOW_K}_dashboard`)
   const DASH_DEFAULT=['positions','periodStats','insights']
   function loadDashboard(){try{const r=localStorage.getItem(DASH_K);if(r)return JSON.parse(r)}catch(e){}return [...DASH_DEFAULT]}
-  function saveDashboard(){localStorage.setItem(DASH_K,JSON.stringify(dashPanels.value))}
+  function saveDashboard(){writeStorageJSON(DASH_K,dashPanels.value,'看板设置')}
   const dashPanels=ref(loadDashboard())
   const showDashCfg=ref(false)
   const dashLabels={periodStats:'盈亏统计',positions:'持仓管理',insights:'建议 · 行为 · 复盘'}
@@ -2583,8 +4152,6 @@ setup(){
     saveDashboard()
   }
   function resetDashboard(){dashPanels.value=[...DASH_DEFAULT];saveDashboard()}
-  const mobileTab=ref('records')
-  const showMobileAdd=ref(false)
   const showFilters=ref(false)
   const editingEntry=ref(null)
   const showSync=ref(false)
@@ -2597,20 +4164,51 @@ setup(){
     showToast(showcaseMode.value?'已开启展示模式，真实金额已隐藏':'已关闭展示模式','info')
   }
 
-  // Theme：Finebank 浅色为唯一主题（深色主题已随改版下线）
-  const theme=ref('light')
-  document.documentElement.dataset.theme='light'
+  const THEME_K='touji_theme_v2'
+  const THEMES=[
+    {key:'mist',label:'雾白',meta:'#EDF2F0'},
+    {key:'graphite',label:'岩灰',meta:'#1B2222'},
+    {key:'ink',label:'墨金',meta:'#090D0C'}
+  ]
+  let savedTheme='mist'
+  try{savedTheme=localStorage.getItem(THEME_K)||'mist'}catch(e){}
+  const theme=ref(THEMES.some(item=>item.key===savedTheme)?savedTheme:'mist')
+  const themeLabel=computed(()=>THEMES.find(item=>item.key===theme.value)?.label||'雾白')
   const themeMeta=document.querySelector('meta[name="theme-color"]')
-  if(themeMeta)themeMeta.content='#F5F5F5'
+  function applyTheme(name){
+    const item=THEMES.find(option=>option.key===name)||THEMES[0]
+    document.documentElement.dataset.theme=item.key
+    if(themeMeta)themeMeta.content=item.meta
+  }
+  function setTheme(name){
+    const item=THEMES.find(option=>option.key===name)
+    if(!item)return
+    document.querySelectorAll('.rail-theme[open],.responsive-theme-menu[open]').forEach(menu=>menu.removeAttribute('open'))
+    if(theme.value===item.key)return
+    theme.value=item.key
+    applyTheme(item.key)
+    try{localStorage.setItem(THEME_K,item.key)}catch(e){}
+    Vue.nextTick(()=>{renderChart();renderPosPieChart()})
+    showToast(`已切换为${item.label}主题`,'info')
+  }
+  applyTheme(theme.value)
   const toast=reactive({show:false,message:'',type:'info'})
   const ACTIVE_TAB_K='touji_active_tab_v1'
+  const NAV_ICONS={
+    overview:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+    quick:'<path d="M12 5v14M5 12h14"/>',
+    positions:'<path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/>',
+    records:'<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2V3Z"/><path d="M9 8h6M9 12h6"/>',
+    review:'<path d="M9 5H6a2 2 0 0 0-2 2v13h16V7a2 2 0 0 0-2-2h-3"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m8.5 13 2.2 2.2 4.8-4.8"/>',
+    data:'<path d="M20 7h-4V3M4 17h4v4"/><path d="M5.1 9A8 8 0 0 1 18.7 5.3L20 7M4 17l1.3 1.7A8 8 0 0 0 18.9 15"/>'
+  }
   const workspaceTabs=[
-    {key:'overview',no:'01',label:'总览'},
-    {key:'quick',no:'02',label:'录入'},
-    {key:'positions',no:'03',label:'持仓'},
-    {key:'records',no:'04',label:'流水统计'},
-    {key:'review',no:'05',label:'复盘'},
-    {key:'data',no:'06',label:'同步数据'}
+    {key:'overview',no:'01',icon:NAV_ICONS.overview,label:'总览',caption:'净值与动态'},
+    {key:'quick',no:'02',icon:NAV_ICONS.quick,label:'录入',caption:'入金与交易'},
+    {key:'positions',no:'03',icon:NAV_ICONS.positions,label:'持仓',caption:'仓位与成本'},
+    {key:'records',no:'04',icon:NAV_ICONS.records,label:'流水统计',caption:'筛选与分析'},
+    {key:'review',no:'05',icon:NAV_ICONS.review,label:'复盘',caption:'行为与纪律'},
+    {key:'data',no:'06',icon:NAV_ICONS.data,label:'同步数据',caption:'备份与迁移'}
   ]
   const activeTabKeys=workspaceTabs.map(t=>t.key)
   const savedActiveTab=localStorage.getItem(ACTIVE_TAB_K)
@@ -2730,26 +4328,60 @@ setup(){
   }
 
   // Persistence
+  function readStorageJSON(key,label,fallback){
+    const raw=localStorage.getItem(key)
+    if(!raw)return fallback
+    try{return JSON.parse(raw)}
+    catch(e){
+      console.error(`[投记] ${label}读取失败，已保留原始数据`,e)
+      setTimeout(()=>showToast(`${label}读取失败，原始数据未被覆盖，请先导出浏览器数据排查`,'error'),0)
+      return fallback
+    }
+  }
+  function writeStorageJSON(key,value,label){
+    try{localStorage.setItem(key,JSON.stringify(value));return true}
+    catch(e){
+      console.error(`[投记] ${label}保存失败`,e)
+      showToast(`${label}保存失败，浏览器空间可能不足，请立即导出备份`,'error')
+      return false
+    }
+  }
   function load(){
-    try{const r=localStorage.getItem(SK);if(r)entries.value=JSON.parse(r).map(e=>({...e,assetType:normalizeAssetType(e.assetType),tags:parseTags(e.tags||e.tagText||e['标签'])}))}catch(e){}
-    if(!entries.value.length){entries.value=PRELOADED.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1);save()}
-    try{const r=localStorage.getItem(SNAP_K);if(r)snapshots.value=JSON.parse(r)}catch(e){}
-    try{const r=localStorage.getItem(IMPORT_K);if(r)importBatches.value=JSON.parse(r)}catch(e){}
-    try{const r=localStorage.getItem(RULES_K);if(r)Object.assign(rules,{...defRules(),...JSON.parse(r)})}catch(e){}
-    try{const r=localStorage.getItem(SYNC_K);if(r)Object.assign(syncCfg,JSON.parse(r));syncStatus.value=syncCfg.token?'已配置':'未配置'}catch(e){}
-    try{const r=localStorage.getItem(DEL_K);if(r)deletedIds.value=JSON.parse(r)||{}}catch(e){}
+    const storedEntries=readStorageJSON(SK,'流水数据',null)
+    if(Array.isArray(storedEntries)){
+      entries.value=storedEntries.map(e=>({...e,assetType:normalizeAssetType(e.assetType),tags:parseTags(e.tags||e.tagText||e['标签'])}))
+    }else if(storedEntries===null&&!localStorage.getItem(SK)&&PRELOADED.length){
+      entries.value=PRELOADED.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1)
+      save()
+    }
+    snapshots.value=readStorageJSON(SNAP_K,'快照',[])||[]
+    importBatches.value=readStorageJSON(IMPORT_K,'导入历史',[])||[]
+    Object.assign(rules,{...defRules(),...(readStorageJSON(RULES_K,'提醒规则',{})||{})})
+    Object.assign(syncCfg,readStorageJSON(SYNC_K,'同步设置',{})||{})
+    syncStatus.value=syncCfg.token?'已配置':'未配置'
+    deletedIds.value=readStorageJSON(DEL_K,'流水删除记录',{})||{}
+    deletedPositionIds.value=readStorageJSON(POS_DEL_K,'持仓删除记录',{})||{}
     loadReview()
   }
-  function save(){localStorage.setItem(SK,JSON.stringify(entries.value));if(typeof scheduleAutoPush==='function')scheduleAutoPush()}
-  function saveDeleted(){localStorage.setItem(DEL_K,JSON.stringify(deletedIds.value))}
+  function save(){const ok=writeStorageJSON(SK,entries.value,'流水数据');if(ok&&typeof scheduleAutoPush==='function')scheduleAutoPush();return ok}
+  function saveDeleted(){writeStorageJSON(DEL_K,deletedIds.value,'流水删除记录')}
+  function saveDeletedPositions(){writeStorageJSON(POS_DEL_K,deletedPositionIds.value,'持仓删除记录')}
   // 记录墓碑（删除/清空时调用）
   function recordDeleted(ids){const now=Date.now();ids.forEach(id=>{deletedIds.value[id]=now});saveDeleted()}
+  function recordDeletedPositions(ids){const now=Date.now();ids.forEach(id=>{deletedPositionIds.value[id]=now});saveDeletedPositions()}
   function snap(){
-    const s={at:new Date().toISOString(),entries:clone(entries.value)}
-    snapshots.value.unshift(s);if(snapshots.value.length>10)snapshots.value=snapshots.value.slice(0,10)
-    localStorage.setItem(SNAP_K,JSON.stringify(snapshots.value))
+    const s={
+      at:new Date().toISOString(),
+      entries:clone(entries.value),
+      positions:clone(positions.value),
+      deletedIds:clone(deletedIds.value),
+      deletedPositionIds:clone(deletedPositionIds.value)
+    }
+    snapshots.value.unshift(s)
+    if(snapshots.value.length>6)snapshots.value=snapshots.value.slice(0,6)
+    writeStorageJSON(SNAP_K,snapshots.value,'快照')
   }
-  function saveImportBatches(){localStorage.setItem(IMPORT_K,JSON.stringify(importBatches.value))}
+  function saveImportBatches(){writeStorageJSON(IMPORT_K,importBatches.value,'导入历史')}
   function recordImportBatch(batch){
     importBatches.value.unshift({id:genId(),at:new Date().toISOString(),undone:false,...batch})
     if(importBatches.value.length>20)importBatches.value=importBatches.value.slice(0,20)
@@ -2811,11 +4443,11 @@ setup(){
     return{types:[...BUILTIN_TYPES],platforms:{...BUILTIN_PLATFORMS},colors:{...BUILTIN_COLORS}}
   }
   const assetCfg=reactive(loadAssetCfg())
-  function saveAssetCfg(){localStorage.setItem(ASSET_CFG_K,JSON.stringify({types:assetCfg.types,platforms:assetCfg.platforms,colors:assetCfg.colors}))}
+  function saveAssetCfg(){writeStorageJSON(ASSET_CFG_K,{types:assetCfg.types,platforms:assetCfg.platforms,colors:assetCfg.colors},'资产设置')}
   const ASSET_TYPES=computed(()=>assetCfg.types)
   function getPlatforms(assetType){return assetCfg.platforms[normalizeAssetType(assetType)]||[]}
   function assetColor(type){return assetCfg.colors[normalizeAssetType(type)]||assetCfg.colors['']}
-  const POS_PIE_COLORS=['#2DB5A0','#f59e0b','#60a5fa','#f87171','#10b981','#8B5CF6','#fbbf24','#0EA5E9','#fb923c','#2dd4bf']
+  const POS_PIE_COLORS=['#D6A34A','#4FB7C5','#42C98B','#E36B6B','#B8A7E8','#6F8FB8','#B8B16D','#D78364','#67A7A2','#9D85B8']
   const platformSuggestions=computed(()=>{
     const preset=getPlatforms(form.assetType)
     const used=allExchanges.value.filter(ex=>!preset.includes(ex))
@@ -2994,6 +4626,18 @@ setup(){
     if(!editingEntry.value)return
     const e=entries.value.find(x=>x.id===editingEntry.value.id)
     if(!e){editingEntry.value=null;return}
+    const tradeLocked=e.type==='买入'||e.type==='卖出'
+    if(tradeLocked){
+      const protectedChanged=e.type!==editingEntry.value.type
+        ||Number(e.amount)!==Number(editingEntry.value.amount)
+        ||String(e.rate||'')!==String(editingEntry.value.rate||'')
+        ||e.currency!==editingEntry.value.currency
+        ||normalizeAssetType(e.assetType)!==normalizeAssetType(editingEntry.value.assetType)
+      if(protectedChanged){
+        showToast('交易记录的类型、金额、币种和资产不可直接修改；请删除后重新录入，系统会同步回退持仓','error')
+        return
+      }
+    }
     snap()
     e.date=editingEntry.value.date;e.amount=Number(editingEntry.value.amount)||0
     e.rate=editingEntry.value.rate===''?'':Number(editingEntry.value.rate)
@@ -3114,34 +4758,64 @@ setup(){
   }
   // 加密快捷列表（从 TICKER_LIST 取 binance 源）
   const cryptoQuickList=computed(()=>TICKER_LIST.filter(t=>t.source==='binance'))
-  function loadPositions(){
-    try{
-      const r=localStorage.getItem(POS_K)
-      if(r){
-        const raw=JSON.parse(r)
-        // 迁移旧持仓：推断 source。加密(Binance)保留，其余视为待重选的股票
-        positions.value=raw.map(p=>{
-          p={...p,assetType:normalizeAssetType(p.assetType)}
-          if(p.source==='eastmoney'||p.source==='binance')return p // 已是新格式
-          const t=findTicker(p.symbol)
-          if(t&&t.source==='binance')return{...p,source:'binance',secid:'',currency:p.currency||'USDT',assetType:p.assetType||'加密货币'}
-          // 旧的股票持仓（Yahoo，本就取不到价）→ 标记 eastmoney 但无 secid，需用户重新选标的
-          return{...p,source:'eastmoney',secid:p.secid||''}
-        })
-      }
-    }catch(e){}
+  function normalizePosition(row){
+    if(!row||!row.id)return null
+    return{
+      ...row,
+      symbol:String(row.symbol||'').trim().toUpperCase(),
+      name:String(row.name||row.symbol||'').trim(),
+      qty:Number(row.qty)||0,
+      avgCost:row.avgCost==null||row.avgCost===''?null:Number(row.avgCost)||0,
+      costRate:row.costRate==null||row.costRate===''?undefined:Number(row.costRate)||1,
+      currency:row.currency||'CNY',
+      assetType:normalizeAssetType(row.assetType),
+      source:row.source||'eastmoney',
+      secid:row.secid||'',
+      updatedAt:Number(row.updatedAt)||0
+    }
   }
-  function savePositions(){localStorage.setItem(POS_K,JSON.stringify(positions.value))}
+  function loadPositions(){
+    const raw=readStorageJSON(POS_K,'持仓数据',[])
+    if(!Array.isArray(raw))return
+    // 迁移旧持仓：推断 source。加密(Binance)保留，其余视为待重选的股票
+    positions.value=raw.map(item=>{
+      let p=normalizePosition(item)
+      if(!p)return null
+      if(p.source==='eastmoney'||p.source==='binance')return p
+      const t=findTicker(p.symbol)
+      if(t&&t.source==='binance')return{...p,source:'binance',secid:'',currency:p.currency||'USDT',assetType:p.assetType||'加密货币'}
+      return{...p,source:'eastmoney',secid:p.secid||''}
+    }).filter(Boolean)
+  }
+  function savePositions({sync=true}={}){
+    const ok=writeStorageJSON(POS_K,positions.value,'持仓数据')
+    if(ok&&sync&&typeof scheduleAutoPush==='function')scheduleAutoPush()
+    return ok
+  }
   function addPosition(){
     if(!posForm.symbol.trim()||!Number(posForm.qty)){showToast('请选择标的并填写份额','error');return}
     const avg=posForm.avgCost===''||posForm.avgCost==null?null:Number(posForm.avgCost)
-    positions.value.push({id:genId(),symbol:posForm.symbol.trim(),name:posForm.name.trim()||posForm.symbol.trim(),icon:posForm.icon,qty:Number(posForm.qty),avgCost:avg,currency:posForm.currency,assetType:normalizeAssetType(posForm.assetType),source:posForm.source,secid:posForm.secid})
+    positions.value.push({id:genId(),symbol:posForm.symbol.trim().toUpperCase(),name:posForm.name.trim()||posForm.symbol.trim(),icon:posForm.icon,qty:Number(posForm.qty),avgCost:avg,currency:posForm.currency,assetType:normalizeAssetType(posForm.assetType),source:posForm.source,secid:posForm.secid,origin:'manual',updatedAt:Date.now()})
     savePositions()
     posForm.symbol='';posForm.name='';posForm.qty='';posForm.avgCost='';posForm.icon='';posForm.secid='';posForm.source='eastmoney'
     posSymbolSearch.value='';posSearchResults.value=[];showPosForm.value=false;showToast('已添加持仓','success')
   }
-  function removePosition(id){if(!confirm('确定删除持仓？'))return;positions.value=positions.value.filter(p=>p.id!==id);savePositions();showToast('已删除','success')}
-  function updatePosition(id,key,val){const p=positions.value.find(x=>x.id===id);if(!p)return;if(key==='qty'||key==='avgCost')p[key]=Number(val)||0;else p[key]=val;savePositions()}
+  function removePosition(id){
+    if(!confirm('确定删除持仓？关联流水会保留。'))return
+    snap()
+    positions.value=positions.value.filter(p=>p.id!==id)
+    recordDeletedPositions([id])
+    savePositions()
+    showToast('已删除','success')
+  }
+  function updatePosition(id,key,val){
+    const p=positions.value.find(x=>x.id===id)
+    if(!p)return
+    if(key==='qty'||key==='avgCost')p[key]=Number(val)||0
+    else p[key]=val
+    p.updatedAt=Date.now()
+    savePositions()
+  }
   function positionTag(p){return `持仓:${String(p.symbol||'').trim().toUpperCase()}`}
   const quickTargetMarkets=[
     {l:'沪深市',v:'沪深市'},
@@ -3353,25 +5027,19 @@ setup(){
     return{count:rows.length,inTotal,outTotal,netInvested:inTotal-outTotal,rows}
   }
   function createPositionFlow(p,kind){
-    const isBuy=kind==='buy'
-    const currency=p.currency||'CNY'
-    const unit=isBuy?(p.avgCost||p.price||0):(p.price||p.avgCost||0)
-    const suggested=unit&&p.qty?Number((unit*p.qty).toFixed(2)):''
-    const raw=prompt(`${isBuy?'买入':'卖出'} ${p.name||p.symbol} 的${currency}金额`,suggested)
-    if(raw===null)return
-    const amount=normNum(raw)
-    if(!amount){showToast('请输入有效金额','error');return}
-    const type=isBuy?'买入':'卖出'
-    const rate=currency==='CNY'?'':(fxRates[currency]||RATE_FALLBACK[currency]||'')
-    const note=`${isBuy?'买入':'卖出'} ${p.name||p.symbol} (${p.symbol})`
-    snap()
-    entries.value.unshift({
-      id:genId(),date:dayjs().format('YYYY-MM-DD'),amount,rate,exchange:'持仓联动',note,type,
-      assetType:p.assetType||'',currency,tags:[positionTag(p),String(p.symbol||'').trim().toUpperCase(),isBuy?'买入':'卖出'].filter(Boolean),
-      updatedAt:Date.now()
-    })
-    save()
-    showToast(`已生成${isBuy?'买入':'卖出'}流水`,'success')
+    setQuickAction(kind==='sell'?'sell':'buy')
+    form.positionId=p.id
+    form.targetMarket=normalizeAssetType(p.assetType)||'沪深市'
+    form.targetKey=`position:${p.id}`
+    form.currency=p.currency||'CNY'
+    form.assetType=normalizeAssetType(p.assetType)
+    form.tradePrice=posPrices.value[posKey(p)]||p.avgCost||''
+    form.tradeQty=''
+    form.exchange=form.exchange||'持仓联动'
+    applyQuickPosition()
+    setActiveTab('quick')
+    Vue.nextTick(()=>scrollPageToElement(document.querySelector('.quick-add-panel'),'start'))
+    showToast(`已带入 ${p.name||p.symbol}，请填写成交数量`,'info')
   }
   // currency→CNY 汇率访问器（兜底 1）
   function fx(cur){return fxRates[cur]||1}
@@ -3401,15 +5069,26 @@ setup(){
     }))
   // 持仓价格缓存的 key：股票用 secid，加密用 symbol
   function posKey(p){return p.source==='eastmoney'?p.secid:p.symbol}
-  function upsertPositionFromTrade(entry,target){
-    if(entry.type!=='买入'&&entry.type!=='卖出')return
+  function tradeTargetFromEntry(entry){
+    if(!entry)return null
+    const symbol=String(entry.targetSymbol||'').trim().toUpperCase()
+    if(!symbol)return null
+    return{symbol,name:entry.targetName||symbol,source:entry.assetType==='加密货币'?'binance':'eastmoney',secid:''}
+  }
+  function findPositionForTrade(entry,target){
+    const symbol=String(target?.symbol||entry?.targetSymbol||'').trim().toUpperCase()
+    let p=entry?.positionId?positions.value.find(x=>x.id===entry.positionId):null
+    if(!p&&symbol)p=positions.value.find(x=>String(x.symbol||'').trim().toUpperCase()===symbol&&normalizeAssetType(x.assetType)===normalizeAssetType(entry?.assetType))
+    return p||null
+  }
+  function upsertPositionFromTrade(entry,target,{persist=true}={}){
+    if(entry.type!=='买入'&&entry.type!=='卖出')return{ok:true}
     const qty=Number(entry.tradeQty)||0
     const price=Number(entry.tradePrice)||0
-    if(!qty||!price||!target)return
+    if(!qty||!price||!target)return{ok:false,message:'交易缺少价格、数量或标的信息'}
     const symbol=String(target.symbol||target.name||'').trim().toUpperCase()
-    if(!symbol)return
-    let p=entry.positionId?positions.value.find(x=>x.id===entry.positionId):null
-    if(!p)p=positions.value.find(x=>String(x.symbol||'').trim().toUpperCase()===symbol&&normalizeAssetType(x.assetType)===normalizeAssetType(entry.assetType))
+    if(!symbol)return{ok:false,message:'交易缺少标的代码'}
+    let p=findPositionForTrade(entry,target)
     if(entry.type==='买入'){
       if(p){
         const oldQty=Number(p.qty)||0
@@ -3421,29 +5100,24 @@ setup(){
         p.costRate=entry.currency==='CNY'?1:(Number(entry.rate)||fx(entry.currency||'CNY'))
         p.assetType=normalizeAssetType(entry.assetType)||p.assetType
         if(target.secid)p.secid=target.secid
+        p.updatedAt=Date.now()
       }else{
         const ticker=findTicker(symbol)
-        positions.value.push({
+        p={
           id:genId(),symbol,name:target.name||symbol,icon:ticker?.icon||'',qty:Number(qty.toFixed(8)),avgCost:price,
           costRate:entry.currency==='CNY'?1:(Number(entry.rate)||fx(entry.currency||'CNY')),
           currency:entry.currency||'CNY',assetType:normalizeAssetType(entry.assetType)||'',source:target.source==='eastmoney'?'eastmoney':(entry.assetType==='加密货币'?'binance':'eastmoney'),
-          secid:target.secid||''
-        })
+          secid:target.secid||'',origin:'trade',updatedAt:Date.now()
+        }
+        positions.value.push(p)
       }
+      entry.positionId=p.id
+      delete deletedPositionIds.value[p.id]
     }else{
-      // 卖出
-      if(!p){
-        // 找不到匹配持仓，警告用户但仍记录交易
-        console.warn('[FlowLedger] 卖出找不到匹配持仓:',symbol)
-        entry.realizedPL=0
-        entry._noPosition=true
-        return
-      }
-      const sellQty=Math.min(qty,Number(p.qty)||0)
-      if(qty>Number(p.qty||0)){
-        console.warn('[FlowLedger] 卖出数量',qty,'超过持仓',p.qty,'，按持仓数量计算')
-      }
-      if(p.avgCost!=null&&sellQty>0){
+      if(!p)return{ok:false,message:`没有找到 ${target.name||symbol} 的持仓`}
+      const held=Number(p.qty)||0
+      if(qty>held)return{ok:false,message:`卖出数量 ${qty} 超过当前持仓 ${held}`}
+      if(p.avgCost!=null&&qty>0){
         // 统一转 CNY 比较：成本价 × 成本汇率，卖出价 × 卖出汇率
         const posCur=p.currency||'CNY'
         const entryCur=entry.currency||'CNY'
@@ -3451,13 +5125,45 @@ setup(){
         const sellRate=entryCur==='CNY'?1:(Number(entry.rate)||fx(entryCur))
         const costPerCNY=p.avgCost*costRate
         const sellPerCNY=price*sellRate
-        entry.realizedPL=Number(((sellPerCNY-costPerCNY)*sellQty).toFixed(2))
+        entry.realizedPL=Number(((sellPerCNY-costPerCNY)*qty).toFixed(2))
       }else{
         entry.realizedPL=0
       }
       p.qty=Math.max(0,Number(((Number(p.qty)||0)-qty).toFixed(8)))
+      p.updatedAt=Date.now()
+      entry.positionId=p.id
     }
-    savePositions()
+    if(persist){
+      saveDeletedPositions()
+      savePositions()
+    }
+    return{ok:true,position:p}
+  }
+  function rollbackPositionFromTrade(entry){
+    if(entry.type!=='买入'&&entry.type!=='卖出')return{ok:true}
+    const qty=Number(entry.tradeQty)||0
+    const price=Number(entry.tradePrice)||0
+    const target=tradeTargetFromEntry(entry)
+    const p=findPositionForTrade(entry,target)
+    if(!qty||!price||!target)return{ok:false,message:'这条交易缺少价格、数量或标的信息，无法自动回退持仓'}
+    if(!p)return{ok:false,message:'找不到关联持仓，无法安全删除这条交易'}
+    if(entry.type==='买入'){
+      const currentQty=Number(p.qty)||0
+      if(qty>currentQty)return{ok:false,message:'该买入之后已有卖出，无法直接删除；请先核对并手动调整持仓'}
+      const newQty=Number((currentQty-qty).toFixed(8))
+      if(newQty<=0&&p.origin==='trade'){
+        positions.value=positions.value.filter(x=>x.id!==p.id)
+        recordDeletedPositions([p.id])
+        return{ok:true}
+      }
+      const currentCost=currentQty*(Number(p.avgCost)||0)
+      p.qty=Math.max(0,newQty)
+      p.avgCost=newQty?Math.max(0,Number(((currentCost-qty*price)/newQty).toFixed(8))):p.avgCost
+    }else{
+      p.qty=Number(((Number(p.qty)||0)+qty).toFixed(8))
+    }
+    p.updatedAt=Date.now()
+    return{ok:true,position:p}
   }
   async function fetchPosPrices(){
     if(!positions.value.length)return
@@ -3496,6 +5202,14 @@ setup(){
     const target=isTrade?quickSelectedTarget.value:null
     if(isTrade&&!target){showToast('标的信息异常，请重新选择','error');return}
     const p=quickSelectedPosition.value
+    if(quickAction.value==='sell'){
+      const held=findPositionForTrade({positionId:form.positionId,assetType:form.assetType,targetSymbol:target?.symbol},target)
+      if(!held){showToast(`没有找到 ${target?.name||target?.symbol||'该标的'} 的持仓，无法卖出`,'error');return}
+      if(Number(form.tradeQty)>Number(held.qty||0)){
+        showToast(`卖出数量不能超过当前持仓 ${held.qty}`,'error')
+        return
+      }
+    }
     // Calm-down check
     const warns=getDepositWarnings()
     if(warns.length){
@@ -3510,28 +5224,74 @@ setup(){
     const note=(form.note||(!p?'':`${quickAction.value==='sell'?'卖出':'买入'} ${p.name||p.symbol} (${p.symbol})`)).trim()
     const entry={id:genId(),date:form.date||dayjs().format('YYYY-MM-DD'),amount:Number(form.amount),rate:form.rate?Number(form.rate):'',exchange:form.exchange.trim(),note,type:form.type,assetType:normalizeAssetType(form.assetType),currency:form.currency||'CNY',tags,tradeQty:Number(form.tradeQty)||'',tradePrice:Number(form.tradePrice)||'',targetSymbol:target?.symbol||'',targetName:target?.name||'',targetMarket:form.targetMarket||'',positionId:form.positionId||'',updatedAt:Date.now()}
     entries.value.unshift(entry)
-    upsertPositionFromTrade(entry,target)
+    const tradeResult=upsertPositionFromTrade(entry,target,{persist:false})
+    if(!tradeResult.ok){
+      entries.value=entries.value.filter(x=>x.id!==entry.id)
+      showToast(tradeResult.message||'持仓更新失败','error')
+      return
+    }
+    if(isTrade){
+      saveDeletedPositions()
+      savePositions({sync:false})
+    }
     save();form.amount='';form.note='';form.tradeQty='';form.tradePrice=''
     if(!keepContext){form.tagText='';form.positionId='';form.targetKey='';form.targetMarket='沪深市';quickTargetQuery.value='';quickTargetResults.value=[]}
     showToast(keepContext?'已保存，可继续录入':'已添加','success')
   }
-  function mobileAddEntry(){const before=entries.value.length;addEntry(false);if(entries.value.length>before)showMobileAdd.value=false}
   function copyLast(){const e=sortedEntries.value[0];if(!e)return;form.date=e.date;form.amount=e.amount;form.rate=e.rate||'';form.exchange=e.exchange;form.note='';form.type=e.type;form.assetType=normalizeAssetType(e.assetType)||'';form.currency=e.currency||'CNY';form.tagText=tagsText(e.tags);form.tradeQty=e.tradeQty||'';form.tradePrice=e.tradePrice||'';form.targetKey='';form.positionId='';quickAction.value=e.type==='买入'?'buy':e.type==='卖出'?'sell':(e.type==='出金'?'withdraw':'deposit');showToast('已复制','info')}
   function removeEntry(id){
     const e=entries.value.find(x=>x.id===id);if(!e)return
     const isTrade=e.type==='买入'||e.type==='卖出'
-    const msg=isTrade?`确认删除此条${e.type}记录？\n注意：持仓数量不会自动回退，请手动核对持仓。`:'确认删除？'
+    const msg=isTrade?`确认删除此条${e.type}记录？系统会同步回退关联持仓。`:'确认删除？'
     if(!confirm(msg))return
-    snap();entries.value=entries.value.filter(x=>x.id!==id);recordDeleted([id]);save();showToast('已删除','success')
+    snap()
+    if(isTrade){
+      const before=clone(positions.value)
+      const result=rollbackPositionFromTrade(e)
+      if(!result.ok){
+        positions.value=before
+        showToast(result.message,'error')
+        return
+      }
+      savePositions({sync:false})
+    }
+    entries.value=entries.value.filter(x=>x.id!==id)
+    recordDeleted([id])
+    save()
+    showToast('已删除','success')
   }
   function updateField(id,key,val){
     const e=entries.value.find(x=>x.id===id);if(!e)return
+    if((e.type==='买入'||e.type==='卖出')&&['type','amount','rate','currency','assetType'].includes(key)){
+      showToast('买卖记录的关键字段请删除后重新录入，避免持仓成本失真','error')
+      return
+    }
     const next=(key==='amount'||key==='rate')?(val===''?'':Number(val)):(key==='assetType'?normalizeAssetType(val):val)
     if(e[key]===next)return
     snap();e[key]=next;e.updatedAt=Date.now();save()
   }
-  function loadDemo(){if(!confirm('加载演示数据会覆盖当前记录，并先生成一份快照。继续吗？'))return;snap();entries.value=DEMO_ENTRIES.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1);save();showToast('已加载演示数据','success')}
-  function clearData(){if(!confirm('确认清空所有记录？'))return;snap();recordDeleted(entries.value.map(e=>e.id));entries.value=[];save();showToast('已清空','success')}
+  function loadDemo(){
+    if(!confirm('加载演示数据会覆盖当前流水和持仓，并先生成一份完整快照。继续吗？'))return
+    snap()
+    recordDeleted(entries.value.map(e=>e.id))
+    recordDeletedPositions(positions.value.map(p=>p.id))
+    entries.value=DEMO_ENTRIES.map(row=>({...normRow(row),updatedAt:Date.now()})).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1)
+    positions.value=[]
+    savePositions({sync:false})
+    save()
+    showToast('已加载演示数据','success')
+  }
+  function clearData(){
+    if(!confirm('确认清空全部流水和持仓？系统会先创建完整快照。'))return
+    snap()
+    recordDeleted(entries.value.map(e=>e.id))
+    recordDeletedPositions(positions.value.map(p=>p.id))
+    entries.value=[]
+    positions.value=[]
+    savePositions({sync:false})
+    save()
+    showToast('流水和持仓已清空','success')
+  }
 
   // Period Stats
   const periodRows=computed(()=>{
@@ -3594,9 +5354,56 @@ setup(){
     return{curNet:cn,prevNet:pn,delta:cn-pn}
   })
 
+  const REVIEW_RANGE_K='touji_review_range_v1'
+  const REVIEW_RANGES=[
+    {key:'30d',label:'近 30 天',days:30},
+    {key:'90d',label:'近 90 天',days:90},
+    {key:'180d',label:'近 180 天',days:180},
+    {key:'year',label:'今年',days:null}
+  ]
+  let savedReviewRange='90d'
+  try{savedReviewRange=localStorage.getItem(REVIEW_RANGE_K)||'90d'}catch(e){}
+  const reviewRange=ref(REVIEW_RANGES.some(item=>item.key===savedReviewRange)?savedReviewRange:'90d')
+  const reviewRangeMeta=computed(()=>REVIEW_RANGES.find(item=>item.key===reviewRange.value)||REVIEW_RANGES[1])
+  const reviewEndDate=computed(()=>dayjs().format('YYYY-MM-DD'))
+  const reviewStartDate=computed(()=>reviewRange.value==='year'
+    ?dayjs().startOf('year').format('YYYY-MM-DD')
+    :dayjs().subtract(reviewRangeMeta.value.days-1,'day').format('YYYY-MM-DD'))
+  const reviewEntries=computed(()=>entries.value
+    .filter(e=>e.date&&e.date>=reviewStartDate.value&&e.date<=reviewEndDate.value)
+    .sort((a,b)=>a.date<b.date?1:-1))
+  const reviewScopeText=computed(()=>`${reviewStartDate.value} 至 ${reviewEndDate.value}`)
+  const reviewSummary=computed(()=>{
+    let inTotal=0,outTotal=0,buyCount=0,sellCount=0,realized=0
+    reviewEntries.value.forEach(e=>{
+      if(e.type==='入金')inTotal+=amountCNY(e)
+      else if(e.type==='出金')outTotal+=amountCNY(e)
+      else if(e.type==='买入')buyCount++
+      else if(e.type==='卖出'){
+        sellCount++
+        const pl=Number(e.realizedPL)
+        if(Number.isFinite(pl))realized+=pl
+      }
+    })
+    return{
+      count:reviewEntries.value.length,
+      inTotal,outTotal,buyCount,sellCount,
+      tradeCount:buyCount+sellCount,
+      realizedPL:realized,
+      netFunding:inTotal-outTotal
+    }
+  })
+  const recentReviewEntries=computed(()=>reviewEntries.value.slice(0,6))
+  function setReviewRange(key){
+    if(!REVIEW_RANGES.some(item=>item.key===key)||reviewRange.value===key)return
+    reviewRange.value=key
+    try{localStorage.setItem(REVIEW_RANGE_K,key)}catch(e){}
+    loadReview()
+  }
+
   const largeTxList=computed(()=>{
     const th=rules.largeTx||5000
-    return entries.value.filter(e=>(e.type==='入金'||e.type==='出金')&&amountCNY(e)>=th).sort((a,b)=>amountCNY(b)-amountCNY(a)).slice(0,6).map(e=>{
+    return reviewEntries.value.filter(e=>(e.type==='入金'||e.type==='出金')&&amountCNY(e)>=th).sort((a,b)=>amountCNY(b)-amountCNY(a)).slice(0,6).map(e=>{
       const original=e.currency&&e.currency!=='CNY'?`（${fmt(e.amount)} ${e.currency}）`:''
       return`${e.date} ${e.exchange||''} ${e.type} ${fmt(amountCNY(e))}元${original}`
     })
@@ -3604,8 +5411,8 @@ setup(){
 
   // Behavior Analysis
   const behaviorAnalysis=computed(()=>{
-    const inEntries=sortedEntries.value.filter(e=>e.type==='入金').reverse() // chronological
-    const allSorted=[...entries.value].sort((a,b)=>a.date<b.date?-1:1)
+    const inEntries=reviewEntries.value.filter(e=>e.type==='入金').reverse() // chronological
+    const allSorted=[...reviewEntries.value].sort((a,b)=>a.date<b.date?-1:1)
     if(!inEntries.length)return null
 
     // Day of week distribution
@@ -3703,50 +5510,68 @@ setup(){
 
   // Insights
   const insightSummary=computed(()=>{
-    const ck=todayKey(period.value)
-    const cur=periodRows.value.find(r=>r.key===ck)||{inTotal:0,outTotal:0}
-    const net=cur.outTotal-cur.inTotal
-    const pn={month:'本月',week:'本周',year:'本年'}[period.value]
-    return`${pn}（${ck}）投入 ${fmt(cur.inTotal)}，取出 ${fmt(cur.outTotal)}，净盈亏 ${fmt(net)}。`
+    const s=reviewSummary.value
+    if(!s.count)return`${reviewRangeMeta.value.label}暂无流水或交易记录。`
+    return`${reviewRangeMeta.value.label}共 ${s.count} 笔记录：入金 ${fmt(s.inTotal)}，出金 ${fmt(s.outTotal)}，买卖 ${s.tradeCount} 笔，已实现盈亏 ${fmt(s.realizedPL)}。`
   })
 
   const insightAdvice=computed(()=>{
-    const ck=todayKey(period.value)
-    const cur=periodRows.value.find(r=>r.key===ck)||{inTotal:0,outTotal:0}
-    const net=cur.outTotal-cur.inTotal
-    const pRoi=cur.inTotal>0?cur.outTotal/cur.inTotal:0
-    const pn={month:'本月',week:'本周',year:'本年'}[period.value]
-    const sorted=[...periodRows.value].sort((a,b)=>a.key<b.key?-1:1)
-    let streak=0;for(let i=sorted.length-1;i>=0;i--){if(sorted[i].net<0)streak++;else break}
+    const s=reviewSummary.value
     const adv=[]
-    if(cur.inTotal===0&&cur.outTotal===0){adv.push('当前周期暂无记录，先保持观望。')}else{
-      if(net<=-rules.lossCritical)adv.push(`${pn}净亏损偏大，建议暂停投入，先复盘。`)
-      else if(net<0&&Math.abs(net)>=rules.lossWarn)adv.push(`${pn}处于亏损，建议下调单次投入额度。`)
-      if(cur.inTotal>0&&pRoi<rules.roiWarn)adv.push(`${pn}回收比例偏低，优先考虑风险收缩。`)
-      if(cur.inTotal>=rules.largeTx&&cur.outTotal>0&&cur.inTotal>cur.outTotal*rules.inflowRatio)adv.push(`${pn}投入明显快于取出，注意控制节奏。`)
-      if(streak>=rules.lossStreak)adv.push(`已连续 ${streak} 个周期亏损，建议暂停加仓。`)
-      if(net>0&&pRoi>=1.1)adv.push(`${pn}表现为正，可分批锁定利润。`)
+    if(!s.count){
+      adv.push('这个时间范围内没有新记录，可以切换到更长范围，或从下一笔操作开始积累复盘样本。')
+      return adv
     }
-    if(!adv.length)adv.push('资金节奏正常，继续执行纪律。')
+    if(s.realizedPL<=-Math.abs(rules.lossCritical||5000))adv.push('近期已实现亏损较大，下一笔交易前先写清止损条件和最大可承受损失。')
+    else if(s.realizedPL<0&&Math.abs(s.realizedPL)>=Math.abs(rules.lossWarn||1000))adv.push('近期已实现盈亏为负，建议先复盘卖出原因，再决定是否继续加仓。')
+    const days=reviewRangeMeta.value.days||Math.max(1,dayjs().diff(dayjs().startOf('year'),'day')+1)
+    const frequentThreshold=Math.max(8,Math.round(days/7*3))
+    if(s.tradeCount>=frequentThreshold)adv.push(`近期共有 ${s.tradeCount} 笔买卖，操作频率偏高；可给非计划交易增加 24 小时冷静期。`)
+    if(s.buyCount>=4&&s.buyCount>s.sellCount*3)adv.push('买入次数明显多于卖出，检查是否持续加仓但没有预先设定退出计划。')
+    if(s.netFunding>Math.max(rules.largeTx||5000,1)*2)adv.push(`近期净投入 ${fmt(s.netFunding)}，确认这部分资金不会影响日常现金流。`)
+    if(s.sellCount>0&&s.realizedPL>0)adv.push('近期卖出实现正收益，记录有效的卖出依据，后续优先复用这套规则。')
+    if(!adv.length)adv.push('近期资金与交易节奏相对平稳，继续保持记录，并在每次买卖前写明计划。')
     return adv
   })
 
   // Review
-  const defaultCL=['复盘本周期亏损前三笔，记录触发原因。','是否有情绪驱动的计划外操作？','最大单笔投入/取出是否在合理范围？','下周期先设定投入上限再操作。','是否及时止盈止损？','有无可复制的成功操作模式？']
+  const defaultCL=['复盘近期影响最大的一笔操作，记录触发原因。','是否有情绪驱动的计划外操作？','最大单笔金额是否在预设范围？','下一笔交易是否已经写好投入上限？','卖出是否遵守了止盈或止损计划？','有没有值得继续复用的成功规则？']
   const reviewChecklist=ref([])
+  function reviewStorageKey(){return`${reviewRange.value}:${dayjs().format('YYYY-MM')}`}
   function loadReview(){
-    const pk=`${period.value}:${todayKey(period.value)}`
+    const pk=reviewStorageKey()
     try{const r=localStorage.getItem(REVIEW_K);const d=r?JSON.parse(r):{};const v=d[pk];reviewNote.value=v?.note||'';reviewSavedAt.value=v?.savedAt||''}catch(e){}
     try{const r=localStorage.getItem(CHECKLIST_K);const d=r?JSON.parse(r):{};const v=d[pk];reviewChecklist.value=v||defaultCL.map(t=>({text:t,checked:false}))}catch(e){reviewChecklist.value=defaultCL.map(t=>({text:t,checked:false}))}
   }
-  function saveChecklist(){const pk=`${period.value}:${todayKey(period.value)}`;try{const r=localStorage.getItem(CHECKLIST_K);const d=r?JSON.parse(r):{};d[pk]=clone(reviewChecklist.value);localStorage.setItem(CHECKLIST_K,JSON.stringify(d))}catch(e){}}
-  function saveReviewNote(){const pk=`${period.value}:${todayKey(period.value)}`;try{const r=localStorage.getItem(REVIEW_K);const d=r?JSON.parse(r):{};d[pk]={note:reviewNote.value,savedAt:new Date().toLocaleString(lang==='zh'?'zh-CN':'en-US')};localStorage.setItem(REVIEW_K,JSON.stringify(d));reviewSavedAt.value=d[pk].savedAt;showToast('笔记已保存','success')}catch(e){}}
-  function saveRules(){localStorage.setItem(RULES_K,JSON.stringify({lossWarn:rules.lossWarn,lossCritical:rules.lossCritical,roiWarn:rules.roiWarn,inflowRatio:rules.inflowRatio,largeTx:rules.largeTx,lossStreak:rules.lossStreak}));showToast('规则已保存','success')}
-  watch(period,loadReview)
+  function saveChecklist(){const pk=reviewStorageKey();try{const r=localStorage.getItem(CHECKLIST_K);const d=r?JSON.parse(r):{};d[pk]=clone(reviewChecklist.value);writeStorageJSON(CHECKLIST_K,d,'复盘清单')}catch(e){showToast('复盘清单保存失败','error')}}
+  function saveReviewNote(){const pk=reviewStorageKey();try{const r=localStorage.getItem(REVIEW_K);const d=r?JSON.parse(r):{};d[pk]={note:reviewNote.value,savedAt:new Date().toLocaleString(lang==='zh'?'zh-CN':'en-US')};if(writeStorageJSON(REVIEW_K,d,'复盘笔记')){reviewSavedAt.value=d[pk].savedAt;showToast('笔记已保存','success')}}catch(e){showToast('复盘笔记保存失败','error')}}
+  function saveRules(){if(writeStorageJSON(RULES_K,{lossWarn:rules.lossWarn,lossCritical:rules.lossCritical,roiWarn:rules.roiWarn,inflowRatio:rules.inflowRatio,largeTx:rules.largeTx,lossStreak:rules.lossStreak},'复盘规则'))showToast('规则已保存','success')}
 
   // Snapshots
   function createSnap(){snap();showToast('快照已创建','success')}
-  function restoreSnap(i){const s=snapshots.value[i];if(!s||!confirm('确认恢复？当前数据会被覆盖。'))return;snap();entries.value=s.entries||[];save();showToast('已恢复','success')}
+  function restoreSnap(i){
+    const s=snapshots.value[i]
+    if(!s||!confirm('确认恢复？当前流水和持仓会先备份，再替换为该快照。'))return
+    snap()
+    const now=Date.now()
+    const nextEntries=clone(s.entries||[]).map(e=>({...e,updatedAt:now}))
+    const nextEntryIds=new Set(nextEntries.map(e=>e.id))
+    recordDeleted(entries.value.filter(e=>!nextEntryIds.has(e.id)).map(e=>e.id))
+    nextEntries.forEach(e=>delete deletedIds.value[e.id])
+    entries.value=nextEntries
+    if(Array.isArray(s.positions)){
+      const nextPositions=clone(s.positions).map(normalizePosition).filter(Boolean).map(p=>({...p,updatedAt:now}))
+      const nextPositionIds=new Set(nextPositions.map(p=>p.id))
+      recordDeletedPositions(positions.value.filter(p=>!nextPositionIds.has(p.id)).map(p=>p.id))
+      nextPositions.forEach(p=>delete deletedPositionIds.value[p.id])
+      positions.value=nextPositions
+      savePositions({sync:false})
+    }
+    saveDeleted()
+    saveDeletedPositions()
+    save()
+    showToast(Array.isArray(s.positions)?'流水和持仓已恢复':'旧快照仅含流水；持仓保持当前状态','success')
+  }
   function clearSnaps(){if(!confirm('清空所有快照？'))return;snapshots.value=[];localStorage.removeItem(SNAP_K);showToast('已清空','success')}
   function undoImportBatch(batch){
     if(!batch||batch.undone)return
@@ -3754,15 +5579,36 @@ setup(){
       ?'撤销覆盖导入会恢复到该次导入前的完整账本，并覆盖之后的记录改动。继续吗？'
       :'撤销合并导入会删除该批次新增的记录。继续吗？'
     if(!confirm(msg))return
+    const now=Date.now()
     if(batch.mode==='overwrite'){
       if(!Array.isArray(batch.beforeEntries)){showToast('缺少导入前备份，无法撤销','error');return}
       snap()
-      entries.value=clone(batch.beforeEntries).sort((a,b)=>a.date<b.date?1:-1)
+      const restored=clone(batch.beforeEntries).map(e=>({...e,updatedAt:now})).sort((a,b)=>a.date<b.date?1:-1)
+      const restoredIds=new Set(restored.map(e=>e.id))
+      recordDeleted(entries.value.filter(e=>!restoredIds.has(e.id)).map(e=>e.id))
+      restored.forEach(e=>delete deletedIds.value[e.id])
+      entries.value=restored
     }else{
       snap()
       const ids=new Set(batch.importedIds||[])
+      recordDeleted([...ids])
       entries.value=entries.value.filter(e=>!ids.has(e.id)).sort((a,b)=>a.date<b.date?1:-1)
+      if(Array.isArray(batch.updatedBeforeEntries)&&batch.updatedBeforeEntries.length){
+        const beforeMap=new Map(batch.updatedBeforeEntries.map(e=>[e.id,{...e,updatedAt:now}]))
+        entries.value=entries.value.map(e=>beforeMap.get(e.id)||e)
+        batch.updatedBeforeEntries.forEach(e=>delete deletedIds.value[e.id])
+      }
     }
+    if(Array.isArray(batch.beforePositions)){
+      const restoredPositions=clone(batch.beforePositions).map(p=>normalizePosition({...p,updatedAt:now})).filter(Boolean)
+      const restoredPositionIds=new Set(restoredPositions.map(p=>p.id))
+      recordDeletedPositions(positions.value.filter(p=>!restoredPositionIds.has(p.id)).map(p=>p.id))
+      restoredPositions.forEach(p=>delete deletedPositionIds.value[p.id])
+      positions.value=restoredPositions
+      savePositions({sync:false})
+    }
+    saveDeleted()
+    saveDeletedPositions()
     batch.undone=true;batch.undoneAt=new Date().toISOString()
     save();saveImportBatches();showToast('已撤销该次导入','success')
   }
@@ -3793,10 +5639,31 @@ setup(){
     if(changed){deletedIds.value=next;saveDeleted()}
     return next
   }
+  function mergedPositionDeletedMap(remoteDeleted){
+    const out={...normalizeDeletedMap(deletedPositionIds.value)}
+    Object.entries(normalizeDeletedMap(remoteDeleted)).forEach(([id,ts])=>{
+      if(!out[id]||ts>out[id])out[id]=ts
+    })
+    return out
+  }
+  function saveMergedPositionDeleted(remoteDeleted){
+    const next=mergedPositionDeletedMap(remoteDeleted)
+    const changed=JSON.stringify(next)!==JSON.stringify(normalizeDeletedMap(deletedPositionIds.value))
+    if(changed){deletedPositionIds.value=next;saveDeletedPositions()}
+    return next
+  }
   function normalizedEntryMap(list){
     const map=new Map()
     ;(Array.isArray(list)?list:[]).forEach(row=>{
       const n=normRow(row)
+      if(n&&n.id)map.set(n.id,n)
+    })
+    return map
+  }
+  function normalizedPositionMap(list){
+    const map=new Map()
+    ;(Array.isArray(list)?list:[]).forEach(row=>{
+      const n=normalizePosition(row)
       if(n&&n.id)map.set(n.id,n)
     })
     return map
@@ -3806,10 +5673,21 @@ setup(){
     if(!e)return''
     return JSON.stringify({
       date:e.date,amount:e.amount,rate:e.rate||'',exchange:e.exchange||'',note:e.note||'',
-      type:e.type,assetType:e.assetType||'',currency:e.currency||'CNY',tags:parseTags(e.tags)
+      type:e.type,assetType:e.assetType||'',currency:e.currency||'CNY',tags:parseTags(e.tags),
+      tradeQty:e.tradeQty||'',tradePrice:e.tradePrice||'',targetSymbol:e.targetSymbol||'',
+      targetName:e.targetName||'',targetMarket:e.targetMarket||'',positionId:e.positionId||'',
+      realizedPL:e.realizedPL??''
     })
   }
   function entriesDiffer(a,b){return syncEntryFingerprint(a)!==syncEntryFingerprint(b)}
+  function positionFingerprint(position){
+    const p=normalizePosition(position)
+    if(!p)return''
+    return JSON.stringify({
+      symbol:p.symbol,name:p.name,qty:p.qty,avgCost:p.avgCost,costRate:p.costRate??'',
+      currency:p.currency,assetType:p.assetType,source:p.source,secid:p.secid,origin:p.origin||''
+    })
+  }
   function mergeEntriesByTimestamp(local,remote,del){
     const map=new Map()
     normalizedEntryMap(local).forEach((e,id)=>map.set(id,e))
@@ -3826,10 +5704,33 @@ setup(){
   function mergeByTimestamp(local,remote,remoteDeleted){
     return mergeEntriesByTimestamp(local,remote,saveMergedDeleted(remoteDeleted))
   }
-  function syncSummaryTotal(s){
-    return s.remoteOnly+s.localOnly+s.remoteNewer+s.localNewer+s.remoteDeleted+s.localDeleted+s.conflict
+  function mergePositionsByTimestamp(local,remote,del){
+    const map=new Map()
+    normalizedPositionMap(local).forEach((p,id)=>map.set(id,p))
+    normalizedPositionMap(remote).forEach((p,id)=>{
+      const current=map.get(id)
+      if(!current||(p.updatedAt||0)>(current.updatedAt||0))map.set(id,p)
+    })
+    return [...map.values()].filter(p=>{
+      const deletedAt=del[p.id]
+      return !(deletedAt&&deletedAt>=(p.updatedAt||0))
+    }).map(normalizePosition).filter(Boolean)
   }
-  function syncHasIncoming(s){return s.remoteOnly+s.remoteNewer+s.remoteDeleted+s.conflict>0}
+  function mergePositionsByRemote(local,remote,remoteDeleted){
+    return mergePositionsByTimestamp(local,remote,saveMergedPositionDeleted(remoteDeleted))
+  }
+  function listChanged(current,next,fingerprint){
+    if(current.length!==next.length)return true
+    const map=new Map(current.map(item=>[item.id,item]))
+    return next.some(item=>{
+      const old=map.get(item.id)
+      return !old||(item.updatedAt||0)!==(old.updatedAt||0)||fingerprint(item)!==fingerprint(old)
+    })
+  }
+  function syncSummaryTotal(s){
+    return s.remoteOnly+s.localOnly+s.remoteNewer+s.localNewer+s.remoteDeleted+s.localDeleted+s.conflict+(s.positionChanges||0)
+  }
+  function syncHasIncoming(s){return s.remoteOnly+s.remoteNewer+s.remoteDeleted+s.conflict+(s.positionIncoming||0)>0}
   function analyzeSyncDiff(local,remote,remoteDeleted){
     const localMap=normalizedEntryMap(local)
     const remoteMap=normalizedEntryMap(remote)
@@ -3867,6 +5768,58 @@ setup(){
     const merged=mergeEntriesByTimestamp(local,remote,mergedDeletedMap(remoteDeleted))
     return{summary,rows,merged}
   }
+  function analyzePositionDiff(local,remote,remoteDeleted){
+    const localMap=normalizedPositionMap(local)
+    const remoteMap=normalizedPositionMap(remote)
+    const localDeleted=normalizeDeletedMap(deletedPositionIds.value)
+    const remoteDel=normalizeDeletedMap(remoteDeleted)
+    const ids=new Set([...localMap.keys(),...remoteMap.keys(),...Object.keys(localDeleted),...Object.keys(remoteDel)])
+    let total=0,incoming=0,conflict=0
+    ids.forEach(id=>{
+      const l=localMap.get(id),r=remoteMap.get(id)
+      const ld=localDeleted[id]||0,rd=remoteDel[id]||0
+      if(rd&&l&&rd>=(l.updatedAt||0)){total++;incoming++;return}
+      if(ld&&r&&ld>=(r.updatedAt||0)){total++;return}
+      if(r&&!l){total++;incoming++;return}
+      if(l&&!r){total++;return}
+      if(l&&r&&positionFingerprint(l)!==positionFingerprint(r)){
+        total++
+        if((r.updatedAt||0)>(l.updatedAt||0))incoming++
+        else if((r.updatedAt||0)===(l.updatedAt||0))conflict++
+      }
+    })
+    return{
+      total,incoming,conflict,
+      merged:mergePositionsByTimestamp(local,remote,mergedPositionDeletedMap(remoteDeleted))
+    }
+  }
+  function analyzeFullSync(remoteCtx){
+    const ctx=remoteCtx||{list:[],deletedIds:{},positionList:[],deletedPositionIds:{}}
+    const analysis=analyzeSyncDiff(entries.value,ctx.list||[],ctx.deletedIds||{})
+    const positionAnalysis=analyzePositionDiff(positions.value,ctx.positionList||[],ctx.deletedPositionIds||{})
+    analysis.summary.positionChanges=positionAnalysis.total
+    analysis.summary.positionIncoming=positionAnalysis.incoming
+    analysis.summary.positionConflict=positionAnalysis.conflict
+    return{...analysis,positions:positionAnalysis}
+  }
+  function applyRemoteData(data,{snapshotOnChange=false}={}){
+    const remoteEntries=Array.isArray(data?.entries)?data.entries:[]
+    const remotePositions=Array.isArray(data?.positions)?data.positions:[]
+    const mergedEntries=mergeByTimestamp(entries.value,remoteEntries,data?.deletedIds)
+    const mergedPositions=mergePositionsByRemote(positions.value,remotePositions,data?.deletedPositionIds)
+    const entriesChanged=listChanged(entries.value,mergedEntries,syncEntryFingerprint)
+    const positionsChanged=listChanged(positions.value,mergedPositions,positionFingerprint)
+    if((entriesChanged||positionsChanged)&&snapshotOnChange)snap()
+    if(entriesChanged){
+      entries.value=mergedEntries
+      writeStorageJSON(SK,entries.value,'流水数据')
+    }
+    if(positionsChanged){
+      positions.value=mergedPositions
+      savePositions({sync:false})
+    }
+    return{entriesChanged,positionsChanged,changed:entriesChanged||positionsChanged}
+  }
   // Debounced auto-sync: 3s after last change → silent pull + push
   let _autoPushTimer=null
   let _syncingInProgress=false
@@ -3886,20 +5839,16 @@ setup(){
           const file=gistDataFile(gist)
           if(file&&file.content){
             const remote=JSON.parse(file.content)
-            const rList=Array.isArray(remote.entries)?remote.entries:[]
-            const merged=mergeByTimestamp(entries.value,rList,remote.deletedIds)
-            if(merged.length!==entries.value.length||merged.some((e,i)=>e.id!==entries.value[i]?.id||e.updatedAt!==entries.value[i]?.updatedAt)){
-              entries.value=merged;localStorage.setItem(SK,JSON.stringify(entries.value))
-            }
+            applyRemoteData(remote)
           }
         }catch(e){/* silent pull failed, continue to push */}
       }
-      const payload=JSON.stringify({version:1,updatedAt:new Date().toISOString(),entries:entries.value,deletedIds:deletedIds.value},null,2)
+      const payload=syncPayload()
       if(syncCfg.gistId){
         await gistUpdate(payload)
       }else{
         const gist=await gistCreate(payload)
-        syncCfg.gistId=gist.id;localStorage.setItem(SYNC_K,JSON.stringify({token:syncCfg.token,gistId:syncCfg.gistId}))
+        syncCfg.gistId=gist.id;writeStorageJSON(SYNC_K,{token:syncCfg.token,gistId:syncCfg.gistId},'同步设置')
       }
       lastSyncedAt.value=Date.now();syncStatus.value='已同步 · '+new Date().toLocaleTimeString()
     }catch(e){syncStatus.value='同步失败'}
@@ -3914,10 +5863,8 @@ setup(){
       const file=gistDataFile(gist)
       if(file&&file.content){
         const remote=JSON.parse(file.content)
-        const rList=Array.isArray(remote.entries)?remote.entries:[]
-        const merged=mergeByTimestamp(entries.value,rList,remote.deletedIds)
-        if(merged.length!==entries.value.length||merged.some((e,i)=>e.id!==entries.value[i]?.id||e.updatedAt!==entries.value[i]?.updatedAt)){
-          entries.value=merged;save()
+        const result=applyRemoteData(remote)
+        if(result.changed){
           syncStatus.value='已同步 · '+new Date().toLocaleTimeString()
           lastSyncedAt.value=Date.now()
         }
@@ -3936,7 +5883,7 @@ setup(){
   function gistAuth(){return{Authorization:`Bearer ${syncCfg.token}`,'Accept':'application/vnd.github+json'}}
   function saveSyncConfig(silent=false){
     const cfg={token:syncCfg.token,gistId:syncCfg.gistId}
-    localStorage.setItem(SYNC_K,JSON.stringify(cfg))
+    writeStorageJSON(SYNC_K,cfg,'同步设置')
     syncStatus.value=cfg.token?'已配置':'未配置'
     if(!silent)showToast('同步配置已保存','success')
   }
@@ -3966,7 +5913,14 @@ setup(){
     return r.json()
   }
   function syncPayload(){
-    return JSON.stringify({version:1,updatedAt:new Date().toISOString(),entries:entries.value,deletedIds:deletedIds.value},null,2)
+    return JSON.stringify({
+      version:2,
+      updatedAt:new Date().toISOString(),
+      entries:entries.value,
+      positions:positions.value,
+      deletedIds:deletedIds.value,
+      deletedPositionIds:deletedPositionIds.value
+    },null,2)
   }
   async function discoverGist(){
     if(syncCfg.gistId)return true
@@ -3982,10 +5936,11 @@ setup(){
     }else if(!syncCfg.gistId)return null
     const gist=await gistGet()
     const file=gistDataFile(gist)
-    if(!file||!file.content)return{gist,data:{entries:[],deletedIds:{}},list:[],deletedIds:{}}
+    if(!file||!file.content)return{gist,data:{entries:[],positions:[],deletedIds:{},deletedPositionIds:{}},list:[],deletedIds:{},positionList:[],deletedPositionIds:{}}
     const data=JSON.parse(file.content)
     const list=Array.isArray(data.entries)?data.entries:[]
-    return{gist,data,list,deletedIds:data.deletedIds||{}}
+    const positionList=Array.isArray(data.positions)?data.positions:[]
+    return{gist,data,list,deletedIds:data.deletedIds||{},positionList,deletedPositionIds:data.deletedPositionIds||{}}
   }
   async function uploadCurrentSyncData(){
     if(syncCfg.gistId){
@@ -3996,11 +5951,11 @@ setup(){
       saveSyncConfig(true)
     }
     lastSyncedAt.value=Date.now()
-    syncStatus.value=`已上传 ${entries.value.length} 条 · ${new Date().toLocaleTimeString()}`
+    syncStatus.value=`已上传 ${entries.value.length} 条流水 · ${positions.value.length} 个持仓 · ${new Date().toLocaleTimeString()}`
   }
   function openSyncPreview(mode,remoteCtx){
-    const ctx=remoteCtx||{gist:null,data:{entries:[],deletedIds:{}},list:[],deletedIds:{}}
-    const analysis=analyzeSyncDiff(entries.value,ctx.list,ctx.deletedIds)
+    const ctx=remoteCtx||{gist:null,data:{entries:[],positions:[],deletedIds:{},deletedPositionIds:{}},list:[],deletedIds:{},positionList:[],deletedPositionIds:{}}
+    const analysis=analyzeFullSync(ctx)
     syncPreview.value={
       mode,
       title:mode==='push'?'上传前发现云端差异':'云端同步预览',
@@ -4008,6 +5963,8 @@ setup(){
       updatedAt:ctx.gist?.updated_at?new Date(ctx.gist.updated_at).toLocaleString():'',
       remoteCount:ctx.list.length,
       mergedCount:analysis.merged.length,
+      remotePositionCount:ctx.positionList.length,
+      mergedPositionCount:analysis.positions.merged.length,
       remoteData:ctx.data,
       summary:analysis.summary,
       rows:analysis.rows
@@ -4031,24 +5988,19 @@ setup(){
     if(!syncPreview.value)return
     const preview=syncPreview.value
     const remote=preview.remoteData||{}
-    const list=Array.isArray(remote.entries)?remote.entries:[]
     const pushAfter=preview.mode==='push'
     syncPreview.value=null
     syncing.value=true;_syncingInProgress=true
     try{
-      const merged=mergeByTimestamp(entries.value,list,remote.deletedIds)
-      const changed=merged.length!==entries.value.length||merged.some((e,i)=>e.id!==entries.value[i]?.id||e.updatedAt!==entries.value[i]?.updatedAt)
-      if(changed)snap()
-      entries.value=merged
-      localStorage.setItem(SK,JSON.stringify(entries.value))
+      applyRemoteData(remote,{snapshotOnChange:true})
       if(pushAfter){
         syncStatus.value='合并后上传中…'
         await uploadCurrentSyncData()
-        showToast(`已合并并上传，当前 ${entries.value.length} 条`,'success')
+        showToast(`已合并并上传：${entries.value.length} 条流水，${positions.value.length} 个持仓`,'success')
       }else{
         lastSyncedAt.value=Date.now()
         syncStatus.value=`已合并 ${entries.value.length} 条 · ${new Date().toLocaleTimeString()}`
-        showToast(`已合并云端数据，当前 ${entries.value.length} 条`,'success')
+        showToast(`已合并云端数据：${entries.value.length} 条流水，${positions.value.length} 个持仓`,'success')
       }
     }catch(e){
       syncStatus.value='合并失败'
@@ -4061,7 +6013,7 @@ setup(){
     try{
       const remote=await loadRemoteSyncData({discover:true})
       if(remote){
-        const analysis=analyzeSyncDiff(entries.value,remote.list,remote.deletedIds)
+        const analysis=analyzeFullSync(remote)
         if(syncHasIncoming(analysis.summary)){
           openSyncPreview('push',remote)
           syncStatus.value='发现云端差异，等待确认'
@@ -4080,7 +6032,7 @@ setup(){
     try{
       const remote=await loadRemoteSyncData({discover:true})
       if(!remote){syncStatus.value='未找到云端数据';showToast('未找到投记的 Gist，请先在另一台设备上上传','info');return}
-      const analysis=analyzeSyncDiff(entries.value,remote.list,remote.deletedIds)
+      const analysis=analyzeFullSync(remote)
       if(!syncSummaryTotal(analysis.summary)){
         syncStatus.value=`已是最新 · 云端 ${remote.list.length} 条`
         lastSyncedAt.value=Date.now()
@@ -4099,20 +6051,16 @@ setup(){
     try{
       const remote=await loadRemoteSyncData({discover:true})
       if(remote){
-        const analysis=analyzeSyncDiff(entries.value,remote.list,remote.deletedIds)
-        if(analysis.summary.conflict){
+        const analysis=analyzeFullSync(remote)
+        if(analysis.summary.conflict||analysis.summary.positionConflict){
           openSyncPreview('push',remote)
           syncStatus.value='发现冲突，等待确认'
           return
         }
-        const merged=mergeByTimestamp(entries.value,remote.list,remote.deletedIds)
-        if(merged.length!==entries.value.length||merged.some((e,i)=>e.id!==entries.value[i]?.id||e.updatedAt!==entries.value[i]?.updatedAt)){
-          entries.value=merged
-          localStorage.setItem(SK,JSON.stringify(entries.value))
-        }
+        applyRemoteData(remote)
       }
       await uploadCurrentSyncData()
-      syncStatus.value=`已同步 ${entries.value.length} 条 · ${new Date().toLocaleTimeString()}`
+      syncStatus.value=`已同步 ${entries.value.length} 条流水 · ${positions.value.length} 个持仓 · ${new Date().toLocaleTimeString()}`
       showToast('一键同步完成','success')
     }catch(e){
       syncStatus.value='同步失败'
@@ -4129,7 +6077,14 @@ setup(){
   function importTextKey(v){return String(v||'').trim().toLowerCase()}
   function importNumKey(v,scale=100){return String(Math.round(normNum(v)*scale)/scale)}
   function importEntryKey(e){
-    return[e.date,e.type,importTextKey(e.assetType),importTextKey(e.exchange),String(e.currency||'CNY').toUpperCase(),importNumKey(e.amount),importNumKey(e.rate||'',10000),parseTags(e.tags).join(',')].join('|')
+    return[
+      e.date,e.type,importTextKey(e.assetType),importTextKey(e.exchange),
+      String(e.currency||'CNY').toUpperCase(),importNumKey(e.amount),importNumKey(e.rate||'',10000),
+      importTextKey(e.note),parseTags(e.tags).join(','),
+      importTextKey(e.targetSymbol),importTextKey(e.targetName),
+      importNumKey(e.tradeQty||'',100000000),importNumKey(e.tradePrice||'',100000000),
+      importNumKey(e.realizedPL??'',100)
+    ].join('|')
   }
   function normalizeImportRows(rawRows){
     const valid=[],invalid=[]
@@ -4157,9 +6112,10 @@ setup(){
     if(!rows.length&&wb.SheetNames[0])appendSheet(wb.SheetNames[0],'')
     return rows
   }
-  function buildImportPreview(source,fileName,validRows,invalidCount){
+  function buildImportPreview(source,fileName,validRows,invalidCount,extra={}){
     if(!validRows.length&&!invalidCount){showToast('未识别到有效数据','error');return}
     const exactKeys=new Set(entries.value.map(importEntryKey))
+    const existingById=new Map(entries.value.map(entry=>[entry.id,entry]))
     const rows=[],newRows=[],duplicateRows=[]
     validRows.forEach((entry,i)=>{
       const key=importEntryKey(entry)
@@ -4167,22 +6123,62 @@ setup(){
       if(exactKeys.has(key)){
         row={key:`dup-${i}-${entry.id}`,entry,status:'duplicate',label:'重复',reason:'字段完全一致，将跳过'}
         duplicateRows.push(row)
+      }else if(source==='JSON'&&entry.id&&existingById.has(entry.id)){
+        row={key:`update-${i}-${entry.id}`,entry,status:'new',label:'更新',reason:'同一记录内容较新，将替换本地版本',isUpdate:true}
+        newRows.push(row);exactKeys.add(key)
       }else{
         row={key:`new-${i}-${entry.id}`,entry,status:'new',label:'新增',reason:'合并导入会追加'}
         newRows.push(row);exactKeys.add(key)
       }
       rows.push(row)
     })
-    importPreview.value={source,fileName,validRows:rows,newRows,duplicateRows,invalidCount}
+    const positionRows=Array.isArray(extra.positions)?extra.positions.map(normalizePosition).filter(Boolean):[]
+    importPreview.value={source,fileName,validRows:rows,newRows,duplicateRows,invalidCount,positionRows}
   }
-  function freshImportEntries(rows){return rows.map(r=>({...r.entry,id:genId()}))}
+  function freshImportEntries(rows){
+    const preserveIds=importPreview.value?.source==='JSON'
+    const now=Date.now()
+    return rows.map(r=>({...r.entry,id:preserveIds&&r.entry.id?r.entry.id:genId(),updatedAt:now}))
+  }
+  function applyImportedTrades(rows,{reset=false}={}){
+    if(reset)positions.value=[]
+    let skipped=0
+    ;[...rows].sort((a,b)=>a.date>b.date?1:-1).forEach(entry=>{
+      if(entry.type!=='买入'&&entry.type!=='卖出')return
+      const target=tradeTargetFromEntry(entry)
+      const result=upsertPositionFromTrade(entry,target,{persist:false})
+      if(!result.ok)skipped++
+    })
+    savePositions({sync:false})
+    return skipped
+  }
+  function mergeImportedPositions(rows){
+    if(!rows.length)return
+    const now=Date.now()
+    const map=new Map(positions.value.map(p=>[p.id,p]))
+    rows.forEach(raw=>{
+      const p=normalizePosition({...raw,updatedAt:now})
+      if(!p)return
+      map.set(p.id,p)
+      delete deletedPositionIds.value[p.id]
+    })
+    positions.value=[...map.values()]
+    saveDeletedPositions()
+    savePositions({sync:false})
+  }
   const importMergeRows=computed(()=>{
     if(!importPreview.value)return[]
     return importPreview.value.newRows
   })
   const importAfterStats=computed(()=>{
     if(!importPreview.value)return summarizeEntries(entries.value)
-    return summarizeEntries([...entries.value,...importMergeRows.value.map(r=>r.entry)])
+    const incoming=new Map(importMergeRows.value.filter(r=>r.entry.id).map(r=>[r.entry.id,r.entry]))
+    const existingIds=new Set(entries.value.map(e=>e.id))
+    const simulated=[
+      ...entries.value.map(e=>incoming.get(e.id)||e),
+      ...importMergeRows.value.map(r=>r.entry).filter(e=>!existingIds.has(e.id))
+    ]
+    return summarizeEntries(simulated)
   })
   const importPreviewRows=computed(()=>{
     if(!importPreview.value)return[]
@@ -4193,13 +6189,23 @@ setup(){
     if(!importPreview.value)return
     const rows=freshImportEntries(importMergeRows.value)
     if(!rows.length){showToast('没有可合并的新记录','info');return}
-    snap();entries.value=[...entries.value,...rows].sort((a,b)=>a.date<b.date?1:-1);save()
+    const existingIds=new Set(entries.value.map(e=>e.id))
+    const updatedBeforeEntries=clone(entries.value.filter(e=>rows.some(row=>row.id===e.id)))
+    const newRows=rows.filter(e=>!existingIds.has(e.id))
+    const beforePositions=clone(positions.value)
+    snap()
+    const incomingById=new Map(rows.filter(e=>e.id).map(e=>[e.id,e]))
+    const retained=entries.value.map(e=>incomingById.get(e.id)||e)
+    entries.value=[...retained,...newRows].sort((a,b)=>a.date<b.date?1:-1)
+    if(importPreview.value.source==='JSON'&&importPreview.value.positionRows.length)mergeImportedPositions(importPreview.value.positionRows)
+    else applyImportedTrades(newRows)
+    save()
     const skipped=importPreview.value.duplicateRows.length
     recordImportBatch({
       mode:'merge',source:importPreview.value.source,fileName:importPreview.value.fileName,
       importedCount:rows.length,skippedCount:skipped,duplicateCount:importPreview.value.duplicateRows.length,
       invalidCount:importPreview.value.invalidCount,
-      importedIds:rows.map(e=>e.id)
+      importedIds:newRows.map(e=>e.id),updatedBeforeEntries,beforePositions
     })
     showToast(`已合并 ${rows.length} 条，跳过 ${skipped} 条`,'success')
     cancelImportPreview()
@@ -4209,13 +6215,33 @@ setup(){
     if(!confirm('覆盖导入会替换当前所有记录。继续吗？'))return
     const rows=freshImportEntries(importPreview.value.validRows)
     const beforeEntries=clone(entries.value)
-    snap();entries.value=rows.sort((a,b)=>a.date<b.date?1:-1);save()
+    const beforePositions=clone(positions.value)
+    snap()
+    const nextIds=new Set(rows.map(e=>e.id))
+    recordDeleted(entries.value.filter(e=>!nextIds.has(e.id)).map(e=>e.id))
+    rows.forEach(e=>delete deletedIds.value[e.id])
+    entries.value=rows.sort((a,b)=>a.date<b.date?1:-1)
+    if(importPreview.value.source==='JSON'&&importPreview.value.positionRows.length){
+      const restored=importPreview.value.positionRows.map(p=>normalizePosition({...p,updatedAt:Date.now()})).filter(Boolean)
+      const positionIds=new Set(restored.map(p=>p.id))
+      recordDeletedPositions(positions.value.filter(p=>!positionIds.has(p.id)).map(p=>p.id))
+      restored.forEach(p=>delete deletedPositionIds.value[p.id])
+      positions.value=restored
+      saveDeletedPositions()
+      savePositions({sync:false})
+    }else{
+      recordDeletedPositions(positions.value.map(p=>p.id))
+      positions.value=[]
+      applyImportedTrades(rows,{reset:true})
+    }
+    saveDeleted()
+    save()
     recordImportBatch({
       mode:'overwrite',source:importPreview.value.source,fileName:importPreview.value.fileName,
       importedCount:rows.length,skippedCount:importPreview.value.invalidCount,
       duplicateCount:importPreview.value.duplicateRows.length,
       invalidCount:importPreview.value.invalidCount,
-      importedIds:rows.map(e=>e.id),beforeEntries
+      importedIds:rows.map(e=>e.id),beforeEntries,beforePositions
     })
     showToast(`已覆盖导入 ${rows.length} 条`,'success')
     cancelImportPreview()
@@ -4255,13 +6281,27 @@ setup(){
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(outR),'出金记录')
     if(tradeR.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(tradeR),'买卖记录')
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(flowR),'全部流水')
+    if(positions.value.length){
+      const holdingRows=positions.value.map(p=>({
+        '标的代码':p.symbol,'标的名称':p.name,'持仓数量':p.qty,'平均成本':p.avgCost??'',
+        '成本汇率':p.costRate??'','货币':p.currency,'资产类型':p.assetType,
+        '行情来源':p.source,'行情ID':p.secid||''
+      }))
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(holdingRows),'当前持仓')
+    }
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(statR),'盈亏总览')
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(mRows),'月度统计')
     XLSX.writeFile(wb,'投记_'+dayjs().format('YYYYMMDD_HHmm')+'.xlsx');showToast('已导出','success')
   }
   function exportJSON(){
     if(showcaseMode.value&&!confirm('展示模式只隐藏页面显示，导出的 JSON 会包含真实数据。继续导出吗？'))return
-    const b=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),entries:entries.value},null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='投记备份_'+dayjs().format('YYYYMMDD_HHmm')+'.json';a.click();URL.revokeObjectURL(u);showToast('已导出','success')
+    const backup={
+      version:2,exportedAt:new Date().toISOString(),
+      entries:entries.value,positions:positions.value,
+      deletedIds:deletedIds.value,deletedPositionIds:deletedPositionIds.value,
+      assetConfig:{types:assetCfg.types,platforms:assetCfg.platforms,colors:assetCfg.colors}
+    }
+    const b=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='投记完整备份_'+dayjs().format('YYYYMMDD_HHmm')+'.json';a.click();URL.revokeObjectURL(u);showToast('完整备份已导出','success')
   }
   function importExcel(ev){
     const f=ev.target.files[0];if(!f)return;const rd=new FileReader()
@@ -4277,7 +6317,7 @@ setup(){
       const d=JSON.parse(e.target.result)
       const list=Array.isArray(d)?d:(d.entries||[])
       const parsed=normalizeImportRows(list.map(row=>({row,type:row.type||row['类型']})))
-      buildImportPreview('JSON',f.name,parsed.valid,parsed.invalidCount)
+      buildImportPreview('JSON',f.name,parsed.valid,parsed.invalidCount,{positions:Array.isArray(d.positions)?d.positions:[]})
     }catch(err){showToast('JSON格式错误','error')}};rd.readAsText(f);ev.target.value=''
   }
 
@@ -4289,14 +6329,21 @@ setup(){
 
   let posPieChartInstance=null
 
+  function cssVar(name,fallback){
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim()||fallback
+  }
+
   function renderChart(){
     if(!trendChart.value||typeof Chart==='undefined')return
     const rows=periodRows.value
     if(chartInstance){chartInstance.destroy();chartInstance=null}
-    const isLight=theme.value==='light'
-    const tickColor=isLight?'#64748b':'#64748b'
-    const gridColor='rgba(0,0,0,.06)'
-    const borderColor='rgba(0,0,0,.08)'
+    const tickColor=cssVar('--muted','#8C95A5')
+    const gridColor=cssVar('--chart-grid','rgba(140,149,165,.12)')
+    const borderColor=cssVar('--border','rgba(140,149,165,.20)')
+    const red=cssVar('--red','#E36B6B')
+    const green=cssVar('--green','#42C98B')
+    const blue=cssVar('--blue','#4FB7C5')
+    const accent=cssVar('--accent','#D6A34A')
     const labels=rows.map(r=>r.key)
     const netData=rows.map(r=>r.net)
     const cumData=rows.map(r=>r.cum)
@@ -4307,10 +6354,10 @@ setup(){
       data:{
         labels,
         datasets:[
-          {label:t('typeIn'),data:inData,borderColor:'rgba(248,113,113,.8)',backgroundColor:'rgba(248,113,113,.06)',fill:true,tension:.4,pointRadius:0,pointHoverRadius:5,borderWidth:2.5,pointHoverBackgroundColor:'#f87171'},
-          {label:t('typeOut'),data:outData,borderColor:'rgba(52,211,153,.8)',backgroundColor:'rgba(52,211,153,.06)',fill:true,tension:.4,pointRadius:0,pointHoverRadius:5,borderWidth:2.5,pointHoverBackgroundColor:'#34d399'},
-          {label:t('netPL'),data:netData,borderColor:'rgba(56,189,248,.9)',backgroundColor:'transparent',tension:.4,pointRadius:0,pointHoverRadius:5,borderWidth:2.5,borderDash:[6,4],pointHoverBackgroundColor:'#38bdf8'},
-          {label:t('cumPL'),data:cumData,borderColor:'rgba(45,181,160,.9)',backgroundColor:'rgba(45,181,160,.06)',fill:true,tension:.4,pointRadius:0,pointHoverRadius:5,borderWidth:2.5,pointHoverBackgroundColor:'#2DB5A0'}
+          {label:t('typeIn'),data:inData,borderColor:red,backgroundColor:'rgba(227,107,107,.08)',fill:true,tension:.32,pointRadius:0,pointHoverRadius:4,borderWidth:2,pointHoverBackgroundColor:red},
+          {label:t('typeOut'),data:outData,borderColor:green,backgroundColor:'rgba(66,201,139,.07)',fill:true,tension:.32,pointRadius:0,pointHoverRadius:4,borderWidth:2,pointHoverBackgroundColor:green},
+          {label:t('netPL'),data:netData,borderColor:blue,backgroundColor:'transparent',tension:.32,pointRadius:0,pointHoverRadius:4,borderWidth:2,borderDash:[5,4],pointHoverBackgroundColor:blue},
+          {label:t('cumPL'),data:cumData,borderColor:accent,backgroundColor:'rgba(214,163,74,.07)',fill:true,tension:.32,pointRadius:0,pointHoverRadius:4,borderWidth:2,pointHoverBackgroundColor:accent}
         ]
       },
       options:{
@@ -4319,10 +6366,10 @@ setup(){
         plugins:{
           legend:{position:'top',labels:{color:tickColor,font:{size:11},boxWidth:12,padding:16,usePointStyle:true}},
           tooltip:{
-            backgroundColor:'rgba(255,255,255,.95)',
-            borderColor:'rgba(0,0,0,.08)',borderWidth:1,
-            titleColor:'#1A1A2E',bodyColor:'#6B7280',padding:14,cornerRadius:12,boxPadding:4,
-            callbacks:{label:ctx=>`${ctx.dataset.label}: ${showcaseMode.value?'••••':Number(ctx.raw).toLocaleString(lang==='zh'?'zh-CN':'en-US',{maximumFractionDigits:0})}`}
+            backgroundColor:cssVar('--chart-tip','#171B24'),
+            borderColor:borderColor,borderWidth:1,
+            titleColor:cssVar('--text','#F3F4F6'),bodyColor:tickColor,padding:12,cornerRadius:6,boxPadding:4,
+            callbacks:{label:ctx=>`${ctx.dataset.label}: ${showcaseMode.value?'••••':Number(ctx.raw).toLocaleString(lang.value==='zh'?'zh-CN':'en-US',{maximumFractionDigits:0})}`}
           }
         },
         scales:{
@@ -4339,8 +6386,7 @@ setup(){
     if(posPieChartInstance){posPieChartInstance.destroy();posPieChartInstance=null}
     const rows=posRows.value.filter(p=>p.value>0)
     if(!rows.length)return
-    const isLight=theme.value==='light'
-    const tickColor='#6B7280'
+    const tickColor=cssVar('--muted','#8C95A5')
     posPieChartInstance=new Chart(posPieChart.value,{
       type:'doughnut',
       data:{
@@ -4349,7 +6395,7 @@ setup(){
           data:rows.map(p=>p.value),
           backgroundColor:rows.map((_,i)=>POS_PIE_COLORS[i%POS_PIE_COLORS.length]),
           borderWidth:2,
-          borderColor:'rgba(255,255,255,.8)',
+          borderColor:cssVar('--panel','#10131A'),
           hoverOffset:6
         }]
       },
@@ -4358,9 +6404,9 @@ setup(){
         plugins:{
           legend:{position:'bottom',labels:{color:tickColor,font:{size:11},padding:10,usePointStyle:true,pointStyleWidth:8}},
           tooltip:{
-            backgroundColor:'rgba(255,255,255,.95)',
-            borderColor:'rgba(0,0,0,.08)',borderWidth:1,
-            titleColor:'#1A1A2E',bodyColor:'#6B7280',padding:14,cornerRadius:12,boxPadding:4,
+            backgroundColor:cssVar('--chart-tip','#171B24'),
+            borderColor:cssVar('--border-light','#384150'),borderWidth:1,
+            titleColor:cssVar('--text','#F3F4F6'),bodyColor:tickColor,padding:12,cornerRadius:6,boxPadding:4,
             callbacks:{label:ctx=>{
               const total=ctx.dataset.data.reduce((s,v)=>s+v,0)
               const pct=total?fmtPct((ctx.raw/total)*100,1):'0%'
@@ -4398,7 +6444,7 @@ setup(){
     function updateAppClass(){
       appEl.className='app tab-'+activeTab.value+(showcaseMode.value?' showcase-mode':'')
     }
-    watch([mobileTab,activeTab,showcaseMode],updateAppClass,{immediate:true})
+    watch([activeTab,showcaseMode],updateAppClass,{immediate:true})
     window.addEventListener('resize',updateAppClass)
     // Render charts after data loads
     Vue.nextTick(()=>{renderChart();renderPosPieChart()})
@@ -4419,13 +6465,11 @@ setup(){
           const file=gistDataFile(gist)
           if(file&&file.content){
             const data=JSON.parse(file.content)
-            const list=Array.isArray(data.entries)?data.entries:[]
-            const merged=mergeByTimestamp(entries.value,list,data.deletedIds)
-            if(merged.length!==entries.value.length||merged.some((e,i)=>e.id!==entries.value[i]?.id||e.updatedAt!==entries.value[i]?.updatedAt)){
-              entries.value=merged;save()
-              syncStatus.value=`已同步 ${merged.length} 条 · ${new Date(gist.updated_at).toLocaleString()}`
+            const result=applyRemoteData(data)
+            if(result.changed){
+              syncStatus.value=`已同步 ${entries.value.length} 条流水 · ${positions.value.length} 个持仓 · ${new Date(gist.updated_at).toLocaleString()}`
             }else{
-              syncStatus.value=`已配置 · 本地 ${entries.value.length} 条`
+              syncStatus.value=`已配置 · ${entries.value.length} 条流水 · ${positions.value.length} 个持仓`
             }
           }
         }catch(e){syncStatus.value='同步失败，请检查网络或 Token'}
@@ -4436,16 +6480,16 @@ setup(){
     setInterval(()=>{if(!document.hidden)backgroundPull()},120000)
   })
 
-  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,mobileTab,activeTab,workspaceTabs,setActiveTab,showMobileAdd,showFilters,editingEntry,showSync,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,
+  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
-    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allMonths,quickAction,quickActions,quickActionInfo,quickAmountLabel,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,largeTxList,insightSummary,insightAdvice,
+    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allMonths,quickAction,quickActions,quickActionInfo,quickAmountLabel,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,largeTxList,insightSummary,insightAdvice,
     behaviorAnalysis,psychoTags,behaviorAdvice,
 
-    fmt,fmtPct,amountCNY,parseTags,normalizeAssetType,rowClass,toggleEx,toggleAssetType,toggleTag,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,editingDetail,
+    fmt,fmtPct,amountCNY,parseTags,tagsText,normalizeAssetType,rowClass,toggleEx,toggleAssetType,toggleTag,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,editingDetail,
     platformSuggestions,editPlatformSuggestions,rateLoading,fetchRate,
     groupedEntries,expandedMonths,toggleMonth,isMonthOpen,expandAllMonths,collapseAllMonths,
-    addEntry,mobileAddEntry,copyLast,removeEntry,updateField,clearData,loadDemo,
+    addEntry,copyLast,removeEntry,updateField,clearData,loadDemo,
     createSnap,restoreSnap,clearSnaps,undoImportBatch,clearImportBatches,
     saveSyncConfig,syncPush,syncPull,syncAuto,saveRules,saveReviewNote,saveChecklist,loadReview,
     exportExcel,exportJSON,importExcel,importJSON,showToast,dayjs,
@@ -4456,7 +6500,6 @@ setup(){
 }
 }).mount('#app')
 
-// Register Service Worker for PWA
 // Trading quotes
 const QUOTES=[
   // 利弗莫尔 (Jesse Livermore)
