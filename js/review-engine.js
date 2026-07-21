@@ -213,6 +213,7 @@
         isToday: date === today,
         hasNote: noteSet.has(date),
         entries: dayEntries.map(entry => ({ ...entry, tags: [...entry.tags] })),
+        amountTotal: dayEntries.reduce((sum, entry) => sum + entry.amountCNY, 0),
         entryTypes: [...new Set(dayEntries.map(entry => entry.type).filter(Boolean))],
         signals: daySignals
       }

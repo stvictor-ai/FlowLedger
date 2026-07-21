@@ -1742,7 +1742,9 @@ td input,td select{min-height:31px;padding:5px 7px}
 .review-day.selected{border-color:var(--accent);background:var(--accent-dim);box-shadow:inset 0 0 0 1px var(--accent)}
 .review-day.today .review-day-number{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--primary-ink)}
 .review-day-number{display:block;font:700 11px/22px 'Manrope',sans-serif}
-.review-day-count{display:block;margin-top:3px;color:var(--muted);font-size:8px;white-space:nowrap}
+.review-day-meta{display:flex;align-items:center;gap:5px;min-width:0;margin-top:3px}
+.review-day-count{display:block;color:var(--muted);font-size:8px;white-space:nowrap}
+.review-day-amount{min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--text);font:700 8px/1.2 'Manrope',sans-serif;white-space:nowrap}
 .review-day-dots{position:absolute;left:7px;bottom:7px;display:flex;gap:3px}
 .review-day-dot{width:5px;height:5px;border-radius:50%;background:var(--dim)}
 .review-day-dot.deposit{background:var(--red)}
@@ -2547,6 +2549,8 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   .review-weekdays,.review-calendar-grid{gap:3px}
   .review-day{min-height:54px;padding:5px}
   .review-day-count{display:none}
+  .review-day-meta{margin-top:1px}
+  .review-day-amount{font-size:7px}
   .review-day-dots{left:5px;bottom:5px}
   .review-day-signal{right:5px;top:6px}
   .review-day-note-mark{right:5px;bottom:3px}
@@ -2561,6 +2565,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   .review-calendar-nav .review-today-btn{width:auto;padding:0 8px}
   .review-day{min-height:48px}
   .review-day-number{font-size:10px;line-height:20px}
+  .review-day-amount{max-width:100%;font-size:6.5px}
   .review-day.today .review-day-number{width:20px;height:20px}
   .review-day-dot{width:4px;height:4px}
   .review-day-note-actions{display:grid;grid-template-columns:1fr}
@@ -3294,7 +3299,10 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
             :title="cell.date+(cell.entries.length?' · '+cell.entries.length+' 笔操作':'')+(cell.signals.length?' · '+cell.signals.length+' 条规则信号':'')"
             @click="selectReviewDate(cell.date)">
             <span class="review-day-number">{{ cell.day }}</span>
-            <span v-if="cell.entries.length" class="review-day-count">{{ cell.entries.length }} 笔</span>
+            <span v-if="cell.entries.length" class="review-day-meta">
+              <span class="review-day-count">{{ cell.entries.length }} 笔</span>
+              <strong :class="['review-day-amount',reviewDayAmountTone(cell)]">{{ fmtCalendarAmount(cell.amountTotal) }}</strong>
+            </span>
             <span v-if="cell.signals.length" :class="['review-day-signal',{danger:cell.signals.some(signal=>signal.severity==='danger')}]" aria-label="有规则信号"></span>
             <span v-if="cell.entries.length" class="review-day-dots" aria-hidden="true">
               <i v-for="type in cell.entryTypes.slice(0,4)" :key="type" :class="['review-day-dot',reviewTypeTone(type)]"></i>
@@ -4364,7 +4372,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.07.20-3'
+  const APP_VERSION='v2026.07.21-1'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -5696,6 +5704,20 @@ setup(){
   function reviewTypeTone(type){
     return{入金:'deposit',出金:'withdraw',买入:'buy',卖出:'sell'}[type]||'other'
   }
+  function reviewDayAmountTone(cell){
+    const directions=new Set((cell.entryTypes||[]).map(type=>type==='入金'||type==='买入'?'in':type==='出金'||type==='卖出'?'out':'other'))
+    if(directions.size!==1)return''
+    return directions.has('in')?'text-red':directions.has('out')?'text-green':''
+  }
+  function fmtCalendarAmount(value){
+    if(showcaseMode.value)return'••'
+    const amount=Math.abs(Number(value)||0)
+    const trim=number=>Number(number.toFixed(1)).toLocaleString('zh-CN')
+    if(amount>=100000000)return`¥${trim(amount/100000000)}亿`
+    if(amount>=10000)return`¥${trim(amount/10000)}万`
+    if(amount>=1000)return`¥${trim(amount/1000)}k`
+    return`¥${amount.toLocaleString('zh-CN',{maximumFractionDigits:0})}`
+  }
   function loadSelectedReviewDay(){
     const saved=reviewDayNotes.value[reviewSelectedDate.value]||{}
     reviewDayNote.value=saved.note||''
@@ -6825,7 +6847,7 @@ setup(){
   return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
-    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allMonths,quickAction,quickActions,quickActionInfo,quickAmountLabel,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,saveReviewDayNote,
+    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allMonths,quickAction,quickActions,quickActionInfo,quickAmountLabel,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
     behaviorAnalysis,psychoTags,behaviorAdvice,
 
     fmt,fmtPct,amountCNY,parseTags,tagsText,normalizeAssetType,rowClass,toggleEx,toggleAssetType,toggleTag,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,editingDetail,

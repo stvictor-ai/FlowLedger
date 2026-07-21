@@ -58,6 +58,7 @@ test('buildCalendarMonth creates a Sunday-first month grid', () => {
   assert.equal(calendar.cells[3].inMonth, true)
   assert.equal(calendar.cells[10].date, '2026-07-08')
   assert.equal(calendar.cells[10].hasNote, true)
+  assert.equal(calendar.cells[10].amountTotal, 1800)
   assert.equal(calendar.cells[22].date, '2026-07-20')
   assert.equal(calendar.cells[22].isToday, true)
 })
