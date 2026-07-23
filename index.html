@@ -1571,7 +1571,7 @@ td input,td select{min-height:31px;padding:5px 7px}
 .month-ledger-summary:hover{background:var(--overlay-hover)}
 .month-detail{border-top-color:var(--border);background:var(--surface-quiet)}
 .month-ledger-title strong{font-family:'JetBrains Mono',monospace;font-size:14px}
-.ledger-toolbar{grid-template-columns:160px 140px minmax(220px,1fr) auto}
+.ledger-toolbar{grid-template-columns:118px 160px 140px minmax(220px,1fr) auto}
 .record-card{border-radius:var(--radius);padding:12px}
 .record-card-exchange{background:var(--overlay-hover)}
 .modal-mask{background:var(--backdrop);backdrop-filter:blur(5px);align-items:center;padding:18px}
@@ -1622,6 +1622,9 @@ td input,td select{min-height:31px;padding:5px 7px}
 }
 .review-range-tabs button:hover{color:var(--text);background:var(--overlay-hover)}
 .review-range-tabs button.active{background:var(--accent);color:var(--primary-ink)}
+.review-range-controls{display:flex;align-items:center;gap:8px}
+.review-year-select{width:116px;min-height:40px;padding:0 30px 0 11px;font-size:11px;font-weight:700;white-space:nowrap}
+.review-calendar-nav button:disabled{cursor:not-allowed;opacity:.38}
 .review-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
 .review-summary-cell{
   min-width:0;
@@ -1948,8 +1951,10 @@ td input,td select{min-height:31px;padding:5px 7px}
   .modal-box,.import-preview-box{width:100%;max-height:91vh;border-radius:8px 8px 0 0;border-bottom:0}
   .detail-grid{grid-template-columns:1fr}
   .review-head{align-items:stretch}
+  .review-range-controls{display:grid;grid-template-columns:1fr;width:100%}
   .review-range-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%}
   .review-range-tabs button{min-width:0;padding:5px 2px}
+  .review-year-select{width:100%}
   .review-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .review-summary-cell strong{font-size:16px}
   .review-layout{grid-template-columns:1fr}
@@ -3048,6 +3053,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
     <!-- Compact Filters -->
     <div>
       <div class="ledger-toolbar">
+        <div class="form-group"><label>年份</label><select class="form-input" aria-label="流水年份" :value="filters.year" @change="setFlowYear($event.target.value)"><option value="">全部</option><option v-for="year in allYears" :key="year" :value="year">{{ year }} 年</option></select></div>
         <div class="form-group"><label>{{ t('month') }}</label><select class="form-input" v-model="filters.month"><option value="">{{ t('typeAll') }}</option><option v-for="m in allMonths" :key="m" :value="m">{{ m }}</option></select></div>
         <div class="form-group"><label>类型</label><select class="form-input" v-model="filters.type"><option value="">{{ t('typeAll') }}</option><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></select></div>
         <div class="form-group"><label>{{ t('keyword') }}</label><input class="form-input" v-model="filters.keyword" placeholder="交易所 / 备注 / 标签"></div>
@@ -3262,8 +3268,14 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
         <h2>近期复盘</h2>
         <p class="hint">{{ reviewScopeText }} · 只分析当前窗口，旧数据仍完整保留</p>
       </div>
-      <div class="review-range-tabs" role="group" aria-label="复盘时间范围">
-        <button v-for="item in REVIEW_RANGES" :key="item.key" :class="{active:reviewRange===item.key}" @click="setReviewRange(item.key)" :aria-pressed="reviewRange===item.key">{{ item.label }}</button>
+      <div class="review-range-controls">
+        <div class="review-range-tabs" role="group" aria-label="复盘时间范围">
+          <button v-for="item in REVIEW_RANGES" :key="item.key" :class="{active:reviewRange===item.key&&!reviewYear}" @click="setReviewRange(item.key)" :aria-pressed="reviewRange===item.key&&!reviewYear">{{ item.label }}</button>
+        </div>
+        <select class="form-input review-year-select" aria-label="复盘年份" :value="reviewYear" @change="setReviewYear($event.target.value)">
+          <option value="">按年份筛选</option>
+          <option v-for="year in reviewYears" :key="year" :value="year">{{ year }} 年</option>
+        </select>
       </div>
     </div>
 
@@ -3282,9 +3294,9 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
             <small>点击日期查看操作与规则原因</small>
           </div>
           <div class="review-calendar-nav">
-            <button @click="changeReviewMonth(-1)" title="上个月" aria-label="上个月">‹</button>
-            <button class="review-today-btn" @click="goReviewCurrentMonth">本月</button>
-            <button @click="changeReviewMonth(1)" title="下个月" aria-label="下个月">›</button>
+            <button @click="changeReviewMonth(-1)" :disabled="reviewCalendarAtStart" title="上个月" aria-label="上个月">‹</button>
+            <button class="review-today-btn" @click="goReviewCurrentMonth">{{ reviewYear?'该年':'本月' }}</button>
+            <button @click="changeReviewMonth(1)" :disabled="reviewCalendarAtEnd" title="下个月" aria-label="下个月">›</button>
           </div>
         </div>
         <div class="review-weekdays" aria-hidden="true">
@@ -4372,7 +4384,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.07.21-1'
+  const APP_VERSION='v2026.07.23-1'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -4476,7 +4488,7 @@ setup(){
     })
   }
   const form=reactive({date:dayjs().format('YYYY-MM-DD'),amount:'',rate:'',exchange:'',note:'',type:'入金',assetType:'',currency:'CNY',tagText:'',positionId:'',targetKey:'',targetMarket:'沪深市',tradeQty:'',tradePrice:''})
-  const filters=reactive({month:'',type:'',keyword:'',dateFrom:'',dateTo:'',amountMin:'',amountMax:'',exchanges:[],assetTypes:[],tags:[]})
+  const filters=reactive({year:'',month:'',type:'',keyword:'',dateFrom:'',dateTo:'',amountMin:'',amountMax:'',exchanges:[],assetTypes:[],tags:[]})
   const showQuickMore=ref(false)
   const quickAction=ref('deposit')
   const quickActions=[
@@ -4653,7 +4665,11 @@ setup(){
   // Computed
   const sortedEntries=computed(()=>[...entries.value].sort((a,b)=>a.date<b.date?1:-1))
   const allExchanges=computed(()=>[...new Set(entries.value.map(e=>e.exchange).filter(Boolean))].sort())
-  const allMonths=computed(()=>[...new Set(entries.value.map(e=>e.date?e.date.slice(0,7):'').filter(Boolean))].sort())
+  const allYears=computed(()=>[...new Set(entries.value.map(e=>e.date?e.date.slice(0,4):'').filter(Boolean))].sort((a,b)=>b.localeCompare(a)))
+  const allMonths=computed(()=>[...new Set(entries.value
+    .map(e=>e.date?e.date.slice(0,7):'')
+    .filter(month=>month&&(!filters.year||month.startsWith(filters.year)))
+  )].sort((a,b)=>b.localeCompare(a)))
   const allAssetTypes=computed(()=>{const present=new Set(entries.value.map(e=>normalizeAssetType(e.assetType)).filter(Boolean));return ASSET_TYPES.value.filter(t=>present.has(t))})
   const allTags=computed(()=>[...new Set(entries.value.flatMap(e=>parseTags(e.tags)))].sort((a,b)=>a.localeCompare(b,'zh-CN')))
   const quickTemplates=computed(()=>{
@@ -4787,7 +4803,8 @@ setup(){
 
   // Filters
   function matchEntry(e){
-    if(filters.month&&e.date&&e.date.slice(0,7)!==filters.month)return false
+    if(filters.year&&(!e.date||e.date.slice(0,4)!==filters.year))return false
+    if(filters.month&&(!e.date||e.date.slice(0,7)!==filters.month))return false
     if(filters.type&&e.type!==filters.type)return false
     if(filters.keyword){const k=filters.keyword.toLowerCase();if(!(`${e.exchange} ${e.note} ${e.assetType||''} ${parseTags(e.tags).join(' ')}`).toLowerCase().includes(k))return false}
     if(filters.dateFrom&&e.date<filters.dateFrom)return false
@@ -4813,7 +4830,11 @@ setup(){
   function toggleEx(ex){const i=filters.exchanges.indexOf(ex);i>=0?filters.exchanges.splice(i,1):filters.exchanges.push(ex)}
   function toggleAssetType(at){const i=filters.assetTypes.indexOf(at);i>=0?filters.assetTypes.splice(i,1):filters.assetTypes.push(at)}
   function toggleTag(tag){const i=filters.tags.indexOf(tag);i>=0?filters.tags.splice(i,1):filters.tags.push(tag)}
-  function clearFilters(){filters.month='';filters.type='';filters.keyword='';filters.dateFrom='';filters.dateTo='';filters.amountMin='';filters.amountMax='';filters.exchanges=[];filters.assetTypes=[];filters.tags=[]}
+  function setFlowYear(year){
+    filters.year=allYears.value.includes(year)?year:''
+    if(filters.month&&!filters.month.startsWith(filters.year))filters.month=''
+  }
+  function clearFilters(){filters.year='';filters.month='';filters.type='';filters.keyword='';filters.dateFrom='';filters.dateTo='';filters.amountMin='';filters.amountMax='';filters.exchanges=[];filters.assetTypes=[];filters.tags=[]}
   function scrollToFirstMatch(){
     const first=sortedEntries.value.find(e=>matchedIds.value.has(e.id))
     if(!first){showToast('无匹配','info');return}
@@ -4823,7 +4844,7 @@ setup(){
   }
   // Month groups for flow records
   const expandedMonths=ref(new Set())
-  const hasActiveFilter=computed(()=>!!(filters.month||filters.type||filters.keyword||filters.dateFrom||filters.dateTo||filters.amountMin||filters.amountMax||filters.exchanges.length||filters.assetTypes.length||filters.tags.length))
+  const hasActiveFilter=computed(()=>!!(filters.year||filters.month||filters.type||filters.keyword||filters.dateFrom||filters.dateTo||filters.amountMin||filters.amountMax||filters.exchanges.length||filters.assetTypes.length||filters.tags.length))
   function topLabels(list,limit=4){
     const map=new Map()
     list.filter(Boolean).forEach(v=>map.set(v,(map.get(v)||0)+1))
@@ -4856,7 +4877,7 @@ setup(){
   function expandAllMonths(){expandedMonths.value=new Set(groupedEntries.value.map(g=>g.key))}
   function collapseAllMonths(){expandedMonths.value=new Set()}
 
-  const activeFilterCount=computed(()=>{let n=0;if(filters.month)n++;if(filters.type)n++;if(filters.keyword)n++;if(filters.dateFrom)n++;if(filters.dateTo)n++;if(filters.amountMin)n++;if(filters.amountMax)n++;if(filters.exchanges.length)n++;if(filters.assetTypes.length)n++;if(filters.tags.length)n++;return n})
+  const activeFilterCount=computed(()=>{let n=0;if(filters.year)n++;if(filters.month)n++;if(filters.type)n++;if(filters.keyword)n++;if(filters.dateFrom)n++;if(filters.dateTo)n++;if(filters.amountMin)n++;if(filters.amountMax)n++;if(filters.exchanges.length)n++;if(filters.assetTypes.length)n++;if(filters.tags.length)n++;return n})
   function netOf(list){return list.reduce((s,e)=>s+(e.type==='出金'?amountCNY(e):-amountCNY(e)),0)}
   const editingDetail=computed(()=>{
     const cur=editingEntry.value;if(!cur)return null
@@ -5611,6 +5632,7 @@ setup(){
   })
 
   const REVIEW_RANGE_K='touji_review_range_v1'
+  const REVIEW_YEAR_K='touji_review_year_v1'
   const REVIEW_RANGES=[
     {key:'30d',label:'近 30 天',days:30},
     {key:'90d',label:'近 90 天',days:90},
@@ -5619,10 +5641,16 @@ setup(){
   ]
   let savedReviewRange='90d'
   try{savedReviewRange=localStorage.getItem(REVIEW_RANGE_K)||'90d'}catch(e){}
+  let savedReviewYear=''
+  try{savedReviewYear=localStorage.getItem(REVIEW_YEAR_K)||''}catch(e){}
   const reviewRange=ref(REVIEW_RANGES.some(item=>item.key===savedReviewRange)?savedReviewRange:'90d')
-  const reviewRangeMeta=computed(()=>REVIEW_RANGES.find(item=>item.key===reviewRange.value)||REVIEW_RANGES[1])
-  const reviewEndDate=computed(()=>dayjs().format('YYYY-MM-DD'))
-  const reviewStartDate=computed(()=>reviewRange.value==='year'
+  const reviewYears=computed(()=>allYears.value)
+  const reviewYear=ref(savedReviewYear)
+  const reviewRangeMeta=computed(()=>reviewYear.value
+    ?{key:'custom-year',label:`${reviewYear.value} 年`,days:null}
+    :(REVIEW_RANGES.find(item=>item.key===reviewRange.value)||REVIEW_RANGES[1]))
+  const reviewEndDate=computed(()=>reviewYear.value?`${reviewYear.value}-12-31`:dayjs().format('YYYY-MM-DD'))
+  const reviewStartDate=computed(()=>reviewYear.value?`${reviewYear.value}-01-01`:reviewRange.value==='year'
     ?dayjs().startOf('year').format('YYYY-MM-DD')
     :dayjs().subtract(reviewRangeMeta.value.days-1,'day').format('YYYY-MM-DD'))
   const reviewEntries=computed(()=>entries.value
@@ -5657,12 +5685,15 @@ setup(){
   })
   const reviewPreparedEntries=computed(()=>reviewEntries.value.map(prepareReviewEntry))
   const reviewAllPreparedEntries=computed(()=>entries.value.filter(entry=>entry.date).map(prepareReviewEntry))
+  const reviewCalendarEntries=computed(()=>reviewYear.value
+    ?reviewAllPreparedEntries.value.filter(entry=>entry.date.slice(0,4)===reviewYear.value)
+    :reviewAllPreparedEntries.value)
   const reviewPositionValues=computed(()=>positions.value.map(position=>{
     const rate=fx(position.currency)
     const price=posPrices.value[posKey(position)]||position.avgCost||0
     return{...position,value:(Number(position.qty)||0)*(Number(price)||0)*rate}
   }))
-  const reviewSignals=computed(()=>window.ToujiReview.buildSignals(
+  const reviewSignalsBase=computed(()=>window.ToujiReview.buildSignals(
     reviewPreparedEntries.value,
     reviewPositionValues.value,
     {
@@ -5673,6 +5704,8 @@ setup(){
     },
     dayjs().format('YYYY-MM-DD')
   ))
+  const reviewSignals=computed(()=>reviewSignalsBase.value.filter(signal=>signal.date
+    &&signal.date>=reviewStartDate.value&&signal.date<=reviewEndDate.value))
   const reviewAllSignals=computed(()=>window.ToujiReview.buildSignals(
     reviewAllPreparedEntries.value,
     reviewPositionValues.value,
@@ -5684,22 +5717,27 @@ setup(){
     },
     dayjs().format('YYYY-MM-DD')
   ))
+  const reviewCalendarSignals=computed(()=>reviewYear.value
+    ?reviewAllSignals.value.filter(signal=>signal.date&&signal.date.slice(0,4)===reviewYear.value)
+    :reviewAllSignals.value)
   const reviewNoteDates=computed(()=>Object.entries(reviewDayNotes.value)
     .filter(([,value])=>value&&String(value.note||'').trim())
     .map(([date])=>date))
   const reviewCalendar=computed(()=>window.ToujiReview.buildCalendarMonth(
     reviewCalendarMonth.value,
-    reviewAllPreparedEntries.value,
-    reviewAllSignals.value,
+    reviewCalendarEntries.value,
+    reviewCalendarSignals.value,
     reviewNoteDates.value,
     dayjs().format('YYYY-MM-DD')
   ))
-  const selectedReviewEntries=computed(()=>reviewAllPreparedEntries.value
+  const selectedReviewEntries=computed(()=>reviewCalendarEntries.value
     .filter(entry=>entry.date===reviewSelectedDate.value)
     .sort((a,b)=>(Number(b.updatedAt)||0)-(Number(a.updatedAt)||0)))
-  const selectedReviewSignals=computed(()=>reviewAllSignals.value.filter(signal=>signal.date===reviewSelectedDate.value))
+  const selectedReviewSignals=computed(()=>reviewCalendarSignals.value.filter(signal=>signal.date===reviewSelectedDate.value))
   const reviewTimeline=computed(()=>window.ToujiReview.buildTimeline(reviewPreparedEntries.value,reviewSignals.value,10))
   const reviewSelectedDateLabel=computed(()=>dayjs(reviewSelectedDate.value).format('M 月 D 日 dddd'))
+  const reviewCalendarAtStart=computed(()=>!!reviewYear.value&&reviewCalendarMonth.value===`${reviewYear.value}-01`)
+  const reviewCalendarAtEnd=computed(()=>!!reviewYear.value&&reviewCalendarMonth.value===`${reviewYear.value}-12`)
 
   function reviewTypeTone(type){
     return{入金:'deposit',出金:'withdraw',买入:'buy',卖出:'sell'}[type]||'other'
@@ -5735,14 +5773,21 @@ setup(){
   }
   function changeReviewMonth(offset){
     const next=dayjs(`${reviewCalendarMonth.value}-01`).add(offset,'month')
+    if(reviewYear.value&&next.format('YYYY')!==reviewYear.value)return
     reviewCalendarMonth.value=next.format('YYYY-MM')
     const today=dayjs()
     reviewSelectedDate.value=next.isSame(today,'month')?today.format('YYYY-MM-DD'):next.format('YYYY-MM-01')
     loadSelectedReviewDay()
   }
   function goReviewCurrentMonth(){
-    reviewCalendarMonth.value=dayjs().format('YYYY-MM')
-    reviewSelectedDate.value=dayjs().format('YYYY-MM-DD')
+    if(reviewYear.value){
+      const latest=[...reviewCalendarEntries.value].sort((a,b)=>b.date.localeCompare(a.date))[0]
+      reviewCalendarMonth.value=latest?.date.slice(0,7)||`${reviewYear.value}-01`
+      reviewSelectedDate.value=latest?.date||`${reviewYear.value}-01-01`
+    }else{
+      reviewCalendarMonth.value=dayjs().format('YYYY-MM')
+      reviewSelectedDate.value=dayjs().format('YYYY-MM-DD')
+    }
     loadSelectedReviewDay()
   }
   function saveReviewDayNote(){
@@ -5759,9 +5804,23 @@ setup(){
     showToast(note?'当日复盘已保存':'当日复盘已清除','success')
   }
   function setReviewRange(key){
-    if(!REVIEW_RANGES.some(item=>item.key===key)||reviewRange.value===key)return
+    if(!REVIEW_RANGES.some(item=>item.key===key))return
     reviewRange.value=key
+    if(reviewYear.value){
+      reviewYear.value=''
+      try{localStorage.removeItem(REVIEW_YEAR_K)}catch(e){}
+    }
     try{localStorage.setItem(REVIEW_RANGE_K,key)}catch(e){}
+    loadReview()
+  }
+  function setReviewYear(year){
+    const next=reviewYears.value.includes(year)?year:''
+    reviewYear.value=next
+    try{
+      if(next)localStorage.setItem(REVIEW_YEAR_K,next)
+      else localStorage.removeItem(REVIEW_YEAR_K)
+    }catch(e){}
+    if(next)goReviewCurrentMonth()
     loadReview()
   }
 
@@ -5888,7 +5947,7 @@ setup(){
     }
     if(s.realizedPL<=-Math.abs(rules.lossCritical||5000))adv.push('近期已实现亏损较大，下一笔交易前先写清止损条件和最大可承受损失。')
     else if(s.realizedPL<0&&Math.abs(s.realizedPL)>=Math.abs(rules.lossWarn||1000))adv.push('近期已实现盈亏为负，建议先复盘卖出原因，再决定是否继续加仓。')
-    const days=reviewRangeMeta.value.days||Math.max(1,dayjs().diff(dayjs().startOf('year'),'day')+1)
+    const days=reviewRangeMeta.value.days||Math.max(1,dayjs(reviewEndDate.value).diff(dayjs(reviewStartDate.value),'day')+1)
     const frequentThreshold=Math.max(8,Math.round(days/7*3))
     if(s.tradeCount>=frequentThreshold)adv.push(`近期共有 ${s.tradeCount} 笔买卖，操作频率偏高；可给非计划交易增加 24 小时冷静期。`)
     if(s.buyCount>=4&&s.buyCount>s.sellCount*3)adv.push('买入次数明显多于卖出，检查是否持续加仓但没有预先设定退出计划。')
@@ -5901,7 +5960,7 @@ setup(){
   // Review
   const defaultCL=['复盘近期影响最大的一笔操作，记录触发原因。','是否有情绪驱动的计划外操作？','最大单笔金额是否在预设范围？','下一笔交易是否已经写好投入上限？','卖出是否遵守了止盈或止损计划？','有没有值得继续复用的成功规则？']
   const reviewChecklist=ref([])
-  function reviewStorageKey(){return`${reviewRange.value}:${dayjs().format('YYYY-MM')}`}
+  function reviewStorageKey(){return`${reviewYear.value||reviewRange.value}:${dayjs().format('YYYY-MM')}`}
   function loadReview(){
     const pk=reviewStorageKey()
     try{const r=localStorage.getItem(REVIEW_K);const d=r?JSON.parse(r):{};const v=d[pk];reviewNote.value=v?.note||'';reviewSavedAt.value=v?.savedAt||''}catch(e){}
@@ -6785,6 +6844,7 @@ setup(){
 
   onMounted(()=>{
     load()
+    if(reviewYear.value)setReviewYear(reviewYear.value)
     loadPositions()
     refreshFxRates() // 静默刷新全局汇率，供持仓市值折算
     if(positions.value.length)fetchPosPrices()
@@ -6847,7 +6907,7 @@ setup(){
   return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
-    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allMonths,quickAction,quickActions,quickActionInfo,quickAmountLabel,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
+    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
     behaviorAnalysis,psychoTags,behaviorAdvice,
 
     fmt,fmtPct,amountCNY,parseTags,tagsText,normalizeAssetType,rowClass,toggleEx,toggleAssetType,toggleTag,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,editingDetail,
