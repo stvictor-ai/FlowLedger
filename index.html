@@ -2590,6 +2590,309 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   .rail-theme{padding:5px 0}
   .terminal-rail-meta{padding-top:8px}
 }
+
+/* ===== EDITORIAL LEDGER WORKSPACE ===== */
+.ledger-panel{
+  padding:0;
+  overflow:hidden;
+}
+.ledger-page-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:24px;
+  padding:26px 28px 20px;
+}
+.ledger-page-head h2{
+  margin:2px 0 4px;
+  font-size:25px;
+  font-weight:800;
+}
+.ledger-page-head .hint{max-width:620px}
+.ledger-head-actions{display:flex;align-items:center;gap:12px}
+.ledger-mobile-copy{display:none}
+.ledger-match-count{
+  color:var(--muted);
+  font:600 11px/1.2 'Manrope','IBM Plex Sans SC',sans-serif;
+}
+.ledger-match-count strong{
+  color:var(--text);
+  font:800 18px/1 'JetBrains Mono',monospace;
+}
+.ledger-filter-shell{
+  padding:14px 28px 4px;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  background:var(--surface-quiet);
+}
+.ledger-panel .ledger-toolbar{
+  grid-template-columns:108px 138px 122px minmax(220px,1fr) auto;
+  gap:10px;
+  margin-bottom:10px;
+}
+.ledger-panel .ledger-toolbar label,
+.ledger-panel .ledger-advanced label{
+  margin-bottom:5px;
+  color:var(--dim);
+  font-size:9px;
+  text-transform:uppercase;
+}
+.ledger-panel .ledger-toolbar .form-input{
+  min-height:38px;
+  border-color:transparent;
+  background:var(--panel);
+}
+.ledger-panel .ledger-toolbar .form-input:focus{border-color:var(--accent)}
+.ledger-panel .ledger-advanced{margin:3px 0 10px}
+.ledger-panel .ledger-chip-groups{padding-bottom:8px}
+.ledger-panel>.filtered-stats{
+  display:grid;
+  grid-template-columns:minmax(190px,.8fr) minmax(0,2fr);
+  gap:18px;
+  align-items:center;
+  margin:0;
+  padding:11px 28px;
+  border-width:0 0 1px;
+  border-radius:0;
+  background:var(--accent-dim);
+}
+.ledger-panel .filtered-stats .fs-header{display:block;margin:0}
+.ledger-panel .filtered-stats .fs-title{display:block;color:var(--accent);font-size:9px}
+.ledger-panel .filtered-stats .fs-range{display:block;margin-top:4px;font-size:10px}
+.ledger-panel .filtered-stats .fs-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.ledger-panel .filtered-stats .fs-cell{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:8px;
+  padding:0;
+  border:0;
+  background:transparent;
+}
+.ledger-panel .filtered-stats .fs-cell p{font-size:9px}
+.ledger-panel .filtered-stats .fs-cell strong{margin:0;font-size:13px}
+.ledger-workspace{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  min-height:420px;
+  background:var(--panel);
+}
+.ledger-workspace.has-inspector{grid-template-columns:minmax(0,1fr) minmax(320px,360px)}
+.ledger-book{min-width:0;padding:4px 28px 30px}
+.ledger-empty{
+  min-height:320px;
+  display:grid;
+  place-content:center;
+  justify-items:center;
+  gap:8px;
+  color:var(--muted);
+  text-align:center;
+}
+.ledger-empty strong{color:var(--text);font-size:16px}
+.ledger-empty span{max-width:330px;font-size:11px}
+.ledger-empty .btn{margin-top:8px}
+.ledger-month{padding-top:22px}
+.ledger-month+.ledger-month{margin-top:8px;border-top:1px solid var(--border)}
+.ledger-month-head{
+  min-height:42px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+  padding:0 4px 10px;
+}
+.ledger-month-head>div:first-child{display:flex;align-items:baseline;gap:10px}
+.ledger-month-head>div:first-child strong{
+  color:var(--text);
+  font-size:15px;
+  font-weight:800;
+}
+.ledger-month-head>div:first-child span{color:var(--dim);font-size:10px}
+.ledger-month-totals{display:flex;align-items:center;gap:17px;color:var(--dim);font-size:9px}
+.ledger-month-totals b{margin-left:4px;font:700 11px/1 'JetBrains Mono',monospace}
+.ledger-column-head,
+.ledger-entry-row{
+  display:grid;
+  grid-template-columns:58px 62px minmax(160px,1.3fr) minmax(140px,.9fr) 132px 18px;
+  gap:12px;
+  align-items:center;
+}
+.ledger-column-head{
+  min-height:27px;
+  padding:0 12px;
+  border-bottom:1px solid var(--border);
+  color:var(--dim);
+  font-size:8px;
+  font-weight:800;
+  text-transform:uppercase;
+}
+.ledger-column-head span:nth-child(5){text-align:right}
+.ledger-workspace.has-inspector .ledger-column-head,
+.ledger-workspace.has-inspector .ledger-entry-row{
+  grid-template-columns:52px 56px minmax(135px,1fr) 112px 14px;
+  gap:9px;
+}
+.ledger-workspace.has-inspector .ledger-column-head span:nth-child(4),
+.ledger-workspace.has-inspector .ledger-entry-context{display:none}
+.ledger-workspace.has-inspector .ledger-column-head span:nth-child(5){text-align:right}
+.ledger-entry-row{
+  width:100%;
+  min-height:66px;
+  padding:8px 12px;
+  border-bottom:1px solid var(--border);
+  border-left:2px solid transparent;
+  border-radius:0;
+  color:var(--text);
+  text-align:left;
+  transition:background .16s ease,border-color .16s ease,transform .16s ease;
+}
+.ledger-entry-row:hover{background:var(--overlay-hover)}
+.ledger-entry-row.selected{
+  border-left-color:var(--accent);
+  background:var(--accent-dim);
+}
+.ledger-entry-row time{
+  color:var(--muted);
+  font:700 11px/1 'JetBrains Mono',monospace;
+}
+.ledger-type{
+  width:42px;
+  display:inline-flex;
+  justify-content:center;
+  padding:5px 0;
+  border:1px solid var(--border);
+  border-radius:4px;
+  font-size:9px;
+  font-weight:800;
+}
+.ledger-type.type-in{color:var(--red);background:var(--red-dim);border-color:rgba(227,107,107,.22)}
+.ledger-type.type-out{color:var(--green);background:var(--green-dim);border-color:rgba(66,201,139,.22)}
+.ledger-type.type-buy{color:var(--blue);background:var(--blue-dim);border-color:rgba(79,183,197,.22)}
+.ledger-type.type-sell{color:var(--purple);background:var(--purple-dim);border-color:rgba(184,167,232,.22)}
+.ledger-entry-main,
+.ledger-entry-context,
+.ledger-entry-amount{
+  min-width:0;
+  display:grid;
+  gap:4px;
+}
+.ledger-entry-main strong,
+.ledger-entry-context strong{
+  overflow:hidden;
+  color:var(--text);
+  font-size:11px;
+  font-weight:700;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.ledger-entry-main small,
+.ledger-entry-context small,
+.ledger-entry-amount>small{
+  overflow:hidden;
+  color:var(--dim);
+  font-size:9px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.ledger-entry-amount{text-align:right}
+.ledger-entry-amount>strong{font:800 13px/1.2 'JetBrains Mono',monospace}
+.ledger-entry-amount>strong small{color:var(--dim);font-size:8px}
+.ledger-row-arrow{color:var(--dim);font-size:18px;text-align:right}
+.ledger-entry-row:hover .ledger-row-arrow,
+.ledger-entry-row.selected .ledger-row-arrow{color:var(--accent)}
+.ledger-inspector{
+  min-width:0;
+  align-self:start;
+  position:sticky;
+  top:12px;
+  height:max(340px,calc(100vh - 250px));
+  max-height:calc(100vh - 24px);
+  overflow:auto;
+  border-left:1px solid var(--border);
+  background:var(--surface-quiet);
+  box-shadow:-12px 0 30px var(--shadow-light);
+}
+.ledger-inspector-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  padding:22px 22px 14px;
+}
+.ledger-inspector-head p{color:var(--accent);font:800 8px/1 'JetBrains Mono',monospace}
+.ledger-inspector-head h3{margin-top:6px;font-size:17px}
+.ledger-inspector-close{
+  width:30px;
+  height:30px;
+  border:1px solid var(--border);
+  border-radius:5px;
+  color:var(--muted);
+  font-size:18px;
+}
+.ledger-inspector-close:hover{color:var(--text);background:var(--overlay-hover)}
+.ledger-inspector-hero{display:grid;gap:6px;padding:6px 22px 18px}
+.ledger-inspector-hero>strong{font:800 26px/1.1 'JetBrains Mono',monospace}
+.ledger-inspector-hero>strong small{font-size:10px}
+.ledger-inspector-hero>span{color:var(--muted);font-size:10px}
+.ledger-inspector-metrics{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  margin:0 22px 18px;
+  border-block:1px solid var(--border);
+}
+.ledger-inspector-metrics>div{display:grid;gap:5px;padding:12px 0}
+.ledger-inspector-metrics>div+div{padding-left:14px;border-left:1px solid var(--border)}
+.ledger-inspector-metrics span{color:var(--dim);font-size:8px}
+.ledger-inspector-metrics strong{font:700 10px/1.2 'JetBrains Mono',monospace}
+.ledger-inspector-form{padding:0 22px}
+.ledger-inspector-form .form-group{margin-bottom:11px}
+.ledger-inspector-form label{margin-bottom:5px;color:var(--muted);font-size:9px}
+.ledger-inspector-form .form-input{min-height:39px;background:var(--panel)}
+.ledger-amount-edit{display:grid;grid-template-columns:82px minmax(0,1fr);gap:7px}
+.ledger-rate-edit{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}
+.ledger-note-input{min-height:74px;resize:vertical;line-height:1.55}
+.ledger-inspector-actions{
+  position:sticky;
+  bottom:0;
+  display:grid;
+  grid-template-columns:auto minmax(120px,1fr);
+  gap:8px;
+  padding:14px 22px 20px;
+  border-top:1px solid var(--border);
+  background:var(--surface-quiet);
+}
+.ledger-inspector-actions .btn{justify-content:center}
+.ledger-delete-action{color:var(--red)}
+@media(min-width:981px){
+  .record-edit-modal{display:none!important}
+}
+@media(max-width:1180px){
+  .ledger-page-head{padding-inline:22px}
+  .ledger-filter-shell{padding-inline:22px}
+  .ledger-book{padding-inline:22px}
+  .ledger-workspace.has-inspector{grid-template-columns:minmax(0,1fr) 326px}
+  .ledger-column-head,
+  .ledger-entry-row{grid-template-columns:54px 58px minmax(150px,1.2fr) minmax(120px,.8fr) 112px 14px;gap:9px}
+}
+@media(max-width:980px){
+  .ledger-inspector{display:none}
+  .ledger-workspace.has-inspector{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .ledger-panel{padding:12px}
+  .ledger-page-head{align-items:flex-start;padding:2px 0 14px}
+  .ledger-page-head h2{font-size:20px}
+  .ledger-page-head .hint{font-size:10px}
+  .ledger-desktop-copy{display:none}
+  .ledger-mobile-copy{display:inline}
+  .ledger-head-actions{display:grid;justify-items:end;gap:7px}
+  .ledger-filter-shell{margin-inline:-2px;padding:12px 2px 2px;background:transparent}
+  .ledger-panel .ledger-toolbar .form-input{border-color:var(--border);background:var(--input-bg)}
+  .ledger-panel>.filtered-stats{grid-template-columns:1fr;margin-inline:-2px;padding:10px 2px}
+  .ledger-panel .filtered-stats .fs-grid{gap:8px}
+  .ledger-panel .filtered-stats .fs-cell{display:grid;gap:3px}
+  .ledger-workspace{display:none}
+}
 </style>
 </head>
 <body>
@@ -3039,19 +3342,23 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   </section>
 
   <!-- ===== FLOW TABLE ===== -->
-  <section id="records" class="panel section-records section-not-stats section-not-data" v-show="activeTab==='records'">
-    <div class="panel-header">
-      <div><h2>{{ t('flowRecords') }}</h2><p class="hint">筛选不隐藏，命中高亮，未命中变淡。</p></div>
-      <div class="panel-actions">
-        <span class="pill">{{ matchCount }}/{{ entries.length }} 命中</span>
-        <button class="btn btn-ghost btn-sm" @click="expandAllMonths">{{ t('expandAll') }}</button>
-        <button class="btn btn-ghost btn-sm" @click="collapseAllMonths">{{ t('collapseAll') }}</button>
-        <button class="btn btn-ghost btn-sm" @click="scrollToFirstMatch">{{ t('locateFirst') }}</button>
-        <button class="btn btn-ghost btn-sm" @click="clearData">{{ t('clearAllRecords') }}</button>
+  <section id="records" class="panel section-records section-not-stats section-not-data ledger-panel" v-show="activeTab==='records'">
+    <div class="ledger-page-head">
+      <div>
+        <p class="module-kicker">INVESTMENT LEDGER</p>
+        <h2>流水账本</h2>
+        <p class="hint">
+          <span class="ledger-desktop-copy">按时间阅读每一笔资金与交易，选择记录后在右侧查看和修改。</span>
+          <span class="ledger-mobile-copy">按时间查看每一笔资金与交易，点击卡片即可修改。</span>
+        </p>
+      </div>
+      <div class="ledger-head-actions">
+        <span class="ledger-match-count"><strong>{{ matchCount }}</strong> / {{ entries.length }} 笔</span>
+        <button class="btn btn-primary btn-sm" @click="setActiveTab('quick')">＋ 记一笔</button>
       </div>
     </div>
     <!-- Compact Filters -->
-    <div>
+    <div class="ledger-filter-shell">
       <div class="ledger-toolbar">
         <div class="form-group"><label>年份</label><select class="form-input" aria-label="流水年份" :value="filters.year" @change="setFlowYear($event.target.value)"><option value="">全部</option><option v-for="year in allYears" :key="year" :value="year">{{ year }} 年</option></select></div>
         <div class="form-group"><label>{{ t('month') }}</label><select class="form-input" v-model="filters.month"><option value="">{{ t('typeAll') }}</option><option v-for="m in allMonths" :key="m" :value="m">{{ m }}</option></select></div>
@@ -3086,71 +3393,119 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
     <!-- Filtered Stats Bar -->
     <div v-if="hasActiveFilter && filteredStats.count" class="filtered-stats">
       <div class="fs-header">
-        <span class="fs-title">筛选结果</span>
-        <span class="fs-range" v-if="filteredStats.firstDate">{{ filteredStats.firstDate }} ~ {{ filteredStats.lastDate }} · {{ filteredStats.count }} 笔</span>
+        <span class="fs-title">当前结果</span>
+        <span class="fs-range" v-if="filteredStats.firstDate">{{ filteredStats.firstDate }} 至 {{ filteredStats.lastDate }}</span>
       </div>
       <div class="fs-grid">
+        <div class="fs-cell"><p>记录</p><strong>{{ filteredStats.count }} 笔</strong></div>
         <div class="fs-cell"><p>{{ t('typeIn') }}</p><strong class="text-red">{{ fmt(filteredStats.inTotal) }}</strong></div>
         <div class="fs-cell"><p>{{ t('typeOut') }}</p><strong class="text-green">{{ fmt(filteredStats.outTotal) }}</strong></div>
-        <div class="fs-cell"><p>净盈亏</p><strong :style="{color:filteredStats.net>=0?'var(--blue)':'var(--red)'}">{{ (filteredStats.net>=0?'+':'')+fmt(filteredStats.net) }}</strong></div>
-        <div class="fs-cell"><p>{{ t('roi') }}</p><strong class="privacy-number" :style="{color:filteredStats.inTotal&&filteredStats.outTotal/filteredStats.inTotal>=1?'var(--green)':'var(--red)'}">{{ filteredStats.inTotal?fmtPct((filteredStats.outTotal/filteredStats.inTotal)*100,1):'-' }}</strong></div>
+        <div class="fs-cell"><p>净额</p><strong :style="{color:filteredStats.net>=0?'var(--blue)':'var(--red)'}">{{ (filteredStats.net>=0?'+':'')+fmt(filteredStats.net) }}</strong></div>
       </div>
     </div>
-    <!-- Month Ledger -->
-    <div class="month-ledger-list">
-      <div v-if="!entries.length" style="text-align:center;color:var(--muted);padding:32px">{{ t('emptyStateHint') }}<br><button class="btn btn-ghost btn-sm mt-12" @click="loadDemo">加载演示数据</button></div>
-      <div v-else-if="hasActiveFilter&&!matchCount" style="text-align:center;color:var(--muted);padding:32px">{{ t('noMatch') }}</div>
-      <div v-for="g in groupedEntries" :key="g.key" class="month-ledger-row">
-        <div class="month-ledger-summary" @click="toggleMonth(g.key)">
-          <div class="month-ledger-title">
-            <span :class="['arrow',{open:isMonthOpen(g.key)}]">&#9654;</span>
-            <strong>{{ g.key }}</strong>
-            <span class="month-ledger-count">{{ hasActiveFilter ? g.matchedCount+'/'+g.entries.length : g.entries.length }} 笔</span>
-          </div>
-          <div class="month-ledger-tags">
-            <span v-for="tag in g.summaryTags" :key="tag" class="tag-chip">{{ tag }}</span>
-          </div>
-          <div class="month-ledger-metric"><span>入</span><strong style="color:var(--red)">{{ fmt(g.inTotal) }}</strong></div>
-          <div class="month-ledger-metric"><span>出</span><strong style="color:var(--green)">{{ fmt(g.outTotal) }}</strong></div>
-          <div class="month-ledger-metric"><span>净</span><strong :style="{color:g.net>=0?'var(--blue)':'var(--red)'}">{{ (g.net>=0?'+':'')+fmt(g.net) }}</strong></div>
+    <!-- Desktop reading-first ledger -->
+    <div :class="['ledger-workspace',{'has-inspector':editingEntry}]">
+      <div class="ledger-book">
+        <div v-if="!entries.length" class="ledger-empty">
+          <strong>账本还是空的</strong>
+          <span>记录第一笔入金或交易后，时间会替你把它们整理好。</span>
+          <button class="btn btn-primary btn-sm" @click="setActiveTab('quick')">记第一笔</button>
         </div>
-        <div class="month-detail" v-show="isMonthOpen(g.key)">
-          <div class="table-wrap">
-            <table>
-          <thead><tr><th>{{ t('date') }}</th><th>资产 / 平台</th><th style="text-align:right">{{ t('amount') }}</th><th>备注/理由</th><th>类型</th><th>{{ t('actions') }}</th></tr></thead>
-          <tbody>
-            <tr v-for="e in g.entries" :key="e.id" :class="rowClass(e)" :id="'row-'+e.id">
-              <td><input type="date" :value="e.date" @change="updateField(e.id,'date',$event.target.value)"></td>
-              <td style="min-width:140px">
-                <select :value="normalizeAssetType(e.assetType)||''" @change="updateField(e.id,'assetType',$event.target.value)" style="width:100%;margin-bottom:3px"><option value="">其他</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select>
-                <input type="text" :value="e.exchange" @change="updateField(e.id,'exchange',$event.target.value)" placeholder="账户/平台" style="width:100%;font-size:11px;color:var(--muted)">
-              </td>
-              <td style="text-align:right;min-width:130px">
-                <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">
-                  <select :value="e.currency||'CNY'" @change="updateField(e.id,'currency',$event.target.value)" style="width:52px;font-size:11px;color:var(--muted)"><option value="CNY">CNY</option><option value="USD">USD</option><option value="HKD">HKD</option><option value="USDT">USDT</option></select>
-                  <input type="number" step="0.01" :value="e.amount" @change="updateField(e.id,'amount',$event.target.value)" style="text-align:right;font-weight:700;width:90px" :style="{color:e.type==='入金'?'var(--red)':e.type==='出金'?'var(--green)':e.type==='买入'?'#60a5fa':'#a78bfa'}">
-                </div>
-                <div v-if="e.currency&&e.currency!=='CNY'" style="font-size:10px;color:var(--muted);text-align:right;margin-top:2px">
-                  汇率 <input type="number" step="0.0001" :value="e.rate" @change="updateField(e.id,'rate',$event.target.value)" style="width:52px;font-size:10px;color:var(--muted);text-align:right">
-                  <span v-if="e.rate">≈ {{ fmt(amountCNY(e)) }} CNY</span>
-                </div>
-              </td>
-              <td>
-                <input type="text" :value="e.note" @change="updateField(e.id,'note',$event.target.value)" style="min-width:100px">
-                <div v-if="e.tradeQty||e.tradePrice" class="pos-flow-meta">
-                  成交 {{ e.tradeQty||'-' }} × {{ e.tradePrice?fmt(e.tradePrice):'-' }} {{ e.currency||'CNY' }}
-                  <span v-if="e.type==='卖出'&&e.realizedPL!=null" :style="{color:e.realizedPL>=0?'var(--green)':'var(--red)',fontWeight:700}"> · {{ e.realizedPL>=0?'+':'' }}{{ fmt(e.realizedPL) }}</span>
-                </div>
-                <div class="tag-strip" v-if="parseTags(e.tags).length"><span v-for="tag in parseTags(e.tags)" :key="tag" class="tag-chip">#{{ tag }}</span></div>
-              </td>
-              <td><select :value="e.type" @change="updateField(e.id,'type',$event.target.value)"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></select></td>
-              <td><span class="action-link del" @click="removeEntry(e.id)">{{ t('delete') }}</span></td>
-            </tr>
-          </tbody>
-            </table>
-          </div>
+        <div v-else-if="hasActiveFilter&&!matchCount" class="ledger-empty">
+          <strong>没有找到符合条件的记录</strong>
+          <span>可以换一个年份、类型或关键词再试试。</span>
+          <button class="btn btn-ghost btn-sm" @click="clearFilters">清除筛选</button>
         </div>
+        <section v-for="g in groupedEntries" :key="g.key" class="ledger-month">
+          <header class="ledger-month-head">
+            <div>
+              <strong>{{ dayjs(g.key+'-01').format('YYYY 年 M 月') }}</strong>
+              <span>{{ g.visibleEntries.length }} 笔记录</span>
+            </div>
+            <div class="ledger-month-totals">
+              <span>入 <b class="text-red">{{ fmt(g.inTotal) }}</b></span>
+              <span>出 <b class="text-green">{{ fmt(g.outTotal) }}</b></span>
+              <span>净 <b :style="{color:g.net>=0?'var(--blue)':'var(--red)'}">{{ (g.net>=0?'+':'')+fmt(g.net) }}</b></span>
+            </div>
+          </header>
+          <div class="ledger-column-head" aria-hidden="true">
+            <span>日期</span><span>类型</span><span>记录</span><span>账户与标签</span><span>金额</span><span></span>
+          </div>
+          <button
+            v-for="e in g.visibleEntries"
+            :key="e.id"
+            :id="'row-'+e.id"
+            :class="['ledger-entry-row',{selected:editingEntry&&editingEntry.id===e.id}]"
+            @click="openEditModal(e)"
+          >
+            <time>{{ dayjs(e.date).format('MM.DD') }}</time>
+            <span :class="['ledger-type','type-'+(e.type==='入金'?'in':e.type==='出金'?'out':e.type==='买入'?'buy':'sell')]">{{ e.type }}</span>
+            <span class="ledger-entry-main">
+              <strong>{{ e.targetName||e.note||e.exchange||'未命名记录' }}</strong>
+              <small v-if="e.targetSymbol||e.tradeQty||e.tradePrice">
+                {{ e.targetSymbol||'' }}{{ e.tradeQty?' · '+e.tradeQty+' 份':'' }}{{ e.tradePrice?' × '+fmt(e.tradePrice):'' }}
+              </small>
+              <small v-else>{{ e.targetName?(e.note||'暂无备注'):(e.note?(e.assetType||'记录'):'暂无备注') }}</small>
+            </span>
+            <span class="ledger-entry-context">
+              <strong>{{ e.exchange||'未知平台' }}</strong>
+              <small>{{ e.assetType||'未分类' }}<template v-if="parseTags(e.tags).length"> · #{{ parseTags(e.tags).slice(0,2).join(' #') }}</template></small>
+            </span>
+            <span class="ledger-entry-amount" :style="{color:e.type==='入金'?'var(--red)':e.type==='出金'?'var(--green)':e.type==='买入'?'var(--blue)':'var(--purple)'}">
+              <strong>{{ fmt(e.amount) }} <small>{{ e.currency||'CNY' }}</small></strong>
+              <small v-if="e.currency&&e.currency!=='CNY'&&e.rate">≈ {{ fmt(amountCNY(e)) }} CNY</small>
+            </span>
+            <span class="ledger-row-arrow">›</span>
+          </button>
+        </section>
       </div>
+
+      <aside v-if="editingEntry" class="ledger-inspector" aria-label="记录详情">
+        <div class="ledger-inspector-head">
+          <div>
+            <p>RECORD DETAIL</p>
+            <h3>{{ editingEntry.type }}记录</h3>
+          </div>
+          <button class="ledger-inspector-close" @click="editingEntry=null" title="关闭" aria-label="关闭记录详情">×</button>
+        </div>
+        <div class="ledger-inspector-hero" v-if="editingDetail">
+          <strong :style="{color:editingEntry.type==='入金'?'var(--red)':editingEntry.type==='出金'?'var(--green)':editingEntry.type==='买入'?'var(--blue)':'var(--purple)'}">{{ fmt(editingEntry.amount) }} <small>{{ editingEntry.currency||'CNY' }}</small></strong>
+          <span>折合 {{ fmt(editingDetail.cny) }} CNY</span>
+        </div>
+        <div class="ledger-inspector-metrics" v-if="editingDetail">
+          <div><span>本月记录</span><strong>{{ editingDetail.monthCount }} 笔</strong></div>
+          <div><span>同平台净额</span><strong>{{ (editingDetail.platformNet>=0?'+':'')+fmt(editingDetail.platformNet) }}</strong></div>
+        </div>
+        <div class="ledger-inspector-form">
+          <div class="trade-lock-note" v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'">成交金额、币种和资产已参与持仓成本计算。需要改动这些字段时，请删除后重新录入。</div>
+          <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></select></div>
+          <div class="form-group"><label>{{ t('date') }}</label><input class="form-input" type="date" v-model="editingEntry.date"></div>
+          <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="editingEntry.assetType" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="">{{ t("uncategorized") }}</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select></div>
+          <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="editingEntry.exchange" list="dl-ex-ledger"></div>
+          <datalist id="dl-ex-ledger"><option v-for="ex in editPlatformSuggestions" :key="ex" :value="ex"></option></datalist>
+          <div class="form-group">
+            <label>{{ t('amount') }}</label>
+            <div class="ledger-amount-edit">
+              <select class="form-input" v-model="editingEntry.currency" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="CNY">CNY</option><option value="USD">USD</option><option value="HKD">HKD</option><option value="USDT">USDT</option></select>
+              <input class="form-input" type="number" step="0.01" v-model.number="editingEntry.amount" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'">
+            </div>
+          </div>
+          <div class="form-group" v-if="editingEntry.currency&&editingEntry.currency!=='CNY'">
+            <label>{{ t('rate') }}</label>
+            <div class="ledger-rate-edit">
+              <input class="form-input" type="number" step="0.0001" v-model="editingEntry.rate" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'">
+              <button class="rate-fetch-btn" @click="fetchRate(editingEntry.currency,'edit')" :disabled="rateLoading||editingEntry.type==='买入'||editingEntry.type==='卖出'">{{ rateLoading?'获取中…':'更新' }}</button>
+            </div>
+          </div>
+          <div class="form-group"><label>{{ editingEntry.type==='入金'?'投入理由':editingEntry.type==='买入'?'买入理由':editingEntry.type==='卖出'?'卖出理由':'出金备注' }}</label><textarea class="form-input ledger-note-input" v-model="editingEntry.note" rows="3"></textarea></div>
+          <div class="form-group"><label>{{ t('tagStats') }}</label><input class="form-input" v-model="editingEntry.tagText" list="dl-tags-ledger" placeholder="定投，补仓，FOMO"></div>
+          <datalist id="dl-tags-ledger"><option v-for="tag in allTags" :key="tag" :value="tag"></option></datalist>
+        </div>
+        <div class="ledger-inspector-actions">
+          <button class="btn btn-ghost btn-sm ledger-delete-action" @click="removeEntry(editingEntry.id);editingEntry=null">{{ t('delete') }}</button>
+          <button class="btn btn-primary" @click="saveEditEntry">{{ t('save') }}</button>
+        </div>
+      </aside>
     </div>
     <!-- Mobile Cards (grouped by month) -->
     <div class="record-cards">
@@ -3617,7 +3972,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   </div>
 
   <!-- ===== MOBILE EDIT MODAL ===== -->
-  <div v-if="editingEntry" class="modal-mask" @click.self="editingEntry=null">
+  <div v-if="editingEntry" class="modal-mask record-edit-modal" @click.self="editingEntry=null">
     <div class="modal-box">
       <div class="modal-handle"></div>
       <div class="modal-head"><div class="modal-title">记录详情</div><button class="modal-close" @click="editingEntry=null">&times;</button></div>
@@ -4384,7 +4739,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.07.23-1'
+  const APP_VERSION='v2026.07.23-2'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -4869,7 +5224,7 @@ setup(){
         ...topLabels(visible.map(e=>e.assetType||'未分类'),2),
         ...topLabels(visible.map(e=>e.exchange||'未知平台'),2)
       ].slice(0,4)
-      return{...g,net:g.outTotal-g.inTotal,summaryTags:tags}
+      return{...g,visibleEntries:visible,net:g.outTotal-g.inTotal,summaryTags:tags}
     })
   })
   function toggleMonth(m){const s=expandedMonths.value;if(s.has(m))s.delete(m);else s.add(m);expandedMonths.value=new Set(s)}

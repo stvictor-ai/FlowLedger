@@ -1,4 +1,4 @@
-const CACHE_NAME = 'touji-v2026-07-23-1';
+const CACHE_NAME = 'touji-v2026-07-23-2';
 
 const APP_ASSETS = [
   './js/review-engine.js'
