@@ -2857,7 +2857,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .position-create-title span{color:var(--dim);font-size:9px}
 .position-create-grid{
   display:grid;
-  grid-template-columns:minmax(220px,1.35fr) minmax(150px,.85fr) 120px 130px 105px auto;
+  grid-template-columns:minmax(210px,1.2fr) minmax(130px,.7fr) 125px 100px 120px 96px auto;
   gap:9px;
   align-items:end;
 }
@@ -3191,6 +3191,180 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   .entry-ticket-foot p{display:none}
   .entry-save-actions{display:grid;grid-template-columns:1fr 1fr}
   .entry-save-actions .btn{justify-content:center}
+}
+
+/* ===== REVIEW MODES ===== */
+.review-mode-bar{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  padding:0 28px;
+  overflow-x:auto;
+  border-bottom:1px solid var(--border);
+  background:var(--surface-quiet);
+}
+.review-mode-button{
+  min-height:46px;
+  padding:0 15px;
+  border-bottom:2px solid transparent;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:800;
+  white-space:nowrap;
+}
+.review-mode-button:hover{color:var(--text)}
+.review-mode-button.active{border-bottom-color:var(--accent);color:var(--text)}
+.review-mode-button small{margin-left:5px;color:var(--dim);font-size:8px;font-weight:600}
+.review-view-section{animation:workspaceReveal .18s ease-out}
+
+/* ===== DATA CENTER WORKSPACE ===== */
+.data-center{
+  padding:0;
+  overflow:hidden;
+}
+.data-center-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:22px;
+  padding:25px 28px 19px;
+  border-bottom:1px solid var(--border);
+}
+.data-center-head h2{margin:3px 0 4px;font-size:24px}
+.data-center-head .hint{font-size:10px}
+.data-state{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:var(--muted);
+  font-size:9px;
+  white-space:nowrap;
+}
+.data-state-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 5px color-mix(in srgb,var(--green) 12%,transparent);
+}
+.data-state-dot.offline{background:var(--dim);box-shadow:none}
+.data-summary-strip{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  border-bottom:1px solid var(--border);
+  background:var(--surface-quiet);
+}
+.data-summary-strip>div{padding:14px 20px;border-left:1px solid var(--border)}
+.data-summary-strip>div:first-child{border-left:0}
+.data-summary-strip span{display:block;color:var(--dim);font-size:8px;font-weight:800}
+.data-summary-strip strong{display:block;margin-top:5px;font:800 14px/1.2 'JetBrains Mono',monospace}
+.data-center-body{display:grid;grid-template-columns:210px minmax(0,1fr);min-height:520px}
+.data-center-nav{
+  display:grid;
+  align-content:start;
+  border-right:1px solid var(--border);
+  background:var(--surface-quiet);
+}
+.data-center-tab{
+  display:grid;
+  gap:4px;
+  min-height:74px;
+  padding:15px 20px;
+  border-bottom:1px solid var(--border);
+  border-left:3px solid transparent;
+  color:var(--muted);
+  text-align:left;
+}
+.data-center-tab:hover{background:var(--overlay-hover);color:var(--text)}
+.data-center-tab.active{border-left-color:var(--accent);background:var(--panel);color:var(--text)}
+.data-center-tab strong{font-size:11px}
+.data-center-tab span{color:var(--dim);font-size:8px}
+.data-center-view{min-width:0;padding:26px 30px 34px;animation:workspaceReveal .18s ease-out}
+.data-view-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:23px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.data-view-head h3{font-size:18px}
+.data-view-head p{margin-top:5px;color:var(--muted);font-size:9px}
+.data-sync-status{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:16px;
+  padding:17px 0;
+  border-block:1px solid var(--border);
+}
+.data-sync-status strong{display:block;font-size:11px}
+.data-sync-status span{display:block;margin-top:5px;color:var(--muted);font-size:9px}
+.data-config-block{display:grid;gap:14px;margin-top:20px;max-width:850px}
+.data-config-help{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--border);border-radius:6px}
+.data-config-help>div{padding:13px;border-left:1px solid var(--border)}
+.data-config-help>div:first-child{border-left:0}
+.data-config-help strong{display:block;color:var(--accent);font:800 10px/1 'JetBrains Mono',monospace}
+.data-config-help span{display:block;margin-top:7px;color:var(--muted);font-size:8px;line-height:1.5}
+.data-config-row{display:grid;grid-template-columns:minmax(240px,1fr) auto;gap:8px}
+.data-sync-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+.data-transfer-group{padding:18px 0;border-bottom:1px solid var(--border)}
+.data-transfer-group:first-of-type{padding-top:0}
+.data-transfer-group h4{margin-bottom:11px;font-size:11px}
+.data-transfer-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.data-transfer-action{
+  display:grid;
+  grid-template-columns:38px minmax(0,1fr) auto;
+  align-items:center;
+  gap:12px;
+  min-height:76px;
+  padding:12px 14px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  color:var(--text);
+  text-align:left;
+}
+.data-transfer-action:hover{border-color:var(--accent);background:var(--accent-dim)}
+.data-transfer-icon{
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  border-radius:6px;
+  background:var(--surface-quiet);
+  color:var(--accent);
+  font:800 13px/1 'JetBrains Mono',monospace;
+}
+.data-transfer-action strong,.data-transfer-action small{display:block}
+.data-transfer-action strong{font-size:10px}
+.data-transfer-action small{margin-top:5px;color:var(--dim);font-size:8px}
+.data-transfer-action>span:last-child{color:var(--dim);font-size:18px}
+.data-recovery-section{margin-top:24px}
+.data-recovery-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:10px}
+.data-recovery-head h4{font-size:11px}
+.data-recovery-head div{display:flex;gap:7px}
+.data-recovery-list{border-top:1px solid var(--border)}
+.data-recovery-empty{padding:28px 0;color:var(--muted);font-size:9px;text-align:center}
+.data-center .snap-row,.data-center .batch-row{padding-inline:0}
+@keyframes workspaceReveal{from{opacity:.45;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(max-width:900px){
+  .data-center-body{grid-template-columns:1fr}
+  .data-center-nav{grid-template-columns:repeat(3,minmax(0,1fr));border-right:0;border-bottom:1px solid var(--border)}
+  .data-center-tab{min-height:61px;padding:11px 13px;border-bottom:0;border-left:0;border-right:1px solid var(--border);border-top:2px solid transparent}
+  .data-center-tab.active{border-top-color:var(--accent);border-left:0}
+}
+@media(max-width:760px){
+  .review-mode-bar{padding:0 14px}
+  .review-mode-button{min-height:42px;padding:0 11px}
+  .data-center-head{align-items:flex-start;padding:15px 14px}
+  .data-center-head h2{font-size:20px}
+  .data-state{white-space:normal}
+  .data-summary-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .data-summary-strip>div:nth-child(3){border-left:0;border-top:1px solid var(--border)}
+  .data-summary-strip>div:nth-child(4){border-top:1px solid var(--border)}
+  .data-summary-strip>div{padding:11px 13px}
+  .data-center-tab{padding:10px 8px;text-align:center}
+  .data-center-tab span{display:none}
+  .data-center-view{padding:20px 14px 92px}
+  .data-view-head{align-items:flex-start}
+  .data-sync-status{grid-template-columns:1fr}
+  .data-config-help{grid-template-columns:1fr}
+  .data-config-help>div{border-left:0;border-top:1px solid var(--border)}
+  .data-config-help>div:first-child{border-top:0}
+  .data-config-row,.data-transfer-list{grid-template-columns:1fr}
 }
 
 /* ===== EDITORIAL LEDGER WORKSPACE ===== */
@@ -3697,7 +3871,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
     <nav class="position-filter-bar" aria-label="持仓市场筛选">
       <span>市场</span>
       <button :class="['position-filter',{active:posMarket===''}]" @click="posMarket='';selectedPositionId=''">全部</button>
-      <button v-for="m in POS_MARKETS" :key="m.v" :class="['position-filter',{active:posMarket===m.v}]" @click="posMarket=m.v;selectedPositionId=''">{{ m.l }}</button>
+      <button v-for="m in POS_MARKETS" :key="m.v" :class="['position-filter',{active:posMarket===m.v}]" @click="posMarket=m.v;posForm.assetType=m.v;selectedPositionId=''">{{ m.l }}</button>
     </nav>
 
     <div v-show="showPosForm" class="position-create-block">
@@ -3708,12 +3882,12 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
       <div class="position-create-grid">
         <div class="form-group" style="position:relative">
           <label>标的</label>
-          <input class="form-input" v-model="posSymbolSearch" @focus="showSymbolPicker=true" @input="onPosSearchInput" placeholder="输入代码或名称">
+          <input class="form-input" v-model="posSymbolSearch" @focus="showSymbolPicker=true" @input="onPosSearchInput" placeholder="搜索代码或直接输入名称">
           <div v-if="showSymbolPicker" class="symbol-picker-dropdown">
             <div class="symbol-picker-list">
               <template v-if="posSymbolSearch.trim()">
                 <div v-if="posSearching" class="symbol-option" style="color:var(--muted)">搜索中…</div>
-                <div v-else-if="!posResultsShown.length" class="symbol-option" style="color:var(--muted)">暂无匹配标的</div>
+                <div v-else-if="!posResultsShown.length" class="symbol-option" style="color:var(--muted)">没有行情结果，仍可按当前输入手动建立</div>
                 <div v-for="it in posResultsShown" :key="it.secid" class="symbol-option" @click="selectEmResult(it)">
                   <span class="symbol-option-icon" style="font-size:10px;font-weight:700;color:var(--accent)">{{ it.typeName }}</span>
                   <span class="symbol-option-name">{{ it.name }}</span>
@@ -3733,6 +3907,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
           </div>
         </div>
         <div class="form-group"><label>名称</label><input class="form-input" v-model="posForm.name" placeholder="自动带出或手填"></div>
+        <div class="form-group"><label>资产类型</label><select class="form-input" v-model="posForm.assetType"><option value="">未分类</option><option v-for="asset in ASSET_TYPES" :key="asset" :value="asset">{{ asset }}</option></select></div>
         <div class="form-group"><label>份额</label><input class="form-input" type="number" step="any" v-model="posForm.qty" placeholder="100"></div>
         <div class="form-group"><label>平均成本</label><input class="form-input" type="number" step="any" v-model="posForm.avgCost" placeholder="单价"></div>
         <div class="form-group"><label>币种</label><select class="form-input" v-model="posForm.currency"><option>CNY</option><option>USD</option><option>HKD</option><option>USDT</option></select></div>
@@ -4169,40 +4344,106 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   </section>
 
   <!-- ===== SYNC PANEL ===== -->
-  <section id="sync" class="panel section-records section-not-stats section-not-data" v-show="activeTab==='data'">
-    <div class="panel-header" @click="showSync=!showSync" style="cursor:pointer">
-      <div class="panel-collapse-toggle">
-        <span :class="['arrow',{open:showSync}]">&#9654;</span>
-        <div><h2>GitHub Gist 同步</h2><p class="hint">多端同步数据。{{ syncStatus!=='未配置'?' · '+syncStatus:'（免费、安全、带版本历史）' }}</p></div>
+  <section id="sync" class="panel section-records section-not-stats section-not-data data-center" v-show="activeTab==='data'">
+    <header class="data-center-head">
+      <div>
+        <p class="module-kicker">DATA CENTER</p>
+        <h2>同步与数据</h2>
+        <p class="hint">管理多端同步、文件迁移和本地恢复，不改变账本内容本身。</p>
       </div>
-      <div class="panel-actions" @click.stop><button class="btn btn-ghost btn-sm" @click="saveSyncConfig" v-if="showSync">{{ t('syncSaveConfig') }}</button></div>
+      <div class="data-state">
+        <span :class="['data-state-dot',{offline:!syncCfg.token}]"></span>
+        <span>{{ syncCfg.token?syncStatus:'云同步尚未配置' }}</span>
+      </div>
+    </header>
+
+    <div class="data-summary-strip">
+      <div><span>流水记录</span><strong>{{ entries.length }}</strong></div>
+      <div><span>持仓项目</span><strong>{{ positions.length }}</strong></div>
+      <div><span>本地快照</span><strong>{{ snapshots.length }}</strong></div>
+      <div><span>同步状态</span><strong>{{ syncCfg.token?'READY':'LOCAL' }}</strong></div>
     </div>
-    <div :class="['panel-collapse-body',{collapsed:!showSync}]">
-      <div class="form-grid">
-        <div class="form-group" style="grid-column:1/-1">
-          <label>GitHub Personal Access Token</label>
-          <div style="display:flex;gap:8px">
-            <input class="form-input" type="password" v-model="syncCfg.token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="flex:1">
-            <a href="https://github.com/settings/tokens/new" target="_blank" class="btn btn-ghost btn-sm" style="white-space:nowrap">{{ t('syncCreateToken') }}</a>
+
+    <div class="data-center-body">
+      <nav class="data-center-nav" aria-label="数据管理视图">
+        <button v-for="item in dataViews" :key="item.key" :class="['data-center-tab',{active:dataView===item.key}]" @click="dataView=item.key">
+          <strong>{{ item.label }}</strong><span>{{ item.caption }}</span>
+        </button>
+      </nav>
+
+      <div v-if="dataView==='sync'" class="data-center-view">
+        <div class="data-view-head">
+          <div><h3>GitHub Gist 云同步</h3><p>手机和电脑使用同一个 Gist，在上传或拉取前都会先比较差异。</p></div>
+          <a href="https://github.com/settings/tokens/new" target="_blank" class="btn btn-ghost btn-sm">{{ t('syncCreateToken') }}</a>
+        </div>
+        <div class="data-sync-status">
+          <div><strong>{{ syncCfg.token?'同步连接已配置':'完成一次配置即可长期使用' }}</strong><span>{{ syncCfg.token?(syncCfg.gistId?'已关联 Gist · '+syncCfg.gistId:'首次上传时会自动创建私有 Gist'):'Token 只保存在当前浏览器，不会写入项目仓库。' }}</span></div>
+          <span :class="['data-state-dot',{offline:!syncCfg.token}]"></span>
+        </div>
+        <div class="data-config-block">
+          <div v-if="!syncCfg.token" class="data-config-help">
+            <div><strong>01</strong><span>打开 GitHub Token 页面，选择 Tokens (classic)。</span></div>
+            <div><strong>02</strong><span>创建 Token，只勾选 gist 权限。</span></div>
+            <div><strong>03</strong><span>粘贴到下方并保存配置。</span></div>
           </div>
-          <p class="hint" style="margin-top:4px">GitHub 页面操作：左侧栏找 <strong>"Tokens (classic)"</strong> &rarr; <strong>"Generate new token (classic)"</strong> &rarr; Note 随意填、Expiration 选不限 &rarr; 勾选 <strong><code>gist</code></strong> 权限 &rarr; 生成后粘贴到此处。Token 仅保存在你的浏览器本地</p>
+          <div class="form-group">
+            <label>GitHub Personal Access Token</label>
+            <div class="data-config-row">
+              <input class="form-input" type="password" v-model="syncCfg.token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+              <button class="btn btn-primary btn-sm" @click="saveSyncConfig">{{ t('syncSaveConfig') }}</button>
+            </div>
+          </div>
+          <div v-if="syncCfg.gistId" class="form-group"><label>Gist ID</label><input class="form-input" :value="syncCfg.gistId" readonly></div>
         </div>
-        <div class="form-group" v-if="syncCfg.gistId">
-          <label>Gist ID</label>
-          <input class="form-input" :value="syncCfg.gistId" readonly>
+        <div class="data-sync-actions">
+          <button class="btn btn-primary" @click="syncAuto" :disabled="!syncCfg.token||syncing">{{ syncing?'同步中…':'智能同步' }}</button>
+          <button class="btn btn-ghost" @click="syncPush" :disabled="!syncCfg.token||syncing">{{ t('syncPush') }}</button>
+          <button class="btn btn-ghost" @click="syncPull" :disabled="!syncCfg.token||syncing">{{ t('syncPull') }}</button>
         </div>
-        <div class="form-group" v-else>
-          <label>Gist</label>
-          <input class="form-input" value="首次推送后自动创建" readonly>
-        </div>
-        <div class="form-group"><label>状态</label><input class="form-input" :value="syncStatus" readonly></div>
-        <button class="btn btn-primary btn-sm" @click="syncPush">{{ t('syncPush') }}</button>
-        <button class="btn btn-ghost btn-sm" @click="syncPull">{{ t('syncPull') }}</button>
-        <button class="btn btn-ghost btn-sm" @click="syncAuto" v-if="syncCfg.token">{{ t('syncAuto') }}</button>
+        <p class="hint" style="margin-top:12px">智能同步会先读取云端，再合并手机和电脑各自新增的内容；检测到覆盖风险时会要求你确认。</p>
       </div>
-      <p class="hint" style="margin-top:10px;font-size:12px">
-        提示：拉取会先预览云端与本地差异，确认后再合并；上传前如果发现云端有新内容，也会先提醒，避免手机和电脑互相覆盖。
-      </p>
+
+      <div v-else-if="dataView==='transfer'" class="data-center-view">
+        <div class="data-view-head"><div><h3>导入与导出</h3><p>Excel 适合查看整理，JSON 适合完整迁移和长期备份。</p></div></div>
+        <section class="data-transfer-group">
+          <h4>导入到当前账本</h4>
+          <div class="data-transfer-list">
+            <button class="data-transfer-action" @click="$refs.xlsxFile.click()"><span class="data-transfer-icon">XL</span><span><strong>导入 Excel</strong><small>预览后再合并或覆盖流水</small></span><span>›</span></button>
+            <button class="data-transfer-action" @click="$refs.jsonFile.click()"><span class="data-transfer-icon">{ }</span><span><strong>导入 JSON</strong><small>同时恢复流水、持仓与设置</small></span><span>›</span></button>
+          </div>
+        </section>
+        <section class="data-transfer-group">
+          <h4>导出当前账本</h4>
+          <div class="data-transfer-list">
+            <button class="data-transfer-action" @click="exportExcel"><span class="data-transfer-icon">XL</span><span><strong>导出 Excel</strong><small>适合核对、筛选和打印</small></span><span>›</span></button>
+            <button class="data-transfer-action" @click="exportJSON"><span class="data-transfer-icon">{ }</span><span><strong>JSON 数据备份</strong><small>包含流水、持仓与资产设置</small></span><span>›</span></button>
+          </div>
+        </section>
+      </div>
+
+      <div v-else class="data-center-view">
+        <div class="data-view-head"><div><h3>恢复记录</h3><p>快照用于回到修改前，导入历史用于撤销某次文件导入。</p></div><button class="btn btn-primary btn-sm" @click="createSnap">立即创建快照</button></div>
+        <section class="data-recovery-section">
+          <div class="data-recovery-head"><h4>本地快照 · {{ snapshots.length }}/6</h4><div><button v-if="snapshots.length" class="btn btn-ghost btn-xs" @click="clearSnaps">清空快照</button></div></div>
+          <div class="data-recovery-list">
+            <div v-if="!snapshots.length" class="data-recovery-empty">还没有快照。修改或删除前系统也会自动创建。</div>
+            <div v-for="(snapshot,index) in snapshots" :key="index" class="snap-row">
+              <div><div style="font-size:11px;font-weight:700">{{ snapshot.at }}</div><div style="font-size:9px;color:var(--muted)">{{ (snapshot.entries||[]).length }} 条流水</div></div>
+              <button class="btn btn-ghost btn-xs" @click="restoreSnap(index)">恢复到这里</button>
+            </div>
+          </div>
+        </section>
+        <section class="data-recovery-section">
+          <div class="data-recovery-head"><h4>导入历史 · {{ importBatches.length }}</h4><div><button v-if="importBatches.length" class="btn btn-ghost btn-xs" @click="clearImportBatches">清空历史</button></div></div>
+          <div class="data-recovery-list">
+            <div v-if="!importBatches.length" class="data-recovery-empty">还没有文件导入记录。</div>
+            <div v-for="batch in importBatches" :key="batch.id" class="batch-row">
+              <div><div class="batch-title"><span :class="['batch-badge',batch.mode]">{{ batch.mode==='overwrite'?'覆盖':'合并' }}</span><span>{{ batch.fileName||'未知文件' }}</span><span v-if="batch.undone" class="batch-badge undone">已撤销</span></div><div class="batch-meta">{{ batch.at }} · 导入 {{ batch.importedCount||0 }} 条</div></div>
+              <button class="btn btn-ghost btn-xs" @click="undoImportBatch(batch)" :disabled="batch.undone">撤销导入</button>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   </section>
 
@@ -4508,7 +4749,13 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
       <div class="review-summary-cell"><p>已实现盈亏</p><strong :class="reviewSummary.realizedPL>=0?'text-green':'text-red'">{{ (reviewSummary.realizedPL>=0?'+':'')+fmt(reviewSummary.realizedPL) }}</strong><small>仅统计卖出记录</small></div>
     </div>
 
-    <div class="review-calendar-shell">
+    <nav class="review-mode-bar" aria-label="复盘视图">
+      <button v-for="item in reviewViews" :key="item.key" :class="['review-mode-button',{active:reviewView===item.key}]" @click="reviewView=item.key">
+        {{ item.label }}<small>{{ item.caption }}</small>
+      </button>
+    </nav>
+
+    <div v-show="reviewView==='calendar'" class="review-calendar-shell review-view-section">
       <section class="review-calendar-panel" aria-label="交易复盘日历">
         <div class="review-calendar-head">
           <div class="review-calendar-title">
@@ -4584,14 +4831,14 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
       </aside>
     </div>
 
-    <div v-if="!reviewSummary.count" class="empty-block review-empty">
+    <div v-if="!reviewSummary.count&&reviewView==='calendar'" class="empty-block review-empty review-view-section">
       <strong>近期还没有可复盘的操作</strong>
       <span>切换更长时间范围查看历史，或从下一笔入金、出金、买入、卖出开始记录。</span>
       <button class="btn btn-primary btn-sm" @click="setActiveTab('quick')">去记一笔</button>
     </div>
 
     <template v-else>
-      <section class="review-timeline">
+      <section v-show="reviewView==='calendar'" class="review-timeline review-view-section">
         <div class="review-block-head">
           <h3>近期行为时间线</h3>
           <small>事实按时间排列，规则标签自动关联</small>
@@ -4612,7 +4859,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
         </div>
       </section>
 
-      <div class="review-layout">
+      <div v-show="reviewView==='insights'" class="review-layout review-view-section">
         <section class="review-block">
           <div class="review-block-head"><h3>行为信号</h3><small>基于所选范围内的入金节奏</small></div>
           <template v-if="behaviorAnalysis">
@@ -4643,7 +4890,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
         </section>
       </div>
 
-      <div class="review-layout review-layout-secondary">
+      <div v-show="reviewView==='insights'" class="review-layout review-layout-secondary review-view-section">
         <section class="review-block">
           <div class="review-block-head"><h3>本次结论</h3><small>{{ reviewRangeMeta.label }}</small></div>
           <p class="insight-summary">{{ insightSummary }}</p>
@@ -4662,14 +4909,14 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
         </section>
       </div>
 
-      <details class="review-details">
+      <details v-show="reviewView==='rules'" class="review-details review-view-section" open>
         <summary>{{ t('largeTxWarn') }} · {{ largeTxList.length }} 笔</summary>
         <ul class="insight-list">
           <li v-for="(item,i) in largeTxList" :key="i">{{ item }}</li>
           <li v-if="!largeTxList.length" class="review-muted">{{ t('noLargeTx') }}</li>
         </ul>
       </details>
-      <details class="review-details">
+      <details v-show="reviewView==='rules'" class="review-details review-view-section" open>
         <summary>{{ t('rules') }}</summary>
         <div class="insight-config">
           <div class="form-group"><label>已实现亏损提醒（元）</label><input class="form-input" type="number" v-model.number="rules.lossWarn"></div>
@@ -4683,7 +4930,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
       </details>
     </template>
 
-    <div class="review-note">
+    <div v-show="reviewView==='insights'" class="review-note review-view-section">
       <div class="review-block-head"><h3>{{ t('reviewNote') }}</h3><small>{{ reviewRangeMeta.label }} · {{ dayjs().format('YYYY-MM') }}</small></div>
       <textarea class="form-input" v-model="reviewNote" placeholder="这段时间做对了什么？哪一笔最值得复盘？下一次要坚持哪条规则？" rows="4"></textarea>
       <div class="note-actions"><button class="btn btn-primary btn-sm" @click="saveReviewNote">{{ t('saveReviewNote') }}</button><small class="note-hint">{{ reviewSavedAt }}</small></div>
@@ -4691,7 +4938,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   </section>
 
   <!-- ===== SNAPSHOTS ===== -->
-  <section id="data-safe" class="panel section-data section-not-records section-not-stats" v-show="activeTab==='data'">
+  <section id="data-safe" class="panel section-data section-not-records section-not-stats" v-if="false">
     <div class="panel-header">
       <h2>{{ t('dataMgmt') }}</h2>
       <div class="panel-actions">
@@ -5606,7 +5853,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.07.24-3'
+  const APP_VERSION='v2026.07.24-4'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -5639,6 +5886,12 @@ setup(){
   const showFilters=ref(false)
   const editingEntry=ref(null)
   const showSync=ref(false)
+  const dataView=ref('sync')
+  const dataViews=[
+    {key:'sync',label:'云同步',caption:'手机与电脑'},
+    {key:'transfer',label:'导入导出',caption:'文件迁移'},
+    {key:'recovery',label:'恢复记录',caption:'快照与撤销'}
+  ]
   const SHOWCASE_K='touji_showcase_v1'
   const showcaseMode=ref(localStorage.getItem(SHOWCASE_K)==='true')
   function toggleShowcase(){
@@ -5772,6 +6025,12 @@ setup(){
   const reviewDayNotes=ref({})
   const reviewDayNote=ref('')
   const reviewDayNoteSavedAt=ref('')
+  const reviewView=ref('calendar')
+  const reviewViews=[
+    {key:'calendar',label:'日历复盘',caption:'按天查看'},
+    {key:'insights',label:'行为洞察',caption:'节奏与结论'},
+    {key:'rules',label:'提醒规则',caption:'阈值设置'}
+  ]
   const importPreview=ref(null)
   const syncPreview=ref(null)
   let toastT=null
@@ -5929,16 +6188,29 @@ setup(){
   // 资产类型配置（内置默认 + 用户自定义，存 localStorage）
   const ASSET_CFG_K='touji_asset_cfg_v1'
   migrateStorageKey(ASSET_CFG_K,`${LEGACY_FLOW_K}_asset_cfg`)
-  const BUILTIN_TYPES=['沪深市','美股','港股','加密货币','基金','黄金','期货','其他']
-  const BUILTIN_PLATFORMS={'沪深市':['招商证券','华泰证券','东方财富','国泰君安','中信证券','平安证券','广发证券','中金财富'],'美股':['富途牛牛','老虎证券','盈透证券','Robinhood','Charles Schwab','嘉信理财'],'港股':['富途牛牛','老虎证券','盈透证券','中银国际','耀才证券'],'加密货币':['币安','欧易','Coinbase','Bybit','Bitget','Gate.io','抹茶'],'基金':['支付宝','天天基金','招商银行','微信理财通','蛋卷基金','雪球'],'黄金':['招商银行','工商银行','中国银行','建设银行','国泰君安','中国黄金'],'期货':['中信期货','国泰君安期货','华泰期货','永安期货','南华期货'],'其他':[]}
-  const BUILTIN_COLORS={'沪深市':'rgba(251,191,36,.85)','美股':'rgba(59,130,246,.85)','港股':'rgba(239,68,68,.85)','加密货币':'rgba(139,92,246,.85)','基金':'rgba(16,185,129,.85)','黄金':'rgba(245,158,11,.85)','期货':'rgba(99,102,241,.85)','其他':'rgba(107,114,128,.7)','':'rgba(107,114,128,.5)'}
+  const BUILTIN_TYPES=['沪深市','港股','美股','基金','债券','REITs','加密货币','黄金','期货','外汇','现金管理','其他']
+  const BUILTIN_PLATFORMS={
+    '沪深市':['招商证券','华泰证券','东方财富','国泰君安','中信证券','平安证券','广发证券','中金财富'],
+    '美股':['富途牛牛','老虎证券','盈透证券','Robinhood','Charles Schwab','嘉信理财'],
+    '港股':['富途牛牛','老虎证券','盈透证券','中银国际','耀才证券'],
+    '加密货币':['币安','欧易','Coinbase','Bybit','Bitget','Gate.io','抹茶'],
+    '基金':['支付宝','天天基金','招商银行','微信理财通','蛋卷基金','雪球'],
+    '债券':['招商银行','工商银行','建设银行','中国银行','证券账户'],
+    'REITs':['招商证券','华泰证券','东方财富','富途牛牛','盈透证券'],
+    '黄金':['招商银行','工商银行','中国银行','建设银行','国泰君安','中国黄金'],
+    '期货':['中信期货','国泰君安期货','华泰期货','永安期货','南华期货'],
+    '外汇':['招商银行','工商银行','中国银行','盈透证券'],
+    '现金管理':['余额宝','零钱通','货币基金','银行活期','券商现金管理'],
+    '其他':[]
+  }
+  const BUILTIN_COLORS={'沪深市':'rgba(251,191,36,.85)','美股':'rgba(59,130,246,.85)','港股':'rgba(239,68,68,.85)','加密货币':'rgba(139,92,246,.85)','基金':'rgba(16,185,129,.85)','债券':'rgba(73,129,145,.85)','REITs':'rgba(159,118,79,.85)','黄金':'rgba(245,158,11,.85)','期货':'rgba(99,102,241,.85)','外汇':'rgba(52,152,128,.85)','现金管理':'rgba(111,132,125,.8)','其他':'rgba(107,114,128,.7)','':'rgba(107,114,128,.5)'}
   function loadAssetCfg(){
     try{
       const r=localStorage.getItem(ASSET_CFG_K)
       if(r){
         const cfg=JSON.parse(r)
         return{
-          types:[...(cfg.types||BUILTIN_TYPES).map(normalizeAssetType).filter((t,i,a)=>t&&a.indexOf(t)===i)],
+          types:[...BUILTIN_TYPES,...(cfg.types||[])].map(normalizeAssetType).filter((t,i,a)=>t&&a.indexOf(t)===i),
           platforms:{...BUILTIN_PLATFORMS,...cfg.platforms,'沪深市':cfg.platforms?.['沪深市']||cfg.platforms?.['大A']||BUILTIN_PLATFORMS['沪深市']},
           colors:{...BUILTIN_COLORS,...cfg.colors,'沪深市':cfg.colors?.['沪深市']||cfg.colors?.['大A']||BUILTIN_COLORS['沪深市']}
         }
@@ -6217,7 +6489,7 @@ setup(){
   const posSearchResults=ref([])
   const posSearching=ref(false)
   const posMarket=ref('') // 市场筛选：''=全部，否则为 assetType 值
-  const POS_MARKETS=[{l:'沪深市',v:'沪深市'},{l:'港股',v:'港股'},{l:'美股',v:'美股'},{l:'基金',v:'基金'},{l:'加密货币',v:'加密货币'},{l:'黄金',v:'黄金'}]
+  const POS_MARKETS=computed(()=>ASSET_TYPES.value.map(type=>({l:type,v:type})))
   // 按所选市场过滤搜索结果
   const posResultsShown=computed(()=>posMarket.value?posSearchResults.value.filter(it=>normalizeAssetType(it.assetType)===posMarket.value):posSearchResults.value)
   function findTicker(sym){return TICKER_LIST.find(t=>t.symbol.toUpperCase()===sym.toUpperCase())}
@@ -6308,7 +6580,7 @@ setup(){
     positions.value=raw.map(item=>{
       let p=normalizePosition(item)
       if(!p)return null
-      if(p.source==='eastmoney'||p.source==='binance')return p
+      if(p.source==='eastmoney'||p.source==='binance'||p.source==='manual')return p
       const t=findTicker(p.symbol)
       if(t&&t.source==='binance')return{...p,source:'binance',secid:'',currency:p.currency||'USDT',assetType:p.assetType||'加密货币'}
       return{...p,source:'eastmoney',secid:p.secid||''}
@@ -6320,9 +6592,13 @@ setup(){
     return ok
   }
   function addPosition(){
-    if(!posForm.symbol.trim()||!Number(posForm.qty)){showToast('请选择标的并填写份额','error');return}
+    const typedTarget=posSymbolSearch.value.trim()
+    const manualCode=(typedTarget.match(/[A-Za-z0-9._-]{2,24}/)||[])[0]||typedTarget
+    const symbol=(posForm.symbol.trim()||manualCode).trim()
+    if(!symbol||!Number(posForm.qty)){showToast('请输入标的并填写份额','error');return}
     const avg=posForm.avgCost===''||posForm.avgCost==null?null:Number(posForm.avgCost)
-    const newPosition={id:genId(),symbol:posForm.symbol.trim().toUpperCase(),name:posForm.name.trim()||posForm.symbol.trim(),icon:posForm.icon,qty:Number(posForm.qty),avgCost:avg,currency:posForm.currency,assetType:normalizeAssetType(posForm.assetType),source:posForm.source,secid:posForm.secid,origin:'manual',updatedAt:Date.now()}
+    const isManual=!posForm.symbol.trim()
+    const newPosition={id:genId(),symbol:symbol.toUpperCase(),name:posForm.name.trim()||typedTarget||symbol,icon:posForm.icon,qty:Number(posForm.qty),avgCost:avg,currency:posForm.currency,assetType:normalizeAssetType(posForm.assetType),source:isManual?'manual':posForm.source,secid:isManual?'':posForm.secid,origin:'manual',updatedAt:Date.now()}
     positions.value.push(newPosition)
     selectedPositionId.value=newPosition.id
     savePositions()
@@ -8185,7 +8461,7 @@ setup(){
   })
   onBeforeUnmount(()=>window.removeEventListener('keydown',handleLedgerKeydown))
 
-  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,
+  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
