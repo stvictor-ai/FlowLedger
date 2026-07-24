@@ -2626,6 +2626,22 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   border-bottom:1px solid var(--border);
   background:var(--surface-quiet);
 }
+@media(min-width:1181px){
+  .ledger-filter-shell{
+    position:sticky;
+    top:18px;
+    z-index:28;
+    box-shadow:0 10px 22px var(--shadow-light);
+  }
+}
+@media(min-width:761px) and (max-width:1180px){
+  .ledger-filter-shell{
+    position:sticky;
+    top:66px;
+    z-index:28;
+    box-shadow:0 10px 22px var(--shadow-light);
+  }
+}
 .ledger-panel .ledger-toolbar{
   grid-template-columns:108px 138px 122px minmax(220px,1fr) auto;
   gap:10px;
@@ -3437,6 +3453,8 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
             :key="e.id"
             :id="'row-'+e.id"
             :class="['ledger-entry-row',{selected:editingEntry&&editingEntry.id===e.id}]"
+            :aria-pressed="editingEntry&&editingEntry.id===e.id"
+            :aria-label="`${e.date} ${e.type} ${e.targetName||e.note||e.exchange||'未命名记录'} ${fmt(e.amount)} ${e.currency||'CNY'}`"
             @click="openEditModal(e)"
           >
             <time>{{ dayjs(e.date).format('MM.DD') }}</time>
@@ -3475,7 +3493,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
         </div>
         <div class="ledger-inspector-metrics" v-if="editingDetail">
           <div><span>本月记录</span><strong>{{ editingDetail.monthCount }} 笔</strong></div>
-          <div><span>同平台净额</span><strong>{{ (editingDetail.platformNet>=0?'+':'')+fmt(editingDetail.platformNet) }}</strong></div>
+          <div><span>同平台出入净额</span><strong>{{ (editingDetail.platformNet>=0?'+':'')+fmt(editingDetail.platformNet) }}</strong></div>
         </div>
         <div class="ledger-inspector-form">
           <div class="trade-lock-note" v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'">成交金额、币种和资产已参与持仓成本计算。需要改动这些字段时，请删除后重新录入。</div>
@@ -4157,7 +4175,7 @@ function prevKey(period,key){
   return''
 }
 
-const{createApp,ref,reactive,computed,watch,onMounted}=Vue
+const{createApp,ref,reactive,computed,watch,onMounted,onBeforeUnmount}=Vue
 
 // ===== I18N =====
 const I18N={
@@ -4740,7 +4758,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.07.23-2'
+  const APP_VERSION='v2026.07.24-1'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -5234,7 +5252,13 @@ setup(){
   function collapseAllMonths(){expandedMonths.value=new Set()}
 
   const activeFilterCount=computed(()=>{let n=0;if(filters.year)n++;if(filters.month)n++;if(filters.type)n++;if(filters.keyword)n++;if(filters.dateFrom)n++;if(filters.dateTo)n++;if(filters.amountMin)n++;if(filters.amountMax)n++;if(filters.exchanges.length)n++;if(filters.assetTypes.length)n++;if(filters.tags.length)n++;return n})
-  function netOf(list){return list.reduce((s,e)=>s+(e.type==='出金'?amountCNY(e):-amountCNY(e)),0)}
+  function netOf(list){
+    return list.reduce((sum,e)=>{
+      if(e.type==='出金')return sum+amountCNY(e)
+      if(e.type==='入金')return sum-amountCNY(e)
+      return sum
+    },0)
+  }
   const editingDetail=computed(()=>{
     const cur=editingEntry.value;if(!cur)return null
     const curTags=parseTags(cur.tagText||cur.tags)
@@ -5278,6 +5302,17 @@ setup(){
     e.type=editingEntry.value.type;e.assetType=editingEntry.value.assetType||'';e.currency=editingEntry.value.currency||'CNY'
     e.tags=parseTags(editingEntry.value.tagText||editingEntry.value.tags);e.updatedAt=Date.now()
     save();editingEntry.value=null;showToast('已保存','success')
+  }
+  function handleLedgerKeydown(event){
+    if(activeTab.value!=='records'||!editingEntry.value)return
+    if(event.key==='Escape'){
+      editingEntry.value=null
+      return
+    }
+    if((event.metaKey||event.ctrlKey)&&event.key==='Enter'){
+      event.preventDefault()
+      saveEditEntry()
+    }
   }
 
   // CRUD
@@ -7198,6 +7233,7 @@ setup(){
   }
 
   onMounted(()=>{
+    window.addEventListener('keydown',handleLedgerKeydown)
     load()
     if(reviewYear.value)setReviewYear(reviewYear.value)
     loadPositions()
@@ -7258,6 +7294,7 @@ setup(){
     // Background pull every 2 min when tab is visible
     setInterval(()=>{if(!document.hidden)backgroundPull()},120000)
   })
+  onBeforeUnmount(()=>window.removeEventListener('keydown',handleLedgerKeydown))
 
   return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
