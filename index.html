@@ -2788,6 +2788,411 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   .overview-grid{grid-template-columns:1fr}
 }
 
+/* ===== POSITION MANAGEMENT WORKSPACE ===== */
+.position-panel{
+  padding:0;
+  overflow:hidden;
+}
+.position-page-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:24px;
+  padding:25px 28px 19px;
+  border-bottom:1px solid var(--border);
+}
+.position-page-head h2{margin:3px 0 4px;font-size:24px}
+.position-page-head .hint{font-size:10px}
+.position-head-actions{display:flex;align-items:center;gap:8px}
+.position-summary-strip{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  border-bottom:1px solid var(--border);
+  background:var(--surface-quiet);
+}
+.position-summary-strip>div{
+  min-width:0;
+  padding:14px 20px;
+  border-left:1px solid var(--border);
+}
+.position-summary-strip>div:first-child{border-left:0}
+.position-summary-strip span{display:block;color:var(--dim);font-size:8px;font-weight:800}
+.position-summary-strip strong{
+  display:block;
+  margin-top:5px;
+  overflow:hidden;
+  font:800 16px/1.2 'JetBrains Mono',monospace;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.position-filter-bar{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:11px 28px;
+  overflow-x:auto;
+  border-bottom:1px solid var(--border);
+  scrollbar-width:thin;
+}
+.position-filter-bar>span{margin-right:5px;color:var(--muted);font-size:9px;font-weight:800;white-space:nowrap}
+.position-filter{
+  min-height:30px;
+  padding:5px 10px;
+  border:1px solid transparent;
+  border-radius:5px;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:700;
+  white-space:nowrap;
+}
+.position-filter:hover{background:var(--overlay-hover);color:var(--text)}
+.position-filter.active{border-color:var(--border);background:var(--panel);color:var(--accent)}
+.position-create-block{
+  padding:18px 28px 6px;
+  border-bottom:1px solid var(--border);
+  background:var(--surface-quiet);
+}
+.position-create-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:13px}
+.position-create-title h3{font-size:14px}
+.position-create-title span{color:var(--dim);font-size:9px}
+.position-create-grid{
+  display:grid;
+  grid-template-columns:minmax(220px,1.35fr) minmax(150px,.85fr) 120px 130px 105px auto;
+  gap:9px;
+  align-items:end;
+}
+.position-create-grid .form-group{margin-bottom:12px}
+.position-create-grid .btn{margin-bottom:12px}
+.position-workspace{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  min-height:480px;
+}
+.position-workspace.has-selection{grid-template-columns:minmax(0,1fr) minmax(320px,370px)}
+.position-list{min-width:0;padding:5px 28px 30px}
+.position-column-head,
+.position-row{
+  display:grid;
+  grid-template-columns:minmax(165px,1.3fr) 90px 112px 112px 126px 18px;
+  gap:13px;
+  align-items:center;
+}
+.position-column-head{
+  min-height:36px;
+  padding:0 12px;
+  border-bottom:1px solid var(--border);
+  color:var(--dim);
+  font-size:8px;
+  font-weight:800;
+}
+.position-column-head span:nth-child(n+2){text-align:right}
+.position-row{
+  width:100%;
+  min-height:76px;
+  padding:10px 12px;
+  border-bottom:1px solid var(--border);
+  border-left:2px solid transparent;
+  color:var(--text);
+  text-align:left;
+}
+.position-row:hover{background:var(--overlay-hover)}
+.position-row.selected{border-left-color:var(--accent);background:var(--accent-dim)}
+.position-identity{min-width:0;display:grid;grid-template-columns:38px minmax(0,1fr);align-items:center;gap:10px}
+.position-symbol{
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--surface-quiet);
+  color:var(--accent);
+  font:800 9px/1 'JetBrains Mono',monospace;
+}
+.position-identity strong,
+.position-identity small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.position-identity strong{font-size:11px}
+.position-identity small{margin-top:4px;color:var(--dim);font-size:9px}
+.position-cell{min-width:0;text-align:right}
+.position-cell strong,
+.position-cell small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.position-cell strong{font:750 11px/1.2 'JetBrains Mono',monospace}
+.position-cell small{margin-top:4px;color:var(--dim);font-size:8px}
+.position-row-arrow{color:var(--dim);font-size:17px;text-align:right}
+.position-row:hover .position-row-arrow,
+.position-row.selected .position-row-arrow{color:var(--accent)}
+.position-list-empty{
+  min-height:330px;
+  display:grid;
+  place-content:center;
+  justify-items:center;
+  gap:7px;
+  color:var(--muted);
+  text-align:center;
+}
+.position-list-empty strong{color:var(--text);font-size:15px}
+.position-list-empty span{max-width:320px;font-size:10px}
+.position-inspector{
+  min-width:0;
+  align-self:start;
+  position:sticky;
+  top:18px;
+  max-height:calc(100vh - 36px);
+  overflow:auto;
+  border-left:1px solid var(--border);
+  background:var(--surface-quiet);
+  box-shadow:-12px 0 30px var(--shadow-light);
+}
+.position-inspector-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  padding:22px 22px 14px;
+}
+.position-inspector-head .module-kicker{margin-bottom:6px}
+.position-inspector-head h3{max-width:260px;overflow:hidden;font-size:18px;text-overflow:ellipsis;white-space:nowrap}
+.position-inspector-value{display:grid;gap:6px;padding:5px 22px 19px}
+.position-inspector-value>strong{font:800 27px/1.1 'JetBrains Mono',monospace}
+.position-inspector-value>span{color:var(--muted);font-size:9px}
+.position-inspector-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 22px 18px}
+.position-inspector-actions .btn{justify-content:center}
+.position-inspector-metrics{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  margin:0 22px 18px;
+  border-block:1px solid var(--border);
+}
+.position-inspector-metrics>div{padding:12px 0}
+.position-inspector-metrics>div:nth-child(even){padding-left:14px;border-left:1px solid var(--border)}
+.position-inspector-metrics span{display:block;color:var(--dim);font-size:8px}
+.position-inspector-metrics strong{display:block;margin-top:5px;font:750 10px/1.2 'JetBrains Mono',monospace}
+.position-inspector-editor{padding:0 22px 13px}
+.position-inspector-editor h4,
+.position-flow-history h4{margin-bottom:10px;color:var(--muted);font-size:9px}
+.position-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.position-flow-history{padding:15px 22px;border-top:1px solid var(--border)}
+.position-flow-list{display:grid}
+.position-flow-row{
+  display:grid;
+  grid-template-columns:64px 36px minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  min-height:39px;
+  border-bottom:1px solid var(--border);
+  color:var(--muted);
+  text-align:left;
+}
+.position-flow-row time{font:700 8px/1 'JetBrains Mono',monospace}
+.position-flow-row span{overflow:hidden;font-size:8px;text-overflow:ellipsis;white-space:nowrap}
+.position-flow-row strong{font:750 9px/1 'JetBrains Mono',monospace}
+.position-inspector-delete{
+  width:calc(100% - 44px);
+  margin:2px 22px 22px;
+  color:var(--red);
+}
+.position-mobile-list{display:none}
+
+/* ===== FOCUSED ENTRY TICKET ===== */
+.entry-panel{
+  padding:0;
+  overflow:hidden;
+}
+.entry-page-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:22px;
+  padding:25px 28px 18px;
+  border-bottom:1px solid var(--border);
+}
+.entry-page-head h2{margin:3px 0 4px;font-size:24px}
+.entry-page-head .hint{font-size:10px}
+.entry-template-select{width:210px}
+.entry-action-bar{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  border-bottom:1px solid var(--border);
+  background:var(--surface-quiet);
+}
+.entry-action-button{
+  min-height:67px;
+  display:grid;
+  align-content:center;
+  gap:4px;
+  padding:10px 17px;
+  border-left:1px solid var(--border);
+  border-bottom:2px solid transparent;
+  color:var(--muted);
+  text-align:left;
+}
+.entry-action-button:first-child{border-left:0}
+.entry-action-button:hover{background:var(--overlay-hover);color:var(--text)}
+.entry-action-button.active{border-bottom-color:var(--accent);background:var(--panel);color:var(--text)}
+.entry-action-button strong{font-size:13px}
+.entry-action-button span{font-size:9px;color:var(--dim)}
+.entry-action-description{
+  display:flex;
+  align-items:baseline;
+  gap:12px;
+  min-height:46px;
+  padding:11px 28px;
+  border-bottom:1px solid var(--border);
+}
+.entry-action-description strong{color:var(--accent);font-size:10px;white-space:nowrap}
+.entry-action-description span{color:var(--muted);font-size:9px;line-height:1.55}
+.entry-form-shell{padding:22px 28px 24px}
+.entry-section-label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:11px;
+  color:var(--muted);
+  font-size:9px;
+  font-weight:800;
+}
+.entry-section-label::before{content:'';width:16px;height:2px;background:var(--accent)}
+.entry-cash-grid{
+  display:grid;
+  grid-template-columns:145px minmax(240px,1.25fr) minmax(180px,.9fr) 160px;
+  gap:9px;
+  align-items:end;
+}
+.entry-trade-target{
+  display:grid;
+  grid-template-columns:155px minmax(220px,1fr) minmax(220px,1fr);
+  gap:9px;
+  margin-bottom:13px;
+}
+.entry-trade-execution{
+  display:grid;
+  grid-template-columns:minmax(140px,.8fr) minmax(140px,.8fr) minmax(180px,1fr) minmax(180px,1fr);
+  gap:9px;
+  align-items:end;
+}
+.entry-form-shell .form-group{margin-bottom:0}
+.entry-total-readout{
+  min-height:62px;
+  display:grid;
+  align-content:center;
+  padding:8px 13px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--surface-quiet);
+}
+.entry-total-readout span{color:var(--dim);font-size:8px}
+.entry-total-readout strong{margin-top:5px;font:800 14px/1.2 'JetBrains Mono',monospace}
+.entry-rate-row{
+  display:grid;
+  grid-template-columns:130px minmax(160px,1fr) auto;
+  gap:7px;
+  align-items:center;
+  margin-top:10px;
+}
+.entry-rate-row>span{color:var(--muted);font-size:9px}
+.entry-more-toggle{
+  width:100%;
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:18px;
+  padding:0;
+  border-block:1px solid var(--border);
+  color:var(--muted);
+  font-size:10px;
+  font-weight:800;
+  text-align:left;
+}
+.entry-more-toggle:hover{color:var(--text)}
+.entry-optional{
+  display:grid;
+  gap:12px;
+  padding-top:15px;
+}
+.entry-optional-grid{display:grid;grid-template-columns:150px 180px minmax(200px,1fr);gap:9px}
+.entry-note-grid{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(200px,.7fr);gap:9px}
+.entry-tag-options{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.entry-tag-options>span:first-child{margin-right:4px;color:var(--dim);font-size:8px;font-weight:800}
+.entry-ticket-foot{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:14px;
+  margin-top:18px;
+  padding-top:16px;
+  border-top:1px solid var(--border);
+}
+.entry-ticket-foot p{color:var(--dim);font-size:9px;line-height:1.5}
+.entry-save-actions{display:flex;align-items:center;gap:8px}
+@media(max-width:1180px){
+  .position-create-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .position-workspace.has-selection{grid-template-columns:minmax(0,1fr) 330px}
+  .position-column-head,
+  .position-row{grid-template-columns:minmax(150px,1.2fr) 78px 100px 100px 112px 16px;gap:9px}
+  .entry-cash-grid{grid-template-columns:130px minmax(200px,1fr) minmax(170px,.8fr)}
+  .entry-cash-grid>.form-group:last-child{grid-column:1/-1}
+  .entry-trade-execution{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:900px){
+  .position-workspace.has-selection{grid-template-columns:1fr}
+  .position-inspector{position:static;max-height:none;border-left:0;border-top:1px solid var(--border);box-shadow:none}
+  .position-create-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .entry-trade-target{grid-template-columns:150px minmax(0,1fr)}
+  .entry-trade-target>.form-group:last-child{grid-column:1/-1}
+  .entry-optional-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .entry-optional-grid>.form-group:last-child{grid-column:1/-1}
+}
+@media(max-width:760px){
+  .position-page-head,.entry-page-head{align-items:flex-start;padding:15px 14px}
+  .position-page-head h2,.entry-page-head h2{font-size:20px}
+  .position-head-actions{gap:5px}
+  .position-head-actions .btn{padding:5px 8px}
+  .position-summary-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .position-summary-strip>div:nth-child(3){border-left:0;border-top:1px solid var(--border)}
+  .position-summary-strip>div:nth-child(4){border-top:1px solid var(--border)}
+  .position-summary-strip>div{padding:11px 13px}
+  .position-summary-strip strong{font-size:13px}
+  .position-filter-bar{padding:9px 14px}
+  .position-create-block{padding:14px 14px 3px}
+  .position-create-title span{display:none}
+  .position-create-grid{grid-template-columns:1fr 1fr}
+  .position-create-grid>.form-group:first-of-type{grid-column:1/-1}
+  .position-workspace{display:none}
+  .position-mobile-list{display:grid;padding:4px 14px 18px}
+  .position-mobile-card{
+    display:grid;
+    gap:10px;
+    padding:15px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .position-mobile-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .position-mobile-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+  .position-mobile-metrics span{display:block;color:var(--dim);font-size:8px}
+  .position-mobile-metrics strong{display:block;margin-top:4px;font:750 10px/1.2 'JetBrains Mono',monospace}
+  .position-mobile-actions{display:flex;gap:7px}
+  .entry-page-head{display:grid;gap:11px}
+  .entry-template-select{width:100%}
+  .entry-action-bar{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .entry-action-button{min-height:56px;padding:7px 5px;text-align:center}
+  .entry-action-button strong{font-size:11px}
+  .entry-action-button span{display:none}
+  .entry-action-description{align-items:flex-start;padding:10px 14px}
+  .entry-form-shell{padding:17px 14px 18px}
+  .entry-cash-grid,.entry-trade-target,.entry-trade-execution,.entry-optional-grid,.entry-note-grid{grid-template-columns:1fr}
+  .entry-cash-grid>.form-group:last-child,
+  .entry-trade-target>.form-group:last-child,
+  .entry-optional-grid>.form-group:last-child{grid-column:auto}
+  .entry-rate-row{grid-template-columns:1fr auto}
+  .entry-rate-row>span{grid-column:1/-1}
+  .entry-ticket-foot{grid-template-columns:1fr}
+  .entry-ticket-foot>button{width:100%;justify-content:center}
+  .entry-ticket-foot p{display:none}
+  .entry-save-actions{display:grid;grid-template-columns:1fr 1fr}
+  .entry-save-actions .btn{justify-content:center}
+}
+
 /* ===== EDITORIAL LEDGER WORKSPACE ===== */
 .ledger-panel{
   padding:0;
@@ -3269,7 +3674,156 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   </div>
 
   <!-- ===== POSITIONS ===== -->
-  <section id="positions" class="panel section-stats section-not-records section-not-data" v-show="activeTab==='positions'">
+  <section id="positions" class="panel section-stats section-not-records section-not-data position-panel" v-show="activeTab==='positions'">
+    <header class="position-page-head">
+      <div>
+        <p class="module-kicker">POSITION BOOK</p>
+        <h2>持仓工作台</h2>
+        <p class="hint">先看仓位与盈亏，再进入单项核对成本、流水或继续交易。</p>
+      </div>
+      <div class="position-head-actions">
+        <button class="btn btn-ghost btn-sm" @click="fetchPosPrices" v-if="positions.length">刷新价格</button>
+        <button class="btn btn-primary btn-sm" @click="showPosForm=!showPosForm">{{ showPosForm?'收起':'新增持仓' }}</button>
+      </div>
+    </header>
+
+    <div class="position-summary-strip">
+      <div><span>持仓市值</span><strong class="privacy-number">{{ fmt(posSummary.totalValue) }}</strong></div>
+      <div><span>持仓成本</span><strong class="privacy-number">{{ fmt(posSummary.totalCost) }}</strong></div>
+      <div><span>浮动盈亏</span><strong class="privacy-number" :style="{color:posSummary.pl>=0?'var(--green)':'var(--red)'}">{{ posSummary.pl>=0?'+':'' }}{{ fmt(posSummary.pl) }}</strong></div>
+      <div><span>收益率</span><strong class="privacy-number" :style="{color:posSummary.pl>=0?'var(--green)':'var(--red)'}">{{ fmtPct(posSummary.plPct,1) }}</strong></div>
+    </div>
+
+    <nav class="position-filter-bar" aria-label="持仓市场筛选">
+      <span>市场</span>
+      <button :class="['position-filter',{active:posMarket===''}]" @click="posMarket='';selectedPositionId=''">全部</button>
+      <button v-for="m in POS_MARKETS" :key="m.v" :class="['position-filter',{active:posMarket===m.v}]" @click="posMarket=m.v;selectedPositionId=''">{{ m.l }}</button>
+    </nav>
+
+    <div v-show="showPosForm" class="position-create-block">
+      <div class="position-create-title">
+        <h3>建立初始持仓</h3>
+        <span>价格和份额用于计算持仓成本，不会额外生成流水。</span>
+      </div>
+      <div class="position-create-grid">
+        <div class="form-group" style="position:relative">
+          <label>标的</label>
+          <input class="form-input" v-model="posSymbolSearch" @focus="showSymbolPicker=true" @input="onPosSearchInput" placeholder="输入代码或名称">
+          <div v-if="showSymbolPicker" class="symbol-picker-dropdown">
+            <div class="symbol-picker-list">
+              <template v-if="posSymbolSearch.trim()">
+                <div v-if="posSearching" class="symbol-option" style="color:var(--muted)">搜索中…</div>
+                <div v-else-if="!posResultsShown.length" class="symbol-option" style="color:var(--muted)">暂无匹配标的</div>
+                <div v-for="it in posResultsShown" :key="it.secid" class="symbol-option" @click="selectEmResult(it)">
+                  <span class="symbol-option-icon" style="font-size:10px;font-weight:700;color:var(--accent)">{{ it.typeName }}</span>
+                  <span class="symbol-option-name">{{ it.name }}</span>
+                  <span class="symbol-option-pair">{{ it.code }} · {{ it.currency }}</span>
+                </div>
+              </template>
+              <template v-else>
+                <div style="font-size:10px;color:var(--dim);padding:4px 10px;font-weight:700">加密货币快捷选择</div>
+                <div v-for="ticker in cryptoQuickList" :key="ticker.symbol" class="symbol-option" @click="selectCryptoQuick(ticker)">
+                  <span class="symbol-option-icon">{{ ticker.icon }}</span>
+                  <span class="symbol-option-name">{{ ticker.symbol }}</span>
+                  <span class="symbol-option-pair">USDT</span>
+                </div>
+              </template>
+            </div>
+            <div class="symbol-picker-backdrop" @click="showSymbolPicker=false"></div>
+          </div>
+        </div>
+        <div class="form-group"><label>名称</label><input class="form-input" v-model="posForm.name" placeholder="自动带出或手填"></div>
+        <div class="form-group"><label>份额</label><input class="form-input" type="number" step="any" v-model="posForm.qty" placeholder="100"></div>
+        <div class="form-group"><label>平均成本</label><input class="form-input" type="number" step="any" v-model="posForm.avgCost" placeholder="单价"></div>
+        <div class="form-group"><label>币种</label><select class="form-input" v-model="posForm.currency"><option>CNY</option><option>USD</option><option>HKD</option><option>USDT</option></select></div>
+        <button class="btn btn-primary btn-sm" @click="addPosition">确认建立</button>
+      </div>
+    </div>
+
+    <div :class="['position-workspace',{'has-selection':selectedPosition}]">
+      <div class="position-list">
+        <div v-if="positionRowsSorted.length" class="position-column-head">
+          <span>标的</span><span>数量 / 成本</span><span>现价</span><span>市值</span><span>浮动盈亏</span><span></span>
+        </div>
+        <button v-for="p in positionRowsSorted" :key="p.id" :class="['position-row',{selected:selectedPositionId===p.id}]" @click="selectPosition(p)">
+          <span class="position-identity">
+            <span class="position-symbol">{{ p.icon||String(p.symbol).slice(0,4) }}</span>
+            <span><strong>{{ p.name||p.symbol }}</strong><small>{{ p.symbol }} · {{ p.assetType||'未分类' }}</small></span>
+          </span>
+          <span class="position-cell"><strong>{{ p.qty }}</strong><small>{{ p.hasCost?fmt(p.avgCost)+' '+p.currency:'未录成本' }}</small></span>
+          <span class="position-cell"><strong>{{ p.price?fmt(p.price):'—' }}</strong><small>{{ p.price?p.currency:'等待行情' }}</small></span>
+          <span class="position-cell"><strong class="privacy-number">{{ fmt(p.value) }}</strong><small>CNY</small></span>
+          <span class="position-cell"><strong class="privacy-number" :style="{color:p.pl>=0?'var(--green)':'var(--red)'}">{{ p.hasCost?(p.pl>=0?'+':'')+fmt(p.pl):'—' }}</strong><small>{{ p.hasCost?fmtPct(p.plPct,1):'缺少成本' }}</small></span>
+          <span class="position-row-arrow">›</span>
+        </button>
+        <div v-if="!positionRowsSorted.length" class="position-list-empty">
+          <strong>{{ positions.length?'这个市场还没有持仓':'还没有建立持仓' }}</strong>
+          <span>{{ positions.length?'切换市场查看其他标的。':'先建立初始持仓，之后买卖流水可以直接与它关联。' }}</span>
+          <button v-if="!positions.length" class="btn btn-primary btn-sm" @click="showPosForm=true">新增第一只持仓</button>
+        </div>
+      </div>
+
+      <aside v-if="selectedPosition" class="position-inspector">
+        <div class="position-inspector-head">
+          <div><p class="module-kicker">{{ selectedPosition.assetType||'POSITION' }}</p><h3>{{ selectedPosition.name||selectedPosition.symbol }}</h3></div>
+          <button class="icon-btn" title="关闭详情" @click="selectedPositionId=''">×</button>
+        </div>
+        <div class="position-inspector-value">
+          <strong class="privacy-number">{{ fmt(selectedPosition.value) }} CNY</strong>
+          <span :style="{color:selectedPosition.pl>=0?'var(--green)':'var(--red)'}">浮动盈亏 {{ selectedPosition.pl>=0?'+':'' }}{{ fmt(selectedPosition.pl) }} · {{ fmtPct(selectedPosition.plPct,1) }}</span>
+        </div>
+        <div class="position-inspector-actions">
+          <button class="btn btn-primary btn-sm" @click="createPositionFlow(selectedPosition,'buy')">继续买入</button>
+          <button class="btn btn-ghost btn-sm" @click="createPositionFlow(selectedPosition,'sell')">记录卖出</button>
+        </div>
+        <div class="position-inspector-metrics">
+          <div><span>持有份额</span><strong>{{ selectedPosition.qty }}</strong></div>
+          <div><span>平均成本</span><strong>{{ selectedPosition.hasCost?fmt(selectedPosition.avgCost):'—' }} {{ selectedPosition.currency }}</strong></div>
+          <div><span>最新价格</span><strong>{{ selectedPosition.price?fmt(selectedPosition.price):'—' }} {{ selectedPosition.currency }}</strong></div>
+          <div><span>仓位占比</span><strong>{{ fmtPct(selectedPositionAllocation,1) }}</strong></div>
+        </div>
+        <div class="position-inspector-editor">
+          <h4>校准持仓</h4>
+          <div class="position-edit-grid">
+            <div class="form-group"><label>持有份额</label><input class="form-input" type="number" step="any" :value="selectedPosition.qty" @change="updatePosition(selectedPosition.id,'qty',$event.target.value)"></div>
+            <div class="form-group"><label>平均成本</label><input class="form-input" type="number" step="any" :value="selectedPosition.avgCost" @change="updatePosition(selectedPosition.id,'avgCost',$event.target.value)"></div>
+          </div>
+        </div>
+        <div class="position-flow-history">
+          <h4>关联流水 · {{ selectedPosition.flow.count }} 笔</h4>
+          <div v-if="selectedPosition.flow.rows.length" class="position-flow-list">
+            <button v-for="r in selectedPosition.flow.rows.slice(0,8)" :key="r.id" class="position-flow-row" @click="setActiveTab('records');openEditModal(r)">
+              <time>{{ r.date.slice(5) }}</time><span>{{ r.type }}</span><span>{{ r.note||r.exchange||'未填写备注' }}</span><strong class="privacy-number">{{ fmt(amountCNY(r)) }}</strong>
+            </button>
+          </div>
+          <p v-else class="hint">还没有关联流水。下一笔买卖会自动出现在这里。</p>
+        </div>
+        <button class="btn btn-ghost btn-sm position-inspector-delete" @click="removePosition(selectedPosition.id)">删除这项持仓</button>
+      </aside>
+    </div>
+
+    <div class="position-mobile-list">
+      <div v-for="p in positionRowsSorted" :key="p.id" class="position-mobile-card">
+        <div class="position-mobile-head">
+          <span class="position-identity"><span class="position-symbol">{{ p.icon||String(p.symbol).slice(0,4) }}</span><span><strong>{{ p.name||p.symbol }}</strong><small>{{ p.symbol }} · {{ p.assetType||'未分类' }}</small></span></span>
+          <strong class="privacy-number">{{ fmt(p.value) }}</strong>
+        </div>
+        <div class="position-mobile-metrics">
+          <div><span>份额</span><strong>{{ p.qty }}</strong></div>
+          <div><span>平均成本</span><strong>{{ p.hasCost?fmt(p.avgCost):'—' }}</strong></div>
+          <div><span>浮动盈亏</span><strong class="privacy-number" :style="{color:p.pl>=0?'var(--green)':'var(--red)'}">{{ p.hasCost?(p.pl>=0?'+':'')+fmt(p.pl):'—' }}</strong></div>
+        </div>
+        <div class="position-mobile-actions">
+          <button class="btn btn-primary btn-sm" @click="createPositionFlow(p,'buy')">买入</button>
+          <button class="btn btn-ghost btn-sm" @click="createPositionFlow(p,'sell')">卖出</button>
+          <button class="btn btn-ghost btn-sm" @click="removePosition(p.id)">删除</button>
+        </div>
+      </div>
+      <div v-if="!positionRowsSorted.length" class="position-list-empty"><strong>暂无持仓</strong><span>新增后会在这里显示仓位和盈亏。</span></div>
+    </div>
+  </section>
+
+  <section id="positions-legacy" class="panel section-stats section-not-records section-not-data" v-if="false">
     <div class="panel-header">
       <div><p class="module-kicker">POSITIONS</p><h2>{{ t('posTitle') }}</h2><p class="hint">{{ t('posCount',{n:positions.length}) }}<span v-if="positions.length"> · {{ t('posTotalCost') }} {{ fmt(posSummary.totalCost) }} · {{ t('posTotalValue') }} {{ fmt(posSummary.totalValue) }} · <span :style="{color:posSummary.pl>=0?'var(--green)':'var(--red)'}">{{ t('posPL') }} {{ posSummary.pl>=0?'+':'' }}{{ fmt(posSummary.pl) }} ({{ fmtPct(posSummary.plPct,1) }})</span></span></p></div>
       <div class="panel-actions"><button class="btn btn-ghost btn-sm" @click="fetchPosPrices" v-if="positions.length">刷新价格</button><button class="btn btn-primary btn-sm" @click="showPosForm=!showPosForm">{{ showPosForm?'收起':'＋ 新增持仓' }}</button></div>
@@ -3417,7 +3971,95 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   </section>
 
   <!-- ===== QUICK ADD ===== -->
-  <section class="panel section-records section-not-stats section-not-data quick-add-panel" v-show="activeTab==='quick'">
+  <section class="panel section-records section-not-stats section-not-data quick-add-panel entry-panel" v-show="activeTab==='quick'">
+    <header class="entry-page-head">
+      <div>
+        <p class="module-kicker">NEW ENTRY</p>
+        <h2>记一笔</h2>
+        <p class="hint">先选择资金动作，再填写这笔操作真正需要的信息。</p>
+      </div>
+      <select v-if="quickTemplates.length" class="form-input entry-template-select" :value="''" @change="applyQuickTemplateKey($event.target.value);$event.target.value=''">
+        <option value="">套用常用模板</option>
+        <option v-for="tpl in quickTemplates" :key="tpl.key" :value="tpl.key">{{ tpl.label }}</option>
+      </select>
+    </header>
+
+    <div class="entry-action-bar">
+      <button v-for="a in quickActions" :key="a.key" :class="['entry-action-button',{active:quickAction===a.key}]" @click="setQuickAction(a.key)">
+        <strong>{{ a.label }}</strong><span>{{ a.short }}</span>
+      </button>
+    </div>
+    <div class="entry-action-description">
+      <strong>{{ quickActionInfo.title }}</strong>
+      <span>{{ quickActionInfo.desc }}</span>
+    </div>
+
+    <div class="entry-form-shell">
+      <p class="entry-section-label">{{ quickAction==='buy'||quickAction==='sell'?'成交信息':'资金信息' }}</p>
+
+      <div v-if="quickAction==='deposit'||quickAction==='withdraw'" class="entry-cash-grid">
+        <div class="form-group"><label>币种</label><select class="form-input" v-model="form.currency"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select></div>
+        <div class="form-group"><label>{{ quickAmountLabel }}</label><input class="form-input" type="number" step="0.01" v-model.number="form.amount" placeholder="输入金额" inputmode="decimal" @keyup.enter="addEntry(true)"></div>
+        <div class="form-group"><label>账户 / 平台</label><input class="form-input" v-model="form.exchange" placeholder="例如：招商证券" list="dl-ex-focused"></div>
+        <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="form.date"></div>
+      </div>
+
+      <template v-else>
+        <div class="entry-trade-target">
+          <div class="form-group"><label>市场</label><select class="form-input" v-model="form.targetMarket" @change="resetQuickTargetSearch"><option v-for="m in quickTargetMarkets" :key="m.v" :value="m.v">{{ m.l }}</option></select></div>
+          <div class="form-group"><label>{{ quickAction==='buy'?'买入标的':'卖出标的' }}</label><input class="form-input" v-model="quickTargetQuery" @input="onQuickTargetInput" :placeholder="quickTargetPlaceholder"></div>
+          <div class="form-group"><label>匹配结果</label><select class="form-input" v-model="form.targetKey" @change="applyQuickTarget"><option value="">{{ quickTargetSearching?'搜索中…':'选择标的或现有持仓' }}</option><option v-for="item in quickTargetOptions" :key="item.key" :value="item.key">{{ item.label }}</option></select></div>
+        </div>
+        <div class="entry-trade-execution">
+          <div class="form-group"><label>{{ quickAction==='buy'?'买入价格':'卖出价格' }}</label><input class="form-input" type="number" step="any" v-model.number="form.tradePrice" :placeholder="(form.currency||'CNY')+' 单价'" inputmode="decimal" @input="syncTradeAmount"></div>
+          <div class="form-group"><label>{{ quickAction==='buy'?'买入数量 / 份额':'卖出数量 / 份额' }}</label><input class="form-input" type="number" step="any" v-model.number="form.tradeQty" placeholder="例如：100" inputmode="decimal" @input="syncTradeAmount"></div>
+          <div class="entry-total-readout"><span>成交总额</span><strong class="privacy-number">{{ tradeAmountPreview?fmt(tradeAmountPreview):'—' }} {{ form.currency||'CNY' }}</strong></div>
+          <div class="form-group"><label>账户 / 平台</label><input class="form-input" v-model="form.exchange" placeholder="例如：招商证券" list="dl-ex-focused"></div>
+        </div>
+      </template>
+      <datalist id="dl-ex-focused"><option v-for="ex in platformSuggestions" :key="ex" :value="ex"></option></datalist>
+
+      <div v-if="form.currency!=='CNY'" class="entry-rate-row">
+        <span>汇率 · 1 {{ form.currency }} 等于多少 CNY</span>
+        <input class="form-input" type="number" step="0.0001" v-model="form.rate" :placeholder="form.currency==='HKD'?'0.92':'7.25'" inputmode="decimal">
+        <button class="rate-fetch-btn" @click="fetchRate(form.currency,'form')" :disabled="rateLoading">{{ rateLoading?'获取中…':'自动获取' }}</button>
+      </div>
+      <p class="rate-hint" v-if="form.currency!=='CNY'&&form.rate&&form.amount">折合人民币约 {{ fmt(form.amount*Number(form.rate)) }} 元</p>
+
+      <button class="entry-more-toggle" @click="showQuickMore=!showQuickMore">
+        <span :class="['arrow',{open:showQuickMore}]">&#9654;</span>
+        {{ showQuickMore?'收起补充信息':'补充资产类型、理由与标签' }}
+        <span v-if="!showQuickMore&&(form.assetType||form.note||form.tagText)" class="quick-more-hint">· 已填写</span>
+      </button>
+
+      <div v-show="showQuickMore" class="entry-optional">
+        <div class="entry-optional-grid">
+          <div class="form-group"><label>资产类型</label><select class="form-input" v-model="form.assetType"><option value="">未分类</option><option v-for="asset in ASSET_TYPES" :key="asset" :value="asset">{{ asset }}</option></select></div>
+          <div v-if="quickAction==='buy'||quickAction==='sell'" class="form-group"><label>日期</label><input class="form-input" type="date" v-model="form.date"></div>
+          <div class="form-group"><label>标签</label><input class="form-input" v-model="form.tagText" list="dl-tags-focused" placeholder="可填写多个标签"></div>
+        </div>
+        <div class="entry-note-grid">
+          <div class="form-group"><label>{{ quickNoteLabel }}</label><input class="form-input" v-model="form.note" :placeholder="quickNotePlaceholder"></div>
+        </div>
+        <datalist id="dl-tags-focused"><option v-for="tag in allTags" :key="tag" :value="tag"></option></datalist>
+        <div class="entry-tag-options">
+          <span>常用标签</span>
+          <button v-for="tag in quickTagOptions" :key="tag" :class="['chip',{active:quickTagActive(tag)}]" @click="toggleQuickTag(tag)">{{ tag }}</button>
+        </div>
+      </div>
+
+      <footer class="entry-ticket-foot">
+        <button class="btn btn-ghost" @click="copyLast" :disabled="!entries.length">复制上一笔</button>
+        <p>保存并继续会保留动作、账户、资产与标签，只清空金额和备注，适合连续补录。</p>
+        <div class="entry-save-actions">
+          <button class="btn btn-ghost" @click="addEntry(false)" :disabled="!quickCanSave">保存</button>
+          <button class="btn btn-primary" @click="addEntry(true)" :disabled="!quickCanSave">保存并继续</button>
+        </div>
+      </footer>
+    </div>
+  </section>
+
+  <section class="panel section-records section-not-stats section-not-data quick-add-panel" v-if="false">
     <div class="panel-header" style="margin-bottom:12px">
       <div><h2>{{ t('quickAdd') }}</h2><p class="hint">先选动作，再填金额；常用模板会自动带出平台、资产和标签。</p></div>
     </div>
@@ -4964,7 +5606,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.07.24-2'
+  const APP_VERSION='v2026.07.24-3'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -5090,7 +5732,12 @@ setup(){
     if(quickAction.value==='buy'||quickAction.value==='sell')return !!form.targetKey&&tradeAmountPreview.value>0
     return Number(form.amount)>0
   })
-  const quickNoteLabel=computed(()=>quickAction.value==='withdraw'||quickAction.value==='sell'?'出金备注':'投入理由')
+  const quickNoteLabel=computed(()=>{
+    if(quickAction.value==='buy')return'买入理由'
+    if(quickAction.value==='sell')return'卖出理由'
+    if(quickAction.value==='withdraw')return'取出原因'
+    return'投入理由'
+  })
   const quickNotePlaceholder=computed(()=>{
     if(quickAction.value==='buy')return'为什么买入？如：定投 / 补仓 / 看好基本面'
     if(quickAction.value==='sell')return'为什么卖出？如：止盈 / 止损 / 调仓'
@@ -5273,6 +5920,10 @@ setup(){
     form.type=tpl.type;form.assetType=tpl.assetType;form.exchange=tpl.exchange;form.currency=tpl.currency;form.rate=tpl.rate
     form.tagText=tpl.tagText;form.note='';form.targetKey='';form.positionId=''
     showToast('已套用常用模板','info')
+  }
+  function applyQuickTemplateKey(key){
+    const tpl=quickTemplates.value.find(item=>item.key===key)
+    if(tpl)applyQuickTemplate(tpl)
   }
 
   // 资产类型配置（内置默认 + 用户自定义，存 localStorage）
@@ -5557,6 +6208,7 @@ setup(){
   const positions=ref([])
   const posForm=reactive({symbol:'',name:'',qty:'',avgCost:'',currency:'CNY',assetType:'',icon:'',source:'eastmoney',secid:''})
   const showPosForm=ref(false)
+  const selectedPositionId=ref('')
   const expandedPosFlows=ref(new Set())
   function togglePosFlow(id){const s=new Set(expandedPosFlows.value);s.has(id)?s.delete(id):s.add(id);expandedPosFlows.value=s}
   const showSymbolPicker=ref(false)
@@ -5565,7 +6217,7 @@ setup(){
   const posSearchResults=ref([])
   const posSearching=ref(false)
   const posMarket=ref('') // 市场筛选：''=全部，否则为 assetType 值
-  const POS_MARKETS=[{l:'沪深市',v:'沪深市'},{l:'港股',v:'港股'},{l:'美股',v:'美股'},{l:'基金',v:'基金'}]
+  const POS_MARKETS=[{l:'沪深市',v:'沪深市'},{l:'港股',v:'港股'},{l:'美股',v:'美股'},{l:'基金',v:'基金'},{l:'加密货币',v:'加密货币'},{l:'黄金',v:'黄金'}]
   // 按所选市场过滤搜索结果
   const posResultsShown=computed(()=>posMarket.value?posSearchResults.value.filter(it=>normalizeAssetType(it.assetType)===posMarket.value):posSearchResults.value)
   function findTicker(sym){return TICKER_LIST.find(t=>t.symbol.toUpperCase()===sym.toUpperCase())}
@@ -5670,7 +6322,9 @@ setup(){
   function addPosition(){
     if(!posForm.symbol.trim()||!Number(posForm.qty)){showToast('请选择标的并填写份额','error');return}
     const avg=posForm.avgCost===''||posForm.avgCost==null?null:Number(posForm.avgCost)
-    positions.value.push({id:genId(),symbol:posForm.symbol.trim().toUpperCase(),name:posForm.name.trim()||posForm.symbol.trim(),icon:posForm.icon,qty:Number(posForm.qty),avgCost:avg,currency:posForm.currency,assetType:normalizeAssetType(posForm.assetType),source:posForm.source,secid:posForm.secid,origin:'manual',updatedAt:Date.now()})
+    const newPosition={id:genId(),symbol:posForm.symbol.trim().toUpperCase(),name:posForm.name.trim()||posForm.symbol.trim(),icon:posForm.icon,qty:Number(posForm.qty),avgCost:avg,currency:posForm.currency,assetType:normalizeAssetType(posForm.assetType),source:posForm.source,secid:posForm.secid,origin:'manual',updatedAt:Date.now()}
+    positions.value.push(newPosition)
+    selectedPositionId.value=newPosition.id
     savePositions()
     posForm.symbol='';posForm.name='';posForm.qty='';posForm.avgCost='';posForm.icon='';posForm.secid='';posForm.source='eastmoney'
     posSymbolSearch.value='';posSearchResults.value=[];showPosForm.value=false;showToast('已添加持仓','success')
@@ -5679,6 +6333,7 @@ setup(){
     if(!confirm('确定删除持仓？关联流水会保留。'))return
     snap()
     positions.value=positions.value.filter(p=>p.id!==id)
+    if(selectedPositionId.value===id)selectedPositionId.value=''
     recordDeletedPositions([id])
     savePositions()
     showToast('已删除','success')
@@ -5905,7 +6560,7 @@ setup(){
     setQuickAction(kind==='sell'?'sell':'buy')
     form.positionId=p.id
     form.targetMarket=normalizeAssetType(p.assetType)||'沪深市'
-    form.targetKey=`position:${p.id}`
+    form.targetKey=`pos:${p.id}`
     form.currency=p.currency||'CNY'
     form.assetType=normalizeAssetType(p.assetType)
     form.tradePrice=posPrices.value[posKey(p)]||p.avgCost||''
@@ -5941,6 +6596,10 @@ setup(){
       return{...p,cost,price:price||0,value,pl,hasCost,plPct:hasCost&&cost?((pl/cost)*100).toFixed(1):'0',flow:positionFlowStats(p)}
     }))
   const posRows=computed(()=>allPositionRows.value.filter(p=>!posMarket.value||normalizeAssetType(p.assetType)===posMarket.value))
+  const positionRowsSorted=computed(()=>[...posRows.value].sort((a,b)=>b.value-a.value))
+  const selectedPosition=computed(()=>allPositionRows.value.find(p=>p.id===selectedPositionId.value)||null)
+  const selectedPositionAllocation=computed(()=>selectedPosition.value&&posSummary.value.totalValue?selectedPosition.value.value/posSummary.value.totalValue*100:0)
+  function selectPosition(position){selectedPositionId.value=position&&position.id===selectedPositionId.value?'':position?.id||''}
   const overviewTopPositions=computed(()=>[...allPositionRows.value].sort((a,b)=>b.value-a.value).slice(0,5))
   const overviewAllocation=computed(()=>{
     const grouped=new Map()
@@ -7529,7 +8188,7 @@ setup(){
   return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
-    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
+    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
     behaviorAnalysis,psychoTags,behaviorAdvice,
 
     fmt,fmtPct,amountCNY,parseTags,tagsText,normalizeAssetType,rowClass,toggleEx,toggleAssetType,toggleTag,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,editingDetail,
@@ -7540,7 +8199,7 @@ setup(){
     saveSyncConfig,syncPush,syncPull,syncAuto,saveRules,saveReviewNote,saveChecklist,loadReview,
     exportExcel,exportJSON,importExcel,importJSON,showToast,dayjs,
     t,lang,
-    positions,posForm,posRows,allPositionRows,posSummary,overviewTopPositions,overviewAllocation,overviewLastUpdated,addPosition,removePosition,updatePosition,createPositionFlow,fetchPosPrices,showPosForm,posSymbolSearch,showSymbolPicker,posSearchResults,posSearching,posResultsShown,posMarket,POS_MARKETS,onPosSearchInput,selectEmResult,selectCryptoQuick,cryptoQuickList,expandedPosFlows,togglePosFlow,
+    positions,posForm,posRows,allPositionRows,posSummary,positionRowsSorted,selectedPositionId,selectedPosition,selectedPositionAllocation,selectPosition,overviewTopPositions,overviewAllocation,overviewLastUpdated,addPosition,removePosition,updatePosition,createPositionFlow,fetchPosPrices,showPosForm,posSymbolSearch,showSymbolPicker,posSearchResults,posSearching,posResultsShown,posMarket,POS_MARKETS,onPosSearchInput,selectEmResult,selectCryptoQuick,cryptoQuickList,expandedPosFlows,togglePosFlow,
     showDashCfg,dashPanels,dashVisible,toggleDashPanel,moveDashPanel,resetDashboard,DASH_DEFAULT,dashLabels,
     ASSET_TYPES,getPlatforms,assetColor}
 }
