@@ -21,6 +21,7 @@
 <script src="https://unpkg.com/dayjs@1.11/locale/zh-cn.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4/dist/chart.umd.min.js"></script>
 <script src="js/review-engine.js"></script>
+<script src="js/import-engine.js"></script>
 <style>
 /* ===== RESET & BASE ===== */
 *{margin:0;padding:0;box-sizing:border-box}
@@ -6892,21 +6893,20 @@ setup(){
   }
   function buildImportPreview(source,fileName,validRows,invalidCount,extra={}){
     if(!validRows.length&&!invalidCount){showToast('未识别到有效数据','error');return}
-    const exactKeys=new Set(entries.value.map(importEntryKey))
-    const existingById=new Map(entries.value.map(entry=>[entry.id,entry]))
     const rows=[],newRows=[],duplicateRows=[]
-    validRows.forEach((entry,i)=>{
-      const key=importEntryKey(entry)
+    const classified=ToujiImport.classifyOccurrences(entries.value,validRows,{source,keyOf:importEntryKey})
+    classified.forEach((result,i)=>{
+      const entry=result.entry
       let row
-      if(exactKeys.has(key)){
+      if(result.kind==='duplicate'){
         row={key:`dup-${i}-${entry.id}`,entry,status:'duplicate',label:'重复',reason:'字段完全一致，将跳过'}
         duplicateRows.push(row)
-      }else if(source==='JSON'&&entry.id&&existingById.has(entry.id)){
+      }else if(result.kind==='update'){
         row={key:`update-${i}-${entry.id}`,entry,status:'new',label:'更新',reason:'同一记录内容较新，将替换本地版本',isUpdate:true}
-        newRows.push(row);exactKeys.add(key)
+        newRows.push(row)
       }else{
         row={key:`new-${i}-${entry.id}`,entry,status:'new',label:'新增',reason:'合并导入会追加'}
-        newRows.push(row);exactKeys.add(key)
+        newRows.push(row)
       }
       rows.push(row)
     })
