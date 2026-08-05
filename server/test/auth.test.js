@@ -26,6 +26,7 @@ function createMemoryRepository() {
         id: 'user-1',
         email: data.email,
         password_hash: data.passwordHash,
+        role: 'admin',
         status: 'active'
       }
       state.users.set(data.email, user)
@@ -54,6 +55,7 @@ function createMemoryRepository() {
       return user ? {
         user_id: user.id,
         email: user.email,
+        role: user.role,
         status: user.status,
         ledger_id: 'ledger-1',
         ledger_name: '我的账本',
@@ -91,6 +93,7 @@ test('registration hashes password, invitation and session secrets', async () =>
   })
 
   assert.equal(result.user.email, 'owner@example.com')
+  assert.equal(result.user.role, 'admin')
   assert.equal(result.user.ledger.id, 'ledger-1')
   assert.notEqual(memory.state.registration.passwordHash, 'correct-horse-battery')
   assert.equal(await verifyPassword(memory.state.registration.passwordHash, 'correct-horse-battery'), true)

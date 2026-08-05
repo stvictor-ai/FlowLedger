@@ -48,6 +48,27 @@ test('server client preserves revision conflict details', async () => {
   )
 })
 
+test('admin client uses role-protected management endpoints', async () => {
+  const calls = []
+  const client = createClient({
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options })
+      return jsonResponse(options.method === 'POST' ? 201 : 200, {})
+    }
+  })
+
+  await client.adminSummary()
+  await client.createInvitation({ maxUses: 1, expiresDays: 14 })
+  await client.updateUserStatus('user-1', 'disabled')
+
+  assert.deepEqual(calls.map(call => [call.url, call.options.method]), [
+    ['/api/v1/admin/summary', 'GET'],
+    ['/api/v1/admin/invitations', 'POST'],
+    ['/api/v1/admin/users/user-1/status', 'PATCH']
+  ])
+  assert.equal(calls.every(call => call.options.credentials === 'include'), true)
+})
+
 test('snapshot summary converts foreign currencies and counts tombstones', () => {
   const summary = summarizeSnapshot({
     entries: [

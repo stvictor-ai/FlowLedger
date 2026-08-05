@@ -1,6 +1,7 @@
 import express from 'express'
 import { createAuthRouter } from './modules/auth/routes.js'
-import { createRequireAuth } from './modules/auth/middleware.js'
+import { createRequireAuth, requireAdmin } from './modules/auth/middleware.js'
+import { createAdminRouter } from './modules/admin/routes.js'
 import { createSyncRouter } from './modules/sync/routes.js'
 import { createOriginGuard } from './middleware/origin.js'
 import { securityHeaders } from './middleware/security.js'
@@ -8,6 +9,7 @@ import { securityHeaders } from './middleware/security.js'
 export function createApp({
   clock = () => new Date(),
   authService = null,
+  adminService = null,
   syncService = null,
   database = null,
   config = {
@@ -52,6 +54,14 @@ export function createApp({
       authService,
       isProduction: config.isProduction
     }))
+    if (adminService) {
+      app.use(
+        '/api/v1/admin',
+        createRequireAuth(authService),
+        requireAdmin,
+        createAdminRouter({ adminService })
+      )
+    }
     if (syncService) {
       app.use(
         '/api/v1/ledgers/:ledgerId/sync',

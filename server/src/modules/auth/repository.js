@@ -13,7 +13,7 @@ export function createAuthRepository(pool) {
       try {
         await client.query('BEGIN')
         const inviteResult = await client.query(`
-          SELECT id
+          SELECT id, role
           FROM invitation_codes
           WHERE code_hash = $1
             AND disabled_at IS NULL
@@ -30,10 +30,10 @@ export function createAuthRepository(pool) {
         let userResult
         try {
           userResult = await client.query(`
-            INSERT INTO users(email, password_hash)
-            VALUES ($1, $2)
-            RETURNING id, email, status, created_at
-          `, [email, passwordHash])
+            INSERT INTO users(email, password_hash, role)
+            VALUES ($1, $2, $3)
+            RETURNING id, email, role, status, created_at
+          `, [email, passwordHash, inviteResult.rows[0].role])
         } catch (error) {
           if (error?.code === '23505') throw new AuthRepositoryError('EMAIL_TAKEN')
           throw error
@@ -71,6 +71,7 @@ export function createAuthRepository(pool) {
           u.id,
           u.email,
           u.password_hash,
+          u.role,
           u.status,
           u.created_at,
           l.id AS ledger_id,
@@ -103,6 +104,7 @@ export function createAuthRepository(pool) {
         SELECT
           u.id AS user_id,
           u.email,
+          u.role,
           u.status,
           l.id AS ledger_id,
           l.name AS ledger_name,
@@ -128,12 +130,12 @@ export function createAuthRepository(pool) {
       await pool.query('DELETE FROM sessions WHERE token_hash = $1', [tokenHash])
     },
 
-    async createInvitation({ codeHash, maxUses, expiresAt, createdBy }) {
+    async createInvitation({ codeHash, maxUses, expiresAt, createdBy, role = 'user' }) {
       const result = await pool.query(`
-        INSERT INTO invitation_codes(code_hash, max_uses, expires_at, created_by)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id, max_uses, expires_at, created_at
-      `, [codeHash, maxUses, expiresAt, createdBy || null])
+        INSERT INTO invitation_codes(code_hash, max_uses, expires_at, created_by, role)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, role, max_uses, expires_at, created_at
+      `, [codeHash, maxUses, expiresAt, createdBy || null, role])
       return result.rows[0]
     }
   }

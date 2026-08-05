@@ -3351,6 +3351,42 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .server-account-metrics span,.server-account-metrics strong{display:block}
 .server-account-metrics span{color:var(--dim);font-size:8px}
 .server-account-metrics strong{margin-top:5px;font:800 12px/1.2 'JetBrains Mono',monospace}
+.server-admin-center{margin-top:28px;padding-top:24px;border-top:1px solid var(--border)}
+.server-admin-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px}
+.server-admin-head h4{font-size:15px}
+.server-admin-head p{margin-top:5px;color:var(--muted);font-size:8px}
+.server-admin-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-block:1px solid var(--border);background:var(--surface-quiet)}
+.server-admin-summary>div{padding:14px 15px;border-left:1px solid var(--border)}
+.server-admin-summary>div:first-child{border-left:0}
+.server-admin-summary span,.server-admin-summary strong{display:block}
+.server-admin-summary span{color:var(--dim);font-size:7px;font-weight:800}
+.server-admin-summary strong{margin-top:6px;font:800 13px/1.2 'JetBrains Mono',monospace}
+.server-admin-layout{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(360px,1.2fr);border-bottom:1px solid var(--border)}
+.server-admin-section{min-width:0;padding:20px 0}
+.server-admin-section+.server-admin-section{padding-left:24px;border-left:1px solid var(--border)}
+.server-admin-section h5{font-size:10px}
+.server-admin-section>p{margin-top:5px;color:var(--dim);font-size:8px;line-height:1.6}
+.server-admin-invite-form{display:grid;grid-template-columns:1fr 1fr auto;align-items:end;gap:9px;margin-top:14px}
+.server-admin-invite-result{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:9px;margin-top:12px;padding:10px 12px;border-left:3px solid var(--green);background:color-mix(in srgb,var(--green) 8%,var(--surface-quiet))}
+.server-admin-invite-result span,.server-admin-invite-result code{display:block}
+.server-admin-invite-result span{color:var(--muted);font-size:7px}
+.server-admin-invite-result code{margin-top:4px;overflow:hidden;text-overflow:ellipsis;color:var(--text);font:800 9px/1.4 'JetBrains Mono',monospace}
+.server-admin-invite-list{margin-top:12px;border-top:1px solid var(--border)}
+.server-admin-invite-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.server-admin-invite-row strong,.server-admin-invite-row span{display:block}
+.server-admin-invite-row strong{font-size:9px}
+.server-admin-invite-row span{margin-top:4px;color:var(--dim);font-size:7px}
+.server-admin-state{padding:4px 7px;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:7px;font-weight:800;white-space:nowrap}
+.server-admin-state.active{border-color:color-mix(in srgb,var(--green) 45%,var(--border));color:var(--green)}
+.server-admin-users{padding-top:20px}
+.server-admin-table-wrap{margin-top:12px;overflow-x:auto;border-top:1px solid var(--border)}
+.server-admin-table{width:100%;min-width:680px;border-collapse:collapse}
+.server-admin-table th,.server-admin-table td{padding:11px 9px;border-bottom:1px solid var(--border);text-align:left;vertical-align:middle}
+.server-admin-table th{color:var(--dim);font-size:7px;font-weight:800}
+.server-admin-table td{font-size:8px}
+.server-admin-table td strong,.server-admin-table td small{display:block}
+.server-admin-table td strong{font-size:9px}.server-admin-table td small{margin-top:4px;color:var(--dim);font-size:7px}
+.server-admin-empty{padding:20px 0;color:var(--dim);font-size:8px;text-align:center}
 .server-sync-note{margin-top:18px;padding-left:12px;border-left:2px solid var(--accent);color:var(--muted);font-size:9px;line-height:1.7}
 .server-loading{padding:42px 0;color:var(--muted);font-size:10px;text-align:center;border-block:1px solid var(--border)}
 .server-migration-box{max-width:700px}
@@ -3443,6 +3479,13 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   .server-account-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
   .server-account-metrics>div:nth-child(3){border-left:0;padding-left:0;border-top:1px solid var(--border)}
   .server-account-metrics>div:nth-child(4){border-top:1px solid var(--border)}
+  .server-admin-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .server-admin-summary>div{border-top:1px solid var(--border)}
+  .server-admin-summary>div:nth-child(odd){border-left:0}
+  .server-admin-layout{grid-template-columns:1fr}
+  .server-admin-section+.server-admin-section{padding-left:0;border-left:0;border-top:1px solid var(--border)}
+  .server-admin-invite-form{grid-template-columns:1fr 1fr}
+  .server-admin-invite-form .btn{grid-column:1/-1}
   .server-migration-compare{grid-template-columns:1fr}
   .server-migration-arrow{padding:8px;border-inline:0;border-block:1px solid var(--border)}
   .server-migration-warning{grid-template-columns:1fr}
@@ -4496,6 +4539,72 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
               <div><span>本地流水</span><strong>{{ entries.length }}</strong></div><div><span>本地持仓</span><strong>{{ positions.length }}</strong></div><div><span>服务器流水</span><strong>{{ serverRemoteSummary.entries }}</strong></div><div><span>服务器持仓</span><strong>{{ serverRemoteSummary.positions }}</strong></div>
             </div>
             <p class="server-sync-note">服务器同步目前采用手动确认模式。每次先读取服务器版本，再让你选择合并、上传或下载；即使退出账号，本地账本也会保留。</p>
+
+            <section v-if="serverAccount.user.role==='admin'" class="server-admin-center" aria-labelledby="server-admin-title">
+              <header class="server-admin-head">
+                <div><h4 id="server-admin-title">管理员中心</h4><p>管理账号与邀请，只显示数量，不读取任何用户的账本明细。</p></div>
+                <button class="btn btn-ghost btn-sm" @click="loadServerAdmin" :disabled="serverAdmin.loading||serverAdmin.busy">{{ serverAdmin.loading?'刷新中…':'刷新状态' }}</button>
+              </header>
+
+              <div v-if="serverAdmin.loading&&!serverAdmin.loaded" class="server-loading">正在读取管理数据…</div>
+              <template v-else>
+                <p v-if="serverAdmin.error" class="form-error" style="margin-bottom:12px">{{ serverAdmin.error }}</p>
+                <div class="server-admin-summary">
+                  <div><span>总用户</span><strong>{{ serverAdmin.summary?.users_total??0 }}</strong></div>
+                  <div><span>正常账号</span><strong>{{ serverAdmin.summary?.users_active??0 }}</strong></div>
+                  <div><span>可用邀请</span><strong>{{ serverAdmin.summary?.invitations_available??0 }}</strong></div>
+                  <div><span>流水数量</span><strong>{{ serverAdmin.summary?.entries_total??0 }}</strong></div>
+                  <div><span>持仓数量</span><strong>{{ serverAdmin.summary?.positions_total??0 }}</strong></div>
+                </div>
+
+                <div class="server-admin-layout">
+                  <section class="server-admin-section">
+                    <h5>创建普通用户邀请码</h5>
+                    <p>管理员邀请码仍只能在服务器生成，避免网页权限被用于扩散管理员身份。</p>
+                    <form class="server-admin-invite-form" @submit.prevent="createServerInvitation">
+                      <div class="form-group"><label>可使用次数</label><input class="form-input" type="number" v-model.number="serverAdmin.maxUses" min="1" max="100" required></div>
+                      <div class="form-group"><label>有效天数</label><input class="form-input" type="number" v-model.number="serverAdmin.expiresDays" min="1" max="365" required></div>
+                      <button class="btn btn-primary btn-sm" type="submit" :disabled="serverAdmin.busy">{{ serverAdmin.busy?'创建中…':'创建邀请' }}</button>
+                    </form>
+                    <div v-if="serverAdmin.inviteCode" class="server-admin-invite-result">
+                      <div><span>邀请码仅在这里显示一次</span><code>{{ serverAdmin.inviteCode }}</code></div>
+                      <button class="btn btn-ghost btn-sm" @click="copyServerInvitation">复制</button>
+                    </div>
+                  </section>
+
+                  <section class="server-admin-section">
+                    <h5>最近邀请码</h5>
+                    <p>只能撤销普通用户邀请码，已创建的管理员邀请不会出现在这里。</p>
+                    <div v-if="!serverAdmin.invitations.length" class="server-admin-empty">暂无普通用户邀请码</div>
+                    <div v-else class="server-admin-invite-list">
+                      <div v-for="invite in serverAdmin.invitations.slice(0,8)" :key="invite.id" class="server-admin-invite-row">
+                        <div><strong>{{ invite.used_count }}/{{ invite.max_uses }} 次</strong><span>创建 {{ formatAdminDate(invite.created_at) }} · 到期 {{ formatAdminDate(invite.expires_at) }}</span></div>
+                        <span :class="['server-admin-state',{active:adminInvitationStatus(invite)==='可使用'}]">{{ adminInvitationStatus(invite) }}</span>
+                        <button v-if="adminInvitationStatus(invite)==='可使用'" class="btn btn-ghost btn-sm" @click="revokeServerInvitation(invite)" :disabled="serverAdmin.busy">撤销</button>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+
+                <section class="server-admin-users">
+                  <div class="server-admin-section" style="padding:0"><h5>账号管理</h5><p>停用后会立即退出该账号的所有设备，恢复后原账本仍然保留。</p></div>
+                  <div class="server-admin-table-wrap">
+                    <table class="server-admin-table">
+                      <thead><tr><th>账号</th><th>状态</th><th>流水</th><th>持仓</th><th>最近活动</th><th>操作</th></tr></thead>
+                      <tbody>
+                        <tr v-for="user in serverAdmin.users" :key="user.id">
+                          <td><strong>{{ user.email }}</strong><small>{{ user.role==='admin'?'管理员':'普通用户' }}</small></td>
+                          <td><span :class="['server-admin-state',{active:user.status==='active'}]">{{ user.status==='active'?'正常':'已停用' }}</span></td>
+                          <td>{{ user.entries_count??0 }}</td><td>{{ user.positions_count??0 }}</td>
+                          <td>{{ formatAdminDate(user.last_seen_at||user.created_at) }}</td>
+                          <td><span v-if="user.role==='admin'" class="server-admin-state active">当前管理员</span><button v-else class="btn btn-ghost btn-sm" @click="toggleServerUser(user)" :disabled="serverAdmin.busy">{{ user.status==='active'?'停用':'恢复' }}</button></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </template>
+            </section>
           </div>
         </div>
 
@@ -6021,7 +6130,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.08.05-1'
+  const APP_VERSION='v2026.08.05-2'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -6186,6 +6295,7 @@ setup(){
   const syncProvider=ref(localStorage.getItem(SERVER_SYNC_PROVIDER_K)||'server')
   const serverClient=window.ToujiServerSync?.createClient?.()||null
   const serverAccount=reactive({loading:true,busy:false,user:null,mode:'login',email:'',password:'',inviteCode:'',error:''})
+  const serverAdmin=reactive({loading:false,busy:false,loaded:false,summary:null,users:[],invitations:[],inviteCode:'',error:'',maxUses:1,expiresDays:14})
   const serverRemote=ref(null)
   const serverMigrationOpen=ref(false)
   const emptyServerSummary={entries:0,positions:0,totalIn:0,totalOut:0,deleted:0}
@@ -7992,9 +8102,97 @@ setup(){
       INVALID_SNAPSHOT:'账本数据未通过服务器校验',
       REVISION_CONFLICT:'服务器账本刚刚发生变化，请重新比较后再同步',
       LEDGER_NOT_FOUND:'没有找到这个账号的账本',
+      FORBIDDEN:'当前账号没有管理员权限',
+      SELF_MANAGEMENT_FORBIDDEN:'管理员不能停用自己的账号',
+      USER_NOT_FOUND:'没有找到可管理的普通用户',
+      INVITATION_NOT_FOUND:'邀请码不存在或已经撤销',
       SERVER_UNAVAILABLE:'暂时无法连接投记服务器'
     }
     return messages[error?.code]||'操作失败，请检查网络后重试'
+  }
+  function formatAdminDate(value){
+    if(!value)return'—'
+    const date=dayjs(value)
+    return date.isValid()?date.format('YYYY-MM-DD HH:mm'):'—'
+  }
+  function adminInvitationStatus(invite){
+    if(invite.disabled_at)return'已撤销'
+    if(Number(invite.used_count)>=Number(invite.max_uses))return'已用完'
+    if(invite.expires_at&&dayjs(invite.expires_at).isBefore(dayjs()))return'已过期'
+    return'可使用'
+  }
+  function resetServerAdmin(){
+    serverAdmin.loading=false
+    serverAdmin.busy=false
+    serverAdmin.loaded=false
+    serverAdmin.summary=null
+    serverAdmin.users=[]
+    serverAdmin.invitations=[]
+    serverAdmin.inviteCode=''
+    serverAdmin.error=''
+  }
+  async function loadServerAdmin(){
+    if(!serverClient||serverAccount.user?.role!=='admin')return
+    serverAdmin.loading=true
+    serverAdmin.error=''
+    try{
+      const [summaryResult,usersResult,invitationsResult]=await Promise.all([
+        serverClient.adminSummary(),
+        serverClient.adminUsers(),
+        serverClient.adminInvitations()
+      ])
+      serverAdmin.summary=summaryResult?.summary||null
+      serverAdmin.users=usersResult?.users||[]
+      serverAdmin.invitations=invitationsResult?.invitations||[]
+      serverAdmin.loaded=true
+    }catch(error){
+      serverAdmin.error=serverErrorMessage(error)
+      if(error?.code==='UNAUTHENTICATED')serverAccount.user=null
+    }finally{serverAdmin.loading=false}
+  }
+  async function createServerInvitation(){
+    if(!serverClient||serverAccount.user?.role!=='admin')return
+    serverAdmin.busy=true
+    serverAdmin.error=''
+    serverAdmin.inviteCode=''
+    try{
+      const result=await serverClient.createInvitation({maxUses:Number(serverAdmin.maxUses),expiresDays:Number(serverAdmin.expiresDays)})
+      serverAdmin.inviteCode=result?.code||''
+      await loadServerAdmin()
+      showToast('普通用户邀请码已创建，请及时复制','success')
+    }catch(error){serverAdmin.error=serverErrorMessage(error)}
+    finally{serverAdmin.busy=false}
+  }
+  async function copyServerInvitation(){
+    if(!serverAdmin.inviteCode)return
+    try{await navigator.clipboard.writeText(serverAdmin.inviteCode);showToast('邀请码已复制','success')}
+    catch{showToast('复制失败，请手动选择邀请码','error')}
+  }
+  async function toggleServerUser(user){
+    if(!user||user.role==='admin')return
+    const nextStatus=user.status==='active'?'disabled':'active'
+    const action=nextStatus==='disabled'?'停用':'恢复'
+    if(!confirm(`确定${action} ${user.email} 吗？${nextStatus==='disabled'?'该账号会立即退出所有设备，账本数据不会删除。':''}`))return
+    serverAdmin.busy=true
+    serverAdmin.error=''
+    try{
+      await serverClient.updateUserStatus(user.id,nextStatus)
+      await loadServerAdmin()
+      showToast(`账号已${action}`,'success')
+    }catch(error){serverAdmin.error=serverErrorMessage(error)}
+    finally{serverAdmin.busy=false}
+  }
+  async function revokeServerInvitation(invite){
+    if(!invite||adminInvitationStatus(invite)!=='可使用')return
+    if(!confirm('确定撤销这个邀请码吗？撤销后无法恢复。'))return
+    serverAdmin.busy=true
+    serverAdmin.error=''
+    try{
+      await serverClient.revokeInvitation(invite.id)
+      await loadServerAdmin()
+      showToast('邀请码已撤销','success')
+    }catch(error){serverAdmin.error=serverErrorMessage(error)}
+    finally{serverAdmin.busy=false}
   }
   function localServerSnapshot(){
     return clone({
@@ -8019,11 +8217,16 @@ setup(){
     try{
       const result=await serverClient.me()
       serverAccount.user=result?.user||null
-      if(serverAccount.user)await fetchServerRemote()
+      if(serverAccount.user){
+        await fetchServerRemote()
+        if(serverAccount.user.role==='admin')await loadServerAdmin()
+        else resetServerAdmin()
+      }
     }catch(error){
       if(error?.code!=='UNAUTHENTICATED')console.info('[投记] 账号服务器暂不可用')
       serverAccount.user=null
       serverRemote.value=null
+      resetServerAdmin()
     }finally{serverAccount.loading=false}
   }
   async function submitServerAuth(){
@@ -8040,6 +8243,8 @@ setup(){
       serverAccount.inviteCode=''
       syncProvider.value='server'
       await fetchServerRemote()
+      if(serverAccount.user.role==='admin')await loadServerAdmin()
+      else resetServerAdmin()
       serverMigrationOpen.value=true
       showToast(serverAccount.mode==='register'?'账号已创建，请选择账本迁移方式':'登录成功，请确认账本迁移方式','success')
     }catch(error){
@@ -8133,6 +8338,7 @@ setup(){
     finally{
       serverAccount.user=null
       serverRemote.value=null
+      resetServerAdmin()
       serverMigrationOpen.value=false
       serverAccount.password=''
       serverAccount.busy=false
@@ -8803,7 +9009,7 @@ setup(){
   })
   onBeforeUnmount(()=>window.removeEventListener('keydown',handleLedgerKeydown))
 
-  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
+  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,

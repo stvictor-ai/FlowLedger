@@ -77,6 +77,32 @@
           method: 'PUT',
           body: JSON.stringify(payload)
         })
+      },
+      adminSummary() {
+        return request('/api/v1/admin/summary', { method: 'GET' })
+      },
+      adminUsers() {
+        return request('/api/v1/admin/users', { method: 'GET' })
+      },
+      adminInvitations() {
+        return request('/api/v1/admin/invitations', { method: 'GET' })
+      },
+      createInvitation(payload) {
+        return request('/api/v1/admin/invitations', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        })
+      },
+      updateUserStatus(userId, status) {
+        return request(`/api/v1/admin/users/${encodeURIComponent(userId)}/status`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status })
+        })
+      },
+      revokeInvitation(inviteId) {
+        return request(`/api/v1/admin/invitations/${encodeURIComponent(inviteId)}`, {
+          method: 'DELETE'
+        })
       }
     }
   }

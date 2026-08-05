@@ -23,6 +23,7 @@ function publicUser(user, ledger) {
   return {
     id: user.id || user.user_id,
     email: user.email,
+    role: user.role || 'user',
     ledger: ledgerId ? {
       id: ledgerId,
       name: ledger.name || ledger.ledger_name,

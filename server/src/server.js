@@ -4,6 +4,8 @@ import { createPool } from './db/pool.js'
 import { runMigrations } from './db/migrate.js'
 import { createAuthRepository } from './modules/auth/repository.js'
 import { createAuthService } from './modules/auth/service.js'
+import { createAdminRepository } from './modules/admin/repository.js'
+import { createAdminService } from './modules/admin/service.js'
 import { createSyncRepository } from './modules/sync/repository.js'
 import { createSyncService } from './modules/sync/service.js'
 
@@ -12,9 +14,11 @@ const pool = createPool(config)
 await runMigrations({ pool })
 const authRepository = createAuthRepository(pool)
 const authService = createAuthService({ repository: authRepository, secret: config.sessionSecret })
+const adminRepository = createAdminRepository(pool)
+const adminService = createAdminService({ repository: adminRepository, secret: config.sessionSecret })
 const syncRepository = createSyncRepository(pool)
 const syncService = createSyncService({ repository: syncRepository })
-const app = createApp({ authService, syncService, database: pool, config })
+const app = createApp({ authService, adminService, syncService, database: pool, config })
 
 const server = app.listen(config.port, '0.0.0.0', () => {
   console.log(`touji-api listening on port ${config.port}`)

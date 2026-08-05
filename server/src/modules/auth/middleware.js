@@ -14,3 +14,10 @@ export function createRequireAuth(authService) {
     return next()
   }
 }
+
+export function requireAdmin(request, response, next) {
+  if (request.auth?.role !== 'admin') {
+    return response.status(403).json({ error: 'FORBIDDEN' })
+  }
+  return next()
+}
