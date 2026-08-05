@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - touji_pg_data:/var/lib/postgresql/data
+    networks:
+      - touji_internal
+
+  api:
+    build:
+      context: ./server
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 8787
+      APP_ORIGIN: ${APP_ORIGIN:?set APP_ORIGIN in .env}
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL in .env}
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8787:8787"
+    networks:
+      - touji_internal
+
+volumes:
+  touji_pg_data:
+
+networks:
+  touji_internal:
+    driver: bridge
