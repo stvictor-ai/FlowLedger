@@ -1,8 +1,16 @@
 import { createApp } from './app.js'
 import { loadConfig } from './config.js'
+import { createPool } from './db/pool.js'
+import { runMigrations } from './db/migrate.js'
+import { createAuthRepository } from './modules/auth/repository.js'
+import { createAuthService } from './modules/auth/service.js'
 
 const config = loadConfig()
-const app = createApp()
+const pool = createPool(config)
+await runMigrations({ pool })
+const authRepository = createAuthRepository(pool)
+const authService = createAuthService({ repository: authRepository })
+const app = createApp({ authService, config })
 
 const server = app.listen(config.port, '0.0.0.0', () => {
   console.log(`touji-api listening on port ${config.port}`)
@@ -14,7 +22,9 @@ function shutdown(signal) {
     if (error) {
       console.error(error)
       process.exitCode = 1
+      return
     }
+    pool.end().catch(console.error)
   })
 }
 

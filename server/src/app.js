@@ -1,10 +1,26 @@
 import express from 'express'
+import { createAuthRouter } from './modules/auth/routes.js'
+import { createOriginGuard } from './middleware/origin.js'
+import { securityHeaders } from './middleware/security.js'
 
-export function createApp({ clock = () => new Date() } = {}) {
+export function createApp({
+  clock = () => new Date(),
+  authService = null,
+  config = {
+    appOrigin: 'http://127.0.0.1:8787',
+    isProduction: false
+  }
+} = {}) {
   const app = express()
 
   app.disable('x-powered-by')
+  if (config.isProduction) app.set('trust proxy', 1)
   app.use(express.json({ limit: '10mb' }))
+  app.use('/api', securityHeaders)
+  app.use('/api/v1', createOriginGuard({
+    appOrigin: config.appOrigin,
+    requireOrigin: config.isProduction
+  }))
 
   app.get('/api/v1/health', (_request, response) => {
     response.json({
@@ -14,6 +30,13 @@ export function createApp({ clock = () => new Date() } = {}) {
       timestamp: clock().toISOString()
     })
   })
+
+  if (authService) {
+    app.use('/api/v1/auth', createAuthRouter({
+      authService,
+      isProduction: config.isProduction
+    }))
+  }
 
   app.use((_request, response) => {
     response.status(404).json({ error: 'NOT_FOUND' })

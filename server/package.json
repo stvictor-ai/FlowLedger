@@ -8,12 +8,17 @@
   },
   "scripts": {
     "db:migrate": "node src/db/migrate.js",
+    "invite:create": "node scripts/create-invite.js",
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "test": "node --test test/*.test.js"
   },
   "dependencies": {
+    "argon2": "0.45.1",
+    "cookie": "2.0.1",
     "express": "5.2.1",
-    "pg": "8.22.0"
+    "express-rate-limit": "8.6.2",
+    "pg": "8.22.0",
+    "zod": "4.4.3"
   }
 }
