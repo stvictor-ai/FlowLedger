@@ -1,11 +1,14 @@
 import express from 'express'
 import { createAuthRouter } from './modules/auth/routes.js'
+import { createRequireAuth } from './modules/auth/middleware.js'
+import { createSyncRouter } from './modules/sync/routes.js'
 import { createOriginGuard } from './middleware/origin.js'
 import { securityHeaders } from './middleware/security.js'
 
 export function createApp({
   clock = () => new Date(),
   authService = null,
+  syncService = null,
   config = {
     appOrigin: 'http://127.0.0.1:8787',
     isProduction: false
@@ -36,6 +39,13 @@ export function createApp({
       authService,
       isProduction: config.isProduction
     }))
+    if (syncService) {
+      app.use(
+        '/api/v1/ledgers/:ledgerId/sync',
+        createRequireAuth(authService),
+        createSyncRouter({ syncService })
+      )
+    }
   }
 
   app.use((_request, response) => {

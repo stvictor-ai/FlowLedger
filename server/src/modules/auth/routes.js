@@ -1,10 +1,8 @@
 import { Router } from 'express'
 import { rateLimit } from 'express-rate-limit'
-import { parseCookie } from 'cookie'
 import { z } from 'zod'
+import { readSessionToken, SESSION_COOKIE } from './middleware.js'
 import { AuthError, authSessionDurationMs } from './service.js'
-
-export const SESSION_COOKIE = 'touji_session'
 
 const emailSchema = z.string().trim().toLowerCase().email().max(254)
 const passwordSchema = z.string().min(10).max(128)
@@ -17,10 +15,6 @@ const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1).max(128)
 }).strict()
-
-function sessionToken(request) {
-  return parseCookie(request.headers.cookie || '')[SESSION_COOKIE] || ''
-}
 
 function cookieOptions(isProduction) {
   return {
@@ -79,13 +73,13 @@ export function createAuthRouter({ authService, isProduction }) {
   })
 
   router.post('/logout', async (request, response) => {
-    await authService.logout(sessionToken(request))
+    await authService.logout(readSessionToken(request))
     response.clearCookie(SESSION_COOKIE, clearCookieOptions(isProduction))
     return response.status(204).end()
   })
 
   router.get('/me', async (request, response) => {
-    const user = await authService.getSession(sessionToken(request))
+    const user = await authService.getSession(readSessionToken(request))
     if (!user) return response.status(401).json({ error: 'UNAUTHENTICATED' })
     return response.json({ user })
   })
