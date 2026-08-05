@@ -45,6 +45,17 @@ curl -fsS https://touji.example.com/api/v1/health/ready
 
 正常情况下，存活检查返回 `status: ok`，就绪检查返回 `status: ready`。首次启动会自动执行数据库迁移。
 
+如果服务器已经由宿主机 Caddy 管理 80/443，只启动数据库和 API，并用覆盖文件把 API 映射到本机回环地址：
+
+```bash
+docker compose \
+  -f docker-compose.yml \
+  -f deploy/docker-compose.existing-caddy.yml \
+  up -d --build db api
+```
+
+然后在宿主机 Caddy 的站点块中将 `/api/*` 反向代理到 `127.0.0.1:8787`。不要启动 Compose 中的 `web` 服务，否则会和已有 Caddy 争用 80/443。
+
 查看日志：
 
 ```bash
