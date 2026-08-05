@@ -1,0 +1,71 @@
+const assert = require('node:assert/strict')
+const test = require('node:test')
+const {
+  ServerSyncError,
+  createClient,
+  hasSnapshotData,
+  summarizeSnapshot
+} = require('../js/server-sync.js')
+
+function jsonResponse(status, body) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    headers: { get: name => name === 'content-type' ? 'application/json' : null },
+    json: async () => body
+  }
+}
+
+test('server client always includes cookie credentials', async () => {
+  const calls = []
+  const client = createClient({
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options })
+      return jsonResponse(200, { user: { id: 'user-1' } })
+    }
+  })
+
+  await client.login({ email: 'owner@example.com', password: 'password-value' })
+
+  assert.equal(calls[0].url, '/api/v1/auth/login')
+  assert.equal(calls[0].options.credentials, 'include')
+  assert.equal(calls[0].options.method, 'POST')
+})
+
+test('server client preserves revision conflict details', async () => {
+  const client = createClient({
+    fetchImpl: async () => jsonResponse(409, {
+      error: 'REVISION_CONFLICT',
+      details: { revision: 3 }
+    })
+  })
+
+  await assert.rejects(
+    () => client.writeSnapshot('ledger-1', { baseRevision: 2 }),
+    error => error instanceof ServerSyncError &&
+      error.code === 'REVISION_CONFLICT' &&
+      error.details.revision === 3
+  )
+})
+
+test('snapshot summary converts foreign currencies and counts tombstones', () => {
+  const summary = summarizeSnapshot({
+    entries: [
+      { type: '入金', amount: 100, currency: 'USD', rate: 7.2 },
+      { type: '出金', amount: 200, currency: 'CNY' }
+    ],
+    positions: [{ id: 'position-1' }],
+    deletedIds: { old: 1 },
+    deletedPositionIds: { gone: 2 }
+  })
+
+  assert.deepEqual(summary, {
+    entries: 2,
+    positions: 1,
+    totalIn: 720,
+    totalOut: 200,
+    deleted: 2
+  })
+  assert.equal(hasSnapshotData({ entries: [], positions: [] }), false)
+  assert.equal(hasSnapshotData({ entries: [{ id: 'entry-1' }] }), true)
+})

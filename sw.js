@@ -1,8 +1,9 @@
-const CACHE_NAME = 'touji-v2026-07-24-4';
+const CACHE_NAME = 'touji-v2026-08-05-1';
 
 const APP_ASSETS = [
   './js/review-engine.js',
-  './js/import-engine.js'
+  './js/import-engine.js',
+  './js/server-sync.js'
 ];
 
 // CDN assets: cache-first (immutable, versioned URLs)
@@ -46,6 +47,12 @@ self.addEventListener('fetch', e => {
         return res;
       }))
     );
+    return;
+  }
+
+  // Account and ledger API responses may contain private data and must never enter Cache Storage.
+  if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) {
+    e.respondWith(fetch(e.request));
     return;
   }
 

@@ -22,6 +22,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4/dist/chart.umd.min.js"></script>
 <script src="js/review-engine.js"></script>
 <script src="js/import-engine.js"></script>
+<script src="js/server-sync.js"></script>
 <style>
 /* ===== RESET & BASE ===== */
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3301,6 +3302,75 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .data-config-help span{display:block;margin-top:7px;color:var(--muted);font-size:8px;line-height:1.5}
 .data-config-row{display:grid;grid-template-columns:minmax(240px,1fr) auto;gap:8px}
 .data-sync-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+.sync-provider-switch{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  max-width:560px;
+  margin-bottom:24px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  overflow:hidden;
+}
+.sync-provider-button{
+  min-height:58px;
+  padding:10px 16px;
+  border-left:1px solid var(--border);
+  color:var(--muted);
+  text-align:left;
+}
+.sync-provider-button:first-child{border-left:0}
+.sync-provider-button:hover{background:var(--overlay-hover);color:var(--text)}
+.sync-provider-button.active{background:var(--accent-dim);color:var(--text);box-shadow:inset 0 -2px var(--accent)}
+.sync-provider-button strong,.sync-provider-button span{display:block}
+.sync-provider-button strong{font-size:10px}
+.sync-provider-button span{margin-top:4px;color:var(--dim);font-size:8px}
+.server-auth-layout{display:grid;grid-template-columns:minmax(220px,.8fr) minmax(300px,1.2fr);border-block:1px solid var(--border)}
+.server-auth-intro{padding:24px 28px 24px 0;border-right:1px solid var(--border)}
+.server-auth-intro strong{display:block;font-size:16px}
+.server-auth-intro p{margin-top:10px;color:var(--muted);font-size:10px;line-height:1.8}
+.server-auth-points{display:grid;gap:9px;margin-top:21px}
+.server-auth-points span{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:9px}
+.server-auth-points span::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-dim)}
+.server-auth-form{padding:24px 0 24px 28px}
+.server-auth-modes{display:flex;gap:16px;margin-bottom:18px;border-bottom:1px solid var(--border)}
+.server-auth-mode{padding:0 0 9px;color:var(--dim);font-size:10px;font-weight:800;border-bottom:2px solid transparent}
+.server-auth-mode.active{color:var(--text);border-bottom-color:var(--accent)}
+.server-auth-fields{display:grid;gap:12px}
+.server-auth-submit{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:17px}
+.server-auth-submit p{color:var(--dim);font-size:8px}
+.server-account-line{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px;padding:18px 0;border-block:1px solid var(--border)}
+.server-account-identity{display:flex;align-items:center;gap:12px;min-width:0}
+.server-account-mark{width:40px;height:40px;display:grid;place-items:center;border-radius:6px;background:var(--accent);color:white;font:800 14px/1 'JetBrains Mono',monospace}
+.server-account-identity strong,.server-account-identity span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.server-account-identity strong{font-size:11px}
+.server-account-identity span{margin-top:4px;color:var(--muted);font-size:8px}
+.server-account-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.server-account-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--border)}
+.server-account-metrics>div{padding:16px 18px;border-left:1px solid var(--border)}
+.server-account-metrics>div:first-child{border-left:0;padding-left:0}
+.server-account-metrics span,.server-account-metrics strong{display:block}
+.server-account-metrics span{color:var(--dim);font-size:8px}
+.server-account-metrics strong{margin-top:5px;font:800 12px/1.2 'JetBrains Mono',monospace}
+.server-sync-note{margin-top:18px;padding-left:12px;border-left:2px solid var(--accent);color:var(--muted);font-size:9px;line-height:1.7}
+.server-loading{padding:42px 0;color:var(--muted);font-size:10px;text-align:center;border-block:1px solid var(--border)}
+.server-migration-box{max-width:700px}
+.server-migration-compare{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:stretch;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.server-migration-compare section{padding:18px;background:var(--surface-quiet)}
+.server-migration-compare span,.server-migration-compare strong,.server-migration-compare small{display:block}
+.server-migration-compare span{color:var(--dim);font-size:8px;font-weight:800}
+.server-migration-compare strong{margin-top:6px;font-size:14px}
+.server-migration-compare small{margin-top:8px;color:var(--muted);font-size:8px;line-height:1.6}
+.server-migration-arrow{display:grid;place-items:center;padding:0 12px;border-inline:1px solid var(--border);color:var(--accent);font-size:18px;font-weight:800}
+.server-migration-warning{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;margin-top:16px;padding:13px 14px;border-left:3px solid var(--accent);background:var(--accent-dim)}
+.server-migration-warning strong{font-size:9px;white-space:nowrap}.server-migration-warning span{color:var(--muted);font-size:8px;line-height:1.65}
+.server-migration-options{display:grid;gap:8px;margin-top:16px}
+.server-migration-option{position:relative;padding:14px 16px;border:1px solid var(--border);border-radius:6px;text-align:left;background:var(--surface-quiet)}
+.server-migration-option:hover{border-color:var(--accent);background:var(--accent-dim)}
+.server-migration-option.recommended{padding-right:76px;border-color:color-mix(in srgb,var(--accent) 45%,var(--border));background:var(--accent-dim)}
+.server-migration-option strong,.server-migration-option small{display:block}
+.server-migration-option strong{font-size:10px}.server-migration-option small{margin-top:5px;color:var(--muted);font-size:8px;line-height:1.6}
+.server-migration-badge{position:absolute;top:13px;right:14px;padding:4px 7px;border-radius:4px;background:var(--accent);color:white;font-size:7px;font-weight:800}
+.server-migration-progress{display:flex;align-items:center;justify-content:flex-end;flex:2;color:var(--muted);font-size:8px}
 .data-transfer-group{padding:18px 0;border-bottom:1px solid var(--border)}
 .data-transfer-group:first-of-type{padding-top:0}
 .data-transfer-group h4{margin-bottom:11px;font-size:11px}
@@ -3365,6 +3435,17 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   .data-config-help>div{border-left:0;border-top:1px solid var(--border)}
   .data-config-help>div:first-child{border-top:0}
   .data-config-row,.data-transfer-list{grid-template-columns:1fr}
+  .server-auth-layout{grid-template-columns:1fr}
+  .server-auth-intro{padding:18px 0;border-right:0;border-bottom:1px solid var(--border)}
+  .server-auth-form{padding:18px 0}
+  .server-account-line{grid-template-columns:1fr}
+  .server-account-actions{justify-content:flex-start}
+  .server-account-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .server-account-metrics>div:nth-child(3){border-left:0;padding-left:0;border-top:1px solid var(--border)}
+  .server-account-metrics>div:nth-child(4){border-top:1px solid var(--border)}
+  .server-migration-compare{grid-template-columns:1fr}
+  .server-migration-arrow{padding:8px;border-inline:0;border-block:1px solid var(--border)}
+  .server-migration-warning{grid-template-columns:1fr}
 }
 
 /* ===== EDITORIAL LEDGER WORKSPACE ===== */
@@ -4352,8 +4433,8 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
         <p class="hint">管理多端同步、文件迁移和本地恢复，不改变账本内容本身。</p>
       </div>
       <div class="data-state">
-        <span :class="['data-state-dot',{offline:!syncCfg.token}]"></span>
-        <span>{{ syncCfg.token?syncStatus:'云同步尚未配置' }}</span>
+        <span :class="['data-state-dot',{offline:!cloudReady}]"></span>
+        <span>{{ cloudStatusLabel }}</span>
       </div>
     </header>
 
@@ -4361,7 +4442,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
       <div><span>流水记录</span><strong>{{ entries.length }}</strong></div>
       <div><span>持仓项目</span><strong>{{ positions.length }}</strong></div>
       <div><span>本地快照</span><strong>{{ snapshots.length }}</strong></div>
-      <div><span>同步状态</span><strong>{{ syncCfg.token?'READY':'LOCAL' }}</strong></div>
+      <div><span>同步状态</span><strong>{{ cloudReady?'READY':'LOCAL' }}</strong></div>
     </div>
 
     <div class="data-center-body">
@@ -4372,35 +4453,66 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
       </nav>
 
       <div v-if="dataView==='sync'" class="data-center-view">
-        <div class="data-view-head">
-          <div><h3>GitHub Gist 云同步</h3><p>手机和电脑使用同一个 Gist，在上传或拉取前都会先比较差异。</p></div>
-          <a href="https://github.com/settings/tokens/new" target="_blank" class="btn btn-ghost btn-sm">{{ t('syncCreateToken') }}</a>
+        <div class="sync-provider-switch" role="tablist" aria-label="同步方式">
+          <button :class="['sync-provider-button',{active:syncProvider==='server'}]" @click="syncProvider='server'" role="tab"><strong>投记账号</strong><span>数据库同步 · 邀请制</span></button>
+          <button :class="['sync-provider-button',{active:syncProvider==='gist'}]" @click="syncProvider='gist'" role="tab"><strong>GitHub Gist</strong><span>自带 Token · 高级选项</span></button>
         </div>
-        <div class="data-sync-status">
-          <div><strong>{{ syncCfg.token?'同步连接已配置':'完成一次配置即可长期使用' }}</strong><span>{{ syncCfg.token?(syncCfg.gistId?'已关联 Gist · '+syncCfg.gistId:'首次上传时会自动创建私有 Gist'):'Token 只保存在当前浏览器，不会写入项目仓库。' }}</span></div>
-          <span :class="['data-state-dot',{offline:!syncCfg.token}]"></span>
-        </div>
-        <div class="data-config-block">
-          <div v-if="!syncCfg.token" class="data-config-help">
-            <div><strong>01</strong><span>打开 GitHub Token 页面，选择 Tokens (classic)。</span></div>
-            <div><strong>02</strong><span>创建 Token，只勾选 gist 权限。</span></div>
-            <div><strong>03</strong><span>粘贴到下方并保存配置。</span></div>
+
+        <div v-if="syncProvider==='server'">
+          <div class="data-view-head">
+            <div><h3>投记账号同步</h3><p>使用安全 Cookie 登录，账本保留本地副本，首次迁移必须由你确认。</p></div>
+            <span class="data-state"><span :class="['data-state-dot',{offline:!serverAccount.user}]"></span>{{ serverAccount.user?'已登录':'本地模式' }}</span>
           </div>
-          <div class="form-group">
-            <label>GitHub Personal Access Token</label>
-            <div class="data-config-row">
-              <input class="form-input" type="password" v-model="syncCfg.token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-              <button class="btn btn-primary btn-sm" @click="saveSyncConfig">{{ t('syncSaveConfig') }}</button>
+
+          <div v-if="serverAccount.loading" class="server-loading">正在检查服务器登录状态…</div>
+
+          <div v-else-if="!serverAccount.user" class="server-auth-layout">
+            <div class="server-auth-intro">
+              <strong>一个账号，多台设备。</strong>
+              <p>服务器保存账本副本，浏览器仍然保留本地数据。断网时可以继续记账，恢复连接后再主动比较同步。</p>
+              <div class="server-auth-points"><span>登录凭证不写入 localStorage</span><span>上传下载前自动创建快照</span><span>版本冲突不会静默覆盖</span></div>
             </div>
+            <form class="server-auth-form" @submit.prevent="submitServerAuth">
+              <div class="server-auth-modes">
+                <button type="button" :class="['server-auth-mode',{active:serverAccount.mode==='login'}]" @click="serverAccount.mode='login';serverAccount.error=''">登录</button>
+                <button type="button" :class="['server-auth-mode',{active:serverAccount.mode==='register'}]" @click="serverAccount.mode='register';serverAccount.error=''">邀请码注册</button>
+              </div>
+              <div class="server-auth-fields">
+                <div class="form-group"><label>邮箱</label><input class="form-input" type="email" v-model.trim="serverAccount.email" autocomplete="email" placeholder="name@example.com" required></div>
+                <div class="form-group"><label>密码</label><input class="form-input" type="password" v-model="serverAccount.password" :autocomplete="serverAccount.mode==='login'?'current-password':'new-password'" minlength="10" maxlength="128" placeholder="至少 10 位" required></div>
+                <div v-if="serverAccount.mode==='register'" class="form-group"><label>邀请码</label><input class="form-input" v-model.trim="serverAccount.inviteCode" autocomplete="off" maxlength="128" placeholder="TJI-…" required></div>
+              </div>
+              <p v-if="serverAccount.error" class="form-error" style="margin-top:12px">{{ serverAccount.error }}</p>
+              <div class="server-auth-submit"><p>{{ serverAccount.mode==='login'?'登录后再选择如何处理本地账本。':'邀请码由投记管理员提供。' }}</p><button class="btn btn-primary" type="submit" :disabled="serverAccount.busy">{{ serverAccount.busy?'处理中…':serverAccount.mode==='login'?'登录':'创建账号' }}</button></div>
+            </form>
           </div>
-          <div v-if="syncCfg.gistId" class="form-group"><label>Gist ID</label><input class="form-input" :value="syncCfg.gistId" readonly></div>
+
+          <div v-else>
+            <div class="server-account-line">
+              <div class="server-account-identity"><span class="server-account-mark">T</span><div><strong>{{ serverAccount.user.email }}</strong><span>{{ serverAccount.user.ledger?.name||'我的账本' }} · revision {{ serverRemote?.ledger?.revision??serverAccount.user.ledger?.revision??0 }}</span></div></div>
+              <div class="server-account-actions"><button class="btn btn-primary btn-sm" @click="openServerComparison" :disabled="serverAccount.busy">{{ serverAccount.busy?'读取中…':'比较并同步' }}</button><button class="btn btn-ghost btn-sm" @click="logoutServerAccount" :disabled="serverAccount.busy">退出账号</button></div>
+            </div>
+            <div class="server-account-metrics">
+              <div><span>本地流水</span><strong>{{ entries.length }}</strong></div><div><span>本地持仓</span><strong>{{ positions.length }}</strong></div><div><span>服务器流水</span><strong>{{ serverRemoteSummary.entries }}</strong></div><div><span>服务器持仓</span><strong>{{ serverRemoteSummary.positions }}</strong></div>
+            </div>
+            <p class="server-sync-note">服务器同步目前采用手动确认模式。每次先读取服务器版本，再让你选择合并、上传或下载；即使退出账号，本地账本也会保留。</p>
+          </div>
         </div>
-        <div class="data-sync-actions">
-          <button class="btn btn-primary" @click="syncAuto" :disabled="!syncCfg.token||syncing">{{ syncing?'同步中…':'智能同步' }}</button>
-          <button class="btn btn-ghost" @click="syncPush" :disabled="!syncCfg.token||syncing">{{ t('syncPush') }}</button>
-          <button class="btn btn-ghost" @click="syncPull" :disabled="!syncCfg.token||syncing">{{ t('syncPull') }}</button>
+
+        <div v-else>
+          <div class="data-view-head">
+            <div><h3>GitHub Gist 云同步</h3><p>手机和电脑使用同一个 Gist，在上传或拉取前都会先比较差异。</p></div>
+            <a href="https://github.com/settings/tokens/new" target="_blank" class="btn btn-ghost btn-sm">{{ t('syncCreateToken') }}</a>
+          </div>
+          <div class="data-sync-status"><div><strong>{{ syncCfg.token?'同步连接已配置':'完成一次配置即可长期使用' }}</strong><span>{{ syncCfg.token?(syncCfg.gistId?'已关联 Gist · '+syncCfg.gistId:'首次上传时会自动创建私有 Gist'):'Token 只保存在当前浏览器，不会写入项目仓库。' }}</span></div><span :class="['data-state-dot',{offline:!syncCfg.token}]"></span></div>
+          <div class="data-config-block">
+            <div v-if="!syncCfg.token" class="data-config-help"><div><strong>01</strong><span>打开 GitHub Token 页面，选择 Tokens (classic)。</span></div><div><strong>02</strong><span>创建 Token，只勾选 gist 权限。</span></div><div><strong>03</strong><span>粘贴到下方并保存配置。</span></div></div>
+            <div class="form-group"><label>GitHub Personal Access Token</label><div class="data-config-row"><input class="form-input" type="password" v-model="syncCfg.token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"><button class="btn btn-primary btn-sm" @click="saveSyncConfig">{{ t('syncSaveConfig') }}</button></div></div>
+            <div v-if="syncCfg.gistId" class="form-group"><label>Gist ID</label><input class="form-input" :value="syncCfg.gistId" readonly></div>
+          </div>
+          <div class="data-sync-actions"><button class="btn btn-primary" @click="syncAuto" :disabled="!syncCfg.token||syncing">{{ syncing?'同步中…':'智能同步' }}</button><button class="btn btn-ghost" @click="syncPush" :disabled="!syncCfg.token||syncing">{{ t('syncPush') }}</button><button class="btn btn-ghost" @click="syncPull" :disabled="!syncCfg.token||syncing">{{ t('syncPull') }}</button></div>
+          <p class="hint" style="margin-top:12px">智能同步会先读取云端，再合并手机和电脑各自新增的内容；检测到覆盖风险时会要求你确认。</p>
         </div>
-        <p class="hint" style="margin-top:12px">智能同步会先读取云端，再合并手机和电脑各自新增的内容；检测到覆盖风险时会要求你确认。</p>
       </div>
 
       <div v-else-if="dataView==='transfer'" class="data-center-view">
@@ -5025,6 +5137,62 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
         <button class="btn btn-ghost" style="flex:1" @click="cancelImportPreview">{{ t('cancel') }}</button>
         <button class="btn btn-danger" style="flex:1" @click="confirmImportOverwrite" :disabled="!importPreview.validRows.length">覆盖导入</button>
         <button class="btn btn-primary" style="flex:2" @click="confirmImportMerge" :disabled="!importMergeRows.length">合并导入 {{ importMergeRows.length }} 条</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SERVER ACCOUNT MIGRATION MODAL ===== -->
+  <div v-if="serverMigrationOpen && serverRemote" class="modal-mask import-preview-mask" @click.self="closeServerMigration">
+    <div class="modal-box server-migration-box">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">比较本机与服务器账本</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">
+            {{ serverAccount.user?.email }} · 服务器 revision {{ serverRemote.ledger?.revision||0 }}
+          </div>
+        </div>
+        <button class="modal-close" @click="closeServerMigration" :disabled="serverAccount.busy">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="server-migration-compare">
+          <section>
+            <span>这台设备</span>
+            <strong>{{ serverLocalSummary.entries }} 条流水</strong>
+            <small>{{ serverLocalSummary.positions }} 个持仓 · 入金 {{ fmt(serverLocalSummary.totalIn) }} · 出金 {{ fmt(serverLocalSummary.totalOut) }}</small>
+          </section>
+          <div class="server-migration-arrow">⇄</div>
+          <section>
+            <span>服务器</span>
+            <strong>{{ serverRemoteSummary.entries }} 条流水</strong>
+            <small>{{ serverRemoteSummary.positions }} 个持仓 · 入金 {{ fmt(serverRemoteSummary.totalIn) }} · 出金 {{ fmt(serverRemoteSummary.totalOut) }}</small>
+          </section>
+        </div>
+
+        <div class="server-migration-warning">
+          <strong>先确认，再改写。</strong>
+          <span>以下操作都会先保存本机快照。合并会按记录 ID 和更新时间保留双方较新的内容；覆盖只适合你能确定其中一边是完整账本时使用。</span>
+        </div>
+
+        <div class="server-migration-options">
+          <button class="server-migration-option recommended" @click="mergeServerAccounts" :disabled="serverAccount.busy">
+            <span class="server-migration-badge">推荐</span>
+            <strong>合并两边数据</strong>
+            <small>保留本机和服务器各自新增、更新及删除的记录，合并完成后再上传服务器。</small>
+          </button>
+          <button class="server-migration-option" @click="uploadLocalToServer" :disabled="serverAccount.busy">
+            <strong>以本机覆盖服务器</strong>
+            <small>服务器现有账本将被这台设备的流水、持仓和删除记录完整替换。</small>
+          </button>
+          <button class="server-migration-option" @click="downloadServerToLocal" :disabled="serverAccount.busy">
+            <strong>以服务器覆盖本机</strong>
+            <small>这台设备的当前账本将被服务器版本替换，原内容可从本地快照恢复。</small>
+          </button>
+        </div>
+        <p v-if="serverAccount.error" class="form-error" style="margin-top:14px">{{ serverAccount.error }}</p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" style="flex:1" @click="closeServerMigration" :disabled="serverAccount.busy">取消</button>
+        <div class="server-migration-progress" v-if="serverAccount.busy">正在安全处理账本…</div>
       </div>
     </div>
   </div>
@@ -5853,7 +6021,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.07.24-4'
+  const APP_VERSION='v2026.08.05-1'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -6014,6 +6182,18 @@ setup(){
   }
   const rules=reactive(defRules())
   const syncCfg=reactive({token:'',gistId:''})
+  const SERVER_SYNC_PROVIDER_K='touji_sync_provider_v1'
+  const syncProvider=ref(localStorage.getItem(SERVER_SYNC_PROVIDER_K)||'server')
+  const serverClient=window.ToujiServerSync?.createClient?.()||null
+  const serverAccount=reactive({loading:true,busy:false,user:null,mode:'login',email:'',password:'',inviteCode:'',error:''})
+  const serverRemote=ref(null)
+  const serverMigrationOpen=ref(false)
+  const emptyServerSummary={entries:0,positions:0,totalIn:0,totalOut:0,deleted:0}
+  const serverLocalSummary=computed(()=>window.ToujiServerSync?.summarizeSnapshot?.({entries:entries.value,positions:positions.value,deletedIds:deletedIds.value,deletedPositionIds:deletedPositionIds.value})||emptyServerSummary)
+  const serverRemoteSummary=computed(()=>window.ToujiServerSync?.summarizeSnapshot?.(serverRemote.value)||emptyServerSummary)
+  const cloudReady=computed(()=>!!serverAccount.user||!!syncCfg.token)
+  const cloudStatusLabel=computed(()=>serverAccount.user?'投记账号已连接':syncCfg.token?'Gist 已配置':'仅保存在本机')
+  watch(syncProvider,value=>localStorage.setItem(SERVER_SYNC_PROVIDER_K,value))
   const syncStatus=ref('未配置')
   const syncing=ref(false)
   const lastSyncedAt=ref(0)
@@ -7799,6 +7979,167 @@ setup(){
     }
     return{entriesChanged,positionsChanged,changed:entriesChanged||positionsChanged}
   }
+
+  // 投记账号同步：显式比较后再迁移，任何覆盖操作前都创建本地快照。
+  function serverErrorMessage(error){
+    const messages={
+      INVALID_INPUT:'请检查邮箱、密码和邀请码格式',
+      INVALID_CREDENTIALS:'邮箱或密码不正确',
+      REGISTRATION_FAILED:'邀请码无效、已使用，或该邮箱已经注册',
+      TOO_MANY_REQUESTS:'尝试次数过多，请稍后再试',
+      INVALID_ORIGIN:'当前网站地址未被服务器允许',
+      UNAUTHENTICATED:'登录已过期，请重新登录',
+      INVALID_SNAPSHOT:'账本数据未通过服务器校验',
+      REVISION_CONFLICT:'服务器账本刚刚发生变化，请重新比较后再同步',
+      LEDGER_NOT_FOUND:'没有找到这个账号的账本',
+      SERVER_UNAVAILABLE:'暂时无法连接投记服务器'
+    }
+    return messages[error?.code]||'操作失败，请检查网络后重试'
+  }
+  function localServerSnapshot(){
+    return clone({
+      entries:entries.value,
+      positions:positions.value,
+      deletedIds:normalizeDeletedMap(deletedIds.value),
+      deletedPositionIds:normalizeDeletedMap(deletedPositionIds.value)
+    })
+  }
+  function serverLedgerId(){return serverAccount.user?.ledger?.id||serverRemote.value?.ledger?.id||''}
+  async function fetchServerRemote(){
+    const ledgerId=serverLedgerId()
+    if(!serverClient||!ledgerId)throw new Error('SERVER_UNAVAILABLE')
+    const remote=await serverClient.readSnapshot(ledgerId)
+    serverRemote.value=remote
+    if(serverAccount.user?.ledger&&remote?.ledger)serverAccount.user.ledger.revision=remote.ledger.revision
+    return remote
+  }
+  async function checkServerSession(){
+    if(!serverClient){serverAccount.loading=false;return}
+    serverAccount.loading=true
+    try{
+      const result=await serverClient.me()
+      serverAccount.user=result?.user||null
+      if(serverAccount.user)await fetchServerRemote()
+    }catch(error){
+      if(error?.code!=='UNAUTHENTICATED')console.info('[投记] 账号服务器暂不可用')
+      serverAccount.user=null
+      serverRemote.value=null
+    }finally{serverAccount.loading=false}
+  }
+  async function submitServerAuth(){
+    if(!serverClient){serverAccount.error='当前页面没有加载账号同步模块';return}
+    serverAccount.error=''
+    serverAccount.busy=true
+    try{
+      const payload={email:serverAccount.email,password:serverAccount.password}
+      const result=serverAccount.mode==='register'
+        ?await serverClient.register({...payload,inviteCode:serverAccount.inviteCode})
+        :await serverClient.login(payload)
+      serverAccount.user=result.user
+      serverAccount.password=''
+      serverAccount.inviteCode=''
+      syncProvider.value='server'
+      await fetchServerRemote()
+      serverMigrationOpen.value=true
+      showToast(serverAccount.mode==='register'?'账号已创建，请选择账本迁移方式':'登录成功，请确认账本迁移方式','success')
+    }catch(error){
+      serverAccount.error=serverErrorMessage(error)
+    }finally{serverAccount.busy=false}
+  }
+  async function openServerComparison(){
+    if(!serverAccount.user)return
+    serverAccount.error=''
+    serverAccount.busy=true
+    try{
+      await fetchServerRemote()
+      serverMigrationOpen.value=true
+    }catch(error){
+      if(error?.code==='UNAUTHENTICATED')serverAccount.user=null
+      serverAccount.error=serverErrorMessage(error)
+      showToast(serverAccount.error,'error')
+    }finally{serverAccount.busy=false}
+  }
+  function closeServerMigration(){if(!serverAccount.busy)serverMigrationOpen.value=false}
+  async function writeServerSnapshot(snapshot){
+    const remote=serverRemote.value
+    if(!remote?.ledger)throw new Error('SERVER_UNAVAILABLE')
+    const result=await serverClient.writeSnapshot(remote.ledger.id,{
+      baseRevision:Number(remote.ledger.revision)||0,
+      ...snapshot
+    })
+    if(serverAccount.user?.ledger)serverAccount.user.ledger.revision=result.revision
+    await fetchServerRemote()
+    return result
+  }
+  async function uploadLocalToServer(){
+    if(!serverRemote.value)return
+    const remoteHasData=window.ToujiServerSync?.hasSnapshotData?.(serverRemote.value)
+    if(remoteHasData&&!confirm('确定用这台设备覆盖服务器账本吗？服务器当前内容会被替换，本机会先创建快照。'))return
+    serverAccount.error='';serverAccount.busy=true
+    try{
+      snap()
+      await writeServerSnapshot(localServerSnapshot())
+      serverMigrationOpen.value=false
+      showToast('本机账本已安全上传到服务器','success')
+    }catch(error){
+      if(error?.code==='REVISION_CONFLICT')await fetchServerRemote().catch(()=>{})
+      serverAccount.error=serverErrorMessage(error)
+      showToast(serverAccount.error,'error')
+    }finally{serverAccount.busy=false}
+  }
+  async function downloadServerToLocal(){
+    if(!serverRemote.value)return
+    const localHasData=window.ToujiServerSync?.hasSnapshotData?.(localServerSnapshot())
+    if(localHasData&&!confirm('确定用服务器账本覆盖这台设备吗？本机当前内容会先保存为快照，之后仍可恢复。'))return
+    serverAccount.error='';serverAccount.busy=true
+    try{
+      snap()
+      const remote=serverRemote.value
+      entries.value=(remote.entries||[]).map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1)
+      positions.value=(remote.positions||[]).map(normalizePosition).filter(Boolean)
+      deletedIds.value=normalizeDeletedMap(remote.deletedIds)
+      deletedPositionIds.value=normalizeDeletedMap(remote.deletedPositionIds)
+      writeStorageJSON(SK,entries.value,'流水数据')
+      savePositions({sync:false})
+      saveDeleted();saveDeletedPositions()
+      serverMigrationOpen.value=false
+      Vue.nextTick(()=>{renderChart();renderPosPieChart()})
+      showToast('服务器账本已下载，本机旧数据保存在快照中','success')
+    }catch(error){
+      serverAccount.error=serverErrorMessage(error)
+      showToast(serverAccount.error,'error')
+    }finally{serverAccount.busy=false}
+  }
+  async function mergeServerAccounts(){
+    if(!serverRemote.value)return
+    serverAccount.error='';serverAccount.busy=true
+    try{
+      snap()
+      applyRemoteData(serverRemote.value)
+      await writeServerSnapshot(localServerSnapshot())
+      serverMigrationOpen.value=false
+      Vue.nextTick(()=>{renderChart();renderPosPieChart()})
+      showToast(`合并完成：${entries.value.length} 条流水，${positions.value.length} 个持仓`,'success')
+    }catch(error){
+      if(error?.code==='REVISION_CONFLICT')await fetchServerRemote().catch(()=>{})
+      serverAccount.error=serverErrorMessage(error)
+      showToast(serverAccount.error,'error')
+    }finally{serverAccount.busy=false}
+  }
+  async function logoutServerAccount(){
+    serverAccount.error='';serverAccount.busy=true
+    try{if(serverClient)await serverClient.logout()}
+    catch(error){console.info('[投记] 服务器退出请求未完成，本地登录状态已清除')}
+    finally{
+      serverAccount.user=null
+      serverRemote.value=null
+      serverMigrationOpen.value=false
+      serverAccount.password=''
+      serverAccount.busy=false
+      showToast('已退出投记账号，本机账本仍然保留','info')
+    }
+  }
+
   // Debounced auto-sync: 3s after last change → silent pull + push
   let _autoPushTimer=null
   let _syncingInProgress=false
@@ -8402,6 +8743,7 @@ setup(){
     load()
     if(reviewYear.value)setReviewYear(reviewYear.value)
     loadPositions()
+    checkServerSession()
     refreshFxRates() // 静默刷新全局汇率，供持仓市值折算
     if(positions.value.length)fetchPosPrices()
     let posPriceTimer=setInterval(()=>{if(positions.value.length)fetchPosPrices()},60000)
@@ -8461,7 +8803,7 @@ setup(){
   })
   onBeforeUnmount(()=>window.removeEventListener('keydown',handleLedgerKeydown))
 
-  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
+  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
