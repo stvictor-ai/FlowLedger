@@ -59,4 +59,3 @@ test('same-origin static files remain network-first cached', async () => {
   assert.equal(calls.fetch.length, 1)
   assert.equal(calls.open.length, 1)
 })
-

@@ -1,4 +1,24 @@
 services:
+  web:
+    build:
+      context: .
+      dockerfile: deploy/web.Dockerfile
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - touji_caddy_data:/data
+      - touji_caddy_config:/config
+    networks:
+      - touji_internal
+
   db:
     image: postgres:17-alpine
     restart: unless-stopped
@@ -29,13 +49,21 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "127.0.0.1:8787:8787"
+    expose:
+      - "8787"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/api/v1/health/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
     networks:
       - touji_internal
 
 volumes:
   touji_pg_data:
+  touji_caddy_data:
+  touji_caddy_config:
 
 networks:
   touji_internal:

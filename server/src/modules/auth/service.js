@@ -31,7 +31,7 @@ function publicUser(user, ledger) {
   }
 }
 
-export function createAuthService({ repository, clock = () => new Date() }) {
+export function createAuthService({ repository, clock = () => new Date(), secret = '' }) {
   const dummyPasswordHash = hashPassword(randomBytes(24).toString('base64url'))
 
   async function issueSession(userId) {
@@ -40,7 +40,7 @@ export function createAuthService({ repository, clock = () => new Date() }) {
     const expiresAt = new Date(now.getTime() + SESSION_DURATION_MS)
     await repository.createSession({
       userId,
-      tokenHash: hashSecret(token),
+      tokenHash: hashSecret(token, secret),
       expiresAt,
       now
     })
@@ -55,7 +55,7 @@ export function createAuthService({ repository, clock = () => new Date() }) {
         const result = await repository.registerUser({
           email: normalizedEmail,
           passwordHash,
-          inviteCodeHash: hashSecret(normalizeInviteCode(inviteCode)),
+          inviteCodeHash: hashSecret(normalizeInviteCode(inviteCode), secret),
           now: clock()
         })
         if (!result) throw new AuthError('REGISTRATION_FAILED', 400)
@@ -87,7 +87,7 @@ export function createAuthService({ repository, clock = () => new Date() }) {
     async getSession(token) {
       if (!token) return null
       const session = await repository.findSession({
-        tokenHash: hashSecret(token),
+        tokenHash: hashSecret(token, secret),
         now: clock()
       })
       if (!session) return null
@@ -95,7 +95,7 @@ export function createAuthService({ repository, clock = () => new Date() }) {
     },
 
     async logout(token) {
-      if (token) await repository.deleteSession(hashSecret(token))
+      if (token) await repository.deleteSession(hashSecret(token, secret))
     }
   }
 }

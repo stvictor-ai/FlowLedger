@@ -40,3 +40,29 @@ test('unknown API routes return a stable error shape', async () => {
   assert.equal(response.status, 404)
   assert.deepEqual(await response.json(), { error: 'NOT_FOUND' })
 })
+
+test('readiness endpoint checks the database connection', async t => {
+  const readyApp = createApp({ database: { query: async sql => assert.equal(sql, 'SELECT 1') } })
+  const readyServer = readyApp.listen(0, '127.0.0.1')
+  await once(readyServer, 'listening')
+  t.after(() => new Promise((resolve, reject) => readyServer.close(error => error ? reject(error) : resolve())))
+
+  const { port } = readyServer.address()
+  const response = await fetch(`http://127.0.0.1:${port}/api/v1/health/ready`)
+
+  assert.equal(response.status, 200)
+  assert.deepEqual(await response.json(), { status: 'ready', database: 'ok' })
+})
+
+test('readiness endpoint returns 503 when the database is unavailable', async t => {
+  const failedApp = createApp({ database: { query: async () => { throw new Error('offline') } } })
+  const failedServer = failedApp.listen(0, '127.0.0.1')
+  await once(failedServer, 'listening')
+  t.after(() => new Promise((resolve, reject) => failedServer.close(error => error ? reject(error) : resolve())))
+
+  const { port } = failedServer.address()
+  const response = await fetch(`http://127.0.0.1:${port}/api/v1/health/ready`)
+
+  assert.equal(response.status, 503)
+  assert.deepEqual(await response.json(), { status: 'unavailable', database: 'error' })
+})

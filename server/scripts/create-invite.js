@@ -21,7 +21,7 @@ try {
   const code = createInviteCode()
   const expiresAt = new Date(Date.now() + expiresDays * 24 * 60 * 60 * 1000)
   await repository.createInvitation({
-    codeHash: hashSecret(code),
+    codeHash: hashSecret(code, config.sessionSecret),
     maxUses,
     expiresAt,
     createdBy: null

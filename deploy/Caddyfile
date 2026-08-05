@@ -1,0 +1,21 @@
+{$DOMAIN} {
+  encode zstd gzip
+
+  @api path /api/*
+  reverse_proxy @api api:8787
+
+  root * /srv
+  try_files {path} /index.html
+  file_server
+
+  @fresh path / /index.html /sw.js
+  header @fresh Cache-Control "no-cache"
+
+  header {
+    Referrer-Policy "strict-origin-when-cross-origin"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "DENY"
+    Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    -Server
+  }
+}

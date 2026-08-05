@@ -32,7 +32,6 @@ Accepted
 
 - GitHub Gist 同步暂时保留，后续根据使用情况决定是否下线。
 - 第二台 AWS 只用于测试和备份，不承担实时流量。
-
 ## Alternatives Considered
 
 ### 单个 JSON 文件同步服务
@@ -50,4 +49,3 @@ Accepted
 ### MongoDB
 
 数据模型灵活，但账本更需要事务、唯一约束和关系查询，PostgreSQL 的 JSONB 已能兼顾兼容性，因此拒绝。
-

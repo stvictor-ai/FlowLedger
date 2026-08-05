@@ -9,6 +9,7 @@ export function createApp({
   clock = () => new Date(),
   authService = null,
   syncService = null,
+  database = null,
   config = {
     appOrigin: 'http://127.0.0.1:8787',
     isProduction: false
@@ -32,6 +33,18 @@ export function createApp({
       database: 'not_checked',
       timestamp: clock().toISOString()
     })
+  })
+
+  app.get('/api/v1/health/ready', async (_request, response) => {
+    if (!database) {
+      return response.status(503).json({ status: 'unavailable', database: 'not_configured' })
+    }
+    try {
+      await database.query('SELECT 1')
+      return response.json({ status: 'ready', database: 'ok' })
+    } catch {
+      return response.status(503).json({ status: 'unavailable', database: 'error' })
+    }
   })
 
   if (authService) {

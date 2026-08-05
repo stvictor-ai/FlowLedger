@@ -82,7 +82,8 @@ async function startApp(options) {
 
 test('registration hashes password, invitation and session secrets', async () => {
   const memory = createMemoryRepository()
-  const service = createAuthService({ repository: memory.repository, clock: () => NOW })
+  const secret = 'test-session-pepper-value-long-enough'
+  const service = createAuthService({ repository: memory.repository, clock: () => NOW, secret })
   const result = await service.register({
     email: ' Owner@Example.com ',
     password: 'correct-horse-battery',
@@ -93,9 +94,13 @@ test('registration hashes password, invitation and session secrets', async () =>
   assert.equal(result.user.ledger.id, 'ledger-1')
   assert.notEqual(memory.state.registration.passwordHash, 'correct-horse-battery')
   assert.equal(await verifyPassword(memory.state.registration.passwordHash, 'correct-horse-battery'), true)
-  assert.equal(memory.state.registration.inviteCodeHash, hashSecret('TJI-SECRET-CODE'))
-  assert.equal(memory.state.sessions.has(hashSecret(result.token)), true)
+  assert.equal(memory.state.registration.inviteCodeHash, hashSecret('TJI-SECRET-CODE', secret))
+  assert.equal(memory.state.sessions.has(hashSecret(result.token, secret)), true)
   assert.equal(memory.state.sessions.has(result.token), false)
+})
+
+test('secret hashing uses the configured server pepper', () => {
+  assert.notEqual(hashSecret('same-token', 'secret-a'), hashSecret('same-token', 'secret-b'))
 })
 
 test('invalid invitation and duplicate email share a generic registration error', async () => {

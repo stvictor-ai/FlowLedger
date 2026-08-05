@@ -1,0 +1,12 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+**/node_modules
+backups
+screenshots
+docs
+Touji Redesign v0.html
+brand-spec.md
+*.log

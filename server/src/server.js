@@ -11,10 +11,10 @@ const config = loadConfig()
 const pool = createPool(config)
 await runMigrations({ pool })
 const authRepository = createAuthRepository(pool)
-const authService = createAuthService({ repository: authRepository })
+const authService = createAuthService({ repository: authRepository, secret: config.sessionSecret })
 const syncRepository = createSyncRepository(pool)
 const syncService = createSyncService({ repository: syncRepository })
-const app = createApp({ authService, syncService, config })
+const app = createApp({ authService, syncService, database: pool, config })
 
 const server = app.listen(config.port, '0.0.0.0', () => {
   console.log(`touji-api listening on port ${config.port}`)
