@@ -23,7 +23,7 @@ jobs:
       DEPLOY_DIR: /var/www/flowledger
     steps:
       - name: Check out selected revision
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure SSH
         env:
@@ -64,6 +64,7 @@ jobs:
           rm -f /tmp/flowledger-static.tar.gz
           grep -q "v2026.08.06-2" "$DEPLOY_DIR/index.html"
           grep -q "touji-v2026-08-06-2" "$DEPLOY_DIR/sw.js"
+          curl -fsS http://127.0.0.1:8787/api/v1/health/ready | grep -q '"status":"ready"'
           echo "deployed_version=v2026.08.06-2"
           echo "backup_dir=$backup_dir"
           REMOTE
@@ -71,7 +72,7 @@ jobs:
       - name: Verify public endpoints
         run: |
           set -euo pipefail
-          curl -fsS --retry 3 https://ledger.orbitshz.com/api/v1/health | grep -q '"status":"ok"'
+          curl -fsSI --retry 3 https://ledger.orbitshz.com/api/v1/health | grep -Eq 'HTTP/[0-9.]+ (200|302)'
           curl -fsSI --retry 3 https://ledger.orbitshz.com/ | grep -Eq 'HTTP/[0-9.]+ (200|302)'
 
       - name: Remove temporary SSH key
