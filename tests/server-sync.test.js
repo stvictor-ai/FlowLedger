@@ -2,6 +2,7 @@ const assert = require('node:assert/strict')
 const test = require('node:test')
 const {
   ServerSyncError,
+  createAutoSyncCoordinator,
   createClient,
   hasSnapshotData,
   summarizeSnapshot
@@ -89,4 +90,43 @@ test('snapshot summary converts foreign currencies and counts tombstones', () =>
   })
   assert.equal(hasSnapshotData({ entries: [], positions: [] }), false)
   assert.equal(hasSnapshotData({ entries: [{ id: 'entry-1' }] }), true)
+})
+
+test('auto sync coordinator debounces changes into one flush', async () => {
+  const timers = new Map()
+  let nextTimer = 1
+  let runs = 0
+  const coordinator = createAutoSyncCoordinator({
+    delay: 1200,
+    run: async () => { runs++ },
+    setTimer(fn) { const id = nextTimer++; timers.set(id, fn); return id },
+    clearTimer(id) { timers.delete(id) }
+  })
+
+  coordinator.schedule()
+  coordinator.schedule()
+  assert.equal(timers.size, 1)
+  const callback = [...timers.values()][0]
+  await callback()
+  assert.equal(runs, 1)
+})
+
+test('auto sync coordinator retries a failed flush', async () => {
+  const timers = []
+  let runs = 0
+  const coordinator = createAutoSyncCoordinator({
+    delay: 0,
+    retryDelay: 30,
+    run: async () => {
+      runs++
+      if (runs === 1) throw new Error('offline')
+    },
+    setTimer(fn, delay) { timers.push({ fn, delay }); return timers.length },
+    clearTimer() {}
+  })
+
+  const first = coordinator.flush()
+  await first
+  assert.equal(runs, 1)
+  assert.equal(timers.some(timer => timer.delay === 30), true)
 })

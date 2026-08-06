@@ -4528,7 +4528,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
             <div><span>本地流水</span><strong>{{ entries.length }}</strong></div><div><span>本地持仓</span><strong>{{ positions.length }}</strong></div><div><span>服务器流水</span><strong>{{ serverRemoteSummary.entries }}</strong></div><div><span>服务器持仓</span><strong>{{ serverRemoteSummary.positions }}</strong></div>
           </div>
           <p v-if="serverAccount.error" class="form-error" style="margin-top:12px">{{ serverAccount.error }}</p>
-          <p class="server-sync-note">本地副本已按 Orbit 账号隔离。切换账号不会看到上一位用户的记录；上传、下载和合并仍需明确确认。</p>
+          <p class="server-sync-note">{{ serverAutoSyncEnabled?'自动保存已开启：修改会先写入本机，再同步到服务器；断网恢复后会自动补传。':'首次同步需要确认本机与服务器账本，确认后将自动保存。' }}</p>
         </div>
 
         <div v-else-if="false">
@@ -6188,7 +6188,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.08.06-1'
+  const APP_VERSION='v2026.08.06-2'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -6361,6 +6361,7 @@ setup(){
   const serverAdmin=reactive({loading:false,busy:false,loaded:false,summary:null,users:[],invitations:[],inviteCode:'',error:'',maxUses:1,expiresDays:14})
   const serverRemote=ref(null)
   const serverMigrationOpen=ref(false)
+  const serverAutoSyncEnabled=ref(false)
   const emptyServerSummary={entries:0,positions:0,totalIn:0,totalOut:0,deleted:0}
   const serverLocalSummary=computed(()=>window.ToujiServerSync?.summarizeSnapshot?.({entries:entries.value,positions:positions.value,deletedIds:deletedIds.value,deletedPositionIds:deletedPositionIds.value})||emptyServerSummary)
   const serverRemoteSummary=computed(()=>window.ToujiServerSync?.summarizeSnapshot?.(serverRemote.value)||emptyServerSummary)
@@ -8269,6 +8270,18 @@ setup(){
       deletedPositionIds:normalizeDeletedMap(deletedPositionIds.value)
     })
   }
+  function serverAutoSyncStorageKey(){
+    return boundAccountId?`touji_server_autosync_ready_v1__orbit_${boundAccountId}`:''
+  }
+  function readServerAutoSyncReady(){
+    const key=serverAutoSyncStorageKey()
+    return !!key&&localStorage.getItem(key)==='1'
+  }
+  function setServerAutoSyncReady(ready){
+    const key=serverAutoSyncStorageKey()
+    serverAutoSyncEnabled.value=!!ready
+    if(key)localStorage.setItem(key,ready?'1':'0')
+  }
   function serverLedgerId(){return serverAccount.user?.ledger?.id||serverRemote.value?.ledger?.id||''}
   async function fetchServerRemote(){
     const ledgerId=serverLedgerId()
@@ -8284,6 +8297,7 @@ setup(){
     reviewDayNotes.value={};reviewDayNote.value='';reviewNote.value='';reviewChecklist.value=[]
     Object.assign(rules,defRules())
     Object.assign(syncCfg,{token:'',gistId:''})
+    serverAutoSyncEnabled.value=false
   }
   function activateAccountStorage(user){
     const accountId=String(user?.orbitUserId||'').trim()
@@ -8292,6 +8306,7 @@ setup(){
     clearVisibleAccountData()
     boundAccountId=bindAccountStorage(accountId)
     load();loadPositions()
+    serverAutoSyncEnabled.value=readServerAutoSyncReady()
     return true
   }
   async function checkServerSession(){
@@ -8307,9 +8322,37 @@ setup(){
       await fetchServerRemote()
       const localHasData=window.ToujiServerSync?.hasSnapshotData?.(localServerSnapshot())
       const remoteHasData=window.ToujiServerSync?.hasSnapshotData?.(serverRemote.value)
-      if(!localHasData&&remoteHasData)await downloadServerToLocal()
+      const wasAutoSyncReady=readServerAutoSyncReady()
+      if(!localHasData&&remoteHasData){
+        await downloadServerToLocal()
+      }else if(!localHasData&&!remoteHasData){
+        setServerAutoSyncReady(true)
+        syncStatus.value='已连接 · 自动保存已开启'
+      }else{
+        const remoteCtx={
+          list:serverRemote.value?.entries||[],
+          deletedIds:serverRemote.value?.deletedIds||{},
+          positionList:serverRemote.value?.positions||[],
+          deletedPositionIds:serverRemote.value?.deletedPositionIds||{}
+        }
+        const differs=syncSummaryTotal(analyzeFullSync(remoteCtx).summary)>0
+        if(!differs){
+          setServerAutoSyncReady(true)
+          syncStatus.value='已保存到服务器'
+          lastSyncedAt.value=Date.now()
+        }else if(!wasAutoSyncReady){
+          setServerAutoSyncReady(false)
+          serverMigrationOpen.value=true
+          syncStatus.value='首次同步待确认'
+        }else{
+          setServerAutoSyncReady(true)
+          _serverDirty=true
+          syncStatus.value='发现其他设备更新 · 正在合并'
+        }
+      }
       resetServerAdmin()
       accountReady.value=true
+      if(wasAutoSyncReady&&serverAutoSyncEnabled.value&&_serverDirty)serverAutoSync.schedule(0)
     }catch(error){
       if(error?.code!=='UNAUTHENTICATED')console.info('[投记] 账号服务器暂不可用')
       serverAccount.user=null
@@ -8375,8 +8418,10 @@ setup(){
     try{
       snap()
       await writeServerSnapshot(localServerSnapshot())
+      setServerAutoSyncReady(true)
+      markServerSyncComplete()
       serverMigrationOpen.value=false
-      showToast('本机账本已安全上传到服务器','success')
+      showToast('本机账本已上传，后续修改会自动保存','success')
     }catch(error){
       if(error?.code==='REVISION_CONFLICT')await fetchServerRemote().catch(()=>{})
       serverAccount.error=serverErrorMessage(error)
@@ -8398,6 +8443,8 @@ setup(){
       writeStorageJSON(SK,entries.value,'流水数据')
       savePositions({sync:false})
       saveDeleted();saveDeletedPositions()
+      setServerAutoSyncReady(true)
+      markServerSyncComplete()
       serverMigrationOpen.value=false
       Vue.nextTick(()=>{renderChart();renderPosPieChart()})
       showToast('服务器账本已下载，本机旧数据保存在快照中','success')
@@ -8413,6 +8460,8 @@ setup(){
       snap()
       applyRemoteData(serverRemote.value)
       await writeServerSnapshot(localServerSnapshot())
+      setServerAutoSyncReady(true)
+      markServerSyncComplete()
       serverMigrationOpen.value=false
       Vue.nextTick(()=>{renderChart();renderPosPieChart()})
       showToast(`合并完成：${entries.value.length} 条流水，${positions.value.length} 个持仓`,'success')
@@ -8437,14 +8486,64 @@ setup(){
     }
   }
 
-  // Debounced auto-sync: 3s after last change → silent pull + push
+  let _serverDirty=false
+  function markServerSyncComplete(){
+    _serverDirty=false
+    lastSyncedAt.value=Date.now()
+    syncStatus.value='已保存到服务器 · '+new Date().toLocaleTimeString()
+  }
+  async function runServerAutoSync(){
+    if(!navigator.onLine){const error=new Error('OFFLINE');error.code='OFFLINE';throw error}
+    const startedAt=lastChangeAt.value
+    syncing.value=true
+    syncStatus.value=_serverDirty?'正在保存到服务器…':'正在检查服务器更新…'
+    try{
+      let remote=await fetchServerRemote()
+      applyRemoteData(remote)
+      if(_serverDirty){
+        try{
+          await writeServerSnapshot(localServerSnapshot())
+        }catch(error){
+          if(error?.code!=='REVISION_CONFLICT')throw error
+          remote=await fetchServerRemote()
+          applyRemoteData(remote)
+          await writeServerSnapshot(localServerSnapshot())
+        }
+      }
+      if(lastChangeAt.value<=startedAt)_serverDirty=false
+      lastSyncedAt.value=Date.now()
+      syncStatus.value='已保存到服务器 · '+new Date().toLocaleTimeString()
+    }finally{syncing.value=false}
+  }
+  function handleServerAutoSyncError(error){
+    if(error?.code==='UNAUTHENTICATED'){
+      syncStatus.value='登录已过期，等待重新登录'
+      return
+    }
+    syncStatus.value=navigator.onLine?'服务器暂不可用，稍后自动重试':'本地已保存，联网后自动上传'
+  }
+  const serverAutoSync=window.ToujiServerSync?.createAutoSyncCoordinator?.({
+    delay:1200,
+    retryDelay:30000,
+    canRun:()=>!!serverClient&&!!serverAccount.user&&accountReady.value&&serverAutoSyncEnabled.value&&!serverMigrationOpen.value,
+    run:runServerAutoSync,
+    onError:handleServerAutoSyncError
+  })||{schedule:()=>false,flush:async()=>false,dispose:()=>{}}
+
+  // GitHub Gist remains an optional, independent sync provider.
   let _autoPushTimer=null
   let _syncingInProgress=false
   function scheduleAutoPush(){
-    if(!syncCfg.token||_syncingInProgress)return
     lastChangeAt.value=Date.now()
-    clearTimeout(_autoPushTimer)
-    _autoPushTimer=setTimeout(()=>doAutoSync(),3000)
+    if(serverAccount.user&&serverAutoSyncEnabled.value){
+      _serverDirty=true
+      syncStatus.value=navigator.onLine?'本地已保存 · 等待上传':'本地已保存，联网后自动上传'
+      serverAutoSync.schedule()
+    }
+    if(syncCfg.token&&!_syncingInProgress&&(syncProvider.value==='gist'||!serverAccount.user)){
+      clearTimeout(_autoPushTimer)
+      _autoPushTimer=setTimeout(()=>doAutoSync(),3000)
+    }
   }
   async function doAutoSync(){
     if(!syncCfg.token||_syncingInProgress)return
@@ -8473,6 +8572,7 @@ setup(){
   }
   // Background periodic pull: check remote every 2 min, merge if newer data found
   async function backgroundPull(){
+    if(serverAccount.user&&syncProvider.value!=='gist')return
     if(!syncCfg.token||!syncCfg.gistId||_syncingInProgress)return
     _syncingInProgress=true
     try{
@@ -9039,10 +9139,16 @@ setup(){
     if(document.hidden||serverAccount.loading)return
     await checkServerSession()
   }
+  function retryOrbitAutoSync(){
+    if(!serverAccount.user||!serverAutoSyncEnabled.value)return
+    if(_serverDirty)serverAutoSync.schedule(0)
+    else serverAutoSync.schedule(250)
+  }
   onMounted(async()=>{
     window.addEventListener('keydown',handleLedgerKeydown)
     if(orbitAuthRequired){
       window.addEventListener('focus',verifyOrbitSession)
+      window.addEventListener('online',retryOrbitAutoSync)
       await checkServerSession()
     }else{
       load();loadPositions();serverAccount.loading=false;accountReady.value=true
@@ -9083,7 +9189,7 @@ setup(){
     // 切换货币时自动拉取汇率（仅非CNY且汇率为空时）
     watch(()=>form.currency,cur=>{if(cur!=='CNY'&&!form.rate)fetchRate(cur,'form')})
     // Auto-sync from GitHub Gist on load (silent, timestamp merge)
-    if(syncCfg.token){
+    if(syncCfg.token&&(!orbitAuthRequired||syncProvider.value==='gist')){
       const doSync=async()=>{
         try{
           if(!syncCfg.gistId){const f=await gistFind();if(f){syncCfg.gistId=f.id;saveSyncConfig(true)}else{syncStatus.value='已配置 · 本地 '+entries.value.length+' 条'}}
@@ -9105,13 +9211,16 @@ setup(){
     }
     // Background pull every 2 min when tab is visible
     setInterval(()=>{if(!document.hidden)backgroundPull()},120000)
+    setInterval(()=>{if(!document.hidden&&serverAutoSyncEnabled.value)retryOrbitAutoSync()},60000)
   })
   onBeforeUnmount(()=>{
     window.removeEventListener('keydown',handleLedgerKeydown)
     window.removeEventListener('focus',verifyOrbitSession)
+    window.removeEventListener('online',retryOrbitAutoSync)
+    serverAutoSync.dispose()
   })
 
-  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
+  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,

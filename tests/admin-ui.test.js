@@ -23,3 +23,13 @@ test('local ledger storage is scoped to the authenticated Orbit user', () => {
   assert.match(html, /clearVisibleAccountData\(\)/)
   assert.match(html, /window\.addEventListener\('focus',verifyOrbitSession\)/)
 })
+
+test('Orbit auto sync stays behind a first-migration gate', () => {
+  const html = fs.readFileSync('index.html', 'utf8')
+
+  assert.match(html, /touji_server_autosync_ready_v1__orbit_/)
+  assert.match(html, /首次同步待确认/)
+  assert.match(html, /delay:1200/)
+  assert.match(html, /error\?\.code!==['"]REVISION_CONFLICT['"]/)
+  assert.match(html, /window\.addEventListener\('online',retryOrbitAutoSync\)/)
+})

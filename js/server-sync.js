@@ -138,5 +138,80 @@
     return summary.entries + summary.positions + summary.deleted > 0
   }
 
-  return { ServerSyncError, createClient, summarizeSnapshot, hasSnapshotData }
+  function createAutoSyncCoordinator(options) {
+    const settings = options || {}
+    const delay = Number(settings.delay) >= 0 ? Number(settings.delay) : 1200
+    const retryDelay = Number(settings.retryDelay) >= 0 ? Number(settings.retryDelay) : 30000
+    const setTimer = settings.setTimer || setTimeout
+    const clearTimer = settings.clearTimer || clearTimeout
+    let timer = null
+    let retryTimer = null
+    let running = false
+    let queued = false
+    let disposed = false
+
+    function clearScheduled() {
+      if (timer !== null) clearTimer(timer)
+      timer = null
+    }
+
+    function clearRetry() {
+      if (retryTimer !== null) clearTimer(retryTimer)
+      retryTimer = null
+    }
+
+    function scheduleRetry() {
+      clearRetry()
+      if (disposed) return
+      retryTimer = setTimer(() => {
+        retryTimer = null
+        flush()
+      }, retryDelay)
+    }
+
+    async function flush() {
+      clearScheduled()
+      if (disposed || (settings.canRun && !settings.canRun())) return false
+      if (running) {
+        queued = true
+        return false
+      }
+      running = true
+      queued = false
+      try {
+        await settings.run()
+        clearRetry()
+        return true
+      } catch (error) {
+        if (settings.onError) settings.onError(error)
+        scheduleRetry()
+        return false
+      } finally {
+        running = false
+        if (queued && !disposed) schedule(0)
+      }
+    }
+
+    function schedule(wait) {
+      if (disposed || (settings.canRun && !settings.canRun())) return false
+      queued = true
+      clearScheduled()
+      timer = setTimer(() => {
+        timer = null
+        flush()
+      }, wait === undefined ? delay : Math.max(0, Number(wait) || 0))
+      return true
+    }
+
+    function dispose() {
+      disposed = true
+      queued = false
+      clearScheduled()
+      clearRetry()
+    }
+
+    return { schedule, flush, dispose, isRunning: () => running, isQueued: () => queued }
+  }
+
+  return { ServerSyncError, createClient, summarizeSnapshot, hasSnapshotData, createAutoSyncCoordinator }
 })
