@@ -1,0 +1,76 @@
+name: Deploy FlowLedger to Lightsail
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: flowledger-lightsail-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DEPLOY_HOST: 15.165.110.145
+      DEPLOY_USER: ubuntu
+      DEPLOY_DIR: /var/www/flowledger
+    steps:
+      - name: Check out selected revision
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        env:
+          LIGHTSAIL_SSH_KEY: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$LIGHTSAIL_SSH_KEY"
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$LIGHTSAIL_SSH_KEY" > ~/.ssh/lightsail
+          chmod 600 ~/.ssh/lightsail
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Package static application
+        run: |
+          set -euo pipefail
+          tar -czf /tmp/flowledger-static.tar.gz \
+            index.html sw.js manifest.json \
+            icon.svg icon-192.png icon-512.png js
+
+      - name: Back up and deploy static files
+        run: |
+          set -euo pipefail
+          scp -i ~/.ssh/lightsail /tmp/flowledger-static.tar.gz \
+            "$DEPLOY_USER@$DEPLOY_HOST:/tmp/flowledger-static.tar.gz"
+          ssh -i ~/.ssh/lightsail "$DEPLOY_USER@$DEPLOY_HOST" \
+            "DEPLOY_DIR='$DEPLOY_DIR' bash -s" <<'REMOTE'
+          set -euo pipefail
+          stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          backup_dir="/var/backups/flowledger/$stamp"
+          sudo install -d -m 750 "$backup_dir"
+          for path in index.html sw.js manifest.json icon.svg icon-192.png icon-512.png js; do
+            if sudo test -e "$DEPLOY_DIR/$path"; then
+              sudo cp -a "$DEPLOY_DIR/$path" "$backup_dir/"
+            fi
+          done
+          sudo tar -xzf /tmp/flowledger-static.tar.gz -C "$DEPLOY_DIR"
+          sudo chown -R www-data:www-data "$DEPLOY_DIR"
+          rm -f /tmp/flowledger-static.tar.gz
+          grep -q "v2026.08.06-2" "$DEPLOY_DIR/index.html"
+          grep -q "touji-v2026-08-06-2" "$DEPLOY_DIR/sw.js"
+          echo "deployed_version=v2026.08.06-2"
+          echo "backup_dir=$backup_dir"
+          REMOTE
+
+      - name: Verify public endpoints
+        run: |
+          set -euo pipefail
+          curl -fsS --retry 3 https://ledger.orbitshz.com/api/v1/health | grep -q '"status":"ok"'
+          curl -fsSI --retry 3 https://ledger.orbitshz.com/ | grep -Eq 'HTTP/[0-9.]+ (200|302)'
+
+      - name: Remove temporary SSH key
+        if: always()
+        run: rm -f ~/.ssh/lightsail /tmp/flowledger-static.tar.gz
