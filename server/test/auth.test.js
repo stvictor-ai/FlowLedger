@@ -136,6 +136,71 @@ test('unknown email and wrong password share invalid credentials', async () => {
   }
 })
 
+test('Orbit identity headers provision the authenticated ledger user', async t => {
+  let received = null
+  const authService = {
+    register: async () => {},
+    login: async () => {},
+    logout: async () => {},
+    getSession: async () => null,
+    getOrbitSession: async identity => {
+      received = identity
+      return {
+        id: 'ledger-user-1',
+        orbitUserId: identity.orbitUserId,
+        email: identity.email,
+        role: identity.role,
+        ledger: { id: '11111111-1111-4111-8111-111111111111', name: '我的账本', revision: 0 }
+      }
+    }
+  }
+  const running = await startApp({
+    authService,
+    config: {
+      appOrigin: 'https://ledger.orbitshz.com',
+      accountOrigin: 'https://orbitshz.com',
+      identityProvider: 'orbit',
+      isProduction: true
+    }
+  })
+  t.after(running.close)
+
+  const response = await fetch(`${running.baseUrl}/api/v1/auth/me`, {
+    headers: {
+      Origin: 'https://orbitshz.com',
+      'X-Orbit-User-Id': '42',
+      'X-Orbit-User-Role': 'owner',
+      'X-Orbit-User-Email': 'Owner@Example.com'
+    }
+  })
+
+  assert.equal(response.status, 200)
+  assert.deepEqual(received, { orbitUserId: '42', email: 'owner@example.com', role: 'admin' })
+  assert.equal(response.headers.get('access-control-allow-origin'), 'https://orbitshz.com')
+  assert.equal((await response.json()).user.orbitUserId, '42')
+})
+
+test('Orbit mode rejects missing trusted identity headers', async t => {
+  const authService = {
+    register: async () => {}, login: async () => {}, logout: async () => {},
+    getSession: async () => null,
+    getOrbitSession: async identity => identity.orbitUserId ? { id: 'unexpected' } : null
+  }
+  const running = await startApp({
+    authService,
+    config: {
+      appOrigin: 'https://ledger.orbitshz.com',
+      accountOrigin: 'https://orbitshz.com',
+      identityProvider: 'orbit',
+      isProduction: true
+    }
+  })
+  t.after(running.close)
+
+  const response = await fetch(`${running.baseUrl}/api/v1/auth/me`)
+  assert.equal(response.status, 401)
+})
+
 test('production auth route rejects cross-origin writes', async t => {
   const authService = {
     register: async () => { throw new Error('must not be called') },

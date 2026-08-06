@@ -22,6 +22,7 @@ function publicUser(user, ledger) {
   const ledgerId = ledger?.id || ledger?.ledger_id
   return {
     id: user.id || user.user_id,
+    orbitUserId: user.orbit_user_id || null,
     email: user.email,
     role: user.role || 'user',
     ledger: ledgerId ? {
@@ -49,6 +50,12 @@ export function createAuthService({ repository, clock = () => new Date(), secret
   }
 
   return {
+    async getOrbitSession({ orbitUserId, email, role }) {
+      if (!orbitUserId || !['admin', 'user'].includes(role)) return null
+      const user = await repository.findOrCreateOrbitUser({ orbitUserId, email, role })
+      return publicUser(user, user)
+    },
+
     async register({ email, password, inviteCode }) {
       const normalizedEmail = email.trim().toLowerCase()
       const passwordHash = await hashPassword(password)

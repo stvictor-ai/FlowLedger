@@ -8,6 +8,88 @@ export class AuthRepositoryError extends Error {
 
 export function createAuthRepository(pool) {
   return {
+    async findOrCreateOrbitUser({ orbitUserId, email, role }) {
+      const client = await pool.connect()
+      const fallbackEmail = `orbit-${orbitUserId}@users.orbit.invalid`
+      const normalizedEmail = email || fallbackEmail
+      try {
+        await client.query('BEGIN')
+        let result = await client.query(`
+          SELECT id
+          FROM users
+          WHERE orbit_user_id = $1
+          FOR UPDATE
+        `, [orbitUserId])
+
+        if (!result.rows[0] && email) {
+          result = await client.query(`
+            SELECT id
+            FROM users
+            WHERE email = $1 AND orbit_user_id IS NULL
+            FOR UPDATE
+          `, [email])
+        }
+
+        let userId = result.rows[0]?.id
+        if (userId) {
+          await client.query(`
+            UPDATE users
+            SET orbit_user_id = $2,
+                email = $3,
+                role = $4,
+                status = 'active',
+                updated_at = now()
+            WHERE id = $1
+          `, [userId, orbitUserId, normalizedEmail, role])
+        } else {
+          const inserted = await client.query(`
+            INSERT INTO users(email, password_hash, role, orbit_user_id)
+            VALUES ($1, NULL, $2, $3)
+            RETURNING id
+          `, [normalizedEmail, role, orbitUserId])
+          userId = inserted.rows[0].id
+        }
+
+        await client.query(`
+          INSERT INTO ledgers(user_id, name)
+          SELECT $1, '我的账本'
+          WHERE NOT EXISTS (SELECT 1 FROM ledgers WHERE user_id = $1)
+        `, [userId])
+
+        const userResult = await client.query(`
+          SELECT
+            u.id,
+            u.email,
+            u.role,
+            u.status,
+            u.orbit_user_id,
+            l.id AS ledger_id,
+            l.name AS ledger_name,
+            l.revision
+          FROM users u
+          JOIN LATERAL (
+            SELECT id, name, revision
+            FROM ledgers
+            WHERE user_id = u.id
+            ORDER BY created_at ASC
+            LIMIT 1
+          ) l ON true
+          WHERE u.id = $1
+        `, [userId])
+        await client.query('COMMIT')
+        return userResult.rows[0]
+      } catch (error) {
+        try {
+          await client.query('ROLLBACK')
+        } catch {
+          // Preserve the original database error.
+        }
+        throw error
+      } finally {
+        client.release()
+      }
+    },
+
     async registerUser({ email, passwordHash, inviteCodeHash, now }) {
       const client = await pool.connect()
       try {

@@ -23,6 +23,27 @@ export function createApp({
   if (config.isProduction) app.set('trust proxy', 1)
   app.use(express.json({ limit: '10mb' }))
   app.use('/api', securityHeaders)
+  app.use('/api/v1', (request, response, next) => {
+    const origin = request.get('origin')
+    if (origin && origin === config.accountOrigin) {
+      const accountReadable = request.method === 'GET' && [
+        '/api/v1/auth/me',
+        '/api/v1/admin/summary'
+      ].includes(request.originalUrl.split('?')[0])
+      if (!accountReadable && request.method !== 'OPTIONS') {
+        return response.status(403).json({ error: 'INVALID_ORIGIN' })
+      }
+      response.set('Access-Control-Allow-Origin', origin)
+      response.set('Access-Control-Allow-Credentials', 'true')
+      response.set('Vary', 'Origin')
+    }
+    if (request.method === 'OPTIONS') {
+      response.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
+      response.set('Access-Control-Allow-Headers', 'Content-Type')
+      return response.status(204).end()
+    }
+    return next()
+  })
   app.use('/api/v1', createOriginGuard({
     appOrigin: config.appOrigin,
     requireOrigin: config.isProduction
@@ -50,14 +71,17 @@ export function createApp({
   })
 
   if (authService) {
+    const requireAuth = createRequireAuth(authService, config)
     app.use('/api/v1/auth', createAuthRouter({
       authService,
-      isProduction: config.isProduction
+      isProduction: config.isProduction,
+      requireAuth,
+      identityProvider: config.identityProvider
     }))
     if (adminService) {
       app.use(
         '/api/v1/admin',
-        createRequireAuth(authService),
+        requireAuth,
         requireAdmin,
         createAdminRouter({ adminService })
       )
@@ -65,7 +89,7 @@ export function createApp({
     if (syncService) {
       app.use(
         '/api/v1/ledgers/:ledgerId/sync',
-        createRequireAuth(authService),
+        requireAuth,
         createSyncRouter({ syncService })
       )
     }

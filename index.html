@@ -3809,10 +3809,24 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   .ledger-panel .filtered-stats .fs-cell{display:grid;gap:3px}
   .ledger-workspace{display:none}
 }
+.account-session-guard{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:24px;background:var(--bg);color:var(--text)}
+.account-session-guard-card{width:min(440px,100%);padding:32px;border:1px solid var(--border);background:var(--panel);box-shadow:var(--shadow)}
+.account-session-guard-card span{color:var(--accent);font:800 10px/1.2 'JetBrains Mono',monospace}
+.account-session-guard-card h2{margin-top:10px;font-size:24px}
+.account-session-guard-card p{margin:10px 0 22px;color:var(--muted);font-size:13px;line-height:1.7}
+.account-session-guard-card .btn{width:100%;justify-content:center}
 </style>
 </head>
 <body>
 <div id="app" :class="['app', 'tab-'+activeTab, { 'showcase-mode': showcaseMode }]">
+  <div v-if="orbitAuthRequired&&!accountReady" class="account-session-guard" role="status" aria-live="polite">
+    <div class="account-session-guard-card">
+      <span>ORBIT ACCOUNT</span>
+      <h2>{{ serverAccount.loading?'正在确认账号':'需要登录' }}</h2>
+      <p>{{ sessionGuardMessage }}</p>
+      <a v-if="!serverAccount.loading" class="btn btn-primary" :href="orbitLoginUrl">前往个人站登录</a>
+    </div>
+  </div>
   <!-- Toast -->
   <div v-if="toast.show" :class="['toast',toast.type]">{{ toast.message }}</div>
 
@@ -4497,11 +4511,27 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 
       <div v-if="dataView==='sync'" class="data-center-view">
         <div class="sync-provider-switch" role="tablist" aria-label="同步方式">
-          <button :class="['sync-provider-button',{active:syncProvider==='server'}]" @click="syncProvider='server'" role="tab"><strong>投记账号</strong><span>数据库同步 · 邀请制</span></button>
+          <button :class="['sync-provider-button',{active:syncProvider==='server'}]" @click="syncProvider='server'" role="tab"><strong>Orbit 账号</strong><span>个人站统一身份 · 数据库同步</span></button>
           <button :class="['sync-provider-button',{active:syncProvider==='gist'}]" @click="syncProvider='gist'" role="tab"><strong>GitHub Gist</strong><span>自带 Token · 高级选项</span></button>
         </div>
 
         <div v-if="syncProvider==='server'">
+          <div class="data-view-head">
+            <div><h3>账号数据库同步</h3><p>登录、密码、邀请和成员统一在个人站管理；这里仅处理当前账号的账本同步。</p></div>
+            <span class="data-state"><span :class="['data-state-dot',{offline:!serverAccount.user}]"></span>{{ serverAccount.user?'已连接':'未连接' }}</span>
+          </div>
+          <div v-if="serverAccount.user" class="server-account-line">
+            <div class="server-account-identity"><span class="server-account-mark">O</span><div><strong>{{ serverAccountLabel }}</strong><span>{{ serverAccount.user.ledger?.name||'我的账本' }} · revision {{ serverRemote?.ledger?.revision??serverAccount.user.ledger?.revision??0 }}</span></div></div>
+            <div class="server-account-actions"><button class="btn btn-primary btn-sm" @click="openServerComparison" :disabled="serverAccount.busy">{{ serverAccount.busy?'读取中…':'比较并同步' }}</button><a class="btn btn-ghost btn-sm" href="https://orbitshz.com/account">账号中心</a></div>
+          </div>
+          <div v-if="serverAccount.user" class="server-account-metrics">
+            <div><span>本地流水</span><strong>{{ entries.length }}</strong></div><div><span>本地持仓</span><strong>{{ positions.length }}</strong></div><div><span>服务器流水</span><strong>{{ serverRemoteSummary.entries }}</strong></div><div><span>服务器持仓</span><strong>{{ serverRemoteSummary.positions }}</strong></div>
+          </div>
+          <p v-if="serverAccount.error" class="form-error" style="margin-top:12px">{{ serverAccount.error }}</p>
+          <p class="server-sync-note">本地副本已按 Orbit 账号隔离。切换账号不会看到上一位用户的记录；上传、下载和合并仍需明确确认。</p>
+        </div>
+
+        <div v-else-if="false">
           <div class="data-view-head">
             <div><h3>投记账号同步</h3><p>使用安全 Cookie 登录，账本保留本地副本，首次迁移必须由你确认。</p></div>
             <span class="data-state"><span :class="['data-state-dot',{offline:!serverAccount.user}]"></span>{{ serverAccount.user?'已登录':'本地模式' }}</span>
@@ -5440,7 +5470,9 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 <script>
 dayjs.extend(dayjs_plugin_isoWeek);dayjs.extend(dayjs_plugin_weekOfYear);dayjs.locale('zh-cn')
 
-const SK='touji_entries_v1',SNAP_K='touji_snapshots_v1',RULES_K='touji_rules_v1',REVIEW_K='touji_reviews_v1',DAY_REVIEW_K='touji_review_day_notes_v1',SYNC_K='touji_sync_v1',IMPORT_K='touji_import_batches_v1',CHECKLIST_K='touji_checklist_v1',POS_K='touji_positions_v1',DEL_K='touji_deleted_v1',POS_DEL_K='touji_position_deleted_v1'
+const ACCOUNT_STORAGE_BASE={SK:'touji_entries_v1',SNAP_K:'touji_snapshots_v1',RULES_K:'touji_rules_v1',REVIEW_K:'touji_reviews_v1',DAY_REVIEW_K:'touji_review_day_notes_v1',SYNC_K:'touji_sync_v1',IMPORT_K:'touji_import_batches_v1',CHECKLIST_K:'touji_checklist_v1',POS_K:'touji_positions_v1',DEL_K:'touji_deleted_v1',POS_DEL_K:'touji_position_deleted_v1'}
+let {SK,SNAP_K,RULES_K,REVIEW_K,DAY_REVIEW_K,SYNC_K,IMPORT_K,CHECKLIST_K,POS_K,DEL_K,POS_DEL_K}=ACCOUNT_STORAGE_BASE
+const ACCOUNT_STORAGE_OWNER_K='touji_account_storage_owner_v1'
 const LEGACY_CASHFLOW_K=['crypto','cashflow'].join('_')
 const LEGACY_FLOW_K=['flow','ledger'].join('')
 const LEGACY_FLOW_LABEL=['Flow','Ledger'].join('')
@@ -5448,6 +5480,7 @@ const LANG_K='touji_lang_v1'
 function migrateStorageKey(currentKey,legacyKeys){
   const oldKeys=Array.isArray(legacyKeys)?legacyKeys:[legacyKeys]
   try{
+    if(localStorage.getItem(ACCOUNT_STORAGE_OWNER_K))return
     if(localStorage.getItem(currentKey))return
     const hit=oldKeys.find(k=>localStorage.getItem(k))
     if(hit)localStorage.setItem(currentKey,localStorage.getItem(hit))
@@ -5465,6 +5498,31 @@ migrateStorageKey(POS_K,`${LEGACY_FLOW_K}_positions_v1`)
 migrateStorageKey(DEL_K,`${LEGACY_FLOW_K}_deleted_v1`)
 migrateStorageKey(POS_DEL_K,`${LEGACY_FLOW_K}_position_deleted_v1`)
 migrateStorageKey(LANG_K,`${LEGACY_FLOW_K}_lang`)
+function bindAccountStorage(accountId){
+  const id=String(accountId||'').trim()
+  if(!id)throw new Error('INVALID_ACCOUNT_STORAGE_ID')
+  const scoped=Object.fromEntries(Object.entries(ACCOUNT_STORAGE_BASE).map(([name,key])=>[name,`${key}__orbit_${id}`]))
+  const owner=localStorage.getItem(ACCOUNT_STORAGE_OWNER_K)
+  if(!owner){
+    const legacyValues=Object.fromEntries(Object.entries(ACCOUNT_STORAGE_BASE).map(([name,key])=>[name,localStorage.getItem(key)]))
+    const copied=[]
+    try{
+      Object.entries(legacyValues).forEach(([name,value])=>{
+        if(value===null||localStorage.getItem(scoped[name])!==null)return
+        localStorage.setItem(scoped[name],value)
+        if(localStorage.getItem(scoped[name])!==value)throw new Error('ACCOUNT_STORAGE_COPY_FAILED')
+        copied.push(name)
+      })
+      localStorage.setItem(ACCOUNT_STORAGE_OWNER_K,id)
+      Object.values(ACCOUNT_STORAGE_BASE).forEach(key=>localStorage.removeItem(key))
+    }catch(error){
+      copied.forEach(name=>localStorage.removeItem(scoped[name]))
+      throw error
+    }
+  }
+  ;({SK,SNAP_K,RULES_K,REVIEW_K,DAY_REVIEW_K,SYNC_K,IMPORT_K,CHECKLIST_K,POS_K,DEL_K,POS_DEL_K}=scoped)
+  return id
+}
 const genId=()=>crypto.randomUUID?crypto.randomUUID():('r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6))
 const clone=o=>JSON.parse(JSON.stringify(o))
 
@@ -6130,7 +6188,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.08.05-2'
+  const APP_VERSION='v2026.08.06-1'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -6294,7 +6352,12 @@ setup(){
   const SERVER_SYNC_PROVIDER_K='touji_sync_provider_v1'
   const syncProvider=ref(localStorage.getItem(SERVER_SYNC_PROVIDER_K)||'server')
   const serverClient=window.ToujiServerSync?.createClient?.()||null
+  const orbitAuthRequired=location.hostname==='ledger.orbitshz.com'
   const serverAccount=reactive({loading:true,busy:false,user:null,mode:'login',email:'',password:'',inviteCode:'',error:''})
+  const accountReady=ref(false)
+  const sessionGuardMessage=ref('正在通过个人站确认你的登录状态，账本数据暂时不会显示。')
+  const orbitLoginUrl=`https://orbitshz.com/login?next=${encodeURIComponent(location.href)}`
+  let boundAccountId=''
   const serverAdmin=reactive({loading:false,busy:false,loaded:false,summary:null,users:[],invitations:[],inviteCode:'',error:'',maxUses:1,expiresDays:14})
   const serverRemote=ref(null)
   const serverMigrationOpen=ref(false)
@@ -6302,7 +6365,11 @@ setup(){
   const serverLocalSummary=computed(()=>window.ToujiServerSync?.summarizeSnapshot?.({entries:entries.value,positions:positions.value,deletedIds:deletedIds.value,deletedPositionIds:deletedPositionIds.value})||emptyServerSummary)
   const serverRemoteSummary=computed(()=>window.ToujiServerSync?.summarizeSnapshot?.(serverRemote.value)||emptyServerSummary)
   const cloudReady=computed(()=>!!serverAccount.user||!!syncCfg.token)
-  const cloudStatusLabel=computed(()=>serverAccount.user?'投记账号已连接':syncCfg.token?'Gist 已配置':'仅保存在本机')
+  const cloudStatusLabel=computed(()=>serverAccount.user?'Orbit 账号已连接':syncCfg.token?'Gist 已配置':'等待账号连接')
+  const serverAccountLabel=computed(()=>{
+    const email=serverAccount.user?.email||''
+    return email.endsWith('@users.orbit.invalid')?`Orbit 账号 #${serverAccount.user?.orbitUserId||''}`:email
+  })
   watch(syncProvider,value=>localStorage.setItem(SERVER_SYNC_PROVIDER_K,value))
   const syncStatus=ref('未配置')
   const syncing=ref(false)
@@ -6397,7 +6464,7 @@ setup(){
     }else if(storedEntries===null&&!localStorage.getItem(SK)&&PRELOADED.length){
       entries.value=PRELOADED.map(normRow).filter(Boolean).sort((a,b)=>a.date<b.date?1:-1)
       save()
-    }
+    }else entries.value=[]
     snapshots.value=readStorageJSON(SNAP_K,'快照',[])||[]
     importBatches.value=readStorageJSON(IMPORT_K,'导入历史',[])||[]
     Object.assign(rules,{...defRules(),...(readStorageJSON(RULES_K,'提醒规则',{})||{})})
@@ -6865,7 +6932,7 @@ setup(){
   }
   function loadPositions(){
     const raw=readStorageJSON(POS_K,'持仓数据',[])
-    if(!Array.isArray(raw))return
+    if(!Array.isArray(raw)){positions.value=[];return}
     // 迁移旧持仓：推断 source。加密(Binance)保留，其余视为待重选的股票
     positions.value=raw.map(item=>{
       let p=normalizePosition(item)
@@ -8211,22 +8278,46 @@ setup(){
     if(serverAccount.user?.ledger&&remote?.ledger)serverAccount.user.ledger.revision=remote.ledger.revision
     return remote
   }
+  function clearVisibleAccountData(){
+    entries.value=[];positions.value=[];snapshots.value=[];importBatches.value=[]
+    deletedIds.value={};deletedPositionIds.value={};serverRemote.value=null
+    reviewDayNotes.value={};reviewDayNote.value='';reviewNote.value='';reviewChecklist.value=[]
+    Object.assign(rules,defRules())
+    Object.assign(syncCfg,{token:'',gistId:''})
+  }
+  function activateAccountStorage(user){
+    const accountId=String(user?.orbitUserId||'').trim()
+    if(!accountId)throw new Error('UNAUTHENTICATED')
+    if(boundAccountId===accountId)return false
+    clearVisibleAccountData()
+    boundAccountId=bindAccountStorage(accountId)
+    load();loadPositions()
+    return true
+  }
   async function checkServerSession(){
-    if(!serverClient){serverAccount.loading=false;return}
+    if(!serverClient){serverAccount.loading=false;sessionGuardMessage.value='账号服务暂时不可用，请返回个人站重试。';return}
+    accountReady.value=false
+    sessionGuardMessage.value='正在通过个人站确认你的登录状态，账本数据暂时不会显示。'
     serverAccount.loading=true
     try{
       const result=await serverClient.me()
-      serverAccount.user=result?.user||null
-      if(serverAccount.user){
-        await fetchServerRemote()
-        if(serverAccount.user.role==='admin')await loadServerAdmin()
-        else resetServerAdmin()
-      }
+      if(!result?.user?.orbitUserId)throw new Error('UNAUTHENTICATED')
+      serverAccount.user=result.user
+      activateAccountStorage(serverAccount.user)
+      await fetchServerRemote()
+      const localHasData=window.ToujiServerSync?.hasSnapshotData?.(localServerSnapshot())
+      const remoteHasData=window.ToujiServerSync?.hasSnapshotData?.(serverRemote.value)
+      if(!localHasData&&remoteHasData)await downloadServerToLocal()
+      resetServerAdmin()
+      accountReady.value=true
     }catch(error){
       if(error?.code!=='UNAUTHENTICATED')console.info('[投记] 账号服务器暂不可用')
       serverAccount.user=null
-      serverRemote.value=null
+      clearVisibleAccountData()
       resetServerAdmin()
+      sessionGuardMessage.value=error?.code==='UNAUTHENTICATED'||error?.message==='UNAUTHENTICATED'
+        ?'登录已退出。重新登录后，只会加载该账号自己的账本。'
+        :'暂时无法验证登录状态。为保护账本，页面数据已锁定。'
     }finally{serverAccount.loading=false}
   }
   async function submitServerAuth(){
@@ -8944,12 +9035,20 @@ setup(){
     })
   }
 
-  onMounted(()=>{
+  async function verifyOrbitSession(){
+    if(document.hidden||serverAccount.loading)return
+    await checkServerSession()
+  }
+  onMounted(async()=>{
     window.addEventListener('keydown',handleLedgerKeydown)
-    load()
+    if(orbitAuthRequired){
+      window.addEventListener('focus',verifyOrbitSession)
+      await checkServerSession()
+    }else{
+      load();loadPositions();serverAccount.loading=false;accountReady.value=true
+    }
+    if(!accountReady.value)return
     if(reviewYear.value)setReviewYear(reviewYear.value)
-    loadPositions()
-    checkServerSession()
     refreshFxRates() // 静默刷新全局汇率，供持仓市值折算
     if(positions.value.length)fetchPosPrices()
     let posPriceTimer=setInterval(()=>{if(positions.value.length)fetchPosPrices()},60000)
@@ -9007,9 +9106,12 @@ setup(){
     // Background pull every 2 min when tab is visible
     setInterval(()=>{if(!document.hidden)backgroundPull()},120000)
   })
-  onBeforeUnmount(()=>window.removeEventListener('keydown',handleLedgerKeydown))
+  onBeforeUnmount(()=>{
+    window.removeEventListener('keydown',handleLedgerKeydown)
+    window.removeEventListener('focus',verifyOrbitSession)
+  })
 
-  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
+  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,

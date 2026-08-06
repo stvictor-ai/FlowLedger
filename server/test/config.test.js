@@ -9,6 +9,7 @@ test('development config uses local-only defaults', () => {
   assert.equal(config.port, 8787)
   assert.match(config.databaseUrl, /^postgres:/)
   assert.equal(config.isProduction, false)
+  assert.equal(config.identityProvider, 'session')
 })
 
 test('production config refuses to start without secrets', () => {
@@ -24,12 +25,14 @@ test('production config accepts explicit secure values', () => {
     PORT: '9000',
     DATABASE_URL: 'postgres://touji:secret@db:5432/touji',
     SESSION_SECRET: 'a-secure-session-secret-with-32-characters',
-    APP_ORIGIN: 'https://touji.example.com'
+    APP_ORIGIN: 'https://touji.example.com',
+    IDENTITY_PROVIDER: 'orbit'
   })
 
   assert.equal(config.port, 9000)
   assert.equal(config.appOrigin, 'https://touji.example.com')
   assert.equal(config.isProduction, true)
+  assert.equal(config.identityProvider, 'orbit')
 })
 
 test('invalid ports and short session secrets are rejected', () => {
@@ -38,4 +41,5 @@ test('invalid ports and short session secrets are rejected', () => {
     () => loadConfig({ SESSION_SECRET: 'too-short' }),
     /SESSION_SECRET must contain at least 32 characters/
   )
+  assert.throws(() => loadConfig({ IDENTITY_PROVIDER: 'unknown' }), /IDENTITY_PROVIDER/)
 })

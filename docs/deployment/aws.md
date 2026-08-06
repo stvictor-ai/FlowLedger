@@ -24,12 +24,16 @@ openssl rand -hex 32
 ```dotenv
 DOMAIN=touji.example.com
 APP_ORIGIN=https://touji.example.com
+ACCOUNT_ORIGIN=https://orbitshz.com
+IDENTITY_PROVIDER=session
 POSTGRES_DB=touji
 POSTGRES_USER=touji
 POSTGRES_PASSWORD=使用独立的长随机密码
 DATABASE_URL=postgres://touji:上面同一个密码@db:5432/touji
 SESSION_SECRET=openssl生成的至少32字符随机值
 ```
+
+若域名接入个人站 Orbit 统一账号，将 `IDENTITY_PROVIDER` 改为 `orbit`，并在宿主机 Caddy 为投记站点配置 `forward_auth`，复制 `X-Orbit-User-Id`、`X-Orbit-User-Role`、`X-Orbit-User-Email` 三个响应头。此模式下投记自带注册/登录接口关闭，账号管理统一由个人站负责。
 
 `.env` 已被 Git 忽略，不要提交，也不要截图分享。数据库密码如果包含 URL 特殊字符，需要在 `DATABASE_URL` 中进行百分号编码；最省事的做法是使用十六进制随机字符串。
 

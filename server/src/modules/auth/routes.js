@@ -38,7 +38,7 @@ function sendAuthError(response, error) {
   throw error
 }
 
-export function createAuthRouter({ authService, isProduction }) {
+export function createAuthRouter({ authService, isProduction, requireAuth, identityProvider = 'session' }) {
   const router = Router()
   const limiter = rateLimit({
     windowMs: 10 * 60 * 1000,
@@ -49,6 +49,7 @@ export function createAuthRouter({ authService, isProduction }) {
   })
 
   router.post('/register', limiter, async (request, response) => {
+    if (identityProvider === 'orbit') return response.status(404).json({ error: 'NOT_FOUND' })
     const parsed = registerSchema.safeParse(request.body)
     if (!parsed.success) return response.status(400).json({ error: 'INVALID_INPUT' })
     try {
@@ -61,6 +62,7 @@ export function createAuthRouter({ authService, isProduction }) {
   })
 
   router.post('/login', limiter, async (request, response) => {
+    if (identityProvider === 'orbit') return response.status(404).json({ error: 'NOT_FOUND' })
     const parsed = loginSchema.safeParse(request.body)
     if (!parsed.success) return response.status(400).json({ error: 'INVALID_INPUT' })
     try {
@@ -73,16 +75,13 @@ export function createAuthRouter({ authService, isProduction }) {
   })
 
   router.post('/logout', async (request, response) => {
+    if (identityProvider === 'orbit') return response.status(404).json({ error: 'NOT_FOUND' })
     await authService.logout(readSessionToken(request))
     response.clearCookie(SESSION_COOKIE, clearCookieOptions(isProduction))
     return response.status(204).end()
   })
 
-  router.get('/me', async (request, response) => {
-    const user = await authService.getSession(readSessionToken(request))
-    if (!user) return response.status(401).json({ error: 'UNAUTHENTICATED' })
-    return response.json({ user })
-  })
+  router.get('/me', requireAuth, (request, response) => response.json({ user: request.auth }))
 
   return router
 }
