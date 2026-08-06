@@ -19,7 +19,7 @@ export class AuthError extends Error {
 }
 
 function publicUser(user, ledger) {
-  const ledgerId = ledger?.id || ledger?.ledger_id
+  const ledgerId = ledger?.ledger_id || ledger?.id
   return {
     id: user.id || user.user_id,
     orbitUserId: user.orbit_user_id || null,

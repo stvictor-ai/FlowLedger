@@ -180,6 +180,35 @@ test('Orbit identity headers provision the authenticated ledger user', async t =
   assert.equal((await response.json()).user.orbitUserId, '42')
 })
 
+test('Orbit session returns the joined ledger id instead of the user id', async () => {
+  const service = createAuthService({
+    repository: {
+      async findOrCreateOrbitUser() {
+        return {
+          id: 'ledger-user-1',
+          orbit_user_id: '42',
+          email: 'owner@example.com',
+          role: 'admin',
+          status: 'active',
+          ledger_id: '11111111-1111-4111-8111-111111111111',
+          ledger_name: '我的账本',
+          revision: 3
+        }
+      }
+    }
+  })
+
+  const user = await service.getOrbitSession({
+    orbitUserId: '42',
+    email: 'owner@example.com',
+    role: 'admin'
+  })
+
+  assert.equal(user.id, 'ledger-user-1')
+  assert.equal(user.ledger.id, '11111111-1111-4111-8111-111111111111')
+  assert.equal(user.ledger.revision, 3)
+})
+
 test('Orbit mode rejects missing trusted identity headers', async t => {
   const authService = {
     register: async () => {}, login: async () => {}, logout: async () => {},
