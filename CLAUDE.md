@@ -16,8 +16,10 @@
 touji/
 ├── index.html      # Vue 主应用与界面
 ├── js/
+│   ├── entry-engine.js  # 时间排序、逐笔换汇和人民币折算（UMD）
 │   └── review-engine.js # 纯函数复盘引擎（UMD）
 ├── tests/
+│   ├── entry-engine.test.js # 时间与换汇计算测试
 │   └── review-engine.test.js # Node 内置测试
 ├── docs/plans/     # 功能实施计划
 ├── manifest.json   # PWA 配置
@@ -34,6 +36,9 @@ touji/
 
 ### 核心功能
 - [x] 出入金记录 CRUD（表格内直接编辑，无需弹窗）
+- [x] 流水记录支持具体到分钟，同日记录按日期和时间排序
+- [x] USD / HKD / USDT 入金支持逐笔实际汇率、人民币支付金额和到账数量
+- [x] 当前汇率可自动拉取，也可手动覆盖，历史记录按成交时汇率固化
 - [x] 快速录入（复制上一笔、交易所下拉补全、输入校验）
 - [x] 标签系统（记录标签、标签筛选、标签盈亏统计、导入导出）
 - [x] 盈亏规则：出金总额 > 入金总额 → 盈利
@@ -103,6 +108,7 @@ touji/
 [{
   id,           // UUID
   date,         // "YYYY-MM-DD"
+  time,         // "HH:mm"，旧记录可为空
   amount,       // 原始金额，数字
   rate,         // 对 CNY 汇率，数字或空
   exchange,     // 账户/平台名称
@@ -111,6 +117,9 @@ touji/
   assetType,    // "沪深市" | "美股" | "港股" | "加密货币" | "基金" | "黄金" | "期货" | "其他" | ""
   currency,     // "CNY" | "USD" | "HKD" | "USDT"
   tags,         // 行为标签数组，如 ["定投", "补仓", "FOMO"]
+  sourceAmount, sourceCurrency, // 换汇支付侧，例如 500 CNY
+  targetAmount, targetCurrency, // 换汇到账侧，例如 74.183976 USDT
+  fxRate,       // 本笔实际成交汇率
   tradeQty, tradePrice, targetSymbol, targetName, targetMarket,
   positionId, realizedPL, updatedAt
 }]

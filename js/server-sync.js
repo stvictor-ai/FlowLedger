@@ -108,6 +108,12 @@
   }
 
   function amountCNY(entry) {
+    if (entry && entry.type === '入金' && String(entry.sourceCurrency || '').toUpperCase() === 'CNY' && Number(entry.sourceAmount) > 0) {
+      return Number(entry.sourceAmount)
+    }
+    if (entry && entry.type === '出金' && String(entry.targetCurrency || '').toUpperCase() === 'CNY' && Number(entry.targetAmount) > 0) {
+      return Number(entry.targetAmount)
+    }
     const amount = Number(entry && entry.amount) || 0
     const currency = (entry && entry.currency) || 'CNY'
     const rate = Number(entry && entry.rate) || 1

@@ -57,8 +57,11 @@
 ### 出入金记账
 
 - 记录向投资账户的每一笔**入金 / 出金**
+- 每笔流水可记录到具体的时和分，同一天的多笔操作按实际发生时间排列
 - 支持多资产类型：沪深市、港股、美股、基金、债券、REITs、加密货币、黄金、期货、外汇、现金管理、其他
 - 支持多币种：CNY、USD、HKD、USDT，自动折合 CNY
+- 外币入金可填写人民币支付金额和该笔实际汇率，自动算出到账数量；也可以拉取当前汇率后再手动修改
+- 每笔换汇独立保存，不会用今天的汇率覆盖昨天的成交汇率
 - 标签系统：可给每笔记录打上 `定投`、`补仓`、`FOMO` 等行为标签，便于统计和复盘
 - 桌面端表格内联编辑，手机端弹出 Modal 编辑
 
@@ -214,6 +217,7 @@ GitHub Pages 与本地 `index.html` 仍保持独立的本地模式，不依赖 O
 {
   id,            // UUID
   date,          // "YYYY-MM-DD"
+  time,          // "HH:mm"，旧记录可为空
   amount,        // 原始金额（数字）
   rate,          // 对 CNY 汇率（空 = 1）
   exchange,      // 账户 / 平台名称
@@ -222,6 +226,10 @@ GitHub Pages 与本地 `index.html` 仍保持独立的本地模式，不依赖 O
   assetType,     // "沪深市" | "港股" | "美股" | "基金" | "债券" | "REITs" | ...
   currency,      // "CNY" | "USD" | "HKD" | "USDT"
   tags,          // 行为标签数组，如 ["定投", "FOMO"]
+  // 人民币换入外币时保存交易两侧，普通记录可为空
+  sourceAmount, sourceCurrency, // 例如 500 CNY
+  targetAmount, targetCurrency, // 例如 74.183976 USDT
+  fxRate,        // 本笔实际汇率，例如 1 USDT = 6.74 CNY
   // 买入/卖出专用字段
   tradeQty,      // 成交数量
   tradePrice,    // 成交单价（原始币种）
@@ -280,6 +288,7 @@ GitHub Pages 与本地 `index.html` 仍保持独立的本地模式，不依赖 O
 FlowLedger/
 ├── index.html        # Vue 主应用与界面
 ├── js/
+│   ├── entry-engine.js   # 流水时间排序、逐笔换汇与 CNY 折算
 │   ├── import-engine.js  # 导入规范化、预览与多重集去重逻辑
 │   ├── review-engine.js  # 无框架依赖的复盘规则、日历与时间线引擎
 │   └── server-sync.js    # 投记账号认证与 revision 同步客户端
@@ -287,6 +296,7 @@ FlowLedger/
 ├── deploy/               # Caddy 与静态前端容器配置
 ├── ops/                  # PostgreSQL 备份和显式恢复脚本
 ├── tests/
+│   ├── entry-engine.test.js # 时间、换汇精度与旧数据兼容测试
 │   ├── import-engine.test.js  # 导入合并与重复记录测试
 │   ├── review-engine.test.js  # 复盘规则、日历与时间线测试
 │   └── server-sync.test.js    # 账号同步客户端测试

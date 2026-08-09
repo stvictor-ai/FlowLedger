@@ -73,7 +73,11 @@ test('admin client uses role-protected management endpoints', async () => {
 test('snapshot summary converts foreign currencies and counts tombstones', () => {
   const summary = summarizeSnapshot({
     entries: [
-      { type: '入金', amount: 100, currency: 'USD', rate: 7.2 },
+      {
+        type: '入金', amount: 74.18397626, currency: 'USDT', rate: 6.74,
+        sourceAmount: 500, sourceCurrency: 'CNY',
+        targetAmount: 74.18397626, targetCurrency: 'USDT'
+      },
       { type: '出金', amount: 200, currency: 'CNY' }
     ],
     positions: [{ id: 'position-1' }],
@@ -84,7 +88,7 @@ test('snapshot summary converts foreign currencies and counts tombstones', () =>
   assert.deepEqual(summary, {
     entries: 2,
     positions: 1,
-    totalIn: 720,
+    totalIn: 500,
     totalOut: 200,
     deleted: 2
   })
