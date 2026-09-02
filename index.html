@@ -3933,6 +3933,11 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:not([tabin
   --border:hsl(var(--primary-foreground)/.18);--border-light:hsl(var(--primary-foreground)/.24)
 }
 .overview-balance-label,.overview-return span,.capital-equation span,.capital-equation code{color:hsl(var(--primary-foreground)/.72)}
+.overview-untracked{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:12px;font-size:12px}
+.overview-untracked span{color:hsl(var(--primary-foreground)/.72)}
+.overview-untracked .text-command{min-height:0;padding:0;color:hsl(var(--primary-foreground));text-decoration:underline;text-underline-offset:3px}
+.equation-unknown{color:hsl(var(--primary-foreground)/.5)!important;font-weight:600}
+
 .overview-balance-value{font-family:var(--font-sans);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .capital-equation,.capital-equation-grid>div{border-color:hsl(var(--primary-foreground)/.18)}
 .overview-allocation{padding:calc(var(--spacing)*5);background:hsl(var(--accent-token)/.22)}
@@ -4119,7 +4124,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
     </header>
     <div class="overview-statement">
       <div class="overview-wealth">
-        <div>
+        <div v-if="hasTrackedHoldings">
           <p class="overview-balance-label">当前持仓市值</p>
           <p class="overview-balance-value privacy-number">{{ fmt(holdingsValue) }} <small>CNY</small></p>
           <p class="overview-return">
@@ -4128,13 +4133,21 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
             <small class="privacy-number" :style="{color:trueROI>=0?'var(--green)':'var(--red)'}">{{ fmtPct(trueROI*100,1) }}</small>
           </p>
         </div>
+        <div v-else>
+          <p class="overview-balance-label">已投入净额</p>
+          <p class="overview-balance-value privacy-number">{{ fmt(netInvested) }} <small>CNY</small></p>
+          <p class="overview-untracked">
+            <span>还没有录入持仓，真实收益暂时算不出来。</span>
+            <button class="text-command" @click="setActiveTab('positions')">建立持仓 →</button>
+          </p>
+        </div>
         <div class="capital-equation">
           <div class="capital-equation-head"><span>资金关系</span><code>持仓 + 取出 - 投入 = 收益</code></div>
           <div class="capital-equation-grid">
-            <div><span>当前持仓</span><strong class="privacy-number">{{ fmt(holdingsValue) }}</strong></div>
+            <div><span>当前持仓</span><strong v-if="hasTrackedHoldings" class="privacy-number">{{ fmt(holdingsValue) }}</strong><strong v-else class="equation-unknown">未录入</strong></div>
             <div><span>＋ 累计取出</span><strong class="privacy-number text-green">{{ fmt(totalOut) }}</strong></div>
             <div><span>－ 累计投入</span><strong class="privacy-number text-red">{{ fmt(totalIn) }}</strong></div>
-            <div class="equation-result"><span>＝ 真实收益</span><strong class="privacy-number">{{ (trueReturn>=0?'+':'')+fmt(trueReturn) }}</strong></div>
+            <div class="equation-result"><span>＝ 真实收益</span><strong v-if="hasTrackedHoldings" class="privacy-number">{{ (trueReturn>=0?'+':'')+fmt(trueReturn) }}</strong><strong v-else class="equation-unknown">—</strong></div>
           </div>
         </div>
       </div>
@@ -6439,7 +6452,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.09.02-2'
+  const APP_VERSION='v2026.09.02-3'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -6923,6 +6936,12 @@ setup(){
   const holdingsValue=computed(()=>posSummary.value.totalValue)
   const realizedPL=computed(()=>entries.value.filter(e=>e.type==='卖出'&&e.realizedPL).reduce((s,e)=>s+(e.realizedPL||0),0))
   // realizedPL 不计入 trueReturn，避免卖出后出金的场景双重计算
+  // A ledger can hold flows but no holdings — money paid in and not yet
+  // withdrawn. trueReturn would then read that entire balance as a loss, so
+  // the overview only claims a return once the user has tracked what the
+  // money became (a position, or a buy/sell entry).
+  const hasTrackedHoldings=computed(()=>positions.value.length>0||entries.value.some(e=>e.type==='买入'||e.type==='卖出'))
+  const netInvested=computed(()=>totalIn.value-totalOut.value)
   const trueReturn=computed(()=>totalOut.value+holdingsValue.value-totalIn.value)
   const trueROI=computed(()=>totalIn.value?trueReturn.value/totalIn.value:0)
 
@@ -9515,7 +9534,7 @@ setup(){
   return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
-    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
+    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
     behaviorAnalysis,psychoTags,behaviorAdvice,
 
     fmt,fmtUnits,fmtPct,amountCNY,isFxEntry,fxEntryTargetAmount,fxEntryRate,fxTargetFromSource,parseTags,tagsText,normalizeAssetType,rowClass,toggleEx,toggleAssetType,toggleTag,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,editingDetail,
