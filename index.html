@@ -3934,7 +3934,6 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:not([tabin
 }
 .overview-balance-label,.overview-return span,.capital-equation span,.capital-equation code{color:hsl(var(--primary-foreground)/.72)}
 .overview-balance-value{font-family:var(--font-sans);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.overview-return strong,.overview-return small{color:hsl(152 46% 66%)!important}
 .capital-equation,.capital-equation-grid>div{border-color:hsl(var(--primary-foreground)/.18)}
 .overview-allocation{padding:calc(var(--spacing)*5);background:hsl(var(--accent-token)/.22)}
 .allocation-track{background:hsl(var(--muted-token))}
@@ -6440,7 +6439,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.09.02-1'
+  const APP_VERSION='v2026.09.02-2'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
