@@ -6463,7 +6463,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.09.09-1'
+  const APP_VERSION='v2026.09.09-2'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -9567,6 +9567,10 @@ setup(){
     watch(periodRows,()=>Vue.nextTick(renderChart))
 
     watch(posRows,()=>Vue.nextTick(renderPosPieChart))
+    // Entries can arrive after the first render — server sync resolves well past
+    // mount — and the canvas sits behind a v-if until there is data, so this
+    // chart needs the same watcher the other two already have.
+    watch(capitalCurve,()=>Vue.nextTick(renderCapitalChart))
     // Rerender charts on language change
     watch(()=>lang.value,()=>{Vue.nextTick(()=>{renderChart();renderPosPieChart();renderCapitalChart()})})
     // 切换货币时自动拉取汇率（仅非CNY且汇率为空时）
