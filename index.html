@@ -3951,28 +3951,40 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:not([tabin
 .ledger-filter-shell,.filtered-stats,.compare-card,.cashflow-card,.behavior-metric,.fs-cell,.stat-card,.review-summary-cell,.data-card,.sync-card{
   border:1px solid hsl(var(--border-token));border-radius:6px;background:hsl(var(--card-token));box-shadow:none
 }
-.overview-wealth{background:hsl(var(--primary));color:hsl(var(--primary-foreground));border-color:hsl(var(--primary));padding:calc(var(--spacing)*6)}
+/* White card against the warm-white page. A heavier border, not a dark fill,
+   is what separates it from the tinted module beside it. */
+.overview-wealth{
+  background:hsl(var(--card-token));
+  color:hsl(var(--foreground));
+  border:1px solid hsl(var(--foreground)/.22);
+  padding:calc(var(--spacing)*6)
+}
 /* Fills the dead space the card used to have between the headline number and
    the capital equation. */
-.capital-curve{height:190px;margin:22px 0 4px}
+.capital-curve{height:190px;margin:18px 0 4px}
 .capital-curve canvas{width:100%!important;height:100%!important}
-@media(max-width:760px){.capital-curve{height:150px;margin-top:16px}}
-/* The wealth card is the one dark surface: rebind the palette inside it so
-   every nested rule using --text/--green/--red lands light-on-dark. */
-.overview-wealth{
-  --text:hsl(var(--primary-foreground));--accent:hsl(var(--primary-foreground));
-  --muted:hsl(var(--primary-foreground)/.66);--dim:hsl(var(--primary-foreground)/.5);
-  --green:hsl(152 46% 66%);--red:hsl(6 66% 70%);--blue:hsl(213 52% 72%);
-  --border:hsl(var(--primary-foreground)/.18);--border-light:hsl(var(--primary-foreground)/.24)
+@media(max-width:760px){.capital-curve{height:150px;margin-top:14px}}
+.capital-curve-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-top:22px
 }
-.overview-balance-label,.overview-return span,.capital-equation span,.capital-equation code{color:hsl(var(--primary-foreground)/.72)}
+.capital-curve-head>span{color:hsl(var(--muted-foreground));font-size:10px;letter-spacing:.1em;font-weight:600}
+.capital-range{display:inline-flex;gap:2px;padding:2px;border:1px solid hsl(var(--border-token));border-radius:5px;background:hsl(var(--muted-token)/.5)}
+.capital-range button{
+  min-height:26px;padding:0 10px;border:0;border-radius:3px;background:transparent;
+  color:hsl(var(--muted-foreground));font-size:11px;cursor:pointer;
+  transition:background-color .16s,color .16s
+}
+.capital-range button:hover{color:hsl(var(--foreground))}
+.capital-range button.active{background:hsl(var(--card-token));color:hsl(var(--foreground));font-weight:600;box-shadow:var(--shadow-2xs)}
+.overview-balance-label,.overview-return span,.capital-equation span,.capital-equation code{color:hsl(var(--muted-foreground))}
 .overview-untracked{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:12px;font-size:12px}
-.overview-untracked span{color:hsl(var(--primary-foreground)/.72)}
-.overview-untracked .text-command{min-height:0;padding:0;color:hsl(var(--primary-foreground));text-decoration:underline;text-underline-offset:3px}
-.equation-unknown{color:hsl(var(--primary-foreground)/.5)!important;font-weight:600}
+.overview-untracked span{color:hsl(var(--muted-foreground))}
+.overview-untracked .text-command{min-height:0;padding:0;color:hsl(var(--foreground));text-decoration:underline;text-underline-offset:3px}
+.equation-unknown{color:hsl(var(--muted-foreground))!important;font-weight:600}
 
 .overview-balance-value{font-family:var(--font-sans);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.capital-equation,.capital-equation-grid>div{border-color:hsl(var(--primary-foreground)/.18)}
+.capital-equation,.capital-equation-grid>div{border-color:hsl(var(--border-token))}
 .overview-allocation{padding:calc(var(--spacing)*5);background:hsl(var(--accent-token)/.22)}
 .allocation-track{background:hsl(var(--muted-token))}
 .overview-grid{gap:calc(var(--spacing)*4)}
@@ -4172,6 +4184,13 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
             <span>还没有录入持仓，真实收益暂时算不出来。</span>
             <button class="text-command" @click="setActiveTab('positions')">建立持仓 →</button>
           </p>
+        </div>
+        <div class="capital-curve-head" v-if="capitalCurve.length>1">
+          <span>资金走势</span>
+          <div class="capital-range" role="group" aria-label="时间范围">
+            <button v-for="r in CAPITAL_RANGES" :key="r.key" :class="{active:capitalRange===r.key}"
+              @click="setCapitalRange(r.key)" :aria-pressed="capitalRange===r.key">{{ r.label }}</button>
+          </div>
         </div>
         <div class="capital-curve" v-if="capitalCurve.length>1">
           <canvas ref="capitalChart"></canvas>
@@ -6491,7 +6510,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.09.09-4'
+  const APP_VERSION='v2026.09.09-5'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -9389,6 +9408,10 @@ setup(){
 
   // Cumulative capital in and out, one point per day that has a flow. The gap
   // between the two lines is the net figure headlined above the chart.
+  const CAPITAL_RANGES=[{key:'6m',label:'近半年',days:183},{key:'1y',label:'近一年',days:365},{key:'all',label:'全部',days:null}]
+  const capitalRange=ref('1y')
+  function setCapitalRange(key){capitalRange.value=key}
+
   const capitalCurve=computed(()=>{
     const byDay=new Map()
     entries.value.forEach(e=>{
@@ -9408,6 +9431,26 @@ setup(){
     })
   })
 
+  // Narrowing the window must not restart the running totals: the right edge
+  // has to keep matching the figures printed under the chart. So the full
+  // series is computed first and only then sliced.
+  const capitalCurveView=computed(()=>{
+    const range=CAPITAL_RANGES.find(r=>r.key===capitalRange.value)
+    const all=capitalCurve.value
+    if(!range||!range.days||all.length<2)return all
+    const cutoff=Date.now()-range.days*86400000
+    const within=all.filter(p=>new Date(p.day+'T00:00:00').getTime()>=cutoff)
+    if(!within.length)return all
+    const firstIdx=all.length-within.length
+    if(firstIdx===0)return within
+    // Anchor at the cutoff carrying the totals accrued before it. Re-using the
+    // earlier point instead would drag the axis back to whenever it happened,
+    // which is the squashing this control exists to fix.
+    const prior=all[firstIdx-1]
+    const anchorDay=new Date(cutoff).toISOString().slice(0,10)
+    return [{day:anchorDay,cumIn:prior.cumIn,cumOut:prior.cumOut,net:prior.net},...within]
+  })
+
   const posPieChart=ref(null)
   let chartInstance=null
 
@@ -9420,22 +9463,20 @@ setup(){
   function renderCapitalChart(){
     if(capitalChartInstance){capitalChartInstance.destroy();capitalChartInstance=null}
     if(!capitalChart.value||typeof Chart==='undefined')return
-    const points=capitalCurve.value
+    const points=capitalCurveView.value
     if(points.length<2)return
 
-    // The card is the one dark surface, so these are literals rather than the
-    // light-theme chart tokens.
-    const ink='rgba(255,255,255,.92)'
-    const dim='rgba(255,255,255,.34)'
-    const inLine='hsl(6 66% 70%)'
-    const outLine='hsl(152 46% 66%)'
+    const ink=cssVar('--text','#16181c')
+    const dim=cssVar('--muted','#86898f')
+    const inLine=cssVar('--chart-color-5','#b34240')
+    const outLine=cssVar('--secondary')?`hsl(${cssVar('--secondary','159 43% 21%')})`:'#1e4b3b'
 
     capitalChartInstance=new Chart(capitalChart.value,{
       type:'line',
       data:{
         labels:points.map(p=>p.day),
         datasets:[
-          {label:'累计投入',data:points.map(p=>p.cumIn),borderColor:inLine,backgroundColor:'rgba(233,140,136,.10)',fill:true,tension:.28,pointRadius:0,pointHoverRadius:4,borderWidth:2},
+          {label:'累计投入',data:points.map(p=>p.cumIn),borderColor:inLine,backgroundColor:'rgba(179,66,64,.07)',fill:true,tension:.28,pointRadius:0,pointHoverRadius:4,borderWidth:2},
           {label:'累计取出',data:points.map(p=>p.cumOut),borderColor:outLine,backgroundColor:'transparent',tension:.28,pointRadius:0,pointHoverRadius:4,borderWidth:2}
         ]
       },
@@ -9447,14 +9488,15 @@ setup(){
         plugins:{
           legend:{display:true,position:'bottom',align:'start',labels:{color:dim,boxWidth:8,boxHeight:8,usePointStyle:true,pointStyle:'circle',font:{size:10},padding:14}},
           tooltip:{
-            backgroundColor:'rgba(20,22,26,.96)',borderColor:'rgba(255,255,255,.14)',borderWidth:1,
-            titleColor:ink,bodyColor:ink,padding:10,displayColors:true,
+            backgroundColor:'rgba(22,24,28,.94)',borderColor:'rgba(255,255,255,.12)',borderWidth:1,
+            titleFont:{size:11},bodyFont:{size:11},
+            titleColor:'#fff',bodyColor:'#fff',padding:10,displayColors:true,
             callbacks:{label:ctx=>`${ctx.dataset.label}: ${showcaseMode.value?'••••':Number(ctx.raw).toLocaleString('zh-CN',{maximumFractionDigits:0})}`}
           }
         },
         scales:{
-          x:{ticks:{color:dim,font:{size:9},maxTicksLimit:6},grid:{display:false},border:{color:'rgba(255,255,255,.14)'}},
-          y:{ticks:{color:dim,font:{size:9},maxTicksLimit:4,callback:v=>showcaseMode.value?'••••':Number(v).toLocaleString('zh-CN',{notation:'compact'})},grid:{color:'rgba(255,255,255,.08)'},border:{display:false}}
+          x:{ticks:{color:dim,font:{size:9},maxTicksLimit:6},grid:{display:false},border:{color:cssVar('--border','#e5e3de')}},
+          y:{ticks:{color:dim,font:{size:9},maxTicksLimit:4,callback:v=>showcaseMode.value?'••••':Number(v).toLocaleString('zh-CN',{notation:'compact'})},grid:{color:cssVar('--chart-grid','rgba(0,0,0,.06)')},border:{display:false}}
         }
       }
     })
@@ -9598,7 +9640,7 @@ setup(){
     // Entries can arrive after the first render — server sync resolves well past
     // mount — and the canvas sits behind a v-if until there is data, so this
     // chart needs the same watcher the other two already have.
-    watch(capitalCurve,()=>Vue.nextTick(renderCapitalChart))
+    watch([capitalCurveView,capitalRange],()=>Vue.nextTick(renderCapitalChart))
     // Rerender charts on language change
     watch(()=>lang.value,()=>{Vue.nextTick(()=>{renderChart();renderPosPieChart();renderCapitalChart()})})
     // 切换货币时自动拉取汇率（仅非CNY且汇率为空时）
@@ -9644,7 +9686,7 @@ setup(){
   return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
-    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,capitalChart,capitalCurve,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
+    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,capitalChart,capitalCurve,capitalCurveView,capitalRange,setCapitalRange,CAPITAL_RANGES,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
     behaviorAnalysis,psychoTags,behaviorAdvice,
 
     fmt,fmtUnits,fmtPct,amountCNY,isFxEntry,fxEntryTargetAmount,fxEntryRate,fxTargetFromSource,parseTags,tagsText,normalizeAssetType,rowClass,toggleEx,toggleAssetType,toggleTag,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,editingDetail,
