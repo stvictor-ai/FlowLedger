@@ -1,4 +1,4 @@
-const CACHE_NAME = 'touji-v2026-09-09-2';
+const CACHE_NAME = 'touji-v2026-09-09-3';
 
 const APP_ASSETS = [
   './js/entry-engine.js',
@@ -57,16 +57,25 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Local app files (index.html, icons, manifest): network-first, fall back to cache
+  // Local app files (index.html, icons, manifest): network-first, fall back to
+  // cache. cache:'reload' skips the browser's own HTTP cache — without it a
+  // stale index.html gets handed to this worker and written straight back into
+  // Cache Storage, pinning the app to an old release across deploys.
   if (url.origin === self.location.origin) {
-    e.respondWith(
-      fetch(e.request)
-        .then(res => {
-          if (res.ok) caches.open(CACHE_NAME).then(c => c.put(e.request, res.clone()));
-          return res;
-        })
-        .catch(() => caches.match(e.request))
-    );
+    e.respondWith((async () => {
+      try {
+        const res = await fetch(e.request, { cache: 'reload' });
+        if (res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(e.request, copy));
+        }
+        return res;
+      } catch (err) {
+        const cached = await caches.match(e.request);
+        if (cached) return cached;
+        throw err;
+      }
+    })());
     return;
   }
 
