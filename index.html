@@ -3125,26 +3125,40 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   text-align:left;
 }
 .entry-more-toggle:hover{color:var(--text)}
+/* Two filled columns rather than one row of fields and a phantom empty
+   column: deposits only supply two of the three optional inputs. */
 .entry-optional{
   display:grid;
-  gap:12px;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:14px 20px;
+  align-items:start;
   padding-top:15px;
 }
-.entry-optional-grid{display:grid;grid-template-columns:150px 180px minmax(200px,1fr);gap:9px}
-.entry-note-grid{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(200px,.7fr);gap:9px}
-.entry-tag-options{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.entry-tag-options>span:first-child{margin-right:4px;color:var(--dim);font-size:8px;font-weight:800}
+.entry-optional-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px}
+.entry-note-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:9px}
+.entry-tag-options{grid-column:1/-1;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.entry-tag-options>span:first-child{
+  margin-right:4px;color:var(--muted);
+  font-size:10px;font-weight:500;letter-spacing:.04em
+}
+/* The hint explains the rightmost button, so it sits under the buttons
+   instead of being wedged between them. */
 .entry-ticket-foot{
   display:grid;
-  grid-template-columns:auto minmax(0,1fr) auto;
+  grid-template-columns:auto minmax(0,1fr);
   align-items:center;
-  gap:14px;
+  gap:10px 14px;
   margin-top:18px;
   padding-top:16px;
   border-top:1px solid var(--border);
 }
-.entry-ticket-foot p{color:var(--dim);font-size:9px;line-height:1.5}
-.entry-save-actions{display:flex;align-items:center;gap:8px}
+/* Explicit placement: auto-flow dropped the save buttons into column one. */
+.entry-ticket-foot>.btn:first-child{grid-column:1;grid-row:1}
+.entry-save-actions{grid-column:2;grid-row:1;justify-self:end;display:flex;align-items:center;gap:8px}
+.entry-ticket-foot p{
+  grid-column:2;grid-row:2;justify-self:end;text-align:right;max-width:48em;
+  color:var(--muted);font-size:11px;line-height:1.6
+}
 @media(max-width:1180px){
   .position-create-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
   .position-workspace.has-selection{grid-template-columns:minmax(0,1fr) 330px}
@@ -3897,9 +3911,23 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:not([tabin
   transition:background-color .18s,border-color .18s,transform .18s
 }
 .terminal-nav button:hover{background:hsl(var(--sidebar-accent)/.42);color:hsl(var(--sidebar-accent-foreground));transform:translateY(-1px)}
-.terminal-nav button.active{background:hsl(var(--sidebar-primary));color:hsl(var(--sidebar-primary-foreground));border-color:hsl(var(--sidebar-primary))}
+/* The rail should hold one dark element — the primary action. A filled black
+   nav item competed with it, so the selected state is a light surface with an
+   accent edge instead. */
+.terminal-nav button{position:relative}
+.terminal-nav button.active{
+  background:hsl(var(--muted-token));
+  color:hsl(var(--foreground));
+  border-color:hsl(var(--border-token));
+  font-weight:600
+}
+.terminal-nav button.active::before{
+  content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:3px;height:26px;border-radius:0 2px 2px 0;background:hsl(var(--secondary))
+}
 .terminal-nav .nav-glyph{border-radius:4px;background:hsl(var(--sidebar-accent));border:0}
-.terminal-nav button.active .nav-glyph{background:hsl(var(--sidebar-primary-foreground)/.16)}
+.terminal-nav button.active .nav-glyph{background:hsl(var(--secondary));color:hsl(var(--secondary-foreground))}
+.terminal-nav button.active .nav-copy small{color:hsl(var(--muted-foreground))}
 .terminal-nav .nav-copy small{color:inherit;opacity:.62}
 .rail-entry-btn{min-height:48px;border:1px solid hsl(var(--primary));border-radius:5px;background:hsl(var(--primary));color:hsl(var(--primary-foreground));box-shadow:none}
 .rail-entry-btn:hover{transform:translateY(-1px);filter:none;opacity:.92}
@@ -6463,7 +6491,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.09.09-3'
+  const APP_VERSION='v2026.09.09-4'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
