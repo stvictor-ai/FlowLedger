@@ -3924,6 +3924,11 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:not([tabin
   border:1px solid hsl(var(--border-token));border-radius:6px;background:hsl(var(--card-token));box-shadow:none
 }
 .overview-wealth{background:hsl(var(--primary));color:hsl(var(--primary-foreground));border-color:hsl(var(--primary));padding:calc(var(--spacing)*6)}
+/* Fills the dead space the card used to have between the headline number and
+   the capital equation. */
+.capital-curve{height:190px;margin:22px 0 4px}
+.capital-curve canvas{width:100%!important;height:100%!important}
+@media(max-width:760px){.capital-curve{height:150px;margin-top:16px}}
 /* The wealth card is the one dark surface: rebind the palette inside it so
    every nested rule using --text/--green/--red lands light-on-dark. */
 .overview-wealth{
@@ -4113,7 +4118,6 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
         <p class="hint">{{ overviewLastUpdated }}</p>
       </div>
       <div class="overview-dashboard-actions">
-        <button class="btn btn-ghost btn-sm" @click="lang=lang==='zh'?'en':'zh';localStorage.setItem('touji_lang_v1',lang)" title="切换语言">{{ lang==='zh'?'EN':'中' }}</button>
         <button :class="['btn','btn-sm',showcaseMode?'btn-primary':'btn-ghost']" @click="toggleShowcase" title="隐藏真实金额，适合公开展示">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
           {{ showcaseMode?'展示中':'隐藏金额' }}
@@ -4140,6 +4144,9 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
             <span>还没有录入持仓，真实收益暂时算不出来。</span>
             <button class="text-command" @click="setActiveTab('positions')">建立持仓 →</button>
           </p>
+        </div>
+        <div class="capital-curve" v-if="capitalCurve.length>1">
+          <canvas ref="capitalChart"></canvas>
         </div>
         <div class="capital-equation">
           <div class="capital-equation-head"><span>资金关系</span><code>持仓 + 取出 - 投入 = 收益</code></div>
@@ -6441,7 +6448,11 @@ const I18N={
     posMarketAll:'All',
   }
 }
-let lang=ref(localStorage.getItem(LANG_K)||(navigator.language.startsWith('zh')?'zh':'en'))
+// The 2026-07 workspace rewrite hardcoded its Chinese strings instead of going
+// through t(), so switching to English only ever translated the older screens.
+// Rather than ship a toggle that half works, the UI is Chinese until those
+// strings are wired back up — t() and the en dictionary stay for that work.
+let lang=ref('zh')
 function t(key,params){
   const d=I18N[lang.value]||I18N.en
   let v=d[key]
@@ -6452,7 +6463,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.09.02-3'
+  const APP_VERSION='v2026.09.09-1'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -6496,7 +6507,7 @@ setup(){
   function toggleShowcase(){
     showcaseMode.value=!showcaseMode.value
     localStorage.setItem(SHOWCASE_K,showcaseMode.value?'true':'false')
-    Vue.nextTick(()=>{renderChart();renderPosPieChart()})
+    Vue.nextTick(()=>{renderChart();renderPosPieChart();renderCapitalChart()})
     showToast(showcaseMode.value?'已开启展示模式，真实金额已隐藏':'已关闭展示模式','info')
   }
 
@@ -6518,7 +6529,7 @@ setup(){
     theme.value=item.key
     applyTheme(item.key)
     try{localStorage.setItem(THEME_K,item.key)}catch(e){}
-    Vue.nextTick(()=>{renderChart();renderPosPieChart()})
+    Vue.nextTick(()=>{renderChart();renderPosPieChart();renderCapitalChart()})
     showToast(`已切换为${item.label}主题`,'info')
   }
   applyTheme(theme.value)
@@ -6553,6 +6564,7 @@ setup(){
     localStorage.setItem(ACTIVE_TAB_K,tab)
     Vue.nextTick(()=>{
       if(tab==='records'){renderChart()}
+      if(tab==='overview'){Vue.nextTick(renderCapitalChart)}
       if(tab==='positions')renderPosPieChart()
     })
   }
@@ -8749,7 +8761,7 @@ setup(){
       setServerAutoSyncReady(true)
       markServerSyncComplete()
       serverMigrationOpen.value=false
-      Vue.nextTick(()=>{renderChart();renderPosPieChart()})
+      Vue.nextTick(()=>{renderChart();renderPosPieChart();renderCapitalChart()})
       showToast('服务器账本已下载，本机旧数据保存在快照中','success')
     }catch(error){
       serverAccount.error=serverErrorMessage(error)
@@ -8766,7 +8778,7 @@ setup(){
       setServerAutoSyncReady(true)
       markServerSyncComplete()
       serverMigrationOpen.value=false
-      Vue.nextTick(()=>{renderChart();renderPosPieChart()})
+      Vue.nextTick(()=>{renderChart();renderPosPieChart();renderCapitalChart()})
       showToast(`合并完成：${entries.value.length} 条流水，${positions.value.length} 个持仓`,'success')
     }catch(error){
       if(error?.code==='REVISION_CONFLICT')await fetchServerRemote().catch(()=>{})
@@ -9344,6 +9356,29 @@ setup(){
 
   // Chart
   const trendChart=ref(null)
+  const capitalChart=ref(null)
+  let capitalChartInstance=null
+
+  // Cumulative capital in and out, one point per day that has a flow. The gap
+  // between the two lines is the net figure headlined above the chart.
+  const capitalCurve=computed(()=>{
+    const byDay=new Map()
+    entries.value.forEach(e=>{
+      if(e.type!=='入金'&&e.type!=='出金')return
+      const day=(e.date||'').slice(0,10)
+      if(!day)return
+      const bucket=byDay.get(day)||{in:0,out:0}
+      if(e.type==='入金')bucket.in+=amountCNY(e); else bucket.out+=amountCNY(e)
+      byDay.set(day,bucket)
+    })
+    const days=[...byDay.keys()].sort()
+    let cumIn=0,cumOut=0
+    return days.map(day=>{
+      const b=byDay.get(day)
+      cumIn+=b.in; cumOut+=b.out
+      return {day,cumIn,cumOut,net:cumIn-cumOut}
+    })
+  })
 
   const posPieChart=ref(null)
   let chartInstance=null
@@ -9352,6 +9387,49 @@ setup(){
 
   function cssVar(name,fallback){
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim()||fallback
+  }
+
+  function renderCapitalChart(){
+    if(capitalChartInstance){capitalChartInstance.destroy();capitalChartInstance=null}
+    if(!capitalChart.value||typeof Chart==='undefined')return
+    const points=capitalCurve.value
+    if(points.length<2)return
+
+    // The card is the one dark surface, so these are literals rather than the
+    // light-theme chart tokens.
+    const ink='rgba(255,255,255,.92)'
+    const dim='rgba(255,255,255,.34)'
+    const inLine='hsl(6 66% 70%)'
+    const outLine='hsl(152 46% 66%)'
+
+    capitalChartInstance=new Chart(capitalChart.value,{
+      type:'line',
+      data:{
+        labels:points.map(p=>p.day),
+        datasets:[
+          {label:'累计投入',data:points.map(p=>p.cumIn),borderColor:inLine,backgroundColor:'rgba(233,140,136,.10)',fill:true,tension:.28,pointRadius:0,pointHoverRadius:4,borderWidth:2},
+          {label:'累计取出',data:points.map(p=>p.cumOut),borderColor:outLine,backgroundColor:'transparent',tension:.28,pointRadius:0,pointHoverRadius:4,borderWidth:2}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        // No entrance animation: this is a balance, not a reveal.
+        animation:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{display:true,position:'bottom',align:'start',labels:{color:dim,boxWidth:8,boxHeight:8,usePointStyle:true,pointStyle:'circle',font:{size:10},padding:14}},
+          tooltip:{
+            backgroundColor:'rgba(20,22,26,.96)',borderColor:'rgba(255,255,255,.14)',borderWidth:1,
+            titleColor:ink,bodyColor:ink,padding:10,displayColors:true,
+            callbacks:{label:ctx=>`${ctx.dataset.label}: ${showcaseMode.value?'••••':Number(ctx.raw).toLocaleString('zh-CN',{maximumFractionDigits:0})}`}
+          }
+        },
+        scales:{
+          x:{ticks:{color:dim,font:{size:9},maxTicksLimit:6},grid:{display:false},border:{color:'rgba(255,255,255,.14)'}},
+          y:{ticks:{color:dim,font:{size:9},maxTicksLimit:4,callback:v=>showcaseMode.value?'••••':Number(v).toLocaleString('zh-CN',{notation:'compact'})},grid:{color:'rgba(255,255,255,.08)'},border:{display:false}}
+        }
+      }
+    })
   }
 
   function renderChart(){
@@ -9485,12 +9563,12 @@ setup(){
     watch([activeTab,showcaseMode],updateAppClass,{immediate:true})
     window.addEventListener('resize',updateAppClass)
     // Render charts after data loads
-    Vue.nextTick(()=>{renderChart();renderPosPieChart()})
+    Vue.nextTick(()=>{renderChart();renderPosPieChart();renderCapitalChart()})
     watch(periodRows,()=>Vue.nextTick(renderChart))
 
     watch(posRows,()=>Vue.nextTick(renderPosPieChart))
     // Rerender charts on language change
-    watch(()=>lang.value,()=>{Vue.nextTick(()=>{renderChart();renderPosPieChart()})})
+    watch(()=>lang.value,()=>{Vue.nextTick(()=>{renderChart();renderPosPieChart();renderCapitalChart()})})
     // 切换货币时自动拉取汇率（仅非CNY且汇率为空时）
     watch(()=>form.currency,(cur,previous)=>{
       if(quickAction.value==='deposit'){
@@ -9534,7 +9612,7 @@ setup(){
   return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
-    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
+    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,capitalChart,capitalCurve,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
     behaviorAnalysis,psychoTags,behaviorAdvice,
 
     fmt,fmtUnits,fmtPct,amountCNY,isFxEntry,fxEntryTargetAmount,fxEntryRate,fxTargetFromSource,parseTags,tagsText,normalizeAssetType,rowClass,toggleEx,toggleAssetType,toggleTag,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,editingDetail,
