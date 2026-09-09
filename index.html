@@ -3986,6 +3986,22 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:not([tabin
 .overview-balance-value{font-family:var(--font-sans);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .capital-equation,.capital-equation-grid>div{border-color:hsl(var(--border-token))}
 .overview-allocation{padding:calc(var(--spacing)*5);background:hsl(var(--accent-token)/.22)}
+
+/* Picking the wrong action here writes the wrong kind of record — it is the
+   one control on the page where a misread produces bad data — so the selected
+   tab is made unmistakable rather than merely tasteful. Same accent language
+   as the rail's selected item. */
+.entry-action-bar{background:hsl(var(--muted-token)/.55)}
+.entry-action-button{border-bottom-width:3px;border-left-color:hsl(var(--border-token))}
+.entry-action-button strong{font-size:14px}
+.entry-action-button span{font-size:10px;line-height:1.4}
+.entry-action-button.active{
+  border-bottom-color:hsl(var(--secondary));
+  background:hsl(var(--card-token));
+  color:hsl(var(--foreground))
+}
+.entry-action-button.active strong{font-weight:700}
+.entry-action-button.active span{color:hsl(var(--muted-foreground))}
 .allocation-track{background:hsl(var(--muted-token))}
 .overview-grid{gap:calc(var(--spacing)*4)}
 .overview-row{border-color:hsl(var(--border-token));border-radius:5px}
@@ -4180,7 +4196,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
         <div v-else>
           <p class="overview-balance-label">已投入净额</p>
           <p class="overview-balance-value privacy-number">{{ fmt(netInvested) }} <small>CNY</small></p>
-          <p class="overview-untracked">
+          <p class="overview-untracked" v-if="entries.length">
             <span>还没有录入持仓，真实收益暂时算不出来。</span>
             <button class="text-command" @click="setActiveTab('positions')">建立持仓 →</button>
           </p>
@@ -4223,7 +4239,6 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
         <div v-else class="allocation-empty">
           <strong>还没有可展示的持仓</strong>
           <span>建立初始仓位或记录第一笔买入后，这里会自动形成资产配置。</span>
-          <button class="text-command" @click="setActiveTab('quick')">开始录入 →</button>
         </div>
       </aside>
     </div>
@@ -4242,7 +4257,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
           <span class="overview-row-value"><strong>{{ fmt(p.value) }}</strong><small :class="p.pl>=0?'text-green':'text-red'">{{ p.hasCost?(p.pl>=0?'+':'')+fmt(p.pl):'待补成本' }}</small></span>
         </button>
       </div>
-      <div class="empty-block" v-else><strong>还没有持仓</strong><span>从“录入”添加第一笔买入，或在持仓页手动建立初始仓位。</span><button class="text-command" @click="setActiveTab('quick')">开始录入 →</button></div>
+      <div class="empty-block" v-else><strong>还没有持仓</strong><span>从“录入”添加第一笔买入，或在持仓页手动建立初始仓位。</span></div>
     </section>
     <section class="panel overview-module">
       <div class="panel-header">
@@ -6510,7 +6525,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.09.09-5'
+  const APP_VERSION='v2026.09.09-6'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})

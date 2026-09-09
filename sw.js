@@ -1,4 +1,4 @@
-const CACHE_NAME = 'touji-v2026-09-09-5';
+const CACHE_NAME = 'touji-v2026-09-09-6';
 
 const APP_ASSETS = [
   './js/entry-engine.js',
