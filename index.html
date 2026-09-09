@@ -11,6 +11,7 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>投记 · 个人投资记账</title>
+<meta name="description" content="投记是一个本地优先的个人投资账本：记录每一笔入金、出金与买卖，看清自己真正投了多少、拿回多少。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/vue@3.5/dist/vue.global.prod.js"></script>
@@ -4169,8 +4170,8 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
   <section id="overview" class="panel overview-dashboard section-records section-stats section-data" v-show="activeTab==='overview'">
     <header class="overview-dashboard-head">
       <div class="overview-dashboard-title">
-        <p class="module-kicker">PORTFOLIO STATEMENT · {{ APP_VERSION }}</p>
-        <h1>资产快照</h1>
+        <p class="module-kicker">{{ hasTrackedHoldings?'PORTFOLIO STATEMENT':'CAPITAL STATEMENT' }} · {{ APP_VERSION }}</p>
+        <h1>{{ hasTrackedHoldings?'资产快照':'资金快照' }}</h1>
         <p class="hint">{{ overviewLastUpdated }}</p>
       </div>
       <div class="overview-dashboard-actions">
@@ -6525,7 +6526,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.09.09-6'
+  const APP_VERSION='v2026.09.09-7'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
