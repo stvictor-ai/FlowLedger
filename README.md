@@ -16,13 +16,13 @@
 
 ### 桌面端
 
-![投记桌面端资产总览](screenshots/desktop-dashboard.png)
+![投记桌面端资产快照：净值、资金走势与资产配置](screenshots/desktop-dashboard.png)
 
 ### 移动端与持仓
 
 | 移动端总览 | 持仓管理 |
 |---|---|
-| <img src="screenshots/mobile-dashboard.png" alt="投记移动端资产总览" width="360"> | <img src="screenshots/positions.png" alt="投记桌面端持仓管理" width="760"> |
+| <img src="screenshots/mobile-dashboard.png" alt="投记移动端资产快照" width="360"> | <img src="screenshots/positions.png" alt="投记桌面端持仓工作台" width="760"> |
 
 ---
 
