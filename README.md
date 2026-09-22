@@ -247,16 +247,50 @@ curl -H "Authorization: Bearer tjk_你的令牌" \
 
 ### 部署提醒
 
-接口住在 Node 服务里，而 GitHub Actions 那条流水线**只发静态文件**（`index.html` / `sw.js` / `manifest.json` / 图标 / `js/`）。所以前端面板会跟着下一次 push 上线，但接口本身要在服务器上重建容器才会生效：
+接口住在 Node 服务里，而 GitHub Actions 那条流水线**只发静态文件**（`index.html` / `sw.js` / `manifest.json` / 图标 / `js/`）。所以前端面板会跟着 push 上线，但接口本身要在服务器上做两件事才会生效。
+
+**一、重建容器并迁移**（生产部署在 `/opt/touji`）：
 
 ```bash
-cd /srv/flowledger        # 或你放 docker-compose.yml 的目录
+cd /opt/touji
 git pull
-docker compose up -d --build api
-docker compose exec api npm run db:migrate   # 建 api_tokens 表
+# 这台机器用宿主机已有的 Caddy，两个 compose 文件缺一不可 ——
+# 只用默认那个会丢掉 8787 的端口映射，Caddy 立刻 502。
+docker compose -f docker-compose.yml -f deploy/docker-compose.existing-caddy.yml up -d --build api
+docker compose -f docker-compose.yml -f deploy/docker-compose.existing-caddy.yml exec api npm run db:migrate
+curl -s http://127.0.0.1:8787/api/v1/health    # 应返回 200
 ```
 
-迁移没跑之前，面板里创建令牌会失败。
+**二、在宿主机 Caddy 给 feed 开豁免**。站点块里的 `forward_auth` 没有 matcher，会挡住包括 `/api/*` 在内的一切，Bearer 令牌根本到不了应用。把需要豁免的那条路径单独 `handle` 出来：
+
+```caddy
+ledger.orbitshz.com {
+    encode zstd gzip
+
+    @feed path /api/v1/feed /api/v1/feed/*
+    handle @feed {
+        # 机器调用自带令牌，不走会话校验；同时剥掉客户端伪造的身份头
+        request_header -X-Orbit-User-Id
+        request_header -X-Orbit-User-Role
+        request_header -X-Orbit-User-Email
+        reverse_proxy 127.0.0.1:8787
+    }
+
+    handle {
+        forward_auth 127.0.0.1:3001 { ... }   # 其余一切照旧
+        ...
+    }
+}
+```
+
+改完**先验语法再 reload**，写错直接 reload 会让整个站点下线：
+
+```bash
+sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+sudo systemctl reload caddy
+```
+
+只豁免 `/api/v1/feed`。创建和撤销令牌的 `/api/v1/tokens` 必须继续走会话校验——那是在浏览器里操作的。
 
 ### 关于安全
 
