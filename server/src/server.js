@@ -8,6 +8,10 @@ import { createAdminRepository } from './modules/admin/repository.js'
 import { createAdminService } from './modules/admin/service.js'
 import { createSyncRepository } from './modules/sync/repository.js'
 import { createSyncService } from './modules/sync/service.js'
+import { createFeedRepository } from './modules/feed/repository.js'
+import { createFeedService } from './modules/feed/service.js'
+import { createTokenRepository } from './modules/tokens/repository.js'
+import { createTokenService } from './modules/tokens/service.js'
 
 const config = loadConfig()
 const pool = createPool(config)
@@ -18,7 +22,21 @@ const adminRepository = createAdminRepository(pool)
 const adminService = createAdminService({ repository: adminRepository, secret: config.sessionSecret })
 const syncRepository = createSyncRepository(pool)
 const syncService = createSyncService({ repository: syncRepository })
-const app = createApp({ authService, adminService, syncService, database: pool, config })
+const feedService = createFeedService({ repository: createFeedRepository(pool) })
+// Same pepper as sessions: the secret never leaves this process either way.
+const tokenService = createTokenService({
+  repository: createTokenRepository(pool),
+  pepper: config.sessionSecret
+})
+const app = createApp({
+  authService,
+  adminService,
+  syncService,
+  feedService,
+  tokenService,
+  database: pool,
+  config
+})
 
 const server = app.listen(config.port, '0.0.0.0', () => {
   console.log(`touji-api listening on port ${config.port}`)

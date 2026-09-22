@@ -3480,6 +3480,28 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .data-recovery-head div{display:flex;gap:7px}
 .data-recovery-list{border-top:1px solid var(--border)}
 .data-recovery-empty{padding:28px 0;color:var(--muted);font-size:9px;text-align:center}
+.api-access-section{margin-top:22px}
+.api-access-empty{padding:34px 0;color:var(--muted);font-size:11px;text-align:center}
+.api-endpoint{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-control);background:var(--surface-quiet);overflow-x:auto}
+.api-endpoint-label{flex:none;padding:2px 7px;border-radius:3px;background:var(--accent);color:var(--primary-ink);font:700 9px/1.6 var(--mono-font);letter-spacing:.06em}
+.api-endpoint code{font:600 12px/1.5 var(--mono-font);white-space:nowrap}
+.api-hint{margin-top:9px;color:var(--muted);font-size:10px;line-height:1.75}
+.api-hint code{padding:1px 4px;border-radius:3px;background:var(--overlay);font-family:var(--mono-font);font-size:10px}
+.api-create{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px}
+/* The secret exists on screen once; make that impossible to scroll past. */
+.api-token-reveal{margin-top:14px;padding:16px;border:1px solid var(--accent);border-radius:var(--radius-control);background:var(--accent-dim)}
+.api-token-reveal-head{display:grid;gap:3px;margin-bottom:11px}
+.api-token-reveal-head strong{font-size:11px}
+.api-token-reveal-head span{color:var(--muted);font-size:10px}
+.api-token-value{display:block;padding:11px 12px;border:1px solid var(--border);border-radius:var(--radius-compact);background:var(--panel);font:600 11px/1.6 var(--mono-font);word-break:break-all;user-select:all}
+.api-token-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+.api-token-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px solid var(--border)}
+.api-token-name{display:flex;align-items:center;gap:8px}
+.api-token-name strong{font-size:12px}
+.api-token-badge{padding:1px 6px;border-radius:999px;background:var(--overlay);color:var(--muted);font-size:9px}
+.api-token-meta{margin-top:4px;color:var(--muted);font-size:10px}
+.api-token-meta code{font-family:var(--mono-font)}
+@media(max-width:760px){.api-create{grid-template-columns:1fr}}
 .data-center .snap-row,.data-center .batch-row{padding-inline:0}
 @keyframes workspaceReveal{from{opacity:.45;transform:translateY(4px)}to{opacity:1;transform:none}}
 @media(max-width:900px){
@@ -4967,6 +4989,76 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
             <button class="data-transfer-action" @click="exportJSON"><span class="data-transfer-icon">{ }</span><span><strong>JSON 数据备份</strong><small>包含流水、持仓与资产设置</small></span><span>›</span></button>
           </div>
         </section>
+      </div>
+
+      <div v-else-if="dataView==='access'" class="data-center-view">
+        <div class="data-view-head">
+          <div><h3>接口访问</h3><p>给交易台、脚本或 agent 一个只读令牌，它只能读出入金，不能改动账本。</p></div>
+        </div>
+
+        <div v-if="!cloudReady" class="api-access-empty">
+          需要先连接 Orbit 账号，令牌才能绑定到你的账本。
+        </div>
+
+        <template v-else>
+          <section class="api-access-section">
+            <div class="api-endpoint">
+              <span class="api-endpoint-label">GET</span>
+              <code>{{ apiFeedBase }}/cashflows</code>
+            </div>
+            <p class="api-hint">
+              按时间升序返回出入金，附折合人民币金额与区间汇总。支持
+              <code>since</code> / <code>until</code>（YYYY-MM-DD）、
+              <code>include=all</code>（并入买卖）、<code>limit</code>。
+            </p>
+          </section>
+
+          <section class="api-access-section">
+            <div class="api-create">
+              <input class="form-input" v-model="apiTokenName" maxlength="60"
+                placeholder="令牌用途，例如：家里的交易台" @keyup.enter="createApiToken">
+              <button class="btn btn-primary btn-sm" :disabled="apiTokenCreating" @click="createApiToken">
+                {{ apiTokenCreating?'创建中…':'创建令牌' }}
+              </button>
+            </div>
+
+            <div v-if="apiTokenPlain" class="api-token-reveal">
+              <div class="api-token-reveal-head">
+                <strong>这是唯一一次显示，请立刻保存</strong>
+                <span>服务器只存哈希，关掉就找不回来了。</span>
+              </div>
+              <code class="api-token-value">{{ apiTokenPlain }}</code>
+              <div class="api-token-actions">
+                <button class="btn btn-ghost btn-xs" @click="copyApiToken">复制令牌</button>
+                <button class="btn btn-ghost btn-xs" @click="copyApiCurl">复制 curl 示例</button>
+                <button class="btn btn-ghost btn-xs" @click="apiTokenPlain=''">我已保存</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="api-access-section">
+            <div class="data-recovery-head">
+              <h4>已创建的令牌 · {{ apiTokens.filter(t=>!t.revokedAt).length }}/10</h4>
+              <div><button class="btn btn-ghost btn-xs" @click="loadApiTokens">刷新</button></div>
+            </div>
+            <div class="data-recovery-list">
+              <div v-if="apiTokensLoading" class="data-recovery-empty">读取中…</div>
+              <div v-else-if="!apiTokens.length" class="data-recovery-empty">还没有令牌。</div>
+              <div v-for="token in apiTokens" :key="token.id" class="api-token-row">
+                <div>
+                  <div class="api-token-name">
+                    <strong>{{ token.name }}</strong>
+                    <span v-if="token.revokedAt" class="api-token-badge">已撤销</span>
+                  </div>
+                  <div class="api-token-meta">
+                    <code>{{ token.prefix }}…</code> · 最近使用 {{ apiTokenTime(token.lastUsedAt) }}
+                  </div>
+                </div>
+                <button v-if="!token.revokedAt" class="btn btn-ghost btn-xs" @click="revokeApiToken(token)">撤销</button>
+              </div>
+            </div>
+          </section>
+        </template>
       </div>
 
       <div v-else class="data-center-view">
@@ -6526,7 +6618,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.09.09-7'
+  const APP_VERSION='v2026.09.22-1'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -6563,8 +6655,80 @@ setup(){
   const dataViews=[
     {key:'sync',label:'云同步',caption:'手机与电脑'},
     {key:'transfer',label:'导入导出',caption:'文件迁移'},
-    {key:'recovery',label:'恢复记录',caption:'快照与撤销'}
+    {key:'recovery',label:'恢复记录',caption:'快照与撤销'},
+    {key:'access',label:'接口访问',caption:'只读 API'}
   ]
+
+  // Read-only API tokens. The secret comes back exactly once, on creation;
+  // after that the server only holds a hash, so it cannot be shown again.
+  const apiTokens=ref([])
+  const apiTokensLoading=ref(false)
+  const apiTokenName=ref('')
+  const apiTokenCreating=ref(false)
+  const apiTokenPlain=ref('')
+  const apiFeedBase=computed(()=>`${location.origin}/api/v1/feed`)
+
+  async function loadApiTokens(){
+    if(!serverClient||!cloudReady.value)return
+    apiTokensLoading.value=true
+    try{
+      const data=await serverClient.listApiTokens()
+      apiTokens.value=Array.isArray(data?.tokens)?data.tokens:[]
+    }catch(e){
+      showToast('读取接口令牌失败','error')
+    }finally{
+      apiTokensLoading.value=false
+    }
+  }
+
+  async function createApiToken(){
+    const name=apiTokenName.value.trim()
+    if(!name){showToast('先给令牌起个名字','error');return}
+    if(!serverClient)return
+    apiTokenCreating.value=true
+    try{
+      const created=await serverClient.createApiToken({name})
+      apiTokenPlain.value=created.token
+      apiTokenName.value=''
+      await loadApiTokens()
+      showToast('令牌已创建，请立刻复制保存')
+    }catch(e){
+      showToast(e?.code==='TOO_MANY_TOKENS'?'活跃令牌已达上限，先撤销一个':'创建令牌失败','error')
+    }finally{
+      apiTokenCreating.value=false
+    }
+  }
+
+  async function revokeApiToken(token){
+    if(!confirm(`撤销「${token.name}」？使用它的程序会立刻失去访问。`))return
+    try{
+      await serverClient.revokeApiToken(token.id)
+      if(apiTokenPlain.value&&apiTokenPlain.value.startsWith(token.prefix))apiTokenPlain.value=''
+      await loadApiTokens()
+      showToast('令牌已撤销')
+    }catch(e){
+      showToast('撤销失败','error')
+    }
+  }
+
+  function copyApiToken(){
+    if(!apiTokenPlain.value)return
+    navigator.clipboard?.writeText(apiTokenPlain.value)
+      .then(()=>showToast('令牌已复制'))
+      .catch(()=>showToast('复制失败，请手动选中','error'))
+  }
+
+  function copyApiCurl(){
+    const snippet=`curl -H "Authorization: Bearer ${apiTokenPlain.value||'<你的令牌>'}" \\\n  "${apiFeedBase.value}/cashflows?since=2026-01-01"`
+    navigator.clipboard?.writeText(snippet)
+      .then(()=>showToast('示例已复制'))
+      .catch(()=>showToast('复制失败','error'))
+  }
+
+  function apiTokenTime(value){
+    if(!value)return '从未使用'
+    return dayjs(value).format('YYYY-MM-DD HH:mm')
+  }
   const SHOWCASE_K='touji_showcase_v1'
   const showcaseMode=ref(localStorage.getItem(SHOWCASE_K)==='true')
   function toggleShowcase(){
@@ -6628,6 +6792,7 @@ setup(){
     Vue.nextTick(()=>{
       if(tab==='records'){renderChart()}
       if(tab==='overview'){Vue.nextTick(renderCapitalChart)}
+      if(tab==='data'&&dataView.value==='access')loadApiTokens()
       if(tab==='positions')renderPosPieChart()
     })
   }
@@ -9657,6 +9822,8 @@ setup(){
     // mount — and the canvas sits behind a v-if until there is data, so this
     // chart needs the same watcher the other two already have.
     watch([capitalCurveView,capitalRange],()=>Vue.nextTick(renderCapitalChart))
+    // Only fetch tokens when that panel is actually opened.
+    watch(dataView,view=>{ if(view==='access')loadApiTokens() })
     // Rerender charts on language change
     watch(()=>lang.value,()=>{Vue.nextTick(()=>{renderChart();renderPosPieChart();renderCapitalChart()})})
     // 切换货币时自动拉取汇率（仅非CNY且汇率为空时）
@@ -9715,7 +9882,9 @@ setup(){
     t,lang,
     positions,posForm,posRows,allPositionRows,posSummary,positionRowsSorted,selectedPositionId,selectedPosition,selectedPositionAllocation,selectPosition,overviewTopPositions,overviewAllocation,overviewLastUpdated,addPosition,removePosition,updatePosition,createPositionFlow,fetchPosPrices,showPosForm,posSymbolSearch,showSymbolPicker,posSearchResults,posSearching,posResultsShown,posMarket,POS_MARKETS,onPosSearchInput,selectEmResult,selectCryptoQuick,cryptoQuickList,expandedPosFlows,togglePosFlow,
     showDashCfg,dashPanels,dashVisible,toggleDashPanel,moveDashPanel,resetDashboard,DASH_DEFAULT,dashLabels,
-    ASSET_TYPES,getPlatforms,assetColor}
+    ASSET_TYPES,getPlatforms,assetColor,
+    apiTokens,apiTokensLoading,apiTokenName,apiTokenCreating,apiTokenPlain,apiFeedBase,
+    loadApiTokens,createApiToken,revokeApiToken,copyApiToken,copyApiCurl,apiTokenTime}
 }
 }).mount('#app')
 

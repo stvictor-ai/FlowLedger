@@ -31,7 +31,7 @@ function createFakePool({ versions = [], failOnMigration = false } = {}) {
 test('initial migration defines all account and ledger tables', async () => {
   const migrations = await loadMigrations()
 
-  assert.deepEqual(migrations.map(item => item.version), ['001_initial', '002_admin_roles', '003_orbit_identity'])
+  assert.deepEqual(migrations.map(item => item.version), ['001_initial', '002_admin_roles', '003_orbit_identity', '004_api_tokens'])
   for (const table of ['users', 'invitation_codes', 'sessions', 'ledgers', 'entries', 'positions']) {
     assert.match(migrations[0].sql, new RegExp(`CREATE TABLE ${table}`))
   }
@@ -40,20 +40,25 @@ test('initial migration defines all account and ledger tables', async () => {
   assert.match(migrations[1].sql, /'user', 'admin'/)
   assert.match(migrations[2].sql, /ADD COLUMN orbit_user_id/)
   assert.match(migrations[2].sql, /password_hash DROP NOT NULL/)
+  assert.match(migrations[3].sql, /CREATE TABLE api_tokens/)
+  // The secret is never stored, and the scope cannot silently widen.
+  assert.match(migrations[3].sql, /token_hash TEXT NOT NULL UNIQUE/)
+  assert.match(migrations[3].sql, /CHECK \(scope IN \('cashflows:read'\)\)/)
+  assert.doesNotMatch(migrations[3].sql, /token TEXT|secret TEXT/)
 })
 
 test('migration runner applies pending migrations once and releases the client', async () => {
   const fake = createFakePool()
   const applied = await runMigrations({ pool: fake.pool })
 
-  assert.deepEqual(applied, ['001_initial', '002_admin_roles', '003_orbit_identity'])
+  assert.deepEqual(applied, ['001_initial', '002_admin_roles', '003_orbit_identity', '004_api_tokens'])
   assert.equal(fake.calls.some(call => call.text.includes('CREATE TABLE users')), true)
   assert.equal(fake.calls.some(call => call.text === 'COMMIT'), true)
   assert.equal(fake.wasReleased(), true)
 })
 
 test('migration runner skips versions already recorded', async () => {
-  const fake = createFakePool({ versions: ['001_initial', '002_admin_roles', '003_orbit_identity'] })
+  const fake = createFakePool({ versions: ['001_initial', '002_admin_roles', '003_orbit_identity', '004_api_tokens'] })
   const applied = await runMigrations({ pool: fake.pool })
 
   assert.deepEqual(applied, [])

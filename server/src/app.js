@@ -3,6 +3,10 @@ import { createAuthRouter } from './modules/auth/routes.js'
 import { createRequireAuth, requireAdmin } from './modules/auth/middleware.js'
 import { createAdminRouter } from './modules/admin/routes.js'
 import { createSyncRouter } from './modules/sync/routes.js'
+import { createFeedRouter } from './modules/feed/routes.js'
+import { createTokenRouter } from './modules/tokens/routes.js'
+import { createRequireApiToken } from './modules/tokens/middleware.js'
+import rateLimit from 'express-rate-limit'
 import { createOriginGuard } from './middleware/origin.js'
 import { securityHeaders } from './middleware/security.js'
 
@@ -11,6 +15,8 @@ export function createApp({
   authService = null,
   adminService = null,
   syncService = null,
+  feedService = null,
+  tokenService = null,
   database = null,
   config = {
     appOrigin: 'http://127.0.0.1:8787',
@@ -44,6 +50,21 @@ export function createApp({
     }
     return next()
   })
+  if (feedService && tokenService) {
+    app.use(
+      '/api/v1/feed',
+      rateLimit({
+        windowMs: 60_000,
+        limit: 60,
+        standardHeaders: 'draft-7',
+        legacyHeaders: false,
+        message: { error: 'RATE_LIMITED' }
+      }),
+      createRequireApiToken(tokenService),
+      createFeedRouter({ feedService })
+    )
+  }
+
   app.use('/api/v1', createOriginGuard({
     appOrigin: config.appOrigin,
     requireOrigin: config.isProduction
@@ -85,6 +106,9 @@ export function createApp({
         requireAdmin,
         createAdminRouter({ adminService })
       )
+    }
+    if (tokenService) {
+      app.use('/api/v1/tokens', requireAuth, createTokenRouter({ tokenService }))
     }
     if (syncService) {
       app.use(

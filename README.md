@@ -2,7 +2,7 @@
 
 > 本地优先的个人投资账本：记录资金流与交易流，追踪持仓价值，看清真实净值。
 
-[在线体验](https://stvictor-ai.github.io/FlowLedger/) · [使用路径](#现在怎么用) · [核心功能](#核心功能) · [账号同步](#个人站统一账号同步) · [自建部署](docs/deployment/aws.md) · [迭代路线](#迭代路线)
+[在线体验](https://stvictor-ai.github.io/FlowLedger/) · [使用路径](#现在怎么用) · [核心功能](#核心功能) · [账号同步](#个人站统一账号同步) · [只读接口](#只读接口给交易台和-agent) · [自建部署](docs/deployment/aws.md) · [迭代路线](#迭代路线)
 
 投记是一款**本地优先**的个人投资记账工具。它帮你记录每一笔出入金和买卖操作，自动同步持仓数量与加权成本，按可获取的行情更新资产估值，计算持仓浮盈与已实现盈亏，最终汇总出你的**真实净值与收益率**。
 
@@ -191,6 +191,80 @@ docker compose up -d --build
 之后可点击「智能同步」先预览本地与云端差异，再确认双向合并。冲突使用每条数据的 `updatedAt` 时间戳判断，删除也会通过删除记录同步。
 
 > Token 只保存在配置它的浏览器 localStorage 中，不会写入代码仓库、导出文件或 Gist。复盘笔记、复盘清单和提醒规则目前只保存在各自浏览器本地。
+
+## 只读接口（给交易台和 agent）
+
+如果你想让本地的交易台、脚本或 AI agent 读到自己的出入金，在「同步数据 → 接口访问」里创建一个令牌即可。它**只能读出入金，不能改动账本**，随时可以撤销。
+
+### 拿到令牌
+
+面板里填一个用途名称（例如"家里的交易台"）→ 创建。**令牌只显示这一次**：服务器只保存哈希，关掉就找不回来了。最多同时存在 10 个活跃令牌。
+
+### 调用
+
+```bash
+curl -H "Authorization: Bearer tjk_你的令牌" \
+  "https://ledger.orbitshz.com/api/v1/feed/cashflows?since=2026-01-01"
+```
+
+返回：
+
+```json
+{
+  "ledger":  { "id": "…", "name": "我的账本", "revision": 41 },
+  "currency": "CNY",
+  "summary": { "count": 104, "totalIn": 138000, "totalOut": 35000, "net": 103000 },
+  "cashflows": [
+    {
+      "id": "…", "date": "2026-09-09", "time": "11:25",
+      "direction": "out", "type": "出金",
+      "amount": 200, "currency": "CNY", "amountCNY": 200,
+      "platform": "欧易", "assetType": null, "note": "还贷款利息", "tags": []
+    }
+  ],
+  "truncated": false,
+  "generatedAt": "2026-09-22T06:00:00.000Z"
+}
+```
+
+要点：
+
+- **`direction`** 是 `in` / `out`，给程序判断用；`type` 保留中文原文，给人看。
+- **`amountCNY`** 已按该笔记录的汇率折算好，调用方不需要自己处理外币。
+- **`summary`** 统计的是**本次返回的这些记录**，不是整个账本——加了筛选就是筛选后的区间汇总。
+- 记录按时间**升序**，删掉的记录不会出现。
+
+### 参数
+
+| 参数 | 说明 |
+|---|---|
+| `since` | `YYYY-MM-DD`，含当天 |
+| `until` | `YYYY-MM-DD`，含当天 |
+| `include` | `cash`（默认，仅出入金）或 `all`（并入买入卖出；买卖不计入 summary 的收支） |
+| `limit` | 1–2000，默认 2000。超出时保留**最近的**部分，并把 `truncated` 置为 `true` |
+
+`GET /api/v1/feed`（不带路径）会返回这套参数说明本身，agent 可以先读它再决定怎么调，不必外部约定。
+
+### 部署提醒
+
+接口住在 Node 服务里，而 GitHub Actions 那条流水线**只发静态文件**（`index.html` / `sw.js` / `manifest.json` / 图标 / `js/`）。所以前端面板会跟着下一次 push 上线，但接口本身要在服务器上重建容器才会生效：
+
+```bash
+cd /srv/flowledger        # 或你放 docker-compose.yml 的目录
+git pull
+docker compose up -d --build api
+docker compose exec api npm run db:migrate   # 建 api_tokens 表
+```
+
+迁移没跑之前，面板里创建令牌会失败。
+
+### 关于安全
+
+- 令牌走 `Authorization: Bearer`，服务器只存 SHA-256 哈希，**明文不落库、不写日志**。
+- 作用域固定为 `cashflows:read`，数据库层面有 CHECK 约束——将来要加写权限必须显式改 schema，不会被顺手放开。
+- 响应带 `Cache-Control: no-store`，中间代理不会留副本。
+- 限流 60 次/分钟。出入金本来就不是高频数据，交易台几分钟拉一次足够。
+- 撤销后立即失效。怀疑泄露就撤销重建，不影响你在浏览器里的登录。
 
 ## 个人站统一账号同步
 

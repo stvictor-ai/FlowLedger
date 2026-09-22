@@ -69,6 +69,18 @@
       me() {
         return request('/api/v1/auth/me', { method: 'GET' })
       },
+      listApiTokens() {
+        return request('/api/v1/tokens', { method: 'GET' })
+      },
+      createApiToken(payload) {
+        return request('/api/v1/tokens', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        })
+      },
+      revokeApiToken(id) {
+        return request(`/api/v1/tokens/${encodeURIComponent(id)}`, { method: 'DELETE' })
+      },
       readSnapshot(ledgerId) {
         return request(`/api/v1/ledgers/${encodeURIComponent(ledgerId)}/sync`, { method: 'GET' })
       },
