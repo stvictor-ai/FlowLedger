@@ -8,3 +8,4 @@ node_modules/
 server/coverage/
 backups/
 my_data_backup.json
+.preview/

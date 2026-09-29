@@ -4111,6 +4111,15 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
   .overview-wealth,.overview-allocation,.position-summary-strip,.position-create-block,.position-list-panel,.position-detail,.table-wrap,.chart-wrap{border-radius:calc(var(--radius)*.64)}
   .overview-balance-value{font-size:clamp(36px,12vw,52px)}
 }
+
+/* Polish pass: alignment and rhythm found by reading every workspace rendered. */
+.terminal-nav button,.terminal-nav button .nav-copy{text-align:left;justify-items:start}
+/* Column titles once per ledger, not once per month: every month shares the
+   same grid, so the rows still line up under the first header. */
+.ledger-month+.ledger-month .ledger-column-head{display:none}
+.ledger-month+.ledger-month .ledger-month-head{padding-bottom:6px}
+.review-timeline-row{min-height:64px;padding-block:12px;row-gap:0}
+.review-timeline-main strong{display:block;margin-bottom:3px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -4376,7 +4385,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
             <span class="position-symbol">{{ p.icon||String(p.symbol).slice(0,4) }}</span>
             <span><strong>{{ p.name||p.symbol }}</strong><small>{{ p.symbol }} · {{ p.assetType||'未分类' }}</small></span>
           </span>
-          <span class="position-cell"><strong>{{ p.qty }}</strong><small>{{ p.hasCost?fmt(p.avgCost)+' '+p.currency:'未录成本' }}</small></span>
+          <span class="position-cell"><strong>{{ fmtQtyNum(p.qty) }}</strong><small>{{ p.hasCost?fmt(p.avgCost)+' '+p.currency:'未录成本' }}</small></span>
           <span class="position-cell"><strong>{{ p.price?fmt(p.price):'—' }}</strong><small>{{ p.price?p.currency:'等待行情' }}</small></span>
           <span class="position-cell"><strong class="privacy-number">{{ fmt(p.value) }}</strong><small>CNY</small></span>
           <span class="position-cell"><strong class="privacy-number" :style="{color:p.pl>=0?'var(--green)':'var(--red)'}">{{ p.hasCost?(p.pl>=0?'+':'')+fmt(p.pl):'—' }}</strong><small>{{ p.hasCost?fmtPct(p.plPct,1):'缺少成本' }}</small></span>
@@ -4435,7 +4444,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
           <strong class="privacy-number">{{ fmt(p.value) }}</strong>
         </div>
         <div class="position-mobile-metrics">
-          <div><span>份额</span><strong>{{ p.qty }}</strong></div>
+          <div><span>份额</span><strong>{{ fmtQtyNum(p.qty) }}</strong></div>
           <div><span>平均成本</span><strong>{{ p.hasCost?fmt(p.avgCost):'—' }}</strong></div>
           <div><span>浮动盈亏</span><strong class="privacy-number" :style="{color:p.pl>=0?'var(--green)':'var(--red)'}">{{ p.hasCost?(p.pl>=0?'+':'')+fmt(p.pl):'—' }}</strong></div>
         </div>
@@ -4524,7 +4533,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
           <template v-for="p in posRows" :key="p.id">
           <tr>
           <td><span v-if="p.icon" style="margin-right:4px;font-size:14px">{{ p.icon }}</span><strong>{{ p.symbol }}</strong><span v-if="p.name&&p.name!==p.symbol" style="color:var(--muted);margin-left:6px;font-size:11px">{{ p.name }}</span></td>
-          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.qty }}</td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums">{{ fmtQtyNum(p.qty) }}</td>
           <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.hasCost?fmt(p.avgCost):'-' }}<span v-if="p.hasCost&&p.currency!=='CNY'" style="font-size:10px;color:var(--dim);margin-left:3px">{{ p.currency }}</span></td>
           <td style="text-align:right;font-variant-numeric:tabular-nums">{{ p.price?fmt(p.price):t('posFetching') }}<span v-if="p.price&&p.currency!=='CNY'" style="font-size:10px;color:var(--dim);margin-left:3px">{{ p.currency }}</span></td>
           <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600">{{ p.value?fmt(p.value):'-' }}</td>
@@ -4568,7 +4577,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
             <span class="record-card-date"><span v-if="p.icon">{{ p.icon }}</span> {{ p.symbol }} <span v-if="p.name&&p.name!==p.symbol" style="font-size:10px;color:var(--dim)">{{ p.name }}</span></span>
             <button class="record-card-del" @click="removePosition(p.id)">✕</button>
           </div>
-          <div style="font-size:11px;color:var(--muted)">{{ p.qty }} {{ t('posQtyCol') }}<span v-if="p.hasCost"> × {{ fmt(p.avgCost) }}{{ p.currency!=='CNY'?' '+p.currency:'' }} = {{ t('posTotalCost') }} {{ fmt(p.cost) }} CNY</span></div>
+          <div style="font-size:11px;color:var(--muted)">{{ fmtQtyNum(p.qty) }} {{ t('posQtyCol') }}<span v-if="p.hasCost"> × {{ fmt(p.avgCost) }}{{ p.currency!=='CNY'?' '+p.currency:'' }} = {{ t('posTotalCost') }} {{ fmt(p.cost) }} CNY</span></div>
           <div style="display:flex;gap:12px;margin-top:6px;font-size:12px">
             <span>{{ t('posPriceCol') }} <strong>{{ p.price?fmt(p.price):'…' }}</strong><span v-if="p.price&&p.currency!=='CNY'" style="font-size:10px;color:var(--dim)"> {{ p.currency }}</span></span>
             <span>{{ t('posValueCol') }} <strong>{{ fmt(p.value) }}</strong> <span style="font-size:10px;color:var(--dim)">CNY</span></span>
@@ -6258,15 +6267,15 @@ const I18N={
     futures:'Futures',
     deposit:'Deposits',
     withdraw:'Withdrawals',
-    curPeriodNet:'Current Period Net',
-    noLargeTx:'No large transactions',
-    noImportHistory:'No import history',
-    noSnapshots:'No snapshots',
-    validRecords:'valid records',
-    newRecords:'new records',
-    relatedThisMonth:'Related this month',
-    actions:'Actions',
-    undone:'Undone',
+    curPeriodNet:'当前周期净盈亏',
+    noLargeTx:'暂无大额交易',
+    noImportHistory:'暂无导入历史',
+    noSnapshots:'暂无快照',
+    validRecords:'有效记录',
+    newRecords:'新增记录',
+    relatedThisMonth:'本月相关',
+    actions:'操作',
+    undone:'已撤销',
     upload:'Upload',
     pull:'Pull',
         deployNote:'本地使用直接打开 index.html；GitHub Pages 部署配合 Gist 同步',
@@ -6618,7 +6627,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.09.22-1'
+  const APP_VERSION='v2026.09.29-1'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -7017,6 +7026,8 @@ setup(){
   function fmtUnits(v){if(showcaseMode.value)return'••••';if(v==null||isNaN(v))return'-';return Number(v).toLocaleString(lang==='zh'?'zh-CN':'en-US',{maximumFractionDigits:8})}
   function fmtPct(v,digits=1){if(showcaseMode.value)return'••••';if(v==null||isNaN(v))return'-';return Number(v).toFixed(digits)+'%'}
   // Convert entry amount to CNY (for non-CNY currencies with rate)
+  // Whole numbers get separators; fractional quantities keep up to 8 places.
+  function fmtQtyNum(q){const n=Number(q);return Number.isFinite(n)?n.toLocaleString('zh-CN',{maximumFractionDigits:8}):String(q)}
   function amountCNY(e){return window.ToujiEntry?.amountCNY(e)||0}
   function isFxEntry(e){return !!window.ToujiEntry?.isFxEntry(e)}
   function fxEntryTargetAmount(e){return Number(e?.targetAmount||e?.amount)||0}
@@ -7077,7 +7088,17 @@ setup(){
     '现金管理':['余额宝','零钱通','货币基金','银行活期','券商现金管理'],
     '其他':[]
   }
-  const BUILTIN_COLORS={'沪深市':'rgba(251,191,36,.85)','美股':'rgba(59,130,246,.85)','港股':'rgba(239,68,68,.85)','加密货币':'rgba(139,92,246,.85)','基金':'rgba(16,185,129,.85)','债券':'rgba(73,129,145,.85)','REITs':'rgba(159,118,79,.85)','黄金':'rgba(245,158,11,.85)','期货':'rgba(99,102,241,.85)','外汇':'rgba(52,152,128,.85)','现金管理':'rgba(111,132,125,.8)','其他':'rgba(107,114,128,.7)','':'rgba(107,114,128,.5)'}
+  const BUILTIN_COLORS={'沪深市':'rgba(30,75,59,.9)','美股':'rgba(58,90,128,.9)','港股':'rgba(140,109,79,.9)','加密货币':'rgba(22,24,28,.86)','基金':'rgba(74,122,104,.85)','债券':'rgba(120,138,150,.85)','REITs':'rgba(166,138,104,.85)','黄金':'rgba(190,150,70,.85)','期货':'rgba(90,100,130,.85)','外汇':'rgba(96,140,132,.85)','现金管理':'rgba(134,137,143,.8)','其他':'rgba(160,162,167,.7)','':'rgba(160,162,167,.5)'}
+  // Values earlier releases wrote into storage; anything still equal to one of
+  // them was never customised, so it moves to the current palette.
+  const LEGACY_COLORS={'沪深市':'rgba(251,191,36,.85)','美股':'rgba(59,130,246,.85)','港股':'rgba(239,68,68,.85)','加密货币':'rgba(139,92,246,.85)','基金':'rgba(16,185,129,.85)','债券':'rgba(73,129,145,.85)','REITs':'rgba(159,118,79,.85)','黄金':'rgba(245,158,11,.85)','期货':'rgba(99,102,241,.85)','外汇':'rgba(52,152,128,.85)','现金管理':'rgba(111,132,125,.8)','其他':'rgba(107,114,128,.7)','':'rgba(107,114,128,.5)'}
+  function migrateAssetColors(colors){
+    const out={...colors}
+    for(const key of Object.keys(out)){
+      if(LEGACY_COLORS[key]&&out[key]===LEGACY_COLORS[key])out[key]=BUILTIN_COLORS[key]
+    }
+    return out
+  }
   function loadAssetCfg(){
     try{
       const r=localStorage.getItem(ASSET_CFG_K)
@@ -7086,7 +7107,7 @@ setup(){
         return{
           types:[...BUILTIN_TYPES,...(cfg.types||[])].map(normalizeAssetType).filter((t,i,a)=>t&&a.indexOf(t)===i),
           platforms:{...BUILTIN_PLATFORMS,...cfg.platforms,'沪深市':cfg.platforms?.['沪深市']||cfg.platforms?.['大A']||BUILTIN_PLATFORMS['沪深市']},
-          colors:{...BUILTIN_COLORS,...cfg.colors,'沪深市':cfg.colors?.['沪深市']||cfg.colors?.['大A']||BUILTIN_COLORS['沪深市']}
+          colors:migrateAssetColors({...BUILTIN_COLORS,...cfg.colors,'沪深市':cfg.colors?.['沪深市']||cfg.colors?.['大A']||BUILTIN_COLORS['沪深市']})
         }
       }
     }catch(e){}
@@ -7097,7 +7118,7 @@ setup(){
   const ASSET_TYPES=computed(()=>assetCfg.types)
   function getPlatforms(assetType){return assetCfg.platforms[normalizeAssetType(assetType)]||[]}
   function assetColor(type){return assetCfg.colors[normalizeAssetType(type)]||assetCfg.colors['']}
-  const POS_PIE_COLORS=['#d6d5c2','#5e4545','#b0b3a2','#9b965f','#f79b45']
+  const POS_PIE_COLORS=['#1e4b3b','#3a5a80','#8c6d4f','#16181c','#4a7a68']
   const platformSuggestions=computed(()=>{
     const preset=getPlatforms(form.assetType)
     const used=allExchanges.value.filter(ex=>!preset.includes(ex))
@@ -9657,8 +9678,8 @@ setup(){
       data:{
         labels:points.map(p=>p.day),
         datasets:[
-          {label:'累计投入',data:points.map(p=>p.cumIn),borderColor:inLine,backgroundColor:'rgba(179,66,64,.07)',fill:true,tension:.28,pointRadius:0,pointHoverRadius:4,borderWidth:2},
-          {label:'累计取出',data:points.map(p=>p.cumOut),borderColor:outLine,backgroundColor:'transparent',tension:.28,pointRadius:0,pointHoverRadius:4,borderWidth:2}
+          {label:'累计投入',data:points.map(p=>p.cumIn),borderColor:inLine,backgroundColor:'rgba(179,66,64,.07)',fill:true,tension:0,pointRadius:0,pointHoverRadius:4,borderWidth:2},
+          {label:'累计取出',data:points.map(p=>p.cumOut),borderColor:outLine,backgroundColor:'transparent',tension:0,pointRadius:0,pointHoverRadius:4,borderWidth:2}
         ]
       },
       options:{
@@ -9704,10 +9725,10 @@ setup(){
       data:{
         labels,
         datasets:[
-          {label:t('typeIn'),data:inData,borderColor:red,backgroundColor:'rgba(94,69,69,.08)',fill:true,tension:.32,pointRadius:0,pointHoverRadius:4,borderWidth:2,pointHoverBackgroundColor:red},
-          {label:t('typeOut'),data:outData,borderColor:green,backgroundColor:'rgba(155,150,95,.08)',fill:true,tension:.32,pointRadius:0,pointHoverRadius:4,borderWidth:2,pointHoverBackgroundColor:green},
-          {label:t('netPL'),data:netData,borderColor:blue,backgroundColor:'transparent',tension:.32,pointRadius:0,pointHoverRadius:4,borderWidth:2,borderDash:[5,4],pointHoverBackgroundColor:blue},
-          {label:t('cumPL'),data:cumData,borderColor:accent,backgroundColor:'rgba(247,155,69,.08)',fill:true,tension:.32,pointRadius:0,pointHoverRadius:4,borderWidth:2,pointHoverBackgroundColor:accent}
+          {label:t('typeIn'),data:inData,borderColor:red,backgroundColor:'rgba(94,69,69,.08)',fill:true,tension:0,pointRadius:0,pointHoverRadius:4,borderWidth:2,pointHoverBackgroundColor:red},
+          {label:t('typeOut'),data:outData,borderColor:green,backgroundColor:'rgba(155,150,95,.08)',fill:true,tension:0,pointRadius:0,pointHoverRadius:4,borderWidth:2,pointHoverBackgroundColor:green},
+          {label:t('netPL'),data:netData,borderColor:blue,backgroundColor:'transparent',tension:0,pointRadius:0,pointHoverRadius:4,borderWidth:2,borderDash:[5,4],pointHoverBackgroundColor:blue},
+          {label:t('cumPL'),data:cumData,borderColor:accent,backgroundColor:'rgba(247,155,69,.08)',fill:true,tension:0,pointRadius:0,pointHoverRadius:4,borderWidth:2,pointHoverBackgroundColor:accent}
         ]
       },
       options:{
@@ -9869,7 +9890,7 @@ setup(){
   return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
-    totalIn,totalOut,netPL,roi,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,capitalChart,capitalCurve,capitalCurveView,capitalRange,setCapitalRange,CAPITAL_RANGES,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
+    totalIn,totalOut,netPL,roi,fmtQtyNum,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,capitalChart,capitalCurve,capitalCurveView,capitalRange,setCapitalRange,CAPITAL_RANGES,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
     behaviorAnalysis,psychoTags,behaviorAdvice,
 
     fmt,fmtUnits,fmtPct,amountCNY,isFxEntry,fxEntryTargetAmount,fxEntryRate,fxTargetFromSource,parseTags,tagsText,normalizeAssetType,rowClass,toggleEx,toggleAssetType,toggleTag,clearFilters,scrollToFirstMatch,openEditModal,saveEditEntry,editingDetail,
