@@ -4124,6 +4124,20 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
 .ledger-month+.ledger-month .ledger-month-head{padding-bottom:6px}
 .review-timeline-row{min-height:64px;padding-block:12px;row-gap:0}
 .review-timeline-main strong{display:block;margin-bottom:3px}
+/* Amounts are never cut short; a name next to one gives way instead. */
+.overview-row-value strong{overflow:visible;text-overflow:clip}
+/* The selected tab is filled with ink, and an older rule painted its icon ink
+   too; it takes the label's colour instead. */
+.workspace-tab.active .workspace-icon{color:inherit}
+@media(max-width:760px){
+  .overview-row{grid-template-columns:32px minmax(0,1fr) auto}
+  /* Four views since 接口访问; and the body's min-height must not stretch the
+     tab row once the views stack above the content. */
+  .data-center-body{min-height:0;align-content:start}
+  .data-center-nav{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .data-center-tab{min-height:48px;padding:10px 4px}
+  .data-state{white-space:nowrap;flex-shrink:0}
+}
 .funding-note{margin:14px 0 0;color:hsl(var(--muted-foreground));font-size:11px;line-height:1.6}
 .text-flow-in{color:var(--flow-in)!important}.text-flow-out{color:var(--flow-out)!important}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
@@ -4198,8 +4212,8 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
   </div>
 
   <nav class="workspace-tabs" aria-label="投记工作区">
-    <button v-for="tab in workspaceTabs" :key="tab.key" :class="['workspace-tab',{active:activeTab===tab.key}]" @click="setActiveTab(tab.key)">
-      <span class="workspace-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" v-html="tab.icon"></svg></span><span>{{ tab.label }}</span>
+    <button v-for="tab in workspaceTabs" :key="tab.key" :class="['workspace-tab',{active:activeTab===tab.key}]" :aria-label="tab.label" :aria-current="activeTab===tab.key?'page':null" @click="setActiveTab(tab.key)">
+      <span class="workspace-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" v-html="tab.icon"></svg></span><span>{{ tab.short||tab.label }}</span>
     </button>
   </nav>
 
@@ -6669,7 +6683,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.10.08-2'
+  const APP_VERSION='v2026.10.08-3'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -6825,9 +6839,9 @@ setup(){
     {key:'overview',no:'01',icon:NAV_ICONS.overview,label:'总览',caption:'净值与动态'},
     {key:'quick',no:'02',icon:NAV_ICONS.quick,label:'录入',caption:'入金与交易'},
     {key:'positions',no:'03',icon:NAV_ICONS.positions,label:'持仓',caption:'仓位与成本'},
-    {key:'records',no:'04',icon:NAV_ICONS.records,label:'流水统计',caption:'筛选与分析'},
+    {key:'records',no:'04',icon:NAV_ICONS.records,label:'流水统计',short:'流水',caption:'筛选与分析'},
     {key:'review',no:'05',icon:NAV_ICONS.review,label:'复盘',caption:'行为与纪律'},
-    {key:'data',no:'06',icon:NAV_ICONS.data,label:'同步数据',caption:'备份与迁移'}
+    {key:'data',no:'06',icon:NAV_ICONS.data,label:'同步数据',short:'同步',caption:'备份与迁移'}
   ]
   const activeTabKeys=workspaceTabs.map(t=>t.key)
   const savedActiveTab=localStorage.getItem(ACTIVE_TAB_K)
@@ -9732,6 +9746,7 @@ setup(){
 
   let posPieChartInstance=null
 
+  function narrowScreen(){return window.matchMedia('(max-width:760px)').matches}
   function cssVar(name,fallback){
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim()||fallback
   }
@@ -9771,7 +9786,7 @@ setup(){
           }
         },
         scales:{
-          x:{ticks:{color:dim,font:{size:9},maxTicksLimit:6},grid:{display:false},border:{color:cssVar('--border','#e5e3de')}},
+          x:{ticks:{color:dim,font:{size:9},maxRotation:0,autoSkipPadding:12,maxTicksLimit:narrowScreen()?3:6},grid:{display:false},border:{color:cssVar('--border','#e5e3de')}},
           y:{ticks:{color:dim,font:{size:9},maxTicksLimit:4,callback:v=>showcaseMode.value?'••••':Number(v).toLocaleString('zh-CN',{notation:'compact'})},grid:{color:cssVar('--chart-grid','rgba(0,0,0,.06)')},border:{display:false}}
         }
       }
@@ -9818,7 +9833,7 @@ setup(){
           }
         },
         scales:{
-          x:{ticks:{color:tickColor,font:{size:10},maxRotation:45},grid:{color:gridColor},border:{color:borderColor}},
+          x:{ticks:{color:tickColor,font:{size:10},maxRotation:0,autoSkipPadding:12,maxTicksLimit:narrowScreen()?4:12},grid:{color:gridColor},border:{color:borderColor}},
           y:{ticks:{color:tickColor,font:{size:10},callback:v=>showcaseMode.value?'••':(v>=1000||v<=-1000?(v/1000)+'k':v)},grid:{color:gridColor},border:{color:borderColor}}
         }
       }
