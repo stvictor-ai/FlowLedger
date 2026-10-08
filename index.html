@@ -4124,6 +4124,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
 .ledger-month+.ledger-month .ledger-month-head{padding-bottom:6px}
 .review-timeline-row{min-height:64px;padding-block:12px;row-gap:0}
 .review-timeline-main strong{display:block;margin-bottom:3px}
+.funding-note{margin:14px 0 0;color:hsl(var(--muted-foreground));font-size:11px;line-height:1.6}
 .text-flow-in{color:var(--flow-in)!important}.text-flow-out{color:var(--flow-out)!important}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
@@ -4258,7 +4259,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
           </div>
         </div>
       </div>
-      <aside class="overview-allocation">
+      <aside class="overview-allocation" v-if="positions.length">
         <div class="overview-allocation-head">
           <div><p class="module-kicker">ALLOCATION</p><h2>资产配置</h2></div>
           <span>{{ positions.length }} 个持仓</span>
@@ -4278,11 +4279,34 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
           <span>建立初始仓位或记录第一笔买入后，这里会自动形成资产配置。</span>
         </div>
       </aside>
+      <!-- A ledger kept for deposits and withdrawals only has no allocation to
+           show, so the slot answers the question it can: where the money sits. -->
+      <aside class="overview-allocation" v-else>
+        <div class="overview-allocation-head">
+          <div><p class="module-kicker">FUNDING</p><h2>资金分布</h2></div>
+          <span>{{ overviewFunding.rows.length }} 个平台</span>
+        </div>
+        <div v-if="overviewFunding.rows.length" class="allocation-list">
+          <div v-for="item in overviewFunding.rows" :key="item.label" class="allocation-row">
+            <div class="allocation-meta">
+              <strong>{{ item.label }}</strong>
+              <span class="privacy-number">{{ fmt(item.value) }}</span>
+              <b>{{ fmtPct(item.pct,1) }}</b>
+            </div>
+            <div class="allocation-track"><i :style="{width:item.pct+'%',background:'var(--flow-in)'}"></i></div>
+          </div>
+          <p class="funding-note">按平台的净投入（入金减出金）<template v-if="overviewFunding.settled">，另有 {{ overviewFunding.settled }} 个平台已全部取回</template>。</p>
+        </div>
+        <div v-else class="allocation-empty">
+          <strong>还没有留在平台里的资金</strong>
+          <span>记录入金后，这里会按平台显示钱目前放在哪里。</span>
+        </div>
+      </aside>
     </div>
   </section>
 
   <div class="overview-grid" v-show="activeTab==='overview'">
-    <section class="panel overview-module">
+    <section class="panel overview-module" v-if="positions.length">
       <div class="panel-header">
         <div><p class="module-kicker">CORE HOLDINGS</p><h2>主要持仓</h2></div>
         <button class="text-command" @click="setActiveTab('positions')">查看全部 <span>→</span></button>
@@ -4295,6 +4319,23 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
         </button>
       </div>
       <div class="empty-block" v-else><strong>还没有持仓</strong><span>从“录入”添加第一笔买入，或在持仓页手动建立初始仓位。</span></div>
+    </section>
+    <section class="panel overview-module" v-else>
+      <div class="panel-header">
+        <div><p class="module-kicker">MONTHLY FLOW</p><h2>按月出入金</h2></div>
+        <button class="text-command" @click="setActiveTab('records')">查看统计 <span>→</span></button>
+      </div>
+      <div class="overview-rows" v-if="overviewMonths.length">
+        <button v-for="m in overviewMonths" :key="m.key" class="overview-row" @click="setActiveTab('records')">
+          <span class="asset-mark">{{ m.key.slice(5) }}</span>
+          <span class="overview-row-main"><strong>{{ m.label }}</strong><small>{{ m.count }} 笔</small></span>
+          <span class="overview-row-value">
+            <strong class="privacy-number" :class="m.net>0?'text-flow-in':m.net<0?'text-flow-out':''">{{ m.net>0?'净投入 ':m.net<0?'净取出 ':'持平 ' }}{{ fmt(Math.abs(m.net)) }}</strong>
+            <small class="privacy-number">入 {{ fmt(m.inTotal) }} · 出 {{ fmt(m.outTotal) }}</small>
+          </span>
+        </button>
+      </div>
+      <div class="empty-block" v-else><strong>还没有出入金</strong><span>记录第一笔入金后，这里会按月汇总。</span><button class="text-command" @click="setActiveTab('quick')">记第一笔 →</button></div>
     </section>
     <section class="panel overview-module">
       <div class="panel-header">
@@ -6632,7 +6673,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.10.08-1'
+  const APP_VERSION='v2026.10.08-2'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -7795,6 +7836,22 @@ setup(){
   const selectedPositionAllocation=computed(()=>selectedPosition.value&&posSummary.value.totalValue?selectedPosition.value.value/posSummary.value.totalValue*100:0)
   function selectPosition(position){selectedPositionId.value=position&&position.id===selectedPositionId.value?'':position?.id||''}
   const overviewTopPositions=computed(()=>[...allPositionRows.value].sort((a,b)=>b.value-a.value).slice(0,5))
+  // Stand-ins for allocation and holdings on a ledger that tracks only money in
+  // and out. Net invested per platform; platforms already drawn down to zero
+  // or below are counted, not charted.
+  const overviewFunding=computed(()=>{
+    const rows=exchangeRows.value.map(r=>({label:r.exchange,value:r.inTotal-r.outTotal}))
+    const held=rows.filter(r=>r.value>0)
+    const total=held.reduce((sum,r)=>sum+r.value,0)
+    return{
+      rows:held.sort((a,b)=>b.value-a.value).slice(0,5).map(r=>({...r,pct:r.value/total*100})),
+      settled:rows.length-held.length
+    }
+  })
+  const overviewMonths=computed(()=>cashflowRows.value.filter(r=>r.key!=='未知').slice(-6).reverse().map(r=>({
+    key:r.key,label:r.key.slice(0,4)+' 年 '+Number(r.key.slice(5))+' 月',count:r.count,
+    inTotal:r.inTotal,outTotal:r.outTotal,net:r.inTotal-r.outTotal
+  })))
   const overviewAllocation=computed(()=>{
     const grouped=new Map()
     allPositionRows.value.forEach(p=>{
@@ -9922,7 +9979,7 @@ setup(){
     saveSyncConfig,syncPush,syncPull,syncAuto,saveRules,saveReviewNote,saveChecklist,loadReview,
     exportExcel,exportJSON,importExcel,importJSON,showToast,dayjs,
     t,lang,
-    positions,posForm,posRows,allPositionRows,posSummary,positionRowsSorted,selectedPositionId,selectedPosition,selectedPositionAllocation,selectPosition,overviewTopPositions,overviewAllocation,overviewLastUpdated,addPosition,removePosition,updatePosition,createPositionFlow,fetchPosPrices,showPosForm,posSymbolSearch,showSymbolPicker,posSearchResults,posSearching,posResultsShown,posMarket,POS_MARKETS,onPosSearchInput,selectEmResult,selectCryptoQuick,cryptoQuickList,expandedPosFlows,togglePosFlow,
+    overviewFunding,overviewMonths,positions,posForm,posRows,allPositionRows,posSummary,positionRowsSorted,selectedPositionId,selectedPosition,selectedPositionAllocation,selectPosition,overviewTopPositions,overviewAllocation,overviewLastUpdated,addPosition,removePosition,updatePosition,createPositionFlow,fetchPosPrices,showPosForm,posSymbolSearch,showSymbolPicker,posSearchResults,posSearching,posResultsShown,posMarket,POS_MARKETS,onPosSearchInput,selectEmResult,selectCryptoQuick,cryptoQuickList,expandedPosFlows,togglePosFlow,
     showDashCfg,dashPanels,dashVisible,toggleDashPanel,moveDashPanel,resetDashboard,DASH_DEFAULT,dashLabels,
     ASSET_TYPES,getPlatforms,assetColor,
     apiTokens,apiTokensLoading,apiTokenName,apiTokenCreating,apiTokenPlain,apiFeedBase,
