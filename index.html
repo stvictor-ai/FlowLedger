@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#faf9f7">
+<!-- The skin is set before first paint so 霓虹 never flashes white. A saved
+     choice wins; otherwise it follows the system, as orbitshz.com does. -->
+<script>(function(){try{var s=localStorage.getItem('touji_theme_v2');var n=s?s==='neon':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.dataset.theme=n?'neon':'mist';var m=document.querySelector('meta[name="theme-color"]');if(m)m.content=n?'#07080b':'#faf9f7'}catch(e){}})();</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="投记">
@@ -4124,6 +4127,56 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
 .ledger-month+.ledger-month .ledger-month-head{padding-bottom:6px}
 .review-timeline-row{min-height:64px;padding-block:12px;row-gap:0}
 .review-timeline-main strong{display:block;margin-bottom:3px}
+/* ===== 霓虹 — the second skin, shared with orbitshz.com =====
+   Colours come only from the site's dark tokens; the additions are a panel
+   ground and two glows (the 记一笔 button and the live sync dot). */
+html[data-theme="neon"]{
+  color-scheme:dark;
+  --background:225 22% 3.5%;--card-token:216 20% 5%;--popover:216 20% 5%;
+  --foreground:225 9% 92%;--card-foreground:225 9% 92%;--popover-foreground:225 9% 92%;--muted-foreground:219 5% 51%;
+  --primary:155 48% 57%;--primary-foreground:225 22% 3.5%;--secondary:155 48% 57%;--secondary-foreground:225 22% 3.5%;
+  --muted-token:220 21% 8.5%;--accent-token:220 17% 13%;--accent-foreground:225 9% 92%;
+  --destructive:2 69% 67%;--destructive-foreground:225 22% 3.5%;--border-token:222 15% 17.5%;--input-token:216 20% 5%;--ring:155 48% 57%;
+  --chart-1:155 48% 57%;--chart-2:215 37% 63%;--chart-3:219 5% 51%;--chart-4:31 40% 62%;--chart-5:2 69% 67%;
+  --chart-color-1:#5cc79a;--chart-color-2:#7f9cc4;--chart-color-3:#7c818a;--chart-color-4:#c4a079;--chart-color-5:#e5736f;
+  --sidebar:216 20% 5%;--sidebar-foreground:225 9% 92%;--sidebar-primary:155 48% 57%;--sidebar-primary-foreground:225 22% 3.5%;
+  --sidebar-accent:220 21% 8.5%;--sidebar-accent-foreground:225 9% 92%;--sidebar-border:222 15% 17.5%;--sidebar-ring:155 48% 57%;
+  --shadow-2xs:0 1px 2px 0 rgb(0 0 0/.4);--shadow-xs:0 1px 2px 0 rgb(0 0 0/.4);--shadow-sm:0 1px 3px 0 rgb(0 0 0/.5);
+  --shadow:0 1px 2px 0 rgb(0 0 0/.45);--shadow-light:0 1px 2px 0 rgb(0 0 0/.3);
+}
+html[data-theme="neon"] ::selection{background:#5cc79a;color:#07080b}
+
+.skin-toggle{display:inline-flex;border:1px solid hsl(var(--border-token));border-radius:2px;overflow:hidden}
+.skin-toggle button{min-height:30px;padding:0 12px;border:0;background:transparent;color:hsl(var(--muted-foreground));font:500 12px/1 var(--font-mono);cursor:pointer;transition:background .15s,color .15s}
+.skin-toggle button+button{border-left:1px solid hsl(var(--border-token))}
+.skin-toggle button:hover{color:hsl(var(--foreground))}
+.skin-toggle button.active{background:hsl(var(--foreground));color:hsl(var(--background))}
+html[data-theme="neon"] .skin-toggle{border-radius:0}
+html[data-theme="neon"] .skin-toggle button.active{background:rgba(92,199,154,.12);color:#5cc79a}
+.terminal-rail .skin-toggle{display:flex;align-self:stretch}
+.terminal-rail .skin-toggle button{flex:1}
+.responsive-head .skin-toggle{margin-left:auto}
+
+/* Selected and primary states are a tinted ground with green text, as on the
+   site's skin switch: a solid green block on every screen would shout. */
+html[data-theme="neon"] .btn-primary,
+html[data-theme="neon"] .position-filter.active,
+html[data-theme="neon"] .review-mode-button.active,
+html[data-theme="neon"] .review-range-tabs button.active,
+html[data-theme="neon"] .workspace-tab.active{background:rgba(92,199,154,.12);color:#5cc79a;border-color:rgba(92,199,154,.4)}
+html[data-theme="neon"] .btn-primary:hover{background:rgba(92,199,154,.18);filter:none}
+
+/* Glow 1: the one primary action. Hover brightens; nothing moves. */
+html[data-theme="neon"] .rail-entry-btn{border:1px solid #5cc79a;background:transparent;color:#5cc79a;box-shadow:0 0 16px rgba(92,199,154,.22),inset 0 0 10px rgba(92,199,154,.1)}
+html[data-theme="neon"] .rail-entry-btn:hover{background:rgba(92,199,154,.08);box-shadow:0 0 24px rgba(92,199,154,.38),inset 0 0 12px rgba(92,199,154,.16);transform:none}
+/* Glow 2: the dot that says the ledger is in sync. */
+html[data-theme="neon"] .sync-dot:not(.stale){background:#4fb287;box-shadow:0 0 0 3px rgba(79,178,135,.15),0 0 10px rgba(79,178,135,.8)}
+
+/* Money in and out is not a gain or a loss: the ledger's type badges follow
+   the flow colours, like every other deposit and withdrawal figure. */
+.ledger-type.type-in{color:var(--flow-in);background:hsl(var(--foreground)/.06);border-color:hsl(var(--foreground)/.16)}
+.ledger-type.type-out{color:var(--flow-out);background:hsl(var(--chart-2)/.1);border-color:hsl(var(--chart-2)/.28)}
+
 /* Amounts are never cut short; a name next to one gives way instead. */
 .overview-row-value strong{overflow:visible;text-overflow:clip}
 /* The selected tab is filled with ink, and an older rule painted its icon ink
@@ -4168,21 +4221,9 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
       </button>
     </nav>
     <button class="rail-entry-btn" @click="setActiveTab('quick')"><span>＋</span>记一笔</button>
-    <details class="rail-theme">
-      <summary title="切换界面主题">
-        <span class="theme-summary-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="13.5" cy="6.5" r="2"/><circle cx="17.5" cy="10.5" r="2"/><circle cx="8.5" cy="7.5" r="2"/><path d="M12 2a10 10 0 1 0 10 10c0-1.1-.9-2-2-2h-1.4a2 2 0 0 1-1.8-2.9l.6-1.2A2.7 2.7 0 0 0 15 2H12Z"/></svg>
-        </span>
-        <span class="theme-summary-copy"><strong>界面主题</strong><small>{{ themeLabel }}</small></span>
-        <span class="theme-caret" aria-hidden="true">⌄</span>
-      </summary>
-      <div class="theme-options" role="group" aria-label="界面主题">
-        <button v-for="item in THEMES" :key="item.key" :class="['theme-option',{active:theme===item.key}]" @click="setTheme(item.key)" :title="'切换为'+item.label+'主题'" :aria-pressed="theme===item.key">
-          <span :class="['theme-swatch',item.key]" aria-hidden="true"></span>
-          <small>{{ item.label }}</small>
-        </button>
-      </div>
-    </details>
+    <div class="skin-toggle" role="radiogroup" aria-label="皮肤">
+      <button v-for="item in THEMES" :key="item.key" type="button" role="radio" :aria-checked="theme===item.key" :class="{active:theme===item.key}" @click="setTheme(item.key)">{{ item.label }}</button>
+    </div>
     <div class="terminal-rail-meta">
       <p><span :class="['sync-dot',{syncing,stale:!syncing&&lastChangeAt>lastSyncedAt}]"></span> 数据状态</p>
       <strong>{{ syncStatus }}</strong>
@@ -4197,18 +4238,9 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
 
   <div class="responsive-head section-records section-stats section-data">
     <div class="responsive-brand"><img src="icon.svg" alt=""><div><strong>投记</strong><small>WEALTH JOURNAL</small></div></div>
-    <details class="responsive-theme-menu">
-      <summary title="切换界面主题" aria-label="切换界面主题">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="13.5" cy="6.5" r="2"/><circle cx="17.5" cy="10.5" r="2"/><circle cx="8.5" cy="7.5" r="2"/><path d="M12 2a10 10 0 1 0 10 10c0-1.1-.9-2-2-2h-1.4a2 2 0 0 1-1.8-2.9l.6-1.2A2.7 2.7 0 0 0 15 2H12Z"/></svg>
-        <span>{{ themeLabel }}</span>
-      </summary>
-      <div class="theme-options" role="group" aria-label="界面主题">
-        <button v-for="item in THEMES" :key="item.key" :class="['theme-option',{active:theme===item.key}]" @click="setTheme(item.key)" :aria-pressed="theme===item.key">
-          <span :class="['theme-swatch',item.key]" aria-hidden="true"></span>
-          <small>{{ item.label }}</small>
-        </button>
-      </div>
-    </details>
+    <div class="skin-toggle" role="radiogroup" aria-label="皮肤">
+      <button v-for="item in THEMES" :key="item.key" type="button" role="radio" :aria-checked="theme===item.key" :class="{active:theme===item.key}" @click="setTheme(item.key)">{{ item.label }}</button>
+    </div>
   </div>
 
   <nav class="workspace-tabs" aria-label="投记工作区">
@@ -4574,7 +4606,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
           <div class="compare-grid" style="align-content:start">
             <div v-for="(p,i) in posRows.filter(r=>r.value>0).slice(0,6)" :key="p.id" class="compare-card" style="padding:8px 12px">
               <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-                <span :style="{width:'8px',height:'8px',borderRadius:'50%',background:POS_PIE_COLORS[i%POS_PIE_COLORS.length],flexShrink:0,display:'inline-block'}"></span>
+                <span :style="{width:'8px',height:'8px',borderRadius:'50%',background:posPieColors()[i%posPieColors().length],flexShrink:0,display:'inline-block'}"></span>
                 <p style="font-weight:700;font-size:12px;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.name&&p.name!==p.symbol?p.name:p.symbol }}</p>
               </div>
               <div style="font-size:11px;color:var(--muted);display:grid;grid-template-columns:1fr 1fr;gap:2px 6px">
@@ -4619,7 +4651,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
                 <div v-for="r in p.flow.rows" :key="r.id" style="display:flex;gap:10px;align-items:center;font-size:11px;color:var(--muted)">
                   <span style="min-width:110px">{{ r.date }}{{ r.time?' '+r.time:'' }}</span>
                   <span :class="['record-card-tag',r.type==='入金'?'tag-in':r.type==='出金'?'tag-out':r.type==='买入'?'tag-buy':'tag-sell']" style="font-size:10px;padding:1px 6px">{{ r.type }}</span>
-                  <span style="min-width:60px;text-align:right;font-variant-numeric:tabular-nums" :style="{color:r.type==='入金'||r.type==='买入'?'var(--red)':r.type==='出金'||r.type==='卖出'?'var(--green)':'inherit'}">{{ fmt(amountCNY(r)) }}</span>
+                  <span style="min-width:60px;text-align:right;font-variant-numeric:tabular-nums" :style="{color:r.type==='入金'||r.type==='买入'?'var(--flow-in)':r.type==='出金'||r.type==='卖出'?'var(--flow-out)':'inherit'}">{{ fmt(amountCNY(r)) }}</span>
                   <span v-if="r.tradeQty" style="color:var(--dim)">× {{ r.tradeQty }}</span>
                   <span v-if="r.realizedPL!=null" :style="{color:r.realizedPL>=0?'var(--green)':'var(--red)',fontWeight:600}">{{ r.realizedPL>=0?'+':'' }}{{ fmt(r.realizedPL) }}</span>
                   <span style="color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.note }}</span>
@@ -4651,7 +4683,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
             <div v-for="r in p.flow.rows" :key="r.id" style="display:flex;gap:8px;align-items:center;font-size:11px;color:var(--muted)">
               <span>{{ r.date }}{{ r.time?' '+r.time:'' }}</span>
               <span :class="['record-card-tag',r.type==='入金'?'tag-in':r.type==='出金'?'tag-out':r.type==='买入'?'tag-buy':'tag-sell']" style="font-size:10px;padding:1px 6px">{{ r.type }}</span>
-              <span :style="{color:r.type==='入金'||r.type==='买入'?'var(--red)':r.type==='出金'||r.type==='卖出'?'var(--green)':'inherit',fontVariantNumeric:'tabular-nums'}">{{ fmt(amountCNY(r)) }}</span>
+              <span :style="{color:r.type==='入金'||r.type==='买入'?'var(--flow-in)':r.type==='出金'||r.type==='卖出'?'var(--flow-out)':'inherit',fontVariantNumeric:'tabular-nums'}">{{ fmt(amountCNY(r)) }}</span>
               <span v-if="r.realizedPL!=null" :style="{color:r.realizedPL>=0?'var(--green)':'var(--red)',fontWeight:600}">{{ r.realizedPL>=0?'+':'' }}{{ fmt(r.realizedPL) }}</span>
             </div>
           </div>
@@ -5268,7 +5300,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
               <strong>{{ e.exchange||'未知平台' }}</strong>
               <small>{{ e.assetType||'未分类' }}<template v-if="parseTags(e.tags).length"> · #{{ parseTags(e.tags).slice(0,2).join(' #') }}</template></small>
             </span>
-            <span class="ledger-entry-amount" :style="{color:e.type==='入金'?'var(--red)':e.type==='出金'?'var(--green)':e.type==='买入'?'var(--blue)':'var(--purple)'}">
+            <span class="ledger-entry-amount" :style="{color:e.type==='入金'?'var(--flow-in)':e.type==='出金'?'var(--flow-out)':e.type==='买入'?'var(--blue)':'var(--purple)'}">
               <template v-if="isFxEntry(e)">
                 <strong>{{ fmt(e.sourceAmount) }} <small>{{ e.sourceCurrency }}</small></strong>
                 <small class="ledger-fx-path">→ {{ fmtUnits(fxEntryTargetAmount(e)) }} {{ e.targetCurrency||e.currency }} · @ {{ fxEntryRate(e) }}</small>
@@ -5292,7 +5324,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
           <button class="ledger-inspector-close" @click="editingEntry=null" title="关闭" aria-label="关闭记录详情">×</button>
         </div>
         <div class="ledger-inspector-hero" v-if="editingDetail">
-          <strong :style="{color:editingEntry.type==='入金'?'var(--red)':editingEntry.type==='出金'?'var(--green)':editingEntry.type==='买入'?'var(--blue)':'var(--purple)'}">{{ fmt(isFxEntry(editingEntry)?editingEntry.sourceAmount:editingEntry.amount) }} <small>{{ isFxEntry(editingEntry)?editingEntry.sourceCurrency:(editingEntry.currency||'CNY') }}</small></strong>
+          <strong :style="{color:editingEntry.type==='入金'?'var(--flow-in)':editingEntry.type==='出金'?'var(--flow-out)':editingEntry.type==='买入'?'var(--blue)':'var(--purple)'}">{{ fmt(isFxEntry(editingEntry)?editingEntry.sourceAmount:editingEntry.amount) }} <small>{{ isFxEntry(editingEntry)?editingEntry.sourceCurrency:(editingEntry.currency||'CNY') }}</small></strong>
           <span v-if="isFxEntry(editingEntry)">到账 {{ fmtUnits(fxEntryTargetAmount(editingEntry)) }} {{ editingEntry.targetCurrency||editingEntry.currency }} · 实际汇率 {{ fxEntryRate(editingEntry) }}</span>
           <span v-else>折合 {{ fmt(editingDetail.cny) }} CNY</span>
         </div>
@@ -5357,7 +5389,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
               <span class="record-card-date">{{ e.date }}<template v-if="e.time"> · {{ e.time }}</template></span>
               <span :class="['record-card-tag',e.type==='入金'?'tag-in':e.type==='出金'?'tag-out':e.type==='买入'?'tag-buy':'tag-sell']">{{ e.type }}</span>
             </div>
-            <div :class="['record-card-amount']" :style="{color:e.type==='入金'?'var(--red)':e.type==='出金'?'var(--green)':e.type==='买入'?'#60a5fa':'#a78bfa'}">
+            <div :class="['record-card-amount']" :style="{color:e.type==='入金'?'var(--flow-in)':e.type==='出金'?'var(--flow-out)':e.type==='买入'?'#60a5fa':'#a78bfa'}">
               <template v-if="isFxEntry(e)">
                 {{ fmt(e.sourceAmount) }} {{ e.sourceCurrency }}
                 <span style="font-size:12px;color:var(--muted);font-weight:500"> → {{ fmtUnits(fxEntryTargetAmount(e)) }} {{ e.targetCurrency||e.currency }} @ {{ fxEntryRate(e) }}</span>
@@ -5417,13 +5449,13 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
       <div style="margin-top:10px">
         <div v-if="period==='month'" class="table-wrap" style="margin-bottom:14px"><table>
           <thead><tr><th>月份</th><th style="text-align:right">笔数</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th><th style="text-align:right">{{ t('cumPL') }}</th></tr></thead>
-          <tbody><tr v-for="row in cashflowRows" :key="row.key"><td class="mono">{{ row.key }}</td><td class="mono" style="text-align:right">{{ row.count }}</td><td class="mono" style="text-align:right;color:var(--red)">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right;color:var(--green)">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</td><td class="mono" style="text-align:right" :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ (row.cum>=0?'+':'')+fmt(row.cum) }}</td></tr></tbody>
+          <tbody><tr v-for="row in cashflowRows" :key="row.key"><td class="mono">{{ row.key }}</td><td class="mono" style="text-align:right">{{ row.count }}</td><td class="mono" style="text-align:right;color:var(--flow-in)">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right;color:var(--flow-out)">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</td><td class="mono" style="text-align:right" :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ (row.cum>=0?'+':'')+fmt(row.cum) }}</td></tr></tbody>
         </table></div>
         <div v-if="period==='month'" class="stats-cards" style="margin-bottom:8px">
           <div v-for="row in cashflowRows" :key="row.key" class="stat-card">
             <div class="stat-card-header"><span class="stat-card-key">{{ row.key }} · {{ row.count }} 笔</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div>
-            <div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div>
-            <div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div>
+            <div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--flow-in)">{{ fmt(row.inTotal) }}</span></div>
+            <div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--flow-out)">{{ fmt(row.outTotal) }}</span></div>
             <div class="stat-card-row"><span>{{ t('cumPL') }}</span><span :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ (row.cum>=0?'+':'')+fmt(row.cum) }}</span></div>
           </div>
         </div>
@@ -5432,7 +5464,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
           <tbody><tr v-for="row in periodRows" :key="row.key"><td class="mono">{{ row.key }}</td><td class="mono" style="text-align:right">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td><td class="mono" style="text-align:right" :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.cum) }}</td></tr></tbody>
         </table></div>
         <div v-if="period!=='month'" class="stats-cards" style="margin-bottom:8px">
-          <div v-for="row in periodRows" :key="row.key" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">{{ row.key }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div><div class="stat-card-row"><span>{{ t('cumPL') }}</span><span :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.cum) }}</span></div></div>
+          <div v-for="row in periodRows" :key="row.key" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">{{ row.key }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--flow-in)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--flow-out)">{{ fmt(row.outTotal) }}</span></div><div class="stat-card-row"><span>{{ t('cumPL') }}</span><span :style="{color:row.cum>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.cum) }}</span></div></div>
         </div>
       </div>
     </details>
@@ -5443,11 +5475,11 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
       <button v-if="tagRows.length" :class="['btn btn-sm',statTab==='tag'?'btn-primary':'btn-ghost']" @click="statTab='tag'" style="border-radius:8px 8px 0 0;font-size:12px">{{ t('tagStats') }}</button>
     </div>
     <!-- Asset type breakdown -->
-    <div v-if="statTab==='asset'"><div class="table-wrap"><table><thead><tr><th>{{ t('assetType') }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th><th style="text-align:right">{{ t('roiRate') }}</th></tr></thead><tbody><tr v-for="row in assetTypeRows" :key="row.assetType"><td style="font-weight:600">{{ row.assetType||'未分类' }}</td><td class="mono" style="text-align:right;color:var(--red)">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right;color:var(--green)">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td><td class="mono privacy-number" style="text-align:right" :style="{color:row.inTotal&&row.outTotal/row.inTotal>=1?'var(--green)':'var(--red)'}">{{ row.inTotal?fmtPct((row.outTotal/row.inTotal)*100,0):'-' }}</td></tr></tbody></table></div><div class="stats-cards"><div v-for="row in assetTypeRows" :key="row.assetType" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">{{ row.assetType||'未分类' }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div></div></div></div>
+    <div v-if="statTab==='asset'"><div class="table-wrap"><table><thead><tr><th>{{ t('assetType') }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th><th style="text-align:right">{{ t('roiRate') }}</th></tr></thead><tbody><tr v-for="row in assetTypeRows" :key="row.assetType"><td style="font-weight:600">{{ row.assetType||'未分类' }}</td><td class="mono" style="text-align:right;color:var(--flow-in)">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right;color:var(--flow-out)">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td><td class="mono privacy-number" style="text-align:right" :style="{color:row.inTotal&&row.outTotal/row.inTotal>=1?'var(--green)':'var(--red)'}">{{ row.inTotal?fmtPct((row.outTotal/row.inTotal)*100,0):'-' }}</td></tr></tbody></table></div><div class="stats-cards"><div v-for="row in assetTypeRows" :key="row.assetType" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">{{ row.assetType||'未分类' }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--flow-in)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--flow-out)">{{ fmt(row.outTotal) }}</span></div></div></div></div>
     <!-- Account/Exchange breakdown -->
-    <div v-if="statTab==='account'"><div class="table-wrap"><table><thead><tr><th>{{ t('exchange') }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th></tr></thead><tbody><tr v-for="row in exchangeRows" :key="row.exchange"><td style="font-weight:600">{{ row.exchange }}</td><td class="mono" style="text-align:right;color:var(--red)">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right;color:var(--green)">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td></tr></tbody></table></div><div class="stats-cards"><div v-for="row in exchangeRows" :key="row.exchange" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">{{ row.exchange }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div></div></div></div>
+    <div v-if="statTab==='account'"><div class="table-wrap"><table><thead><tr><th>{{ t('exchange') }}</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th></tr></thead><tbody><tr v-for="row in exchangeRows" :key="row.exchange"><td style="font-weight:600">{{ row.exchange }}</td><td class="mono" style="text-align:right;color:var(--flow-in)">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right;color:var(--flow-out)">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ fmt(row.net) }}</td></tr></tbody></table></div><div class="stats-cards"><div v-for="row in exchangeRows" :key="row.exchange" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">{{ row.exchange }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--flow-in)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--flow-out)">{{ fmt(row.outTotal) }}</span></div></div></div></div>
     <!-- Tag breakdown -->
-    <div v-if="statTab==='tag'&&tagRows.length"><div class="table-wrap"><table><thead><tr><th>{{ t('tagStats') }}</th><th style="text-align:right">笔数</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th></tr></thead><tbody><tr v-for="row in tagRows" :key="row.tag"><td style="font-weight:600">#{{ row.tag }}</td><td class="mono" style="text-align:right">{{ row.count }}</td><td class="mono" style="text-align:right;color:var(--red)">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right;color:var(--green)">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</td></tr></tbody></table></div><div class="stats-cards"><div v-for="row in tagRows" :key="row.tag" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">#{{ row.tag }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>笔数</span><span>{{ row.count }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--red)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--green)">{{ fmt(row.outTotal) }}</span></div></div></div></div>
+    <div v-if="statTab==='tag'&&tagRows.length"><div class="table-wrap"><table><thead><tr><th>{{ t('tagStats') }}</th><th style="text-align:right">笔数</th><th style="text-align:right">{{ t('inTotal') }}</th><th style="text-align:right">{{ t('outTotal') }}</th><th style="text-align:right">盈亏</th></tr></thead><tbody><tr v-for="row in tagRows" :key="row.tag"><td style="font-weight:600">#{{ row.tag }}</td><td class="mono" style="text-align:right">{{ row.count }}</td><td class="mono" style="text-align:right;color:var(--flow-in)">{{ fmt(row.inTotal) }}</td><td class="mono" style="text-align:right;color:var(--flow-out)">{{ fmt(row.outTotal) }}</td><td class="mono" style="text-align:right" :style="{color:row.net>=0?'var(--blue)':'var(--red)'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</td></tr></tbody></table></div><div class="stats-cards"><div v-for="row in tagRows" :key="row.tag" class="stat-card"><div class="stat-card-header"><span class="stat-card-key">#{{ row.tag }}</span><span class="mono" :style="{color:row.net>=0?'var(--blue)':'var(--red)',fontWeight:700,fontSize:'15px'}">{{ (row.net>=0?'+':'')+fmt(row.net) }}</span></div><div class="stat-card-row"><span>笔数</span><span>{{ row.count }}</span></div><div class="stat-card-row"><span>{{ t('typeIn') }}</span><span style="color:var(--flow-in)">{{ fmt(row.inTotal) }}</span></div><div class="stat-card-row"><span>{{ t('typeOut') }}</span><span style="color:var(--flow-out)">{{ fmt(row.outTotal) }}</span></div></div></div></div>
   </section>
 
   <!-- ===== INSIGHT & REVIEW ===== -->
@@ -5875,7 +5907,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
       <div class="modal-head"><div class="modal-title">记录详情</div><button class="modal-close" @click="editingEntry=null">&times;</button></div>
       <div class="modal-body">
         <div class="detail-hero" v-if="editingDetail">
-          <div class="detail-amount" :style="{color:editingEntry.type==='入金'?'var(--red)':editingEntry.type==='出金'?'var(--green)':editingEntry.type==='买入'?'#60a5fa':'#a78bfa'}">{{ fmt(isFxEntry(editingEntry)?editingEntry.sourceAmount:editingEntry.amount) }} {{ isFxEntry(editingEntry)?editingEntry.sourceCurrency:(editingEntry.currency&&editingEntry.currency!=='CNY'?editingEntry.currency:'元') }}</div>
+          <div class="detail-amount" :style="{color:editingEntry.type==='入金'?'var(--flow-in)':editingEntry.type==='出金'?'var(--flow-out)':editingEntry.type==='买入'?'#60a5fa':'#a78bfa'}">{{ fmt(isFxEntry(editingEntry)?editingEntry.sourceAmount:editingEntry.amount) }} {{ isFxEntry(editingEntry)?editingEntry.sourceCurrency:(editingEntry.currency&&editingEntry.currency!=='CNY'?editingEntry.currency:'元') }}</div>
           <div class="detail-meta">
             <template v-if="isFxEntry(editingEntry)">到账 {{ fmtUnits(fxEntryTargetAmount(editingEntry)) }} {{ editingEntry.targetCurrency||editingEntry.currency }} · @ {{ fxEntryRate(editingEntry) }}</template>
             <template v-else>折合 {{ fmt(editingDetail.cny) }} CNY</template>
@@ -5894,7 +5926,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
         <div class="related-list" v-if="editingDetail&&editingDetail.related.length">
           <div v-for="r in editingDetail.related" :key="r.id" class="related-row">
             <span>{{ r.date }}{{ r.time?' '+r.time:'' }} · {{ r.assetType||'未分类' }} · {{ r.exchange||'未知平台' }}</span>
-            <strong :style="{color:r.type==='入金'?'var(--red)':r.type==='出金'?'var(--green)':r.type==='买入'?'#60a5fa':'#a78bfa'}">{{ r.type }}</strong> {{ fmt(amountCNY(r)) }}
+            <strong :style="{color:r.type==='入金'?'var(--flow-in)':r.type==='出金'?'var(--flow-out)':r.type==='买入'?'#60a5fa':'#a78bfa'}">{{ r.type }}</strong> {{ fmt(amountCNY(r)) }}
           </div>
         </div>
         <div class="trade-lock-note" v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'">成交金额、币种和资产会参与持仓成本计算。需要改动时请删除后重新录入；日期、平台、备注和标签仍可编辑。</div>
@@ -6683,7 +6715,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.10.08-3'
+  const APP_VERSION='v2026.10.08-4'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -6804,9 +6836,9 @@ setup(){
   }
 
   const THEME_K='touji_theme_v2'
-  const THEMES=[{key:'mist',label:'素白',meta:'#faf9f7'}]
-  const theme=ref('mist')
-  const themeLabel=computed(()=>'素白')
+  const THEMES=[{key:'mist',label:'经典',meta:'#faf9f7'},{key:'neon',label:'霓虹',meta:'#07080b'}]
+  const theme=ref(document.documentElement.dataset.theme==='neon'?'neon':'mist')
+  const themeLabel=computed(()=>(THEMES.find(item=>item.key===theme.value)||THEMES[0]).label)
   const themeMeta=document.querySelector('meta[name="theme-color"]')
   function applyTheme(name){
     const item=THEMES.find(option=>option.key===name)||THEMES[0]
@@ -6822,7 +6854,7 @@ setup(){
     applyTheme(item.key)
     try{localStorage.setItem(THEME_K,item.key)}catch(e){}
     Vue.nextTick(()=>{renderChart();renderPosPieChart();renderCapitalChart()})
-    showToast(`已切换为${item.label}主题`,'info')
+    showToast(`已切换为${item.label}皮肤`,'info')
   }
   applyTheme(theme.value)
   const toast=reactive({show:false,message:'',type:'info'})
@@ -7173,8 +7205,17 @@ setup(){
   function saveAssetCfg(){writeStorageJSON(ASSET_CFG_K,{types:assetCfg.types,platforms:assetCfg.platforms,colors:assetCfg.colors},'资产设置')}
   const ASSET_TYPES=computed(()=>assetCfg.types)
   function getPlatforms(assetType){return assetCfg.platforms[normalizeAssetType(assetType)]||[]}
-  function assetColor(type){return assetCfg.colors[normalizeAssetType(type)]||assetCfg.colors['']}
-  const POS_PIE_COLORS=['#1e4b3b','#3a5a80','#8c6d4f','#16181c','#4a7a68']
+  // On 霓虹's near-black ground the darker built-ins (ink, deep green, slate,
+  // brown) would all but vanish, so they are drawn one step lighter. Only the
+  // built-in values are swapped; a colour the user picked is shown as picked.
+  const NEON_COLORS={'rgba(22,24,28,.86)':'rgba(233,234,237,.86)','rgba(30,75,59,.9)':'rgba(92,199,154,.9)','rgba(58,90,128,.9)':'rgba(127,156,196,.9)','rgba(140,109,79,.9)':'rgba(196,160,121,.9)','rgba(90,100,130,.85)':'rgba(140,150,185,.85)','rgba(74,122,104,.85)':'rgba(110,170,145,.85)'}
+  function assetColor(type){
+    const color=assetCfg.colors[normalizeAssetType(type)]||assetCfg.colors['']
+    return theme.value==='neon'?(NEON_COLORS[color]||color):color
+  }
+  const POS_PIE_LIGHT=['#1e4b3b','#3a5a80','#8c6d4f','#16181c','#4a7a68']
+  const POS_PIE_NEON=['#5cc79a','#7f9cc4','#c4a079','#e9eaed','#6eaa91']
+  function posPieColors(){return theme.value==='neon'?POS_PIE_NEON:POS_PIE_LIGHT}
   const platformSuggestions=computed(()=>{
     const preset=getPlatforms(form.assetType)
     const used=allExchanges.value.filter(ex=>!preset.includes(ex))
@@ -9853,7 +9894,7 @@ setup(){
         labels:rows.map(p=>p.name&&p.name!==p.symbol?p.name:p.symbol),
         datasets:[{
           data:rows.map(p=>p.value),
-          backgroundColor:rows.map((_,i)=>POS_PIE_COLORS[i%POS_PIE_COLORS.length]),
+          backgroundColor:rows.map((_,i)=>posPieColors()[i%posPieColors().length]),
           borderWidth:2,
           borderColor:cssVar('--panel','#10131A'),
           hoverOffset:6
@@ -9976,7 +10017,7 @@ setup(){
     serverAutoSync.dispose()
   })
 
-  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,POS_PIE_COLORS,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
+  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,fmtQtyNum,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,capitalChart,capitalCurve,capitalCurveView,capitalRange,setCapitalRange,CAPITAL_RANGES,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
