@@ -41,7 +41,7 @@ jobs:
           set -euo pipefail
           tar -czf /tmp/flowledger-static.tar.gz \
             index.html sw.js manifest.json \
-            icon.svg icon-192.png icon-512.png js
+            icon.svg icon-192.png icon-512.png js vendor
 
       - name: Back up and deploy static files
         run: |
@@ -54,7 +54,7 @@ jobs:
           stamp="$(date -u +%Y%m%dT%H%M%SZ)"
           backup_dir="/var/backups/flowledger/$stamp"
           sudo install -d -m 750 "$backup_dir"
-          for path in index.html sw.js manifest.json icon.svg icon-192.png icon-512.png js; do
+          for path in index.html sw.js manifest.json icon.svg icon-192.png icon-512.png js vendor; do
             if sudo test -e "$DEPLOY_DIR/$path"; then
               sudo cp -a "$DEPLOY_DIR/$path" "$backup_dir/"
             fi
@@ -62,10 +62,10 @@ jobs:
           sudo tar -xzf /tmp/flowledger-static.tar.gz -C "$DEPLOY_DIR"
           sudo chown -R www-data:www-data "$DEPLOY_DIR"
           rm -f /tmp/flowledger-static.tar.gz
-          grep -q "v2026.09.29-1" "$DEPLOY_DIR/index.html"
-          grep -q "touji-v2026-09-29-1" "$DEPLOY_DIR/sw.js"
+          grep -q "v2026.10.08-1" "$DEPLOY_DIR/index.html"
+          grep -q "touji-v2026-10-08-1" "$DEPLOY_DIR/sw.js"
           curl -fsS http://127.0.0.1:8787/api/v1/health/ready | grep -q '"status":"ready"'
-          echo "deployed_version=v2026.09.29-1"
+          echo "deployed_version=v2026.10.08-1"
           echo "backup_dir=$backup_dir"
           REMOTE
 

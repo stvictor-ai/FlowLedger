@@ -59,3 +59,28 @@ test('same-origin static files remain network-first cached', async () => {
   assert.equal(calls.fetch.length, 1)
   assert.equal(calls.open.length, 1)
 })
+
+test('vendor libraries are served cache-first from their own cache', async () => {
+  const { listeners, calls } = loadWorker()
+
+  await dispatchFetch(listeners.fetch, 'https://touji.example.com/vendor/vue-3.5.43.global.prod.js')
+
+  // Nothing cached yet, so it is looked up, fetched once, and stored.
+  assert.equal(calls.match.length, 1)
+  assert.equal(calls.fetch.length, 1)
+  await new Promise(resolve => setImmediate(resolve))
+  assert.deepEqual(calls.open, ['touji-vendor-v1'])
+})
+
+test('the page no longer depends on third-party script hosts', () => {
+  const html = fs.readFileSync('index.html', 'utf8')
+  const sw = fs.readFileSync('sw.js', 'utf8')
+
+  assert.doesNotMatch(html, /<script[^>]+src="https?:\/\//)
+  for (const match of html.matchAll(/<script src="(vendor\/[^"]+)"/g)) {
+    assert.ok(fs.existsSync(match[1]), `${match[1]} is referenced but missing`)
+    assert.ok(sw.includes(`./${match[1]}`), `${match[1]} is not pre-cached`)
+  }
+  assert.ok(fs.existsSync('vendor/xlsx-0.20.3.full.min.js'))
+  assert.match(html, /vendor\/xlsx-0\.20\.3\.full\.min\.js/)
+})

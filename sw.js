@@ -1,4 +1,4 @@
-const CACHE_NAME = 'touji-v2026-09-29-1';
+const CACHE_NAME = 'touji-v2026-10-08-1';
 
 const APP_ASSETS = [
   './js/entry-engine.js',
@@ -7,23 +7,32 @@ const APP_ASSETS = [
   './js/server-sync.js'
 ];
 
-// CDN assets: cache-first (immutable, versioned URLs)
-const CDN_ASSETS = [
-  'https://unpkg.com/vue@3.5/dist/vue.global.prod.js',
-  'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js',
-  'https://unpkg.com/dayjs@1.11/dayjs.min.js',
-  'https://unpkg.com/dayjs@1.11/plugin/isoWeek.js',
-  'https://unpkg.com/dayjs@1.11/plugin/weekOfYear.js',
-  'https://unpkg.com/dayjs@1.11/locale/zh-cn.js',
-  'https://cdn.jsdelivr.net/npm/chart.js@4.4/dist/chart.umd.min.js'
+// Third-party libraries, served from this origin under version-stamped names.
+// A file never changes once published, so they are cache-first and live in a
+// cache of their own that survives app releases; bump VENDOR_CACHE only when
+// a file is removed. xlsx is left out of the pre-cache: it is ~930 KB and only
+// import/export load it, after which the fetch handler keeps a copy.
+const VENDOR_CACHE = 'touji-vendor-v1';
+const VENDOR_ASSETS = [
+  './vendor/vue-3.5.43.global.prod.js',
+  './vendor/dayjs-1.11.23.min.js',
+  './vendor/dayjs-1.11.23-isoWeek.js',
+  './vendor/dayjs-1.11.23-weekOfYear.js',
+  './vendor/dayjs-1.11.23-zh-cn.js',
+  './vendor/chart-4.4.9.umd.min.js'
 ];
 
-// Install: pre-cache local engines and CDN dependencies.
+// Install: pre-cache local engines and libraries.
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => Promise.allSettled([...APP_ASSETS, ...CDN_ASSETS].map(url => cache.add(url))))
-      .then(() => self.skipWaiting())
+    Promise.all([
+      caches.open(CACHE_NAME).then(cache => Promise.allSettled(APP_ASSETS.map(url => cache.add(url)))),
+      caches.open(VENDOR_CACHE).then(async cache => {
+        const missing = [];
+        for (const url of VENDOR_ASSETS) if (!(await cache.match(url))) missing.push(url);
+        return Promise.allSettled(missing.map(url => cache.add(url)));
+      })
+    ]).then(() => self.skipWaiting())
   );
 });
 
@@ -31,27 +40,28 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)));
+    await Promise.all(keys.filter(k => k !== CACHE_NAME && k !== VENDOR_CACHE).map(k => caches.delete(k)));
     await self.clients.claim();
   })());
 });
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  const isCDN = CDN_ASSETS.some(u => e.request.url.startsWith(u));
 
-  // CDN: cache-first (these URLs are version-pinned, safe to cache forever)
-  if (isCDN) {
+  if (url.origin === self.location.origin && url.pathname.startsWith('/vendor/')) {
     e.respondWith(
       caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
-        if (res.ok) caches.open(CACHE_NAME).then(c => c.put(e.request, res.clone()));
+        if (res.ok) {
+          const copy = res.clone();
+          caches.open(VENDOR_CACHE).then(c => c.put(e.request, copy));
+        }
         return res;
       }))
     );
     return;
   }
 
-  // Account and ledger API responses may contain private data and must never enter Cache Storage.
+// Account and ledger API responses may contain private data and must never enter Cache Storage.
   if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) {
     e.respondWith(fetch(e.request));
     return;

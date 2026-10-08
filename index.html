@@ -14,13 +14,14 @@
 <meta name="description" content="投记是一个本地优先的个人投资账本：记录每一笔入金、出金与买卖，看清自己真正投了多少、拿回多少。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/vue@3.5/dist/vue.global.prod.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<script src="https://unpkg.com/dayjs@1.11/dayjs.min.js"></script>
-<script src="https://unpkg.com/dayjs@1.11/plugin/isoWeek.js"></script>
-<script src="https://unpkg.com/dayjs@1.11/plugin/weekOfYear.js"></script>
-<script src="https://unpkg.com/dayjs@1.11/locale/zh-cn.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4/dist/chart.umd.min.js"></script>
+<!-- Served from this origin: the overseas CDNs these used to come from are
+     slow or unreachable from mainland networks. xlsx is loaded on demand. -->
+<script src="vendor/vue-3.5.43.global.prod.js"></script>
+<script src="vendor/dayjs-1.11.23.min.js"></script>
+<script src="vendor/dayjs-1.11.23-isoWeek.js"></script>
+<script src="vendor/dayjs-1.11.23-weekOfYear.js"></script>
+<script src="vendor/dayjs-1.11.23-zh-cn.js"></script>
+<script src="vendor/chart-4.4.9.umd.min.js"></script>
 <script src="js/entry-engine.js"></script>
 <script src="js/review-engine.js"></script>
 <script src="js/import-engine.js"></script>
@@ -1754,8 +1755,8 @@ td input,td select{min-height:31px;padding:5px 7px}
 .review-day-amount{min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--text);font:700 8px/1.2 'Manrope',sans-serif;white-space:nowrap}
 .review-day-dots{position:absolute;left:7px;bottom:7px;display:flex;gap:3px}
 .review-day-dot{width:5px;height:5px;border-radius:50%;background:var(--dim)}
-.review-day-dot.deposit{background:var(--red)}
-.review-day-dot.withdraw{background:var(--green)}
+.review-day-dot.deposit{background:var(--flow-in)}
+.review-day-dot.withdraw{background:var(--flow-out)}
 .review-day-dot.buy{background:var(--accent)}
 .review-day-dot.sell{background:var(--blue)}
 .review-day-signal{position:absolute;right:7px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--accent-2);box-shadow:0 0 0 3px var(--accent-dim)}
@@ -3890,6 +3891,9 @@ html[data-theme="ink"]{
   --destructive:2 47% 47%;--destructive-foreground:0 0% 100%;--border-token:43 12% 88%;--input-token:0 0% 100%;--ring:159 43% 21%;
   --chart-1:159 43% 21%;--chart-2:213 37% 36%;--chart-3:220 4% 54%;--chart-4:33 28% 43%;--chart-5:2 47% 47%;
   --chart-color-1:#1e4b3b;--chart-color-2:#3a5a80;--chart-color-3:#8a8e95;--chart-color-4:#8c6d4f;--chart-color-5:#b34240;
+  /* Money moving in or out is not a gain or a loss, so it never borrows the
+     profit/loss red and green. Deposits read as plain ink, withdrawals as slate. */
+  --flow-in:hsl(var(--foreground));--flow-out:hsl(var(--chart-2));
   --sidebar:40 23% 97.5%;--sidebar-foreground:220 12% 10%;--sidebar-primary:220 12% 10%;--sidebar-primary-foreground:0 0% 100%;
   --sidebar-accent:43 14% 94%;--sidebar-accent-foreground:220 12% 10%;--sidebar-border:43 12% 88%;--sidebar-ring:159 43% 21%;
   --font-sans:'Inter Variable','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
@@ -4120,6 +4124,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
 .ledger-month+.ledger-month .ledger-month-head{padding-bottom:6px}
 .review-timeline-row{min-height:64px;padding-block:12px;row-gap:0}
 .review-timeline-main strong{display:block;margin-bottom:3px}
+.text-flow-in{color:var(--flow-in)!important}.text-flow-out{color:var(--flow-out)!important}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -4247,8 +4252,8 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
           <div class="capital-equation-head"><span>资金关系</span><code>持仓 + 取出 - 投入 = 收益</code></div>
           <div class="capital-equation-grid">
             <div><span>当前持仓</span><strong v-if="hasTrackedHoldings" class="privacy-number">{{ fmt(holdingsValue) }}</strong><strong v-else class="equation-unknown">未录入</strong></div>
-            <div><span>＋ 累计取出</span><strong class="privacy-number text-green">{{ fmt(totalOut) }}</strong></div>
-            <div><span>－ 累计投入</span><strong class="privacy-number text-red">{{ fmt(totalIn) }}</strong></div>
+            <div><span>＋ 累计取出</span><strong class="privacy-number text-flow-out">{{ fmt(totalOut) }}</strong></div>
+            <div><span>－ 累计投入</span><strong class="privacy-number text-flow-in">{{ fmt(totalIn) }}</strong></div>
             <div class="equation-result"><span>＝ 真实收益</span><strong v-if="hasTrackedHoldings" class="privacy-number">{{ (trueReturn>=0?'+':'')+fmt(trueReturn) }}</strong><strong v-else class="equation-unknown">—</strong></div>
           </div>
         </div>
@@ -5153,8 +5158,8 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
       </div>
       <div class="fs-grid">
         <div class="fs-cell"><p>记录</p><strong>{{ filteredStats.count }} 笔</strong></div>
-        <div class="fs-cell"><p>{{ t('typeIn') }}</p><strong class="text-red">{{ fmt(filteredStats.inTotal) }}</strong></div>
-        <div class="fs-cell"><p>{{ t('typeOut') }}</p><strong class="text-green">{{ fmt(filteredStats.outTotal) }}</strong></div>
+        <div class="fs-cell"><p>{{ t('typeIn') }}</p><strong class="text-flow-in">{{ fmt(filteredStats.inTotal) }}</strong></div>
+        <div class="fs-cell"><p>{{ t('typeOut') }}</p><strong class="text-flow-out">{{ fmt(filteredStats.outTotal) }}</strong></div>
         <div class="fs-cell"><p>净额</p><strong :style="{color:filteredStats.net>=0?'var(--blue)':'var(--red)'}">{{ (filteredStats.net>=0?'+':'')+fmt(filteredStats.net) }}</strong></div>
       </div>
     </div>
@@ -5178,8 +5183,8 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
               <span>{{ g.visibleEntries.length }} 笔记录</span>
             </div>
             <div class="ledger-month-totals">
-              <span>入 <b class="text-red">{{ fmt(g.inTotal) }}</b></span>
-              <span>出 <b class="text-green">{{ fmt(g.outTotal) }}</b></span>
+              <span>入 <b class="text-flow-in">{{ fmt(g.inTotal) }}</b></span>
+              <span>出 <b class="text-flow-out">{{ fmt(g.outTotal) }}</b></span>
               <span>净 <b :style="{color:g.net>=0?'var(--blue)':'var(--red)'}">{{ (g.net>=0?'+':'')+fmt(g.net) }}</b></span>
             </div>
           </header>
@@ -5347,8 +5352,8 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
       <canvas ref="trendChart"></canvas>
     </div>
     <div v-if="period==='month'" class="cashflow-overview">
-      <div class="cashflow-card"><p>本年入金</p><strong class="text-red">{{ fmt(cashflowOverview.yearIn) }}</strong></div>
-      <div class="cashflow-card"><p>本年出金</p><strong class="text-green">{{ fmt(cashflowOverview.yearOut) }}</strong></div>
+      <div class="cashflow-card"><p>本年入金</p><strong class="text-flow-in">{{ fmt(cashflowOverview.yearIn) }}</strong></div>
+      <div class="cashflow-card"><p>本年出金</p><strong class="text-flow-out">{{ fmt(cashflowOverview.yearOut) }}</strong></div>
       <div class="cashflow-card"><p>本年净额</p><strong :style="{color:cashflowOverview.yearNet>=0?'var(--blue)':'var(--red)'}">{{ (cashflowOverview.yearNet>=0?'+':'')+fmt(cashflowOverview.yearNet) }}</strong></div>
       <div class="cashflow-card"><p>累计净额</p><strong :style="{color:cashflowOverview.cum>=0?'var(--blue)':'var(--red)'}">{{ (cashflowOverview.cum>=0?'+':'')+fmt(cashflowOverview.cum) }}</strong></div>
     </div>
@@ -5411,7 +5416,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
 
     <div class="review-summary-grid">
       <div class="review-summary-cell"><p>记录</p><strong>{{ reviewSummary.count }}</strong><small>笔操作</small></div>
-      <div class="review-summary-cell"><p>净投入</p><strong :class="reviewSummary.netFunding>0?'text-red':reviewSummary.netFunding<0?'text-green':''">{{ fmt(reviewSummary.netFunding) }}</strong><small>入金减出金</small></div>
+      <div class="review-summary-cell"><p>净投入</p><strong :class="reviewSummary.netFunding>0?'text-flow-in':reviewSummary.netFunding<0?'text-flow-out':''">{{ fmt(reviewSummary.netFunding) }}</strong><small>入金减出金</small></div>
       <div class="review-summary-cell"><p>买卖</p><strong>{{ reviewSummary.tradeCount }}</strong><small>{{ reviewSummary.buyCount }} 买 · {{ reviewSummary.sellCount }} 卖</small></div>
       <div class="review-summary-cell"><p>已实现盈亏</p><strong :class="reviewSummary.realizedPL>=0?'text-green':'text-red'">{{ (reviewSummary.realizedPL>=0?'+':'')+fmt(reviewSummary.realizedPL) }}</strong><small>仅统计卖出记录</small></div>
     </div>
@@ -5472,7 +5477,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
               <strong>{{ entry.type }} · {{ entry.targetName||entry.exchange||'未填写标的或平台' }}</strong>
               <small>{{ entry.exchange||'未填写平台' }} · {{ entry.assetType||'未分类' }}</small>
             </div>
-            <strong :class="entry.type==='出金'||entry.type==='卖出'?'text-green':'text-red'">{{ fmt(entry.amountCNY) }}</strong>
+            <strong :class="entry.type==='出金'||entry.type==='卖出'?'text-flow-out':'text-flow-in'">{{ fmt(entry.amountCNY) }}</strong>
           </div>
         </div>
         <p v-else class="review-day-empty">这一天没有操作。你仍然可以写一条观察或复盘笔记。</p>
@@ -5521,7 +5526,7 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
                 <span v-for="signal in item.signals" :key="signal.id" :class="['review-signal-chip',signal.severity]" :title="signal.reason">{{ signal.title }}</span>
               </div>
             </div>
-            <strong class="review-timeline-amount" :class="item.entry.type==='出金'||item.entry.type==='卖出'?'text-green':'text-red'">{{ fmt(item.entry.amountCNY) }}</strong>
+            <strong class="review-timeline-amount" :class="item.entry.type==='出金'||item.entry.type==='卖出'?'text-flow-out':'text-flow-in'">{{ fmt(item.entry.amountCNY) }}</strong>
           </div>
         </div>
       </section>
@@ -5669,8 +5674,8 @@ tbody tr:hover{background:hsl(var(--accent-token)/.2)}
 
         <div class="import-impact">
           <div><p>{{ t('importAfterCount') }}</p><strong>{{ importAfterStats.count }}</strong></div>
-          <div><p>{{ t('importAfterIn') }}</p><strong class="text-red">{{ fmt(importAfterStats.inTotal) }}</strong></div>
-          <div><p>{{ t('importAfterOut') }}</p><strong class="text-green">{{ fmt(importAfterStats.outTotal) }}</strong></div>
+          <div><p>{{ t('importAfterIn') }}</p><strong class="text-flow-in">{{ fmt(importAfterStats.inTotal) }}</strong></div>
+          <div><p>{{ t('importAfterOut') }}</p><strong class="text-flow-out">{{ fmt(importAfterStats.outTotal) }}</strong></div>
           <div><p>{{ t('importAfterNet') }}</p><strong :style="{color:importAfterStats.net>=0?'var(--blue)':'var(--red)'}">{{ (importAfterStats.net>=0?'+':'')+fmt(importAfterStats.net) }}</strong></div>
         </div>
 
@@ -6627,7 +6632,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.09.29-1'
+  const APP_VERSION='v2026.10.08-1'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -8221,7 +8226,7 @@ setup(){
   function reviewDayAmountTone(cell){
     const directions=new Set((cell.entryTypes||[]).map(type=>type==='入金'||type==='买入'?'in':type==='出金'||type==='卖出'?'out':'other'))
     if(directions.size!==1)return''
-    return directions.has('in')?'text-red':directions.has('out')?'text-green':''
+    return directions.has('in')?'text-flow-in':directions.has('out')?'text-flow-out':''
   }
   function fmtCalendarAmount(value){
     if(showcaseMode.value)return'••'
@@ -9528,7 +9533,22 @@ setup(){
     showToast(`已覆盖导入 ${rows.length} 条`,'success')
     cancelImportPreview()
   }
-  function exportExcel(){
+  // The spreadsheet library is ~930 KB and only import/export need it, so it
+  // is fetched the first time either runs rather than on every page load.
+  let xlsxReady=null
+  function loadXLSX(){
+    if(window.XLSX)return Promise.resolve(window.XLSX)
+    if(!xlsxReady)xlsxReady=new Promise((resolve,reject)=>{
+      const s=document.createElement('script')
+      s.src='vendor/xlsx-0.20.3.full.min.js'
+      s.onload=()=>window.XLSX?resolve(window.XLSX):reject(new Error('xlsx unavailable'))
+      s.onerror=()=>{xlsxReady=null;s.remove();reject(new Error('xlsx failed to load'))}
+      document.head.appendChild(s)
+    })
+    return xlsxReady
+  }
+  async function exportExcel(){
+    try{await loadXLSX()}catch(_){showToast('导出组件加载失败，请检查网络后重试','error');return}
     if(!entries.value.length){showToast('无数据','info');return}
     if(showcaseMode.value&&!confirm('展示模式只隐藏页面显示，导出的 Excel 会包含真实数据。继续导出吗？'))return
     const inR=[],outR=[],tradeR=[],flowR=[]
@@ -9587,7 +9607,8 @@ setup(){
   }
   function importExcel(ev){
     const f=ev.target.files[0];if(!f)return;const rd=new FileReader()
-    rd.onload=e=>{try{
+    rd.onload=async e=>{try{
+      await loadXLSX()
       const wb=XLSX.read(e.target.result,{type:'array'})
       const parsed=normalizeImportRows(workbookRows(wb))
       buildImportPreview('Excel',f.name,parsed.valid,parsed.invalidCount)
@@ -9670,15 +9691,15 @@ setup(){
 
     const ink=cssVar('--text','#16181c')
     const dim=cssVar('--muted','#86898f')
-    const inLine=cssVar('--chart-color-5','#b34240')
-    const outLine=cssVar('--secondary')?`hsl(${cssVar('--secondary','159 43% 21%')})`:'#1e4b3b'
+    const inLine=cssVar('--flow-in','#16181c')
+    const outLine=cssVar('--flow-out','#3a5a80')
 
     capitalChartInstance=new Chart(capitalChart.value,{
       type:'line',
       data:{
         labels:points.map(p=>p.day),
         datasets:[
-          {label:'累计投入',data:points.map(p=>p.cumIn),borderColor:inLine,backgroundColor:'rgba(179,66,64,.07)',fill:true,tension:0,pointRadius:0,pointHoverRadius:4,borderWidth:2},
+          {label:'累计投入',data:points.map(p=>p.cumIn),borderColor:inLine,backgroundColor:'rgba(22,24,28,.05)',fill:true,tension:0,pointRadius:0,pointHoverRadius:4,borderWidth:2},
           {label:'累计取出',data:points.map(p=>p.cumOut),borderColor:outLine,backgroundColor:'transparent',tension:0,pointRadius:0,pointHoverRadius:4,borderWidth:2}
         ]
       },
