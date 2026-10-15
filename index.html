@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#faf9f7">
 <!-- The skin is set before first paint so 霓虹 never flashes white. A saved
      choice wins; otherwise it follows the system, as orbitshz.com does. -->
-<script>(function(){try{var s=localStorage.getItem('touji_theme_v2');var n=s?s==='neon':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.dataset.theme=n?'neon':'mist';var m=document.querySelector('meta[name="theme-color"]');if(m)m.content=n?'#07080b':'#faf9f7'}catch(e){}})();</script>
+<script>(function(){try{var s=localStorage.getItem('touji_theme_v2');var t=s==='mist'||s==='neon'||s==='sky'?s:matchMedia('(prefers-color-scheme: dark)').matches?'neon':'mist';document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.content={mist:'#faf9f7',neon:'#07080b',sky:'#cfe6f8'}[t]}catch(e){}})();</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="投记">
@@ -4172,6 +4172,46 @@ html[data-theme="neon"] .rail-entry-btn:hover{background:rgba(92,199,154,.08);bo
 /* Glow 2: the dot that says the ledger is in sync. */
 html[data-theme="neon"] .sync-dot:not(.stale){background:#4fb287;box-shadow:0 0 0 3px rgba(79,178,135,.15),0 0 10px rgba(79,178,135,.8)}
 
+/* ===== 晴空 — the third skin, shared with orbitshz.com =====
+   A clear Japanese-animation sky behind the workspaces. The panels stay solid
+   white so every figure sits on a plain ground; the sky, the rounder corners
+   and the blue-tinted shadows carry the mood. Withdrawals turn amber: slate
+   would vanish next to navy ink, and amber is neither gain nor loss. */
+html[data-theme="sky"]{
+  color-scheme:light;
+  --background:40 100% 97.5%;--card-token:0 0% 100%;--popover:0 0% 100%;
+  --foreground:214 50% 22%;--card-foreground:214 50% 22%;--popover-foreground:214 50% 22%;--muted-foreground:214 20% 52%;
+  --primary:208 64% 45%;--primary-foreground:0 0% 100%;--secondary:154 49% 34%;--secondary-foreground:0 0% 100%;
+  --muted-token:208 60% 96%;--accent-token:208 61% 92%;--accent-foreground:214 50% 22%;
+  --destructive:4 58% 52%;--destructive-foreground:0 0% 100%;--border-token:206 45% 88%;--input-token:0 0% 100%;--ring:208 64% 45%;
+  --chart-1:208 64% 45%;--chart-2:33 62% 46%;--chart-3:214 15% 62%;--chart-4:200 55% 62%;--chart-5:4 58% 52%;
+  --chart-color-1:#2a78bd;--chart-color-2:#bf7d2d;--chart-color-3:#8d9bb0;--chart-color-4:#6db0d6;--chart-color-5:#d0574f;
+  --sidebar:0 0% 100%;--sidebar-foreground:214 50% 22%;--sidebar-primary:208 64% 45%;--sidebar-primary-foreground:0 0% 100%;
+  --sidebar-accent:208 60% 96%;--sidebar-accent-foreground:214 50% 22%;--sidebar-border:206 45% 88%;--sidebar-ring:208 64% 45%;
+  --radius-panel:16px;--radius-control:10px;
+  --shadow-2xs:0 1px 2px 0 rgb(42 120 189/.06);--shadow-xs:0 6px 18px -10px rgb(42 120 189/.28);--shadow-sm:0 12px 28px -16px rgb(42 120 189/.32);
+  --shadow:0 12px 28px -16px rgb(42 120 189/.32);--shadow-light:0 6px 18px -12px rgb(42 120 189/.22);
+}
+html[data-theme="sky"] body{
+  background:
+    radial-gradient(ellipse 50% 30% at 85% 0%,rgba(255,236,196,.8),transparent 70%),
+    radial-gradient(38% 16% at 18% 14%,rgba(255,255,255,.9) 0 50%,transparent 52%),
+    radial-gradient(30% 12% at 30% 11%,rgba(255,255,255,.85) 0 50%,transparent 52%),
+    radial-gradient(34% 14% at 72% 22%,rgba(255,255,255,.75) 0 50%,transparent 52%),
+    linear-gradient(180deg,#bfe0f7 0,#dcedfa 360px,#f1f7fc 720px,#fffaf2 1100px);
+  background-repeat:no-repeat;background-color:#fffaf2;
+}
+html[data-theme="sky"] ::selection{background:#2a78bd;color:#fff}
+html[data-theme="sky"] .skin-toggle{border-radius:999px;border-color:rgba(42,120,189,.35);background:rgba(255,255,255,.7)}
+html[data-theme="sky"] .skin-toggle button+button{border-left-color:rgba(42,120,189,.2)}
+html[data-theme="sky"] .skin-toggle button.active{background:#2a78bd;color:#fff}
+html[data-theme="sky"] .rail-entry-btn{border-radius:999px;box-shadow:0 12px 24px -14px rgba(42,120,189,.9)}
+html[data-theme="sky"] .btn-primary{border-radius:999px}
+html[data-theme="sky"] .terminal-rail,
+html[data-theme="sky"] .panel{border-color:rgba(255,255,255,.9)}
+html[data-theme="sky"] .overview-module,
+html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(--shadow-xs)}
+
 /* Money in and out is not a gain or a loss: the ledger's type badges follow
    the flow colours, like every other deposit and withdrawal figure. */
 .ledger-type.type-in{color:var(--flow-in);background:hsl(var(--foreground)/.06);border-color:hsl(var(--foreground)/.16)}
@@ -6715,7 +6755,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.10.08-4'
+  const APP_VERSION='v2026.10.15-1'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -6836,8 +6876,8 @@ setup(){
   }
 
   const THEME_K='touji_theme_v2'
-  const THEMES=[{key:'mist',label:'经典',meta:'#faf9f7'},{key:'neon',label:'霓虹',meta:'#07080b'}]
-  const theme=ref(document.documentElement.dataset.theme==='neon'?'neon':'mist')
+  const THEMES=[{key:'mist',label:'经典',meta:'#faf9f7'},{key:'neon',label:'霓虹',meta:'#07080b'},{key:'sky',label:'晴空',meta:'#cfe6f8'}]
+  const theme=ref(THEMES.some(item=>item.key===document.documentElement.dataset.theme)?document.documentElement.dataset.theme:'mist')
   const themeLabel=computed(()=>(THEMES.find(item=>item.key===theme.value)||THEMES[0]).label)
   const themeMeta=document.querySelector('meta[name="theme-color"]')
   function applyTheme(name){
