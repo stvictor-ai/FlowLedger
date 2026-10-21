@@ -17,7 +17,10 @@ touji/
 ├── index.html      # Vue 主应用与界面
 ├── js/
 │   ├── entry-engine.js  # 时间排序、逐笔换汇和人民币折算（UMD）
-│   └── review-engine.js # 纯函数复盘引擎（UMD）
+│   ├── review-engine.js # 纯函数复盘引擎（UMD）
+│   ├── import-engine.js # 导入去重（UMD）
+│   ├── server-sync.js   # 账号同步客户端（UMD）
+│   └── debt-engine.js   # 负债：利息、待付日程、发薪日还债计划、入金冷静提醒（UMD）
 ├── tests/
 │   ├── entry-engine.test.js # 时间与换汇计算测试
 │   └── review-engine.test.js # Node 内置测试
@@ -121,8 +124,15 @@ touji/
   targetAmount, targetCurrency, // 换汇到账侧，例如 74.183976 USDT
   fxRate,       // 本笔实际成交汇率
   tradeQty, tradePrice, targetSymbol, targetName, targetMarket,
-  positionId, realizedPL, updatedAt
+  positionId, realizedPL, updatedAt,
+  fundSource,   // 入金资金来源 'salary' | 'savings' | 'loan' | 'other'
+  destination,  // 出金去向 'card' | 'repay' | 'interest' | 'other'
+  loanId        // 借款入金 / 还贷出金关联的贷款
 }]
+
+// 负债 key: touji_debts_v1（贷款 kind:'loan' + 还债计划 kind:'plan'，见 README「数据模型」）
+// 负债删除墓碑 key: touji_debt_deleted_v1
+// 同步：服务器 GET 快照里带 debts 才会上传负债（旧服务器的写接口是 strict 的）
 
 // 持仓 key: touji_positions_v1
 // 流水删除墓碑 key: touji_deleted_v1

@@ -136,6 +136,7 @@
     const data = snapshot || {}
     const entries = Array.isArray(data.entries) ? data.entries : []
     const positions = Array.isArray(data.positions) ? data.positions : []
+    const debts = Array.isArray(data.debts) ? data.debts : []
     let totalIn = 0
     let totalOut = 0
     entries.forEach(entry => {
@@ -145,15 +146,18 @@
     return {
       entries: entries.length,
       positions: positions.length,
+      debts: debts.length,
       totalIn,
       totalOut,
-      deleted: Object.keys(data.deletedIds || {}).length + Object.keys(data.deletedPositionIds || {}).length
+      deleted: Object.keys(data.deletedIds || {}).length +
+        Object.keys(data.deletedPositionIds || {}).length +
+        Object.keys(data.deletedDebtIds || {}).length
     }
   }
 
   function hasSnapshotData(snapshot) {
     const summary = summarizeSnapshot(snapshot)
-    return summary.entries + summary.positions + summary.deleted > 0
+    return summary.entries + summary.positions + summary.debts + summary.deleted > 0
   }
 
   function createAutoSyncCoordinator(options) {

@@ -29,6 +29,7 @@
 <script src="js/review-engine.js"></script>
 <script src="js/import-engine.js"></script>
 <script src="js/server-sync.js"></script>
+<script src="js/debt-engine.js"></script>
 <style>
 /* ===== RESET & BASE ===== */
 *{margin:0;padding:0;box-sizing:border-box}
@@ -392,6 +393,7 @@ tr.row-unmatched td{opacity:.35}
 .record-card-tag.tag-out{background:var(--green-dim);color:var(--green);border:1px solid rgba(52,211,153,.2)}
 .record-card-tag.tag-buy{background:rgba(96,165,250,.15);color:#60a5fa;border:1px solid rgba(96,165,250,.2)}
 .record-card-tag.tag-sell{background:rgba(167,139,250,.15);color:#a78bfa;border:1px solid rgba(167,139,250,.2)}
+.record-card-tag.tag-transfer{background:var(--surface-quiet);color:var(--muted);border:1px dashed var(--border)}
 .record-card-amount{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;margin-bottom:4px}
 .record-card-rate{font-size:12px;color:var(--dim);margin-bottom:10px}
 .record-card-bottom{display:flex;justify-content:space-between;align-items:center}
@@ -1884,7 +1886,7 @@ td input,td select{min-height:31px;padding:5px 7px}
     inset:auto 0 0;
     z-index:120;
     display:grid;
-    grid-template-columns:repeat(6,minmax(0,1fr));
+    grid-template-columns:repeat(7,minmax(0,1fr));
     gap:0;
     margin:0;
     padding:6px 5px calc(6px + env(safe-area-inset-bottom));
@@ -2795,6 +2797,88 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   .overview-grid{grid-template-columns:1fr}
 }
 
+/* ===== DEBT BOOK ===== */
+.debt-panel{padding:0;overflow:hidden}
+.debt-form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;align-items:end}
+.debt-form-grid .form-group{margin-bottom:0}
+.debt-form-wide{grid-column:span 2}
+.debt-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.debt-form-actions .ledger-delete-action{margin-right:auto}
+.debt-empty{padding:36px 28px;gap:8px}
+.debt-workspace{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr);gap:0}
+.debt-block{padding:20px 28px 22px;border-bottom:1px solid var(--border);min-width:0}
+.debt-workspace>.debt-block:nth-child(odd){border-right:1px solid var(--border)}
+.debt-plan-block,.debt-loans{grid-column:1/-1;border-right:0!important}
+.debt-block-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.debt-block-head h3{margin:0;font-size:14px}
+.debt-block-head span{color:var(--dim);font-size:9px;text-align:right}
+.debt-muted{margin:6px 0 0;color:var(--muted);font-size:10px;line-height:1.6}
+.debt-gap,.debt-gap strong{color:var(--red)!important}
+.debt-plan-hero{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--border);border-radius:6px;background:var(--surface-quiet)}
+.debt-plan-hero>div{padding:12px 16px;border-left:1px solid var(--border);min-width:0}
+.debt-plan-hero>div:first-child{border-left:0}
+.debt-plan-hero span{display:block;color:var(--dim);font-size:9px;font-weight:800}
+.debt-plan-hero strong{display:block;margin-top:5px;font:800 18px/1.2 'JetBrains Mono',monospace}
+.debt-plan-note{margin:10px 0 0;color:var(--muted);font-size:10px;line-height:1.7}
+.debt-steps{margin-top:14px;font-size:11px}
+.debt-step-head,.debt-step{display:grid;grid-template-columns:120px minmax(120px,1.2fr) 90px repeat(3,minmax(90px,1fr));gap:10px;align-items:center}
+.debt-step-head{padding:0 0 7px;color:var(--dim);font-size:9px;font-weight:800;border-bottom:1px solid var(--border)}
+.debt-step{padding:9px 0;border-bottom:1px solid var(--border)}
+.debt-step:last-child{border-bottom:0}
+.debt-step small{display:block;color:var(--dim);font-size:9px;margin-top:2px}
+.debt-step>span:nth-child(n+4){font-family:'JetBrains Mono',monospace;text-align:right}
+.debt-step-head>span:nth-child(n+4){text-align:right}
+.debt-event{display:grid;grid-template-columns:18px 54px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.debt-event:last-of-type{border-bottom:0}
+.debt-event input{margin:0;accent-color:var(--accent)}
+.debt-event-date{font:800 12px/1.2 'JetBrains Mono',monospace}
+.debt-event-date small,.debt-event-what small{display:block;color:var(--dim);font:500 9px/1.4 inherit;margin-top:2px}
+.debt-event-what strong{font-size:11px}
+.debt-event-amount{font:800 12px/1.2 'JetBrains Mono',monospace}
+.debt-event.paid .debt-event-what,.debt-event.paid .debt-event-amount,.debt-event.paid .debt-event-date{color:var(--dim);text-decoration:line-through}
+.debt-loan{border:1px solid var(--border);border-radius:6px;margin-top:9px;background:var(--panel)}
+.debt-loan.closed{opacity:.6}
+.debt-loan-main{display:grid;grid-template-columns:minmax(160px,1.4fr) repeat(3,minmax(0,1fr));gap:12px;align-items:center;padding:12px 14px;cursor:pointer}
+.debt-loan-name strong{display:block;font-size:12px}
+.debt-loan-name small,.debt-loan-figure small{display:block;color:var(--dim);font-size:9px;margin-top:3px}
+.debt-loan-figure span{display:block;color:var(--dim);font-size:8px;font-weight:800}
+.debt-loan-figure strong{display:block;margin-top:4px;font:800 12px/1.2 'JetBrains Mono',monospace}
+.debt-loan-actions{display:flex;justify-content:flex-end;gap:6px;padding:0 14px 10px}
+.debt-repay-form,.debt-repayments{padding:12px 14px;border-top:1px solid var(--border);background:var(--surface-quiet)}
+.debt-repayment{display:grid;grid-template-columns:90px minmax(0,1fr) minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0;font-size:10px;border-bottom:1px solid var(--border)}
+.debt-repayment:last-of-type{border-bottom:0}
+.debt-repayment small{color:var(--dim);font-size:9px}
+.debt-funding-grid{display:grid;gap:10px}
+.debt-funding-grid>div{padding:11px 13px;border:1px solid var(--border);border-radius:6px;background:var(--surface-quiet)}
+.debt-funding-grid span{display:block;color:var(--dim);font-size:9px;font-weight:800}
+.debt-funding-grid strong{display:block;margin-top:4px;font:800 15px/1.2 'JetBrains Mono',monospace}
+.debt-funding-grid small{display:block;margin-top:3px;color:var(--muted);font-size:9px}
+@media(max-width:1180px){
+  .debt-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .debt-workspace{grid-template-columns:minmax(0,1fr)}
+  .debt-workspace>.debt-block{border-right:0!important}
+}
+@media(max-width:760px){
+  .debt-block{padding:15px 14px 17px}
+  .debt-form-grid{grid-template-columns:minmax(0,1fr)}
+  .debt-form-wide{grid-column:auto}
+  .debt-plan-hero{grid-template-columns:minmax(0,1fr)}
+  .debt-plan-hero>div{border-left:0;border-top:1px solid var(--border)}
+  .debt-plan-hero>div:first-child{border-top:0}
+  .debt-step-head{display:none}
+  .debt-step{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 10px}
+  .debt-step>span:nth-child(3){display:none}
+  .debt-step>span:nth-child(n+4){text-align:left}
+  .debt-step>span:nth-child(4)::before{content:'累计要还 ';color:var(--dim);font:500 9px inherit}
+  .debt-step>span:nth-child(5)::before{content:'按计划 ';color:var(--dim);font:500 9px inherit}
+  .debt-step>span:nth-child(6)::before{content:'还差 ';color:var(--dim);font:500 9px inherit}
+  .debt-loan-main{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .debt-loan-name{grid-column:1/-1}
+  .debt-repayment{grid-template-columns:80px minmax(0,1fr);gap:3px 10px}
+  .debt-block-head{flex-direction:column;align-items:flex-start;gap:3px}
+  .debt-block-head span{text-align:left}
+}
+
 /* ===== POSITION MANAGEMENT WORKSPACE ===== */
 .position-panel{
   padding:0;
@@ -3019,7 +3103,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .entry-template-select{width:210px}
 .entry-action-bar{
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-columns:repeat(5,minmax(0,1fr));
   border-bottom:1px solid var(--border);
   background:var(--surface-quiet);
 }
@@ -3146,6 +3230,37 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   margin-right:4px;color:var(--muted);
   font-size:10px;font-weight:500;letter-spacing:.04em
 }
+/* 资金来源 / 去向：一行选项，选借款或还贷时后面跟一个贷款选择。 */
+.entry-fund-row{
+  display:flex;
+  align-items:center;
+  gap:8px 12px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+.entry-fund-label{min-width:84px;color:var(--muted);font-size:10px;font-weight:800}
+.entry-fund-options{display:flex;gap:6px;flex-wrap:wrap}
+/* 必选项选中要一眼看出来，主题里的 chip 选中态太淡。 */
+.entry-fund-options .chip.active,.entry-calm-intent .chip.active{background:var(--text);border-color:var(--text);color:var(--panel)}
+.entry-loan-select{width:auto;min-width:180px;max-width:260px}
+.entry-fund-hint{padding:0;color:var(--accent);font-size:10px;font-weight:800}
+/* 冷静提醒：不再是弹窗，留在表单里，能看到数字再决定。 */
+.entry-calm-card{
+  margin-top:14px;
+  padding:13px 15px;
+  border:1px solid var(--border);
+  border-left:3px solid var(--accent);
+  border-radius:6px;
+  background:var(--surface-quiet);
+}
+.entry-calm-card.level-danger{border-left-color:var(--red);background:var(--red-dim)}
+.entry-calm-title{margin:0 0 6px;font-size:12px;font-weight:800}
+.entry-calm-card.level-danger .entry-calm-title{color:var(--red)}
+.entry-calm-card ul{margin:0;padding-left:16px;color:var(--text);font-size:11px;line-height:1.75}
+.entry-calm-intent{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px}
+.entry-calm-intent>span{margin-right:4px;color:var(--muted);font-size:10px;font-weight:800}
+.entry-calm-link{margin-top:9px;padding:0;color:var(--accent);font-size:10px;font-weight:800}
+.entry-ticket-foot p.entry-save-blocker{color:var(--red);font-weight:700}
 /* The hint explains the rightmost button, so it sits under the buttons
    instead of being wedged between them. */
 .entry-ticket-foot{
@@ -3212,7 +3327,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   .position-mobile-actions{display:flex;gap:7px}
   .entry-page-head{display:grid;gap:11px}
   .entry-template-select{width:100%}
-  .entry-action-bar{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .entry-action-bar{grid-template-columns:repeat(5,minmax(0,1fr))}
   .entry-action-button{min-height:56px;padding:7px 5px;text-align:center}
   .entry-action-button strong{font-size:11px}
   .entry-action-button span{display:none}
@@ -3492,6 +3607,8 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .api-hint{margin-top:9px;color:var(--muted);font-size:10px;line-height:1.75}
 .api-hint code{padding:1px 4px;border-radius:3px;background:var(--overlay);font-family:var(--mono-font);font-size:10px}
 .api-create{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px}
+.api-scope-option{display:flex;align-items:center;gap:7px;margin-top:9px;color:var(--muted);font-size:10px}
+.api-scope-option input{margin:0;accent-color:var(--accent)}
 /* The secret exists on screen once; make that impossible to scroll past. */
 .api-token-reveal{margin-top:14px;padding:16px;border:1px solid var(--accent);border-radius:var(--radius-control);background:var(--accent-dim)}
 .api-token-reveal-head{display:grid;gap:3px;margin-bottom:11px}
@@ -3750,6 +3867,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .ledger-type.type-out{color:var(--green);background:var(--green-dim);border-color:rgba(66,201,139,.22)}
 .ledger-type.type-buy{color:var(--blue);background:var(--blue-dim);border-color:rgba(79,183,197,.22)}
 .ledger-type.type-sell{color:var(--purple);background:var(--purple-dim);border-color:rgba(184,167,232,.22)}
+.ledger-type.type-transfer{color:var(--muted);background:var(--surface-quiet);border-style:dashed}
 .ledger-entry-main,
 .ledger-entry-context,
 .ledger-entry-amount{
@@ -4690,7 +4808,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
               <div style="display:flex;flex-direction:column;gap:3px;max-height:200px;overflow-y:auto;padding:6px 0">
                 <div v-for="r in p.flow.rows" :key="r.id" style="display:flex;gap:10px;align-items:center;font-size:11px;color:var(--muted)">
                   <span style="min-width:110px">{{ r.date }}{{ r.time?' '+r.time:'' }}</span>
-                  <span :class="['record-card-tag',r.type==='入金'?'tag-in':r.type==='出金'?'tag-out':r.type==='买入'?'tag-buy':'tag-sell']" style="font-size:10px;padding:1px 6px">{{ r.type }}</span>
+                  <span :class="['record-card-tag',typeTagClass(r.type)]" style="font-size:10px;padding:1px 6px">{{ r.type }}</span>
                   <span style="min-width:60px;text-align:right;font-variant-numeric:tabular-nums" :style="{color:r.type==='入金'||r.type==='买入'?'var(--flow-in)':r.type==='出金'||r.type==='卖出'?'var(--flow-out)':'inherit'}">{{ fmt(amountCNY(r)) }}</span>
                   <span v-if="r.tradeQty" style="color:var(--dim)">× {{ r.tradeQty }}</span>
                   <span v-if="r.realizedPL!=null" :style="{color:r.realizedPL>=0?'var(--green)':'var(--red)',fontWeight:600}">{{ r.realizedPL>=0?'+':'' }}{{ fmt(r.realizedPL) }}</span>
@@ -4722,7 +4840,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <div v-if="expandedPosFlows.has(p.id)&&p.flow.rows.length" style="margin-top:6px;display:flex;flex-direction:column;gap:3px">
             <div v-for="r in p.flow.rows" :key="r.id" style="display:flex;gap:8px;align-items:center;font-size:11px;color:var(--muted)">
               <span>{{ r.date }}{{ r.time?' '+r.time:'' }}</span>
-              <span :class="['record-card-tag',r.type==='入金'?'tag-in':r.type==='出金'?'tag-out':r.type==='买入'?'tag-buy':'tag-sell']" style="font-size:10px;padding:1px 6px">{{ r.type }}</span>
+              <span :class="['record-card-tag',typeTagClass(r.type)]" style="font-size:10px;padding:1px 6px">{{ r.type }}</span>
               <span :style="{color:r.type==='入金'||r.type==='买入'?'var(--flow-in)':r.type==='出金'||r.type==='卖出'?'var(--flow-out)':'inherit',fontVariantNumeric:'tabular-nums'}">{{ fmt(amountCNY(r)) }}</span>
               <span v-if="r.realizedPL!=null" :style="{color:r.realizedPL>=0?'var(--green)':'var(--red)',fontWeight:600}">{{ r.realizedPL>=0?'+':'' }}{{ fmt(r.realizedPL) }}</span>
             </div>
@@ -4738,6 +4856,181 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
   </section>
 
   <!-- ===== QUICK ADD ===== -->
+  <!-- ===== DEBT BOOK =====
+       借来的钱单独记账。贷款与还款存在 debts 集合里；从交易所取出来直接还贷的
+       出金（去向 = 还本 / 付息）也算作还款，但它仍是一笔出金，净值口径不变。 -->
+  <section id="debts" class="panel section-stats section-not-records section-not-data debt-panel" v-show="activeTab==='debts'">
+    <header class="position-page-head">
+      <div>
+        <p class="module-kicker">DEBT BOOK</p>
+        <h2>负债</h2>
+        <p class="hint">借来的钱单独记账：每期该还多少、每笔到期还差多少，以及借来的钱有多少进了交易所。</p>
+      </div>
+      <div class="position-head-actions">
+        <button class="btn btn-ghost btn-sm" @click="toggleDebtPlanForm">{{ debtPlanForm.open?'收起设置':'还债设置' }}</button>
+        <button class="btn btn-primary btn-sm" @click="openLoanForm()">登记贷款</button>
+      </div>
+    </header>
+
+    <div class="position-summary-strip" v-if="loanList.length">
+      <div><span>总欠款 · 本金 + 到期前利息</span><strong class="privacy-number">{{ fmt(debtSummary.totalOwed) }}</strong></div>
+      <div><span>剩余本金 · 已还 {{ debtSummary.progressPct==null?'—':fmtPct(debtSummary.progressPct,1) }}</span><strong class="privacy-number">{{ fmt(debtSummary.remaining) }}</strong></div>
+      <div><span>每月付息{{ debtSummary.monthlyAccrual?' · 另有 '+fmt(debtSummary.monthlyAccrual)+' 在累计':'' }}</span><strong class="privacy-number">{{ fmt(debtSummary.monthlyInterest) }}</strong></div>
+      <div><span>下次要付{{ debtSummary.nextEvent?' · '+debtSummary.nextEvent.date.slice(5)+(debtSummary.nextEvent.count>1?' · '+debtSummary.nextEvent.count+' 笔':''):'' }}</span><strong class="privacy-number">{{ debtSummary.nextEvent?fmt(debtSummary.nextEvent.amount):'—' }}</strong></div>
+    </div>
+
+    <div v-show="debtPlanForm.open" class="position-create-block debt-plan-form">
+      <div class="position-create-title">
+        <h3>还债设置</h3>
+        <span>发薪日用来算每期该拿多少；「每月能拿出多少」用来推到每个到期日还差多少。</span>
+      </div>
+      <div class="debt-form-grid">
+        <div class="form-group"><label>发薪日（每月几号）</label><input class="form-input" type="number" min="1" max="31" v-model.number="debtPlanForm.paydayDom"></div>
+        <div class="form-group"><label>每月能拿出多少还债</label><input class="form-input" type="number" step="100" min="0" v-model.number="debtPlanForm.monthlyPlan" placeholder="留空则按「全靠工资还清」算"></div>
+        <button class="btn btn-primary btn-sm" @click="saveDebtPlanSettings">保存设置</button>
+      </div>
+    </div>
+
+    <div v-show="debtLoanForm.open" class="position-create-block">
+      <div class="position-create-title">
+        <h3>{{ debtLoanForm.id?'编辑贷款':'登记贷款' }}</h3>
+        <span>本金填借到手的原始金额；之后的还款单独记，剩余本金会自动算。利息按银行惯例：本金 × 年化 ÷ 360 × 实际天数。</span>
+      </div>
+      <div class="debt-form-grid">
+        <div class="form-group"><label>名称</label><input class="form-input" v-model="debtLoanForm.name" placeholder="例如：信用贷 A"></div>
+        <div class="form-group"><label>放款机构</label><input class="form-input" v-model="debtLoanForm.lender" placeholder="例如：招商银行"></div>
+        <div class="form-group"><label>本金</label><input class="form-input" type="number" step="0.01" min="0" v-model.number="debtLoanForm.principal" inputmode="decimal"></div>
+        <div class="form-group"><label>年化利率 %</label><input class="form-input" type="number" step="0.01" min="0" v-model.number="debtLoanForm.ratePct" inputmode="decimal"></div>
+        <div class="form-group"><label>还款方式</label><select class="form-input" v-model="debtLoanForm.repayType"><option v-for="o in REPAY_TYPES" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
+        <div class="form-group" v-if="debtLoanForm.repayType==='interest_monthly'"><label>每月几号付息</label><input class="form-input" type="number" min="1" max="31" v-model.number="debtLoanForm.interestDay"></div>
+        <div class="form-group"><label>起息日</label><input class="form-input" type="date" v-model="debtLoanForm.startDate"></div>
+        <div class="form-group"><label>到期日</label><input class="form-input" type="date" v-model="debtLoanForm.maturityDate"></div>
+        <div class="form-group debt-form-wide"><label>备注</label><input class="form-input" v-model="debtLoanForm.note" placeholder="可选"></div>
+      </div>
+      <div class="debt-form-actions">
+        <button v-if="debtLoanForm.id" class="btn btn-ghost btn-sm ledger-delete-action" @click="deleteLoan(debtLoanForm.id)">删除这笔贷款</button>
+        <button class="btn btn-ghost btn-sm" @click="debtLoanForm.open=false">取消</button>
+        <button class="btn btn-primary btn-sm" @click="saveLoan">保存</button>
+      </div>
+    </div>
+
+    <div v-if="!loanList.length&&!debtLoanForm.open" class="position-list-empty debt-empty">
+      <strong>还没有登记贷款</strong>
+      <span>登记后这里会算出每期该还多少、到期还差多少。也可以在「同步数据 → 导入 JSON」导入迁移文件。</span>
+      <button class="btn btn-primary btn-sm" @click="openLoanForm()">登记第一笔贷款</button>
+    </div>
+
+    <div v-if="loanList.length" class="debt-workspace">
+      <section class="debt-block debt-plan-block" v-if="openLoans.length">
+        <header class="debt-block-head">
+          <h3>这期该还多少</h3>
+          <span>发薪日每月 {{ debtPayday.paydayDom }} 号{{ debtPayday.isPaydayToday?' · 今天就是发薪日':' · 下次 '+debtPayday.nextPayday.slice(5) }}</span>
+        </header>
+        <div class="debt-plan-hero">
+          <div>
+            <span>{{ debtPayday.monthlyPlan?'按你设的每月':'全靠工资还清，每期至少' }}</span>
+            <strong class="privacy-number">{{ fmt(debtPayday.target) }}</strong>
+          </div>
+          <div>
+            <span>本期已还（{{ debtPayday.lastPayday.slice(5) }} 起）</span>
+            <strong class="privacy-number">{{ fmt(debtPayday.paidThisPayday) }}</strong>
+          </div>
+          <div :class="{'debt-gap':debtPayday.leftThisPayday>0}">
+            <span>本期还差</span>
+            <strong class="privacy-number">{{ fmt(debtPayday.leftThisPayday) }}</strong>
+          </div>
+        </div>
+        <p class="debt-plan-note" v-if="debtPayday.monthlyPlan&&debtPayday.monthlyPlan<debtPayday.needPerPayday">
+          全靠工资还清每期要 {{ fmt(debtPayday.needPerPayday) }}（含每月利息 {{ fmt(debtPayday.monthlyInterest) }}），你设的 {{ fmt(debtPayday.monthlyPlan) }} 不够 —— 差的部分只能续贷或另找来源，要续贷就提前问银行。
+        </p>
+        <p class="debt-plan-note" v-else-if="!debtPayday.monthlyPlan">在「还债设置」里填每月能拿出多少，下面会算出到每个到期日还差多少。</p>
+        <div class="debt-steps">
+          <div class="debt-step-head"><span>到期日</span><span>贷款</span><span>之前的发薪日</span><span>到这天累计要还</span><span>按计划能还</span><span>还差</span></div>
+          <div v-for="st in debtPayday.steps" :key="st.loanId" class="debt-step">
+            <span><strong>{{ st.date }}</strong><small>还有 {{ st.days }} 天</small></span>
+            <span>{{ st.loanName }}<small>到期付 {{ fmt(st.due) }}</small></span>
+            <span>{{ st.paydays }} 个</span>
+            <span class="privacy-number">{{ fmt(st.cumDue) }}</span>
+            <span class="privacy-number">{{ st.planCover==null?'—':fmt(st.planCover) }}</span>
+            <span :class="['privacy-number',{'debt-gap':st.planGap}]">{{ st.planGap==null?'—':st.planGap?fmt(st.planGap):'够了' }}</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="debt-block">
+        <header class="debt-block-head">
+          <h3>待付日程</h3>
+          <span>付完勾一下：付息只记利息，到期还本会把这笔贷款结清。</span>
+        </header>
+        <div v-if="!debtSchedule.length" class="debt-muted">近期没有要付的。</div>
+        <label v-for="ev in debtSchedule" :key="ev.loanId+ev.kind+ev.date" :class="['debt-event',{paid:ev.paid}]">
+          <input type="checkbox" :checked="ev.paid" @change="toggleDebtEvent(ev,$event.target.checked)">
+          <span class="debt-event-date">{{ ev.date.slice(5) }}<small>{{ ev.date.slice(0,4) }}</small></span>
+          <span class="debt-event-what"><strong>{{ ev.kind==='interest'?'付息':'到期还本' }}</strong><small>{{ ev.loanName }}</small></span>
+          <span class="debt-event-amount privacy-number">{{ fmt(ev.amount) }}</span>
+        </label>
+      </section>
+
+      <section class="debt-block debt-loans">
+        <header class="debt-block-head">
+          <h3>贷款明细</h3>
+          <span>{{ debtSummary.openCount }} 笔未结清 · 本金合计 {{ fmt(debtSummary.principal) }}</span>
+        </header>
+        <article v-for="l in debtViews" :key="l.id" :class="['debt-loan',{closed:l.closed}]">
+          <div class="debt-loan-main" @click="expandedLoanId=expandedLoanId===l.id?'':l.id">
+            <div class="debt-loan-name">
+              <strong>{{ l.name||'未命名贷款' }}</strong>
+              <small>{{ l.lender||'—' }} · {{ (REPAY_TYPES.find(o=>o.key===l.repayType)||{}).label||'其他' }} · {{ (l.annualRate*100).toFixed(2) }}%</small>
+            </div>
+            <div class="debt-loan-figure"><span>剩余本金</span><strong class="privacy-number">{{ fmt(l.remaining) }}</strong></div>
+            <div class="debt-loan-figure"><span>到期</span><strong>{{ l.closed?'已结清':l.maturityDate||'—' }}</strong><small v-if="!l.closed&&l.daysToMaturity!=null">还有 {{ l.daysToMaturity }} 天</small></div>
+            <div class="debt-loan-figure"><span>已还本 / 已付息</span><strong class="privacy-number">{{ fmt(l.repaidPrincipal) }} / {{ fmt(l.paidInterest) }}</strong></div>
+          </div>
+          <div class="debt-loan-actions">
+            <button class="btn btn-ghost btn-sm" @click="openRepayForm(l.id)">记还款</button>
+            <button class="btn btn-ghost btn-sm" @click="openLoanForm(l)">编辑</button>
+          </div>
+          <div v-if="debtRepayForm.loanId===l.id" class="debt-repay-form">
+            <div class="debt-form-grid">
+              <div class="form-group"><label>日期</label><input class="form-input" type="date" v-model="debtRepayForm.date"></div>
+              <div class="form-group"><label>还本金</label><input class="form-input" type="number" step="0.01" min="0" v-model.number="debtRepayForm.principal" inputmode="decimal"></div>
+              <div class="form-group"><label>付利息</label><input class="form-input" type="number" step="0.01" min="0" v-model.number="debtRepayForm.interest" inputmode="decimal"></div>
+              <div class="form-group"><label>钱从哪来</label><select class="form-input" v-model="debtRepayForm.source"><option value="salary">工资</option><option value="savings">存款</option><option value="other">其他</option></select></div>
+              <div class="form-group debt-form-wide"><label>备注</label><input class="form-input" v-model="debtRepayForm.note" placeholder="可选"></div>
+            </div>
+            <p class="debt-muted">从交易所取出来直接还的，去「录入 → 出金」选「还贷款本金」，会自动算进这里，不用再记一次。</p>
+            <div class="debt-form-actions">
+              <button class="btn btn-ghost btn-sm" @click="debtRepayForm.loanId=''">取消</button>
+              <button class="btn btn-primary btn-sm" @click="saveRepayment">保存还款</button>
+            </div>
+          </div>
+          <div v-if="expandedLoanId===l.id" class="debt-repayments">
+            <div v-if="!l.repayments.length" class="debt-muted">还没有还款记录。</div>
+            <div v-for="r in [...l.repayments].reverse()" :key="r.id" class="debt-repayment">
+              <span>{{ r.date }}</span>
+              <span>{{ r.principal?'还本 '+fmt(r.principal):'' }}{{ r.principal&&r.interest?' · ':'' }}{{ r.interest?'付息 '+fmt(r.interest):'' }}</span>
+              <small>{{ r.entryId?'来自出金':r.via==='schedule'?'日程勾选':(r.source==='salary'?'工资':r.source==='savings'?'存款':'其他') }}{{ r.note?' · '+r.note:'' }}</small>
+              <button v-if="!r.entryId" class="action-link del" @click="removeRepayment(l.id,r.id)" title="删除这条还款">删除</button>
+            </div>
+            <p v-if="l.note" class="debt-muted">备注：{{ l.note }}</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="debt-block debt-funding">
+        <header class="debt-block-head">
+          <h3>借来的钱去了哪</h3>
+          <span>互转不算；没标来源的老入金只能按时间看。</span>
+        </header>
+        <div class="debt-funding-grid">
+          <div><span>标了「借款」的入金</span><strong class="privacy-number">{{ fmt(debtFunding.taggedLoan) }}</strong><small>{{ debtFunding.taggedLoanCount }} 笔</small></div>
+          <div v-if="debtFunding.since"><span>{{ debtFunding.since }} 贷款下来以后转进去</span><strong class="privacy-number">{{ fmt(debtFunding.sinceIn) }}</strong><small>取回 {{ fmt(debtFunding.sinceOut) }} · 净流入 {{ fmt(debtFunding.sinceNet) }}</small></div>
+          <div :class="{'debt-gap':debtSummary.openCount&&debtFunding.monthCount>=2}"><span>本月入金</span><strong class="privacy-number">{{ fmt(debtFunding.monthIn) }}</strong><small>{{ debtFunding.monthCount }} 笔{{ debtSummary.openCount?' · 还欠着钱':'' }}</small></div>
+        </div>
+      </section>
+    </div>
+  </section>
+
   <section class="panel section-records section-not-stats section-not-data quick-add-panel entry-panel" v-show="activeTab==='quick'">
     <header class="entry-page-head">
       <div>
@@ -4764,11 +5057,12 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
     <div class="entry-form-shell">
       <p class="entry-section-label">{{ quickAction==='buy'||quickAction==='sell'?'成交信息':'资金信息' }}</p>
 
-      <div v-if="quickAction==='deposit'||quickAction==='withdraw'" class="entry-cash-grid">
+      <div v-if="quickAction==='deposit'||quickAction==='withdraw'||quickAction==='transfer'" class="entry-cash-grid">
         <div class="form-group"><label>{{ isFxDeposit?'到账币种':'币种' }}</label><select class="form-input" v-model="form.currency" @change="handleCashCurrencyChange"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select></div>
         <div v-if="isFxDeposit" class="form-group"><label>支付金额</label><input class="form-input" type="number" step="0.01" v-model.number="form.sourceAmount" placeholder="输入人民币金额" inputmode="decimal" @keyup.enter="addEntry(true)"></div>
         <div v-else class="form-group"><label>{{ quickAmountLabel }}</label><input class="form-input" type="number" step="0.01" v-model.number="form.amount" placeholder="输入金额" inputmode="decimal" @keyup.enter="addEntry(true)"></div>
-        <div class="form-group"><label>账户 / 平台</label><input class="form-input" v-model="form.exchange" placeholder="例如：招商证券" list="dl-ex-focused"></div>
+        <div class="form-group"><label>{{ quickAction==='transfer'?'从哪个平台转出':'账户 / 平台' }}</label><input class="form-input" v-model="form.exchange" placeholder="例如：招商证券" list="dl-ex-focused"></div>
+        <div class="form-group" v-if="quickAction==='transfer'"><label>转入哪个平台</label><input class="form-input" v-model="form.toExchange" placeholder="例如：币安" list="dl-ex-focused"></div>
         <div class="form-group"><label>日期与时间</label><div class="entry-datetime-fields"><input class="form-input" type="date" v-model="form.date"><input class="form-input" type="time" v-model="form.time" aria-label="发生时间"></div></div>
       </div>
 
@@ -4799,6 +5093,42 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
       </div>
       <p class="rate-hint" v-else-if="form.currency!=='CNY'&&form.rate&&form.amount">折合人民币约 {{ fmt(form.amount*Number(form.rate)) }} 元</p>
 
+      <div v-if="quickAction==='deposit'" class="entry-fund-row">
+        <span class="entry-fund-label">这笔钱从哪来</span>
+        <div class="entry-fund-options" role="radiogroup" aria-label="资金来源">
+          <button v-for="o in FUND_SOURCES" :key="o.key" type="button" role="radio" :aria-checked="form.fundSource===o.key" :class="['chip',{active:form.fundSource===o.key}]" @click="form.fundSource=o.key">{{ o.label }}</button>
+        </div>
+        <select v-if="form.fundSource==='loan'&&loanOptions.length" class="form-input entry-loan-select" v-model="form.loanId" aria-label="来自哪笔贷款">
+          <option value="">不指定哪笔贷款</option>
+          <option v-for="l in loanOptions" :key="l.id" :value="l.id">{{ l.name }}</option>
+        </select>
+      </div>
+      <div v-if="quickAction==='withdraw'" class="entry-fund-row">
+        <span class="entry-fund-label">钱去了哪</span>
+        <div class="entry-fund-options" role="radiogroup" aria-label="资金去向">
+          <button v-for="o in DESTINATIONS" :key="o.key" type="button" role="radio" :aria-checked="form.destination===o.key" :class="['chip',{active:form.destination===o.key}]" @click="form.destination=o.key">{{ o.label }}</button>
+        </div>
+        <template v-if="form.destination==='repay'||form.destination==='interest'">
+          <select v-if="loanOptions.length" class="form-input entry-loan-select" v-model="form.loanId" aria-label="还哪笔贷款">
+            <option value="">选择还哪笔贷款</option>
+            <option v-for="l in loanOptions" :key="l.id" :value="l.id">{{ l.name }}</option>
+          </select>
+          <button v-else type="button" class="entry-fund-hint" @click="setActiveTab('debts')">还没登记贷款，去「负债」登记 →</button>
+        </template>
+      </div>
+
+      <div v-if="quickAction==='deposit'&&depositRisk.warnings.length" :class="['entry-calm-card','level-'+depositRisk.level]" role="status">
+        <p class="entry-calm-title">{{ depositRisk.level==='danger'?'先停一下':'留意一下' }}</p>
+        <ul>
+          <li v-for="w in depositRisk.warnings" :key="w.key">{{ w.text }}</li>
+        </ul>
+        <div class="entry-calm-intent">
+          <span>{{ needsIntent?'要继续，先说清这笔钱的打算':'这笔钱的打算（可选）' }}</span>
+          <button v-for="i in DEPOSIT_INTENTS" :key="i" type="button" :class="['chip',{active:form.intent===i}]" @click="form.intent=form.intent===i?'':i">{{ i }}</button>
+        </div>
+        <button v-if="debtSummary.openCount" type="button" class="entry-calm-link" @click="setActiveTab('debts')">去看还债计划 →</button>
+      </div>
+
       <button class="entry-more-toggle" @click="showQuickMore=!showQuickMore">
         <span :class="['arrow',{open:showQuickMore}]">&#9654;</span>
         {{ showQuickMore?'收起补充信息':'补充资产类型、理由与标签' }}
@@ -4823,7 +5153,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
 
       <footer class="entry-ticket-foot">
         <button class="btn btn-ghost" @click="copyLast" :disabled="!entries.length">复制上一笔</button>
-        <p>保存并继续会保留动作、账户、资产与标签，只清空金额和备注，适合连续补录。</p>
+        <p v-if="quickSaveBlocker" class="entry-save-blocker">{{ quickSaveBlocker }}</p>
+        <p v-else>保存并继续会保留动作、账户、资产、标签和资金来源，只清空金额和备注，适合连续补录。</p>
         <div class="entry-save-actions">
           <button class="btn btn-ghost" @click="addEntry(false)" :disabled="!quickCanSave">保存</button>
           <button class="btn btn-primary" @click="addEntry(true)" :disabled="!quickCanSave">保存并继续</button>
@@ -5152,6 +5483,11 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
               <code>since</code> / <code>until</code>（YYYY-MM-DD）、
               <code>include=all</code>（并入买卖）、<code>limit</code>。
             </p>
+            <div class="api-endpoint">
+              <span class="api-endpoint-label">GET</span>
+              <code>{{ apiFeedBase }}/debts</code>
+            </div>
+            <p class="api-hint">返回贷款、还款与还债计划；令牌要勾选「同时可读负债」才能访问。</p>
           </section>
 
           <section class="api-access-section">
@@ -5162,6 +5498,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
                 {{ apiTokenCreating?'创建中…':'创建令牌' }}
               </button>
             </div>
+            <label class="api-scope-option"><input type="checkbox" v-model="apiTokenDebts"> 同时可读负债（贷款、还款、还债计划）</label>
 
             <div v-if="apiTokenPlain" class="api-token-reveal">
               <div class="api-token-reveal-head">
@@ -5192,7 +5529,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
                     <span v-if="token.revokedAt" class="api-token-badge">已撤销</span>
                   </div>
                   <div class="api-token-meta">
-                    <code>{{ token.prefix }}…</code> · 最近使用 {{ apiTokenTime(token.lastUsedAt) }}
+                    <code>{{ token.prefix }}…</code> · {{ String(token.scope||'').includes('debts:read')?'出入金 + 负债':'只读出入金' }} · 最近使用 {{ apiTokenTime(token.lastUsedAt) }}
                   </div>
                 </div>
                 <button v-if="!token.revokedAt" class="btn btn-ghost btn-xs" @click="revokeApiToken(token)">撤销</button>
@@ -5249,7 +5586,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
       <div class="ledger-toolbar">
         <div class="form-group"><label>年份</label><select class="form-input" aria-label="流水年份" :value="filters.year" @change="setFlowYear($event.target.value)"><option value="">全部</option><option v-for="year in allYears" :key="year" :value="year">{{ year }} 年</option></select></div>
         <div class="form-group"><label>{{ t('month') }}</label><select class="form-input" v-model="filters.month"><option value="">{{ t('typeAll') }}</option><option v-for="m in allMonths" :key="m" :value="m">{{ m }}</option></select></div>
-        <div class="form-group"><label>类型</label><select class="form-input" v-model="filters.type"><option value="">{{ t('typeAll') }}</option><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></select></div>
+        <div class="form-group"><label>类型</label><select class="form-input" v-model="filters.type"><option value="">{{ t('typeAll') }}</option><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option><option value="互转">互转</option></select></div>
         <div class="form-group"><label>{{ t('keyword') }}</label><input class="form-input" v-model="filters.keyword" placeholder="交易所 / 备注 / 标签"></div>
         <div style="display:flex;gap:8px;justify-content:flex-end;align-items:end">
           <button :class="['btn','btn-ghost','btn-sm',{'has-filter':activeFilterCount>0}]" @click="showFilters=!showFilters">{{ showFilters?'收起':'更多筛选' }}{{ activeFilterCount?' · '+activeFilterCount:'' }}</button>
@@ -5328,7 +5665,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
             @click="openEditModal(e)"
           >
             <time>{{ dayjs(e.date).format('MM.DD') }}<small v-if="e.time">{{ e.time }}</small></time>
-            <span :class="['ledger-type','type-'+(e.type==='入金'?'in':e.type==='出金'?'out':e.type==='买入'?'buy':'sell')]">{{ e.type }}</span>
+            <span :class="['ledger-type','type-'+typeTone(e.type)]">{{ e.type }}</span>
             <span class="ledger-entry-main">
               <strong>{{ e.targetName||e.note||e.exchange||'未命名记录' }}</strong>
               <small v-if="e.targetSymbol||e.tradeQty||e.tradePrice">
@@ -5337,10 +5674,10 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
               <small v-else>{{ e.targetName?(e.note||'暂无备注'):(e.note?(e.assetType||'记录'):'暂无备注') }}</small>
             </span>
             <span class="ledger-entry-context">
-              <strong>{{ e.exchange||'未知平台' }}</strong>
-              <small>{{ e.assetType||'未分类' }}<template v-if="parseTags(e.tags).length"> · #{{ parseTags(e.tags).slice(0,2).join(' #') }}</template></small>
+              <strong>{{ e.exchange||'未知平台' }}{{ e.type==='互转'&&e.toExchange?' → '+e.toExchange:'' }}</strong>
+              <small>{{ e.fundSource?fundSourceLabel(e.fundSource)+' · ':'' }}{{ e.destination?destinationLabel(e.destination)+' · ':'' }}{{ e.assetType||'未分类' }}<template v-if="parseTags(e.tags).length"> · #{{ parseTags(e.tags).slice(0,2).join(' #') }}</template></small>
             </span>
-            <span class="ledger-entry-amount" :style="{color:e.type==='入金'?'var(--flow-in)':e.type==='出金'?'var(--flow-out)':e.type==='买入'?'var(--blue)':'var(--purple)'}">
+            <span class="ledger-entry-amount" :style="{color:typeColor(e.type)}">
               <template v-if="isFxEntry(e)">
                 <strong>{{ fmt(e.sourceAmount) }} <small>{{ e.sourceCurrency }}</small></strong>
                 <small class="ledger-fx-path">→ {{ fmtUnits(fxEntryTargetAmount(e)) }} {{ e.targetCurrency||e.currency }} · @ {{ fxEntryRate(e) }}</small>
@@ -5364,7 +5701,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <button class="ledger-inspector-close" @click="editingEntry=null" title="关闭" aria-label="关闭记录详情">×</button>
         </div>
         <div class="ledger-inspector-hero" v-if="editingDetail">
-          <strong :style="{color:editingEntry.type==='入金'?'var(--flow-in)':editingEntry.type==='出金'?'var(--flow-out)':editingEntry.type==='买入'?'var(--blue)':'var(--purple)'}">{{ fmt(isFxEntry(editingEntry)?editingEntry.sourceAmount:editingEntry.amount) }} <small>{{ isFxEntry(editingEntry)?editingEntry.sourceCurrency:(editingEntry.currency||'CNY') }}</small></strong>
+          <strong :style="{color:typeColor(editingEntry.type)}">{{ fmt(isFxEntry(editingEntry)?editingEntry.sourceAmount:editingEntry.amount) }} <small>{{ isFxEntry(editingEntry)?editingEntry.sourceCurrency:(editingEntry.currency||'CNY') }}</small></strong>
           <span v-if="isFxEntry(editingEntry)">到账 {{ fmtUnits(fxEntryTargetAmount(editingEntry)) }} {{ editingEntry.targetCurrency||editingEntry.currency }} · 实际汇率 {{ fxEntryRate(editingEntry) }}</span>
           <span v-else>折合 {{ fmt(editingDetail.cny) }} CNY</span>
         </div>
@@ -5374,7 +5711,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         </div>
         <div class="ledger-inspector-form">
           <div class="trade-lock-note" v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'">成交金额、币种和资产已参与持仓成本计算。需要改动这些字段时，请删除后重新录入。</div>
-          <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></select></div>
+          <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option><option value="互转">互转</option></select></div>
           <div class="form-group"><label>日期与时间</label><div class="entry-datetime-fields"><input class="form-input" type="date" v-model="editingEntry.date"><input class="form-input" type="time" v-model="editingEntry.time" aria-label="发生时间"></div></div>
           <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="editingEntry.assetType" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="">{{ t("uncategorized") }}</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select></div>
           <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="editingEntry.exchange" list="dl-ex-ledger"></div>
@@ -5397,6 +5734,13 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
               <button class="rate-fetch-btn" @click="fetchRate(editingEntry.currency,'edit')" :disabled="rateLoading||editingEntry.type==='买入'||editingEntry.type==='卖出'">{{ rateLoading?'获取中…':'更新' }}</button>
             </div>
             <p class="rate-hint" v-if="isFxEntry(editingEntry)&&editingEntry.sourceAmount&&editingEntry.rate">到账 {{ fmtUnits(fxTargetFromSource(editingEntry)) }} {{ editingEntry.targetCurrency||editingEntry.currency }} · 以本笔实际汇率保存</p>
+          </div>
+          <div class="form-group" v-if="editingEntry.type==='互转'"><label>转入平台</label><input class="form-input" v-model="editingEntry.toExchange" list="dl-ex-ledger"></div>
+          <div class="form-group" v-if="editingEntry.type==='入金'"><label>资金来源</label><select class="form-input" v-model="editingEntry.fundSource"><option value="">未标注</option><option v-for="o in FUND_SOURCES" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
+          <div class="form-group" v-if="editingEntry.type==='出金'"><label>资金去向</label><select class="form-input" v-model="editingEntry.destination"><option value="">未标注</option><option v-for="o in DESTINATIONS" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
+          <div class="form-group" v-if="(editingEntry.type==='入金'&&editingEntry.fundSource==='loan')||(editingEntry.type==='出金'&&(editingEntry.destination==='repay'||editingEntry.destination==='interest'))">
+            <label>{{ editingEntry.type==='入金'?'来自哪笔贷款':'还哪笔贷款' }}</label>
+            <select class="form-input" v-model="editingEntry.loanId"><option value="">不指定</option><option v-for="l in debtViews" :key="l.id" :value="l.id">{{ l.name }}{{ l.closed?'（已结清）':'' }}</option></select>
           </div>
           <div class="form-group"><label>{{ editingEntry.type==='入金'?'投入理由':editingEntry.type==='买入'?'买入理由':editingEntry.type==='卖出'?'卖出理由':'出金备注' }}</label><textarea class="form-input ledger-note-input" v-model="editingEntry.note" rows="3"></textarea></div>
           <div class="form-group"><label>{{ t('tagStats') }}</label><input class="form-input" v-model="editingEntry.tagText" list="dl-tags-ledger" placeholder="定投，补仓，FOMO"></div>
@@ -5427,9 +5771,9 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <div v-for="e in g.entries" :key="e.id" :class="['record-card',rowClass(e)]" @click="openEditModal(e)">
             <div class="record-card-top">
               <span class="record-card-date">{{ e.date }}<template v-if="e.time"> · {{ e.time }}</template></span>
-              <span :class="['record-card-tag',e.type==='入金'?'tag-in':e.type==='出金'?'tag-out':e.type==='买入'?'tag-buy':'tag-sell']">{{ e.type }}</span>
+              <span :class="['record-card-tag',typeTagClass(e.type)]">{{ e.type }}</span>
             </div>
-            <div :class="['record-card-amount']" :style="{color:e.type==='入金'?'var(--flow-in)':e.type==='出金'?'var(--flow-out)':e.type==='买入'?'#60a5fa':'#a78bfa'}">
+            <div :class="['record-card-amount']" :style="{color:typeColor(e.type)}">
               <template v-if="isFxEntry(e)">
                 {{ fmt(e.sourceAmount) }} {{ e.sourceCurrency }}
                 <span style="font-size:12px;color:var(--muted);font-weight:500"> → {{ fmtUnits(fxEntryTargetAmount(e)) }} {{ e.targetCurrency||e.currency }} @ {{ fxEntryRate(e) }}</span>
@@ -5845,13 +6189,13 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <section>
             <span>这台设备</span>
             <strong>{{ serverLocalSummary.entries }} 条流水</strong>
-            <small>{{ serverLocalSummary.positions }} 个持仓 · 入金 {{ fmt(serverLocalSummary.totalIn) }} · 出金 {{ fmt(serverLocalSummary.totalOut) }}</small>
+            <small>{{ serverLocalSummary.positions }} 个持仓{{ serverLocalSummary.debts?' · '+serverLocalSummary.debts+' 项负债':'' }} · 入金 {{ fmt(serverLocalSummary.totalIn) }} · 出金 {{ fmt(serverLocalSummary.totalOut) }}</small>
           </section>
           <div class="server-migration-arrow">⇄</div>
           <section>
             <span>服务器</span>
             <strong>{{ serverRemoteSummary.entries }} 条流水</strong>
-            <small>{{ serverRemoteSummary.positions }} 个持仓 · 入金 {{ fmt(serverRemoteSummary.totalIn) }} · 出金 {{ fmt(serverRemoteSummary.totalOut) }}</small>
+            <small>{{ serverRemoteSummary.positions }} 个持仓{{ serverRemoteSummary.debts?' · '+serverRemoteSummary.debts+' 项负债':'' }} · 入金 {{ fmt(serverRemoteSummary.totalIn) }} · 出金 {{ fmt(serverRemoteSummary.totalOut) }}</small>
           </section>
         </div>
 
@@ -5947,7 +6291,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
       <div class="modal-head"><div class="modal-title">记录详情</div><button class="modal-close" @click="editingEntry=null">&times;</button></div>
       <div class="modal-body">
         <div class="detail-hero" v-if="editingDetail">
-          <div class="detail-amount" :style="{color:editingEntry.type==='入金'?'var(--flow-in)':editingEntry.type==='出金'?'var(--flow-out)':editingEntry.type==='买入'?'#60a5fa':'#a78bfa'}">{{ fmt(isFxEntry(editingEntry)?editingEntry.sourceAmount:editingEntry.amount) }} {{ isFxEntry(editingEntry)?editingEntry.sourceCurrency:(editingEntry.currency&&editingEntry.currency!=='CNY'?editingEntry.currency:'元') }}</div>
+          <div class="detail-amount" :style="{color:typeColor(editingEntry.type)}">{{ fmt(isFxEntry(editingEntry)?editingEntry.sourceAmount:editingEntry.amount) }} {{ isFxEntry(editingEntry)?editingEntry.sourceCurrency:(editingEntry.currency&&editingEntry.currency!=='CNY'?editingEntry.currency:'元') }}</div>
           <div class="detail-meta">
             <template v-if="isFxEntry(editingEntry)">到账 {{ fmtUnits(fxEntryTargetAmount(editingEntry)) }} {{ editingEntry.targetCurrency||editingEntry.currency }} · @ {{ fxEntryRate(editingEntry) }}</template>
             <template v-else>折合 {{ fmt(editingDetail.cny) }} CNY</template>
@@ -5966,11 +6310,11 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <div class="related-list" v-if="editingDetail&&editingDetail.related.length">
           <div v-for="r in editingDetail.related" :key="r.id" class="related-row">
             <span>{{ r.date }}{{ r.time?' '+r.time:'' }} · {{ r.assetType||'未分类' }} · {{ r.exchange||'未知平台' }}</span>
-            <strong :style="{color:r.type==='入金'?'var(--flow-in)':r.type==='出金'?'var(--flow-out)':r.type==='买入'?'#60a5fa':'#a78bfa'}">{{ r.type }}</strong> {{ fmt(amountCNY(r)) }}
+            <strong :style="{color:typeColor(r.type)}">{{ r.type }}</strong> {{ fmt(amountCNY(r)) }}
           </div>
         </div>
         <div class="trade-lock-note" v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'">成交金额、币种和资产会参与持仓成本计算。需要改动时请删除后重新录入；日期、平台、备注和标签仍可编辑。</div>
-        <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></select></div>
+        <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option><option value="互转">互转</option></select></div>
         <div class="form-group"><label>日期与时间</label><div class="entry-datetime-fields"><input class="form-input" type="date" v-model="editingEntry.date"><input class="form-input" type="time" v-model="editingEntry.time" aria-label="发生时间"></div></div>
         <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="editingEntry.assetType" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="">{{ t("uncategorized") }}</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select></div>
         <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="editingEntry.exchange" list="dl-ex3"><datalist id="dl-ex3"><option v-for="ex in editPlatformSuggestions" :key="ex" :value="ex"></option></datalist></div>
@@ -6025,8 +6369,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
 <script>
 dayjs.extend(dayjs_plugin_isoWeek);dayjs.extend(dayjs_plugin_weekOfYear);dayjs.locale('zh-cn')
 
-const ACCOUNT_STORAGE_BASE={SK:'touji_entries_v1',SNAP_K:'touji_snapshots_v1',RULES_K:'touji_rules_v1',REVIEW_K:'touji_reviews_v1',DAY_REVIEW_K:'touji_review_day_notes_v1',SYNC_K:'touji_sync_v1',IMPORT_K:'touji_import_batches_v1',CHECKLIST_K:'touji_checklist_v1',POS_K:'touji_positions_v1',DEL_K:'touji_deleted_v1',POS_DEL_K:'touji_position_deleted_v1'}
-let {SK,SNAP_K,RULES_K,REVIEW_K,DAY_REVIEW_K,SYNC_K,IMPORT_K,CHECKLIST_K,POS_K,DEL_K,POS_DEL_K}=ACCOUNT_STORAGE_BASE
+const ACCOUNT_STORAGE_BASE={SK:'touji_entries_v1',SNAP_K:'touji_snapshots_v1',RULES_K:'touji_rules_v1',REVIEW_K:'touji_reviews_v1',DAY_REVIEW_K:'touji_review_day_notes_v1',SYNC_K:'touji_sync_v1',IMPORT_K:'touji_import_batches_v1',CHECKLIST_K:'touji_checklist_v1',POS_K:'touji_positions_v1',DEL_K:'touji_deleted_v1',POS_DEL_K:'touji_position_deleted_v1',DEBT_K:'touji_debts_v1',DEBT_DEL_K:'touji_debt_deleted_v1'}
+let {SK,SNAP_K,RULES_K,REVIEW_K,DAY_REVIEW_K,SYNC_K,IMPORT_K,CHECKLIST_K,POS_K,DEL_K,POS_DEL_K,DEBT_K,DEBT_DEL_K}=ACCOUNT_STORAGE_BASE
 const ACCOUNT_STORAGE_OWNER_K='touji_account_storage_owner_v1'
 const LEGACY_CASHFLOW_K=['crypto','cashflow'].join('_')
 const LEGACY_FLOW_K=['flow','ledger'].join('')
@@ -6075,7 +6419,7 @@ function bindAccountStorage(accountId){
       throw error
     }
   }
-  ;({SK,SNAP_K,RULES_K,REVIEW_K,DAY_REVIEW_K,SYNC_K,IMPORT_K,CHECKLIST_K,POS_K,DEL_K,POS_DEL_K}=scoped)
+  ;({SK,SNAP_K,RULES_K,REVIEW_K,DAY_REVIEW_K,SYNC_K,IMPORT_K,CHECKLIST_K,POS_K,DEL_K,POS_DEL_K,DEBT_K,DEBT_DEL_K}=scoped)
   return id
 }
 const genId=()=>crypto.randomUUID?crypto.randomUUID():('r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6))
@@ -6114,6 +6458,7 @@ function normType(v){
   if(s==='卖出')return'卖出'
   if(['出金','取出','提现','赎回'].includes(s))return'出金'
   if(['入金','投入','充值','存入'].includes(s))return'入金'
+  if(['互转','划转','平台互转'].includes(s))return'互转'
   return''
 }
 function normalizeAssetType(v){
@@ -6125,6 +6470,36 @@ function parseTags(v){
   return[...new Set(String(v||'').split(/[,\uFF0C\u3001;；\s]+/).map(t=>t.trim()).filter(Boolean))].slice(0,8)
 }
 function tagsText(tags){return parseTags(tags).join('，')}
+// 资金来源 / 去向：内部存 key，导入时中文标签也认（Excel 导出写的是中文）。
+function normFundSource(v){
+  const s=String(v||'').trim()
+  const hit=(window.ToujiDebt?.FUND_SOURCES||[]).find(o=>o.key===s||o.label===s)
+  return hit?hit.key:''
+}
+function normDestination(v){
+  const s=String(v||'').trim()
+  const hit=(window.ToujiDebt?.DESTINATIONS||[]).find(o=>o.key===s||o.label===s)
+  return hit?hit.key:''
+}
+// 负债集合（贷款 + 还债计划）。字段由 debt-engine 解释，这里只保证 id / kind 合法。
+function normalizeDebt(item){
+  if(!item||typeof item!=='object'||!item.id)return null
+  if(item.kind!=='loan'&&item.kind!=='plan')return null
+  return{...item,id:String(item.id),updatedAt:Number(item.updatedAt)||0}
+}
+function normalizeDebtList(list){return(Array.isArray(list)?list:[]).map(normalizeDebt).filter(Boolean)}
+// 服务器存 JSONB 会重排键顺序，比较内容必须用排好序的序列化，否则每次同步都像是「有变化」。
+function stableStringify(value){
+  if(Array.isArray(value))return'['+value.map(stableStringify).join(',')+']'
+  if(value&&typeof value==='object')return'{'+Object.keys(value).sort().map(k=>JSON.stringify(k)+':'+stableStringify(value[k])).join(',')+'}'
+  return JSON.stringify(value===undefined?null:value)
+}
+function debtFingerprint(item){
+  const d=normalizeDebt(item)
+  if(!d)return''
+  const{updatedAt,...rest}=d
+  return stableStringify(rest)
+}
 function normRow(row){
   const rawDate=row.date||row['日期']||row['入金时间']||(normDate(row['时间'])?row['时间']:'')
   let date=normDate(rawDate)
@@ -6149,7 +6524,16 @@ function normRow(row){
   const targetAmount=normNum(row.targetAmount??row['到账金额']??0)
   const targetCurrency=String(row.targetCurrency||row['到账币种']||'').trim().toUpperCase()
   const fxRate=normNum(row.fxRate??row['实际汇率']??0)
+  const fundSource=type==='入金'?normFundSource(row.fundSource??row['资金来源']):''
+  const destination=type==='出金'?normDestination(row.destination??row['资金去向']):''
+  const loanId=String(row.loanId||'').trim()
+  const linksLoan=fundSource==='loan'||destination==='repay'||destination==='interest'
+  const toExchange=type==='互转'?String(row.toExchange||row['转入平台']||'').trim():''
   return{id:row.id||genId(),date,time,amount:amt,rate:rate===''?'':normNum(rate),exchange,note,type,assetType,currency,tags,
+    ...(fundSource?{fundSource}:{}),
+    ...(destination?{destination}:{}),
+    ...(loanId&&linksLoan?{loanId}:{}),
+    ...(toExchange?{toExchange}:{}),
     ...(sourceAmount&&sourceCurrency?{sourceAmount,sourceCurrency}:{}),
     ...(targetAmount&&targetCurrency?{targetAmount,targetCurrency}:{}),
     ...(fxRate?{fxRate}:{}),
@@ -6755,10 +7139,12 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.10.15-1'
+  const APP_VERSION='v2026.10.21-1'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
+  const debts=ref([]) // 贷款与还债计划，见 js/debt-engine.js
+  const deletedDebtIds=ref({})
   const snapshots=ref([])
   const importBatches=ref([])
   const period=ref('month')
@@ -6803,6 +7189,8 @@ setup(){
   const apiTokenName=ref('')
   const apiTokenCreating=ref(false)
   const apiTokenPlain=ref('')
+  // 负债是比出入金更私密的数据：令牌默认只读出入金，要读负债得在创建时明确勾选。
+  const apiTokenDebts=ref(false)
   const apiFeedBase=computed(()=>`${location.origin}/api/v1/feed`)
 
   async function loadApiTokens(){
@@ -6824,9 +7212,10 @@ setup(){
     if(!serverClient)return
     apiTokenCreating.value=true
     try{
-      const created=await serverClient.createApiToken({name})
+      const created=await serverClient.createApiToken({name,scopes:apiTokenDebts.value?['cashflows:read','debts:read']:['cashflows:read']})
       apiTokenPlain.value=created.token
       apiTokenName.value=''
+      apiTokenDebts.value=false
       await loadApiTokens()
       showToast('令牌已创建，请立刻复制保存')
     }catch(e){
@@ -6903,6 +7292,7 @@ setup(){
     overview:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
     quick:'<path d="M12 5v14M5 12h14"/>',
     positions:'<path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/>',
+    debts:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>',
     records:'<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2V3Z"/><path d="M9 8h6M9 12h6"/>',
     review:'<path d="M9 5H6a2 2 0 0 0-2 2v13h16V7a2 2 0 0 0-2-2h-3"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m8.5 13 2.2 2.2 4.8-4.8"/>',
     data:'<path d="M20 7h-4V3M4 17h4v4"/><path d="M5.1 9A8 8 0 0 1 18.7 5.3L20 7M4 17l1.3 1.7A8 8 0 0 0 18.9 15"/>'
@@ -6911,9 +7301,10 @@ setup(){
     {key:'overview',no:'01',icon:NAV_ICONS.overview,label:'总览',caption:'净值与动态'},
     {key:'quick',no:'02',icon:NAV_ICONS.quick,label:'录入',caption:'入金与交易'},
     {key:'positions',no:'03',icon:NAV_ICONS.positions,label:'持仓',caption:'仓位与成本'},
-    {key:'records',no:'04',icon:NAV_ICONS.records,label:'流水统计',short:'流水',caption:'筛选与分析'},
-    {key:'review',no:'05',icon:NAV_ICONS.review,label:'复盘',caption:'行为与纪律'},
-    {key:'data',no:'06',icon:NAV_ICONS.data,label:'同步数据',short:'同步',caption:'备份与迁移'}
+    {key:'debts',no:'04',icon:NAV_ICONS.debts,label:'负债',caption:'借款与还款'},
+    {key:'records',no:'05',icon:NAV_ICONS.records,label:'流水统计',short:'流水',caption:'筛选与分析'},
+    {key:'review',no:'06',icon:NAV_ICONS.review,label:'复盘',caption:'行为与纪律'},
+    {key:'data',no:'07',icon:NAV_ICONS.data,label:'同步数据',short:'同步',caption:'备份与迁移'}
   ]
   const activeTabKeys=workspaceTabs.map(t=>t.key)
   const savedActiveTab=localStorage.getItem(ACTIVE_TAB_K)
@@ -6933,19 +7324,21 @@ setup(){
       if(tab==='positions')renderPosPieChart()
     })
   }
-  const form=reactive({date:dayjs().format('YYYY-MM-DD'),time:dayjs().format('HH:mm'),amount:'',sourceAmount:'',sourceCurrency:'CNY',rate:'',exchange:'',note:'',type:'入金',assetType:'',currency:'CNY',tagText:'',positionId:'',targetKey:'',targetMarket:'沪深市',tradeQty:'',tradePrice:''})
+  const form=reactive({date:dayjs().format('YYYY-MM-DD'),time:dayjs().format('HH:mm'),amount:'',sourceAmount:'',sourceCurrency:'CNY',rate:'',exchange:'',note:'',type:'入金',assetType:'',currency:'CNY',tagText:'',positionId:'',targetKey:'',targetMarket:'沪深市',tradeQty:'',tradePrice:'',fundSource:'',destination:'card',loanId:'',intent:'',toExchange:''})
   const filters=reactive({year:'',month:'',type:'',keyword:'',dateFrom:'',dateTo:'',amountMin:'',amountMax:'',exchanges:[],assetTypes:[],tags:[]})
   const showQuickMore=ref(false)
   const quickAction=ref('deposit')
   const quickActions=[
     {key:'deposit',label:'入金',short:'钱进入投资账户',title:'入金是什么？',desc:'记录你把现金转入某个投资账户，比如工资转入东方财富、给币安充值、往基金账户打钱。它增加投入本金。'},
     {key:'withdraw',label:'出金',short:'钱离开投资账户',title:'出金是什么？',desc:'记录你从投资账户取回现金，比如卖出后提现、赎回基金到账、从交易所转回银行卡。它减少占用资金。'},
+    {key:'transfer',label:'互转',short:'平台之间挪钱',title:'互转是什么？',desc:'记录钱在两个投资平台之间挪动，比如从欧易转到币安。它不算投入也不算取出，不影响入金 / 出金统计；记下来是为了对账时知道钱去了哪个平台。'},
     {key:'buy',label:'买入',short:'买入某个标的',title:'买入是什么？',desc:'记录你用账户内资金购入某个资产，自动更新持仓数量和加权均价，不影响入金/出金统计。'},
     {key:'sell',label:'卖出',short:'卖出某个标的',title:'卖出是什么？',desc:'记录你卖出持有资产，自动减少持仓数量并计算已实现盈亏，不影响入金/出金统计。'}
   ]
   const quickActionInfo=computed(()=>quickActions.find(a=>a.key===quickAction.value)||quickActions[0])
-  const quickTagOptions=['定投','补仓','止盈','FOMO','工资入金','转出','买入','卖出']
-  const quickAmountLabel=computed(()=>quickAction.value==='withdraw'?'取出金额':quickAction.value==='deposit'?'投入金额':'成交金额')
+  // 「工资入金」「转出」已由资金来源 / 去向表达，不再放进常用标签。
+  const quickTagOptions=['定投','补仓','止盈','FOMO','买入','卖出']
+  const quickAmountLabel=computed(()=>quickAction.value==='withdraw'?'取出金额':quickAction.value==='deposit'?'投入金额':quickAction.value==='transfer'?'转出金额':'成交金额')
   const isFxDeposit=computed(()=>quickAction.value==='deposit'&&form.currency!=='CNY')
   const fxTargetAmount=computed(()=>isFxDeposit.value?window.ToujiEntry.targetAmount(form.sourceAmount,form.rate):0)
   const tradeAmountPreview=computed(()=>{
@@ -6955,19 +7348,32 @@ setup(){
   })
   const quickCanSave=computed(()=>{
     if(quickAction.value==='buy'||quickAction.value==='sell')return !!form.targetKey&&tradeAmountPreview.value>0
+    if(quickAction.value==='deposit'&&(!form.fundSource||(needsIntent.value&&!form.intent)))return false
+    if(quickAction.value==='withdraw'&&withdrawNeedsLoan.value&&!form.loanId)return false
+    if(quickAction.value==='transfer'&&(!String(form.exchange||'').trim()||!String(form.toExchange||'').trim()))return false
     if(isFxDeposit.value)return Number(form.sourceAmount)>0&&Number(form.rate)>0&&fxTargetAmount.value>0
     return Number(form.amount)>0
+  })
+  // 为什么现在点不了保存 —— 按钮灰着却不说原因，用户只会以为坏了。
+  const quickSaveBlocker=computed(()=>{
+    if(quickAction.value==='deposit'&&!form.fundSource)return'先选这笔钱从哪来'
+    if(quickAction.value==='deposit'&&needsIntent.value&&!form.intent)return'先选这笔钱的打算'
+    if(quickAction.value==='withdraw'&&withdrawNeedsLoan.value&&!form.loanId)return'先选还的是哪笔贷款'
+    if(quickAction.value==='transfer'&&(!String(form.exchange||'').trim()||!String(form.toExchange||'').trim()))return'填写从哪个平台转到哪个平台'
+    return''
   })
   const quickNoteLabel=computed(()=>{
     if(quickAction.value==='buy')return'买入理由'
     if(quickAction.value==='sell')return'卖出理由'
     if(quickAction.value==='withdraw')return'取出原因'
+    if(quickAction.value==='transfer')return'备注'
     return'投入理由'
   })
   const quickNotePlaceholder=computed(()=>{
     if(quickAction.value==='buy')return'为什么买入？如：定投 / 补仓 / 看好基本面'
     if(quickAction.value==='sell')return'为什么卖出？如：止盈 / 止损 / 调仓'
-    return form.type==='入金'?'为什么要入这笔？如：定投 / 补仓 / 工资入金':'收款渠道 / 取出原因'
+    if(form.type==='互转')return'为什么转？如：换个平台交易'
+    return form.type==='入金'?'为什么要入这笔？如：定投 / 补仓 / 抄底':'收款渠道 / 取出原因'
   })
   function setQuickAction(action){
     const wasFxDeposit=quickAction.value==='deposit'&&form.currency!=='CNY'&&Number(form.sourceAmount)>0
@@ -6976,7 +7382,7 @@ setup(){
       form.sourceAmount=''
     }
     quickAction.value=action
-    form.type=action==='withdraw'?'出金':action==='deposit'?'入金':action==='buy'?'买入':'卖出'
+    form.type=action==='withdraw'?'出金':action==='deposit'?'入金':action==='transfer'?'互转':action==='buy'?'买入':'卖出'
     let tags=parseTags(form.tagText).filter(t=>!['买入','卖出'].includes(t))
     form.tagText=tags.join('，')
     const tag=action==='buy'?'买入':action==='sell'?'卖出':''
@@ -7010,8 +7416,8 @@ setup(){
   const serverRemote=ref(null)
   const serverMigrationOpen=ref(false)
   const serverAutoSyncEnabled=ref(false)
-  const emptyServerSummary={entries:0,positions:0,totalIn:0,totalOut:0,deleted:0}
-  const serverLocalSummary=computed(()=>window.ToujiServerSync?.summarizeSnapshot?.({entries:entries.value,positions:positions.value,deletedIds:deletedIds.value,deletedPositionIds:deletedPositionIds.value})||emptyServerSummary)
+  const emptyServerSummary={entries:0,positions:0,debts:0,totalIn:0,totalOut:0,deleted:0}
+  const serverLocalSummary=computed(()=>window.ToujiServerSync?.summarizeSnapshot?.({entries:entries.value,positions:positions.value,debts:debts.value,deletedIds:deletedIds.value,deletedPositionIds:deletedPositionIds.value,deletedDebtIds:deletedDebtIds.value})||emptyServerSummary)
   const serverRemoteSummary=computed(()=>window.ToujiServerSync?.summarizeSnapshot?.(serverRemote.value)||emptyServerSummary)
   const cloudReady=computed(()=>!!serverAccount.user||!!syncCfg.token)
   const cloudStatusLabel=computed(()=>serverAccount.user?'Orbit 账号已连接':syncCfg.token?'Gist 已配置':'等待账号连接')
@@ -7121,6 +7527,8 @@ setup(){
     syncStatus.value=syncCfg.token?'已配置':'未配置'
     deletedIds.value=readStorageJSON(DEL_K,'流水删除记录',{})||{}
     deletedPositionIds.value=readStorageJSON(POS_DEL_K,'持仓删除记录',{})||{}
+    debts.value=normalizeDebtList(readStorageJSON(DEBT_K,'负债数据',[]))
+    deletedDebtIds.value=readStorageJSON(DEBT_DEL_K,'负债删除记录',{})||{}
     loadReview()
     loadReviewDayNotes()
   }
@@ -7130,13 +7538,18 @@ setup(){
   // 记录墓碑（删除/清空时调用）
   function recordDeleted(ids){const now=Date.now();ids.forEach(id=>{deletedIds.value[id]=now});saveDeleted()}
   function recordDeletedPositions(ids){const now=Date.now();ids.forEach(id=>{deletedPositionIds.value[id]=now});saveDeletedPositions()}
+  function saveDebts({sync=true}={}){const ok=writeStorageJSON(DEBT_K,debts.value,'负债数据');if(ok&&sync&&typeof scheduleAutoPush==='function')scheduleAutoPush();return ok}
+  function saveDeletedDebts(){writeStorageJSON(DEBT_DEL_K,deletedDebtIds.value,'负债删除记录')}
+  function recordDeletedDebts(ids){const now=Date.now();ids.forEach(id=>{deletedDebtIds.value[id]=now});saveDeletedDebts()}
   function snap(){
     const s={
       at:new Date().toISOString(),
       entries:clone(entries.value),
       positions:clone(positions.value),
       deletedIds:clone(deletedIds.value),
-      deletedPositionIds:clone(deletedPositionIds.value)
+      deletedPositionIds:clone(deletedPositionIds.value),
+      debts:clone(debts.value),
+      deletedDebtIds:clone(deletedDebtIds.value)
     }
     snapshots.value.unshift(s)
     if(snapshots.value.length>6)snapshots.value=snapshots.value.slice(0,6)
@@ -7157,6 +7570,142 @@ setup(){
   // Whole numbers get separators; fractional quantities keep up to 8 places.
   function fmtQtyNum(q){const n=Number(q);return Number.isFinite(n)?n.toLocaleString('zh-CN',{maximumFractionDigits:8}):String(q)}
   function amountCNY(e){return window.ToujiEntry?.amountCNY(e)||0}
+
+  // ===== 负债 =====
+  const Debt=window.ToujiDebt
+  const FUND_SOURCES=Debt.FUND_SOURCES
+  const DESTINATIONS=Debt.DESTINATIONS
+  const REPAY_TYPES=Debt.REPAY_TYPES
+  const DEPOSIT_INTENTS=Debt.DEPOSIT_INTENTS
+  // 跨过零点后到期天数、发薪日要跟着变；每分钟对一次日期就够了。
+  const debtToday=ref(dayjs().format('YYYY-MM-DD'))
+  const debtTodayTimer=setInterval(()=>{const d=dayjs().format('YYYY-MM-DD');if(d!==debtToday.value)debtToday.value=d},60000)
+  const debtPlanSettings=computed(()=>Debt.findPlan(debts.value))
+  const loanList=computed(()=>debts.value.filter(Debt.isLoan))
+  const debtViews=computed(()=>Debt.loanViews(debts.value,{today:debtToday.value,entries:entries.value,amountCNY}))
+  const openLoans=computed(()=>debtViews.value.filter(v=>!v.closed))
+  const loanOptions=computed(()=>openLoans.value.length?openLoans.value:debtViews.value)
+  const debtSummary=computed(()=>Debt.summary(debtViews.value,debtToday.value))
+  const debtSchedule=computed(()=>Debt.schedule(debtViews.value,debtToday.value,8))
+  const debtPayday=computed(()=>Debt.paydayPlan(debtViews.value,debtPlanSettings.value,debtToday.value))
+  const debtFunding=computed(()=>Debt.loanFunding(entries.value,debtViews.value,amountCNY,debtToday.value))
+  const withdrawNeedsLoan=computed(()=>quickAction.value==='withdraw'&&(form.destination==='repay'||form.destination==='interest')&&loanList.value.length>0)
+  const depositRisk=computed(()=>{
+    if(quickAction.value!=='deposit')return{level:null,warnings:[]}
+    const cny=isFxDeposit.value?Number(form.sourceAmount)||0:amountCNY({amount:Number(form.amount)||0,rate:form.rate,currency:form.currency})
+    return Debt.depositWarnings({entries:entries.value,form:{date:form.date,amountCNY:cny,fundSource:form.fundSource},views:debtViews.value,plan:debtPlanSettings.value,today:debtToday.value,amountCNY})
+  })
+  const needsIntent=computed(()=>depositRisk.value.level==='danger')
+  function loanName(id){return loanList.value.find(l=>l.id===id)?.name||'已删除的贷款'}
+  function fundSourceLabel(key){return FUND_SOURCES.find(o=>o.key===key)?.label||''}
+  function destinationLabel(key){return DESTINATIONS.find(o=>o.key===key)?.label||''}
+  const debtLoanForm=reactive({open:false,id:'',name:'',lender:'',principal:'',ratePct:3,repayType:'interest_monthly',interestDay:10,startDate:'',maturityDate:'',note:''})
+  const debtRepayForm=reactive({loanId:'',date:'',principal:'',interest:'',source:'salary',note:''})
+  const debtPlanForm=reactive({open:false,paydayDom:20,monthlyPlan:''})
+  const expandedLoanId=ref('')
+  function upsertDebt(item){
+    const next={...item,updatedAt:Date.now()}
+    const i=debts.value.findIndex(d=>d.id===next.id)
+    if(i>=0)debts.value.splice(i,1,next);else debts.value.push(next)
+    if(deletedDebtIds.value[next.id]){delete deletedDebtIds.value[next.id];saveDeletedDebts()}
+    saveDebts()
+    return next
+  }
+  function openLoanForm(loan){
+    debtRepayForm.loanId=''
+    Object.assign(debtLoanForm,loan
+      ?{open:true,id:loan.id,name:loan.name||'',lender:loan.lender||'',principal:Number(loan.principal)||'',ratePct:Math.round((Number(loan.annualRate)||0)*10000)/100,repayType:loan.repayType||'interest_monthly',interestDay:loan.interestDay||10,startDate:loan.startDate||'',maturityDate:loan.maturityDate||'',note:loan.note||''}
+      :{open:true,id:'',name:'',lender:'',principal:'',ratePct:3,repayType:'interest_monthly',interestDay:10,startDate:dayjs().format('YYYY-MM-DD'),maturityDate:dayjs().add(1,'year').format('YYYY-MM-DD'),note:''})
+  }
+  function saveLoan(){
+    const f=debtLoanForm
+    if(!String(f.name||'').trim()){showToast('给这笔贷款起个名字','error');return}
+    if(!(Number(f.principal)>0)){showToast('本金要大于 0','error');return}
+    if(!f.maturityDate){showToast('请填写到期日','error');return}
+    if(f.startDate&&f.startDate>f.maturityDate){showToast('起息日不能晚于到期日','error');return}
+    const existing=loanList.value.find(l=>l.id===f.id)
+    upsertDebt({
+      ...(existing||{}),
+      id:existing?.id||('loan-'+genId()),
+      kind:'loan',
+      name:String(f.name).trim(),
+      lender:String(f.lender||'').trim(),
+      principal:Math.round(Number(f.principal)*100)/100,
+      annualRate:Math.max(0,Number(f.ratePct)||0)/100,
+      repayType:f.repayType,
+      interestDay:f.repayType==='interest_monthly'?Math.min(31,Math.max(1,Number(f.interestDay)||10)):null,
+      startDate:f.startDate||null,
+      maturityDate:f.maturityDate,
+      closedAt:existing?.closedAt||null,
+      note:String(f.note||'').trim(),
+      sortOrder:existing?.sortOrder??loanList.value.length+1,
+      repayments:existing?.repayments||[]
+    })
+    f.open=false
+    showToast(existing?'贷款已更新':'贷款已登记','success')
+  }
+  function deleteLoan(id){
+    const loan=loanList.value.find(l=>l.id===id)
+    if(!loan)return
+    const linked=entries.value.filter(e=>e.loanId===id).length
+    if(!confirm(`删除「${loan.name}」和它的 ${(loan.repayments||[]).length} 条还款记录吗？${linked?`有 ${linked} 笔流水关联到它，流水本身不会删除。`:''}本机会先存一份快照。`))return
+    snap()
+    debts.value=debts.value.filter(d=>d.id!==id)
+    recordDeletedDebts([id])
+    saveDebts()
+    debtLoanForm.open=false
+    showToast('贷款已删除','success')
+  }
+  function openRepayForm(loanId){
+    debtLoanForm.open=false
+    Object.assign(debtRepayForm,{loanId,date:dayjs().format('YYYY-MM-DD'),principal:'',interest:'',source:'salary',note:''})
+  }
+  function saveRepayment(){
+    const loan=loanList.value.find(l=>l.id===debtRepayForm.loanId)
+    if(!loan)return
+    const principal=Math.max(0,Number(debtRepayForm.principal)||0)
+    const interest=Math.max(0,Number(debtRepayForm.interest)||0)
+    if(!(principal+interest>0)){showToast('还本金或付利息至少填一项','error');return}
+    const view=debtViews.value.find(v=>v.id===loan.id)
+    if(view&&principal>view.remaining+0.005){showToast(`还本金不能超过剩余本金 ${fmt(view.remaining)}`,'error');return}
+    upsertDebt({...loan,repayments:[...(loan.repayments||[]),{id:'rp-'+genId(),date:debtRepayForm.date||dayjs().format('YYYY-MM-DD'),principal:Math.round(principal*100)/100,interest:Math.round(interest*100)/100,dueDate:null,source:debtRepayForm.source,via:'manual',note:String(debtRepayForm.note||'').trim()}]})
+    debtRepayForm.loanId=''
+    expandedLoanId.value=loan.id
+    showToast('还款已记录','success')
+  }
+  function removeRepayment(loanId,repaymentId){
+    const loan=loanList.value.find(l=>l.id===loanId)
+    if(!loan||!confirm('删除这条还款记录吗？'))return
+    snap()
+    upsertDebt({...loan,repayments:(loan.repayments||[]).filter(r=>r.id!==repaymentId)})
+    showToast('还款记录已删除','success')
+  }
+  function toggleDebtEvent(event,paid){
+    const loan=loanList.value.find(l=>l.id===event.loanId)
+    if(!loan)return
+    if(paid&&!event.paid){
+      upsertDebt(Debt.checkOff(loan,event,{today:debtToday.value,paidOn:debtToday.value<event.date?debtToday.value:event.date,id:'rp-'+genId()}))
+      showToast(event.kind==='interest'?'这期利息已记为已付':'到期还本已记，这笔贷款已结清','success')
+    }else if(!paid&&event.paid){
+      upsertDebt(Debt.uncheck(loan,event))
+      showToast('已取消勾选','info')
+    }
+  }
+  function toggleDebtPlanForm(){
+    if(!debtPlanForm.open){
+      debtPlanForm.paydayDom=debtPlanSettings.value.paydayDom
+      debtPlanForm.monthlyPlan=debtPlanSettings.value.monthlyPlan||''
+    }
+    debtPlanForm.open=!debtPlanForm.open
+  }
+  function saveDebtPlanSettings(){
+    const dom=Math.floor(Number(debtPlanForm.paydayDom))
+    if(!(dom>=1&&dom<=31)){showToast('发薪日要在 1 到 31 之间','error');return}
+    const existing=debts.value.find(d=>d.kind==='plan')
+    upsertDebt({...(existing||{}),id:existing?.id||Debt.PLAN_ID,kind:'plan',paydayDom:dom,monthlyPlan:Math.max(0,Number(debtPlanForm.monthlyPlan)||0),nudge:existing?.nudge!==false})
+    debtPlanForm.open=false
+    showToast('还债设置已保存','success')
+  }
   function isFxEntry(e){return !!window.ToujiEntry?.isFxEntry(e)}
   function fxEntryTargetAmount(e){return Number(e?.targetAmount||e?.amount)||0}
   function fxEntryRate(e){return Number(e?.fxRate||e?.rate)||0}
@@ -7179,7 +7728,7 @@ setup(){
       const key=[e.type,e.assetType||'',e.exchange||'',e.currency||'CNY',tags.join(',')].join('|')
       if(seen.has(key))return
       seen.add(key)
-      const action=tags.includes('买入')?'buy':tags.includes('卖出')?'sell':(e.type==='出金'?'withdraw':'deposit')
+      const action=tags.includes('买入')?'buy':tags.includes('卖出')?'sell':e.type==='互转'?'transfer':(e.type==='出金'?'withdraw':'deposit')
       items.push({
         key,label:`${e.exchange||'未知平台'} · ${e.assetType||'未分类'}${tags.length?' · '+tags.join('/') : ''}`,
         action,type:e.type,assetType:e.assetType||'',exchange:e.exchange||'',currency:e.currency||'CNY',rate:e.rate||'',tagText:tags.join('，')
@@ -7481,6 +8030,15 @@ setup(){
       delete e.sourceAmount;delete e.sourceCurrency;delete e.targetAmount;delete e.targetCurrency;delete e.fxRate
     }
     e.tags=parseTags(editingEntry.value.tagText||editingEntry.value.tags);e.updatedAt=Date.now()
+    // 来源 / 去向只对入金 / 出金有意义；改了类型就清掉不再适用的字段。
+    const fundSource=e.type==='入金'?normFundSource(editingEntry.value.fundSource):''
+    const destination=e.type==='出金'?normDestination(editingEntry.value.destination):''
+    const linksLoan=fundSource==='loan'||destination==='repay'||destination==='interest'
+    if(fundSource)e.fundSource=fundSource;else delete e.fundSource
+    if(destination)e.destination=destination;else delete e.destination
+    if(linksLoan&&editingEntry.value.loanId)e.loanId=editingEntry.value.loanId;else delete e.loanId
+    const toExchange=e.type==='互转'?String(editingEntry.value.toExchange||'').trim():''
+    if(toExchange)e.toExchange=toExchange;else delete e.toExchange
     save();editingEntry.value=null;showToast('已保存','success')
   }
   function handleLedgerKeydown(event){
@@ -7496,35 +8054,6 @@ setup(){
   }
 
   // CRUD
-  // Calm-down warnings for deposits
-  function getDepositWarnings(){
-    if(form.type!=='入金')return[]
-    const warnings=[]
-    const now=dayjs(form.date||undefined)
-    const recent=entries.value.filter(e=>e.type==='入金').sort(window.ToujiEntry.compareEntriesDesc)
-
-    // Check interval since last deposit
-    if(recent.length){
-      const lastDate=dayjs(recent[0].date)
-      const gap=now.diff(lastDate,'day')
-      if(gap>=0&&gap<=1)warnings.push('距上次投入仅 '+gap+' 天，建议冷静 24 小时再操作')
-      else if(gap>=0&&gap<=3)warnings.push('距上次投入仅 '+gap+' 天，注意控制投入频率')
-    }
-
-    // Check this week deposit count
-    const weekStart=now.startOf('week')
-    const weekDeposits=entries.value.filter(e=>e.type==='入金'&&e.date>=weekStart.format('YYYY-MM-DD')&&e.date<=now.format('YYYY-MM-DD'))
-    if(weekDeposits.length>=3)warnings.push('本周已投入 '+weekDeposits.length+' 次，频率偏高，是否在追涨？')
-
-    // Check amount vs average
-    if(recent.length>=3){
-      const avg=recent.slice(0,10).reduce((s,e)=>s+amountCNY(e),0)/Math.min(recent.length,10)
-      const formCNY=amountCNY({amount:Number(form.amount||0),rate:form.rate,currency:form.currency})
-      if(formCNY>avg*2)warnings.push('本笔折合 '+fmt(formCNY)+' 元，是近期均值的 '+(formCNY/avg).toFixed(1)+' 倍，是否冲动操作？')
-    }
-
-    return warnings
-  }
 
   // Positions (持仓)
   const positions=ref([])
@@ -8114,20 +8643,29 @@ setup(){
         return
       }
     }
-    // Calm-down check
-    const warns=getDepositWarnings()
-    if(warns.length){
-      const msg='⚠️ 冷静提醒\n\n'+warns.map(w=>'• '+w).join('\n')+'\n\n确定要继续投入吗？'
-      if(!confirm(msg))return
-    }
+    // 冷静提醒不再弹 confirm（每笔都弹，结果每次都被点掉）：风险高时表单里要求先选
+    // 这笔钱的打算，选的打算存成标签。
+    if(form.type==='入金'&&!form.fundSource){showToast('先选这笔钱从哪来','error');return}
+    if(form.type==='入金'&&needsIntent.value&&!form.intent){showToast('先选这笔钱的打算','error');return}
+    if(form.type==='出金'&&withdrawNeedsLoan.value&&!form.loanId){showToast('先选还的是哪笔贷款','error');return}
+    if(form.type==='互转'&&(!String(form.exchange||'').trim()||!String(form.toExchange||'').trim())){showToast('填写从哪个平台转到哪个平台','error');return}
     snap()
     const tags=parseTags(form.tagText)
+    if(form.type==='入金'&&form.intent&&!tags.includes(form.intent))tags.push(form.intent)
+    const linksLoan=(form.type==='入金'&&form.fundSource==='loan')||(form.type==='出金'&&(form.destination==='repay'||form.destination==='interest'))
+    const fundMeta={
+      ...(form.type==='入金'&&form.fundSource?{fundSource:form.fundSource}:{}),
+      ...(form.type==='出金'&&form.destination?{destination:form.destination}:{}),
+      ...(linksLoan&&form.loanId?{loanId:form.loanId}:{}),
+      ...(form.type==='互转'?{toExchange:String(form.toExchange||'').trim()}:{})
+    }
     const actionTag=quickAction.value==='buy'?'买入':quickAction.value==='sell'?'卖出':''
     if(actionTag&&!tags.includes(actionTag))tags.push(actionTag)
     if(p){[positionTag(p),String(p.symbol||'').trim().toUpperCase()].filter(Boolean).forEach(tag=>{if(!tags.includes(tag))tags.push(tag)})}
     const note=(form.note||(!p?'':`${quickAction.value==='sell'?'卖出':'买入'} ${p.name||p.symbol} (${p.symbol})`)).trim()
     const entry={id:genId(),date:form.date||dayjs().format('YYYY-MM-DD'),time:normTime(form.time),amount:Number(form.amount),rate:form.rate?Number(form.rate):'',exchange:form.exchange.trim(),note,type:form.type,assetType:normalizeAssetType(form.assetType),currency:form.currency||'CNY',tags,
       ...(convertedDeposit?{sourceAmount:Number(form.sourceAmount),sourceCurrency:'CNY',targetAmount:Number(form.amount),targetCurrency:form.currency,fxRate:Number(form.rate)}:{}),
+      ...fundMeta,
       tradeQty:Number(form.tradeQty)||'',tradePrice:Number(form.tradePrice)||'',targetSymbol:target?.symbol||'',targetName:target?.name||'',targetMarket:form.targetMarket||'',positionId:form.positionId||'',updatedAt:Date.now()}
     entries.value.unshift(entry)
     const tradeResult=upsertPositionFromTrade(entry,target,{persist:false})
@@ -8140,11 +8678,12 @@ setup(){
       saveDeletedPositions()
       savePositions({sync:false})
     }
-    save();form.amount='';form.sourceAmount='';form.note='';form.tradeQty='';form.tradePrice=''
-    if(!keepContext){form.tagText='';form.positionId='';form.targetKey='';form.targetMarket='沪深市';quickTargetQuery.value='';quickTargetResults.value=[]}
-    showToast(keepContext?'已保存，可继续录入':'已添加','success')
+    save();form.amount='';form.sourceAmount='';form.note='';form.tradeQty='';form.tradePrice='';form.intent=''
+    if(!keepContext){form.tagText='';form.positionId='';form.targetKey='';form.targetMarket='沪深市';quickTargetQuery.value='';quickTargetResults.value=[];form.fundSource='';form.destination='card';form.loanId=''}
+    const repaidLoan=fundMeta.loanId&&entry.type==='出金'?loanList.value.find(l=>l.id===fundMeta.loanId):null
+    showToast(repaidLoan?`已保存，并记为「${repaidLoan.name}」的${entry.destination==='repay'?'还本':'付息'}`:keepContext?'已保存，可继续录入':'已添加','success')
   }
-  function copyLast(){const e=sortedEntries.value[0];if(!e)return;form.date=e.date;form.time=normTime(e.time)||dayjs().format('HH:mm');form.amount=e.amount;form.sourceAmount=e.sourceAmount||'';form.rate=e.fxRate||e.rate||'';form.exchange=e.exchange;form.note='';form.type=e.type;form.assetType=normalizeAssetType(e.assetType)||'';form.currency=e.targetCurrency||e.currency||'CNY';form.tagText=tagsText(e.tags);form.tradeQty=e.tradeQty||'';form.tradePrice=e.tradePrice||'';form.targetKey='';form.positionId='';quickAction.value=e.type==='买入'?'buy':e.type==='卖出'?'sell':(e.type==='出金'?'withdraw':'deposit');showToast('已复制','info')}
+  function copyLast(){const e=sortedEntries.value[0];if(!e)return;form.date=e.date;form.time=normTime(e.time)||dayjs().format('HH:mm');form.amount=e.amount;form.sourceAmount=e.sourceAmount||'';form.rate=e.fxRate||e.rate||'';form.exchange=e.exchange;form.note='';form.type=e.type;form.assetType=normalizeAssetType(e.assetType)||'';form.currency=e.targetCurrency||e.currency||'CNY';form.tagText=tagsText(e.tags);form.tradeQty=e.tradeQty||'';form.tradePrice=e.tradePrice||'';form.targetKey='';form.positionId='';form.fundSource=e.fundSource||'';form.destination=e.destination||'card';form.loanId=e.loanId||'';form.intent='';form.toExchange=e.toExchange||'';quickAction.value=e.type==='买入'?'buy':e.type==='卖出'?'sell':e.type==='互转'?'transfer':(e.type==='出金'?'withdraw':'deposit');showToast('已复制','info')}
   function removeEntry(id){
     const e=entries.value.find(x=>x.id===id);if(!e)return
     const isTrade=e.type==='买入'||e.type==='卖出'
@@ -8371,6 +8910,10 @@ setup(){
   function reviewTypeTone(type){
     return{入金:'deposit',出金:'withdraw',买入:'buy',卖出:'sell'}[type]||'other'
   }
+  // 互转是第五种类型：钱在两个平台之间挪，不算投入也不算取出。
+  function typeTone(type){return{入金:'in',出金:'out',买入:'buy',卖出:'sell',互转:'transfer'}[type]||'sell'}
+  function typeTagClass(type){return'tag-'+typeTone(type)}
+  function typeColor(type){return{入金:'var(--flow-in)',出金:'var(--flow-out)',买入:'var(--blue)',卖出:'var(--purple)',互转:'var(--muted)'}[type]||'var(--purple)'}
   function reviewDayAmountTone(cell){
     const directions=new Set((cell.entryTypes||[]).map(type=>type==='入金'||type==='买入'?'in':type==='出金'||type==='卖出'?'out':'other'))
     if(directions.size!==1)return''
@@ -8619,6 +9162,15 @@ setup(){
       positions.value=nextPositions
       savePositions({sync:false})
     }
+    if(Array.isArray(s.debts)){
+      const nextDebts=normalizeDebtList(clone(s.debts)).map(d=>({...d,updatedAt:now}))
+      const nextDebtIds=new Set(nextDebts.map(d=>d.id))
+      recordDeletedDebts(debts.value.filter(d=>!nextDebtIds.has(d.id)).map(d=>d.id))
+      nextDebts.forEach(d=>delete deletedDebtIds.value[d.id])
+      debts.value=nextDebts
+      saveDeletedDebts()
+      saveDebts({sync:false})
+    }
     saveDeleted()
     saveDeletedPositions()
     save()
@@ -8704,6 +9256,52 @@ setup(){
     if(changed){deletedPositionIds.value=next;saveDeletedPositions()}
     return next
   }
+  function mergedDebtDeletedMap(remoteDeleted){
+    const out={...normalizeDeletedMap(deletedDebtIds.value)}
+    Object.entries(normalizeDeletedMap(remoteDeleted)).forEach(([id,ts])=>{
+      if(!out[id]||ts>out[id])out[id]=ts
+    })
+    return out
+  }
+  function saveMergedDebtDeleted(remoteDeleted){
+    const next=mergedDebtDeletedMap(remoteDeleted)
+    const changed=JSON.stringify(next)!==JSON.stringify(normalizeDeletedMap(deletedDebtIds.value))
+    if(changed){deletedDebtIds.value=next;saveDeletedDebts()}
+    return next
+  }
+  function mergeDebtsByTimestamp(local,remote,del){
+    const map=new Map()
+    normalizeDebtList(local).forEach(d=>map.set(d.id,d))
+    normalizeDebtList(remote).forEach(d=>{
+      const current=map.get(d.id)
+      if(!current||(d.updatedAt||0)>(current.updatedAt||0))map.set(d.id,d)
+    })
+    return[...map.values()].filter(d=>{
+      const deletedAt=del[d.id]
+      return !(deletedAt&&deletedAt>=(d.updatedAt||0))
+    })
+  }
+  function analyzeDebtDiff(local,remote,remoteDeleted){
+    const localMap=new Map(normalizeDebtList(local).map(d=>[d.id,d]))
+    const remoteMap=new Map(normalizeDebtList(remote).map(d=>[d.id,d]))
+    const localDeleted=normalizeDeletedMap(deletedDebtIds.value)
+    const remoteDel=normalizeDeletedMap(remoteDeleted)
+    const ids=new Set([...localMap.keys(),...remoteMap.keys(),...Object.keys(localDeleted),...Object.keys(remoteDel)])
+    let total=0,incoming=0
+    ids.forEach(id=>{
+      const l=localMap.get(id),r=remoteMap.get(id)
+      const ld=localDeleted[id]||0,rd=remoteDel[id]||0
+      if(rd&&l&&rd>=(l.updatedAt||0)){total++;incoming++;return}
+      if(ld&&r&&ld>=(r.updatedAt||0)){total++;return}
+      if(r&&!l){total++;incoming++;return}
+      if(l&&!r){total++;return}
+      if(l&&r&&debtFingerprint(l)!==debtFingerprint(r)){
+        total++
+        if((r.updatedAt||0)>(l.updatedAt||0))incoming++
+      }
+    })
+    return{total,incoming,merged:mergeDebtsByTimestamp(local,remote,mergedDebtDeletedMap(remoteDeleted))}
+  }
   function normalizedEntryMap(list){
     const map=new Map()
     ;(Array.isArray(list)?list:[]).forEach(row=>{
@@ -8730,7 +9328,7 @@ setup(){
       targetAmount:e.targetAmount||'',targetCurrency:e.targetCurrency||'',fxRate:e.fxRate||'',
       tradeQty:e.tradeQty||'',tradePrice:e.tradePrice||'',targetSymbol:e.targetSymbol||'',
       targetName:e.targetName||'',targetMarket:e.targetMarket||'',positionId:e.positionId||'',
-      realizedPL:e.realizedPL??''
+      realizedPL:e.realizedPL??'',fundSource:e.fundSource||'',destination:e.destination||'',loanId:e.loanId||'',toExchange:e.toExchange||''
     })
   }
   function entriesDiffer(a,b){return syncEntryFingerprint(a)!==syncEntryFingerprint(b)}
@@ -8782,9 +9380,9 @@ setup(){
     })
   }
   function syncSummaryTotal(s){
-    return s.remoteOnly+s.localOnly+s.remoteNewer+s.localNewer+s.remoteDeleted+s.localDeleted+s.conflict+(s.positionChanges||0)
+    return s.remoteOnly+s.localOnly+s.remoteNewer+s.localNewer+s.remoteDeleted+s.localDeleted+s.conflict+(s.positionChanges||0)+(s.debtChanges||0)
   }
-  function syncHasIncoming(s){return s.remoteOnly+s.remoteNewer+s.remoteDeleted+s.conflict+(s.positionIncoming||0)>0}
+  function syncHasIncoming(s){return s.remoteOnly+s.remoteNewer+s.remoteDeleted+s.conflict+(s.positionIncoming||0)+(s.debtIncoming||0)>0}
   function analyzeSyncDiff(local,remote,remoteDeleted){
     const localMap=normalizedEntryMap(local)
     const remoteMap=normalizedEntryMap(remote)
@@ -8854,7 +9452,13 @@ setup(){
     analysis.summary.positionChanges=positionAnalysis.total
     analysis.summary.positionIncoming=positionAnalysis.incoming
     analysis.summary.positionConflict=positionAnalysis.conflict
-    return{...analysis,positions:positionAnalysis}
+    // 远端不带负债（旧服务器 / 旧 Gist 文件）时不算差异，也不拿它覆盖本机负债。
+    const debtAnalysis=Array.isArray(ctx.debtList)
+      ?analyzeDebtDiff(debts.value,ctx.debtList,ctx.deletedDebtIds||{})
+      :{total:0,incoming:0,merged:debts.value}
+    analysis.summary.debtChanges=debtAnalysis.total
+    analysis.summary.debtIncoming=debtAnalysis.incoming
+    return{...analysis,positions:positionAnalysis,debts:debtAnalysis}
   }
   function applyRemoteData(data,{snapshotOnChange=false}={}){
     const remoteEntries=Array.isArray(data?.entries)?data.entries:[]
@@ -8863,7 +9467,9 @@ setup(){
     const mergedPositions=mergePositionsByRemote(positions.value,remotePositions,data?.deletedPositionIds)
     const entriesChanged=listChanged(entries.value,mergedEntries,syncEntryFingerprint)
     const positionsChanged=listChanged(positions.value,mergedPositions,positionFingerprint)
-    if((entriesChanged||positionsChanged)&&snapshotOnChange)snap()
+    const mergedDebts=Array.isArray(data?.debts)?mergeDebtsByTimestamp(debts.value,data.debts,saveMergedDebtDeleted(data.deletedDebtIds)):debts.value
+    const debtsChanged=listChanged(debts.value,mergedDebts,debtFingerprint)
+    if((entriesChanged||positionsChanged||debtsChanged)&&snapshotOnChange)snap()
     if(entriesChanged){
       entries.value=mergedEntries
       writeStorageJSON(SK,entries.value,'流水数据')
@@ -8872,7 +9478,11 @@ setup(){
       positions.value=mergedPositions
       savePositions({sync:false})
     }
-    return{entriesChanged,positionsChanged,changed:entriesChanged||positionsChanged}
+    if(debtsChanged){
+      debts.value=mergedDebts
+      saveDebts({sync:false})
+    }
+    return{entriesChanged,positionsChanged,debtsChanged,changed:entriesChanged||positionsChanged||debtsChanged}
   }
 
   // 投记账号同步：显式比较后再迁移，任何覆盖操作前都创建本地快照。
@@ -8979,12 +9589,16 @@ setup(){
     }catch(error){serverAdmin.error=serverErrorMessage(error)}
     finally{serverAdmin.busy=false}
   }
+  // 服务器的读快照里带 debts 才说明它认识负债；旧服务器的写接口是 strict 的，
+  // 多送一个字段会让整次同步被拒，所以只在确认支持时才送。
+  function serverSupportsDebts(){return Array.isArray(serverRemote.value?.debts)}
   function localServerSnapshot(){
     return clone({
       entries:entries.value,
       positions:positions.value,
       deletedIds:normalizeDeletedMap(deletedIds.value),
-      deletedPositionIds:normalizeDeletedMap(deletedPositionIds.value)
+      deletedPositionIds:normalizeDeletedMap(deletedPositionIds.value),
+      ...(serverSupportsDebts()?{debts:debts.value,deletedDebtIds:normalizeDeletedMap(deletedDebtIds.value)}:{})
     })
   }
   function serverAutoSyncStorageKey(){
@@ -9010,7 +9624,7 @@ setup(){
   }
   function clearVisibleAccountData(){
     entries.value=[];positions.value=[];snapshots.value=[];importBatches.value=[]
-    deletedIds.value={};deletedPositionIds.value={};serverRemote.value=null
+    deletedIds.value={};deletedPositionIds.value={};debts.value=[];deletedDebtIds.value={};serverRemote.value=null
     reviewDayNotes.value={};reviewDayNote.value='';reviewNote.value='';reviewChecklist.value=[]
     Object.assign(rules,defRules())
     Object.assign(syncCfg,{token:'',gistId:''})
@@ -9050,7 +9664,9 @@ setup(){
           list:serverRemote.value?.entries||[],
           deletedIds:serverRemote.value?.deletedIds||{},
           positionList:serverRemote.value?.positions||[],
-          deletedPositionIds:serverRemote.value?.deletedPositionIds||{}
+          deletedPositionIds:serverRemote.value?.deletedPositionIds||{},
+          debtList:serverRemote.value?.debts,
+          deletedDebtIds:serverRemote.value?.deletedDebtIds||{}
         }
         const differs=syncSummaryTotal(analyzeFullSync(remoteCtx).summary)>0
         if(!differs){
@@ -9157,6 +9773,11 @@ setup(){
       positions.value=(remote.positions||[]).map(normalizePosition).filter(Boolean)
       deletedIds.value=normalizeDeletedMap(remote.deletedIds)
       deletedPositionIds.value=normalizeDeletedMap(remote.deletedPositionIds)
+      if(Array.isArray(remote.debts)){
+        debts.value=normalizeDebtList(remote.debts)
+        deletedDebtIds.value=normalizeDeletedMap(remote.deletedDebtIds)
+        saveDebts({sync:false});saveDeletedDebts()
+      }
       writeStorageJSON(SK,entries.value,'流水数据')
       savePositions({sync:false})
       saveDeleted();saveDeletedPositions()
@@ -9353,7 +9974,9 @@ setup(){
       entries:entries.value,
       positions:positions.value,
       deletedIds:deletedIds.value,
-      deletedPositionIds:deletedPositionIds.value
+      deletedPositionIds:deletedPositionIds.value,
+      debts:debts.value,
+      deletedDebtIds:deletedDebtIds.value
     },null,2)
   }
   async function discoverGist(){
@@ -9374,7 +9997,7 @@ setup(){
     const data=JSON.parse(file.content)
     const list=Array.isArray(data.entries)?data.entries:[]
     const positionList=Array.isArray(data.positions)?data.positions:[]
-    return{gist,data,list,deletedIds:data.deletedIds||{},positionList,deletedPositionIds:data.deletedPositionIds||{}}
+    return{gist,data,list,deletedIds:data.deletedIds||{},positionList,deletedPositionIds:data.deletedPositionIds||{},debtList:Array.isArray(data.debts)?data.debts:undefined,deletedDebtIds:data.deletedDebtIds||{}}
   }
   async function uploadCurrentSyncData(){
     if(syncCfg.gistId){
@@ -9701,12 +10324,12 @@ setup(){
     if(showcaseMode.value&&!confirm('展示模式只隐藏页面显示，导出的 Excel 会包含真实数据。继续导出吗？'))return
     const inR=[],outR=[],tradeR=[],flowR=[]
     sortedEntries.value.forEach(e=>{
-      const base={'日期':e.date,'时间':e.time||'','资产类型':e.assetType||'','账户/平台':e.exchange,'货币':e.currency||'CNY','金额':e.amount,'汇率':e.rate||'','支付金额':e.sourceAmount||'','支付币种':e.sourceCurrency||'','到账金额':e.targetAmount||'','到账币种':e.targetCurrency||'','实际汇率':e.fxRate||'','折合CNY':amountCNY(e),'类型':e.type,'标签':tagsText(e.tags)}
+      const base={'日期':e.date,'时间':e.time||'','资产类型':e.assetType||'','账户/平台':e.exchange,'货币':e.currency||'CNY','金额':e.amount,'汇率':e.rate||'','支付金额':e.sourceAmount||'','支付币种':e.sourceCurrency||'','到账金额':e.targetAmount||'','到账币种':e.targetCurrency||'','实际汇率':e.fxRate||'','折合CNY':amountCNY(e),'类型':e.type,'标签':tagsText(e.tags),'资金来源':fundSourceLabel(e.fundSource),'资金去向':destinationLabel(e.destination),'关联贷款':e.loanId?loanName(e.loanId):'','转入平台':e.toExchange||''}
       const tradeExtra={'标的代码':e.targetSymbol||'','成交数量':e.tradeQty||'','成交单价':e.tradePrice||'','已实现盈亏':e.realizedPL!=null?e.realizedPL:''}
       flowR.push({...base,...tradeExtra,'备注':e.note,'月份(yyyy-MM)':e.date?e.date.slice(0,7):''})
       if(e.type==='入金')inR.push({...base,'投入理由':e.note})
       else if(e.type==='出金')outR.push({...base,'备注':e.note})
-      else tradeR.push({...base,...tradeExtra,'备注':e.note})
+      else if(e.type==='买入'||e.type==='卖出')tradeR.push({...base,...tradeExtra,'备注':e.note})
     })
     let cum=0;const mRows=[];const mm=new Map()
     entries.value.forEach(e=>{
@@ -9730,6 +10353,11 @@ setup(){
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(inR),'入金记录')
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(outR),'出金记录')
     if(tradeR.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(tradeR),'买卖记录')
+    if(debtViews.value.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(debtViews.value.map(l=>({
+      '贷款':l.name,'放款机构':l.lender||'','本金':l.principal,'年化利率':l.annualRate,
+      '还款方式':(REPAY_TYPES.find(o=>o.key===l.repayType)||{}).label||'','起息日':l.startDate||'','到期日':l.maturityDate||'',
+      '已还本金':l.repaidPrincipal,'已付利息':l.paidInterest,'剩余本金':l.remaining,'到期前还要付的利息':l.remainingInterest,'状态':l.closed?'已结清':'未结清'
+    }))),'负债')
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(flowR),'全部流水')
     if(positions.value.length){
       const holdingRows=positions.value.map(p=>({
@@ -9749,6 +10377,7 @@ setup(){
       version:3,exportedAt:new Date().toISOString(),
       entries:entries.value,positions:positions.value,
       deletedIds:deletedIds.value,deletedPositionIds:deletedPositionIds.value,
+      debts:debts.value,deletedDebtIds:deletedDebtIds.value,
       assetConfig:{types:assetCfg.types,platforms:assetCfg.platforms,colors:assetCfg.colors}
     }
     const b=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='投记完整备份_'+dayjs().format('YYYYMMDD_HHmm')+'.json';a.click();URL.revokeObjectURL(u);showToast('完整备份已导出','success')
@@ -9762,11 +10391,28 @@ setup(){
       buildImportPreview('Excel',f.name,parsed.valid,parsed.invalidCount)
     }catch(err){showToast('导入失败','error')}};rd.readAsArrayBuffer(f);ev.target.value=''
   }
+  // 备份或迁移文件里的负债：用户主动导入，同 id 以文件为准，更新时间记为现在，让它能同步出去。
+  function importDebtRows(rows,fileName){
+    const loanCount=rows.filter(d=>d.kind==='loan').length
+    const hasPlan=rows.some(d=>d.kind==='plan')
+    if(!confirm(`${fileName} 里有 ${loanCount} 笔贷款${hasPlan?'和还债计划':''}。合并到负债吗？同一笔会以文件为准。`))return
+    snap()
+    const now=Date.now()
+    const incoming=new Map(rows.map(d=>[d.id,{...d,updatedAt:now}]))
+    debts.value=[...debts.value.filter(d=>!incoming.has(d.id)),...incoming.values()]
+    incoming.forEach((_,id)=>delete deletedDebtIds.value[id])
+    saveDeletedDebts()
+    saveDebts()
+    showToast(`已导入 ${loanCount} 笔贷款`,'success')
+  }
   function importJSON(ev){
     const f=ev.target.files[0];if(!f)return;const rd=new FileReader()
     rd.onload=e=>{try{
       const d=JSON.parse(e.target.result)
       const list=Array.isArray(d)?d:(d.entries||[])
+      const debtRows=Array.isArray(d?.debts)?normalizeDebtList(d.debts):[]
+      if(debtRows.length)importDebtRows(debtRows,f.name)
+      if(!list.length&&debtRows.length)return
       const parsed=normalizeImportRows(list.map(row=>({row,type:row.type||row['类型']})))
       buildImportPreview('JSON',f.name,parsed.valid,parsed.invalidCount,{positions:Array.isArray(d.positions)?d.positions:[]})
     }catch(err){showToast('JSON格式错误','error')}};rd.readAsText(f);ev.target.value=''
@@ -10057,7 +10703,8 @@ setup(){
     serverAutoSync.dispose()
   })
 
-  return{APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
+  return{typeTone,typeTagClass,typeColor,debts,loanList,debtViews,openLoans,loanOptions,debtSummary,debtSchedule,debtPayday,debtFunding,depositRisk,needsIntent,quickSaveBlocker,FUND_SOURCES,DESTINATIONS,REPAY_TYPES,DEPOSIT_INTENTS,loanName,fundSourceLabel,destinationLabel,debtLoanForm,debtRepayForm,debtPlanForm,expandedLoanId,openLoanForm,saveLoan,deleteLoan,openRepayForm,saveRepayment,removeRepayment,toggleDebtEvent,toggleDebtPlanForm,saveDebtPlanSettings,
+    APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,fmtQtyNum,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,capitalChart,capitalCurve,capitalCurveView,capitalRange,setCapitalRange,CAPITAL_RANGES,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
@@ -10074,7 +10721,7 @@ setup(){
     overviewFunding,overviewMonths,positions,posForm,posRows,allPositionRows,posSummary,positionRowsSorted,selectedPositionId,selectedPosition,selectedPositionAllocation,selectPosition,overviewTopPositions,overviewAllocation,overviewLastUpdated,addPosition,removePosition,updatePosition,createPositionFlow,fetchPosPrices,showPosForm,posSymbolSearch,showSymbolPicker,posSearchResults,posSearching,posResultsShown,posMarket,POS_MARKETS,onPosSearchInput,selectEmResult,selectCryptoQuick,cryptoQuickList,expandedPosFlows,togglePosFlow,
     showDashCfg,dashPanels,dashVisible,toggleDashPanel,moveDashPanel,resetDashboard,DASH_DEFAULT,dashLabels,
     ASSET_TYPES,getPlatforms,assetColor,
-    apiTokens,apiTokensLoading,apiTokenName,apiTokenCreating,apiTokenPlain,apiFeedBase,
+    apiTokens,apiTokensLoading,apiTokenName,apiTokenCreating,apiTokenPlain,apiTokenDebts,apiFeedBase,
     loadApiTokens,createApiToken,revokeApiToken,copyApiToken,copyApiCurl,apiTokenTime}
 }
 }).mount('#app')

@@ -63,7 +63,20 @@
 - 外币入金可填写人民币支付金额和该笔实际汇率，自动算出到账数量；也可以拉取当前汇率后再手动修改
 - 每笔换汇独立保存，不会用今天的汇率覆盖昨天的成交汇率
 - 标签系统：可给每笔记录打上 `定投`、`补仓`、`FOMO` 等行为标签，便于统计和复盘
+- 入金必选**资金来源**（工资 / 存款 / 借款 / 其他），借款可以关联到具体某笔贷款；出金可选**去向**（回到银行卡 / 还贷款本金 / 付贷款利息 / 其他）
+- 入金前的冷静提醒留在表单里，不再弹窗：还欠着钱、本月第几笔、借来的钱、间隔太短、金额异常时才出现；风险高时要先选「这笔钱的打算」（计划内 / 补仓 / 翻本 / 抄底 / FOMO）才能保存，选的打算存成标签
 - 桌面端表格内联编辑，手机端弹出 Modal 编辑
+
+### 负债
+
+借来的钱单独记账，不混进入金本金：
+
+- 登记贷款：本金、年化利率、还款方式（按月付息到期还本 / 到期一次还本付息）、付息日、起息日、到期日
+- 利息按银行惯例算：剩余本金 × 年化 ÷ 360 × 实际天数；按月付息的贷款到期时还要付最后一个付息日到到期日的那几天利息
+- **这期该还多少**：按发薪日算每期要拿出多少；填了「每月能拿出多少」就推到每个到期日还差多少
+- **待付日程**：付息、到期还本逐笔列出，付完勾一下；勾到期还本会把这笔贷款结清
+- 从交易所取出来直接还贷的出金（去向 = 还本 / 付息）自动算作这笔贷款的还款，不用记两次；它仍是一笔出金，净值口径不变
+- **借来的钱去了哪**：标了「借款」的入金、贷款下来以后转进交易所多少、本月入金几笔
 
 ### 买卖交易与持仓管理
 
@@ -194,11 +207,20 @@ docker compose up -d --build
 
 ## 只读接口（给交易台和 agent）
 
-如果你想让本地的交易台、脚本或 AI agent 读到自己的出入金，在「同步数据 → 接口访问」里创建一个令牌即可。它**只能读出入金，不能改动账本**，随时可以撤销。
+如果你想让本地的交易台、脚本或 AI agent 读到自己的出入金，在「同步数据 → 接口访问」里创建一个令牌即可。它**只读，不能改动账本**，随时可以撤销。默认只能读出入金；借款要在创建时单独授权。
 
 ### 拿到令牌
 
 面板里填一个用途名称（例如"家里的交易台"）→ 创建。**令牌只显示这一次**：服务器只保存哈希，关掉就找不回来了。最多同时存在 10 个活跃令牌。
+
+作用域（`POST /api/v1/tokens` 的 `scopes`）只有两种组合：
+
+| scopes | 能读什么 |
+|---|---|
+| `["cashflows:read"]`（默认） | 出入金与互转 |
+| `["cashflows:read", "debts:read"]` | 另加借款与还款 |
+
+已有的令牌一律是 `cashflows:read`，不会自动获得借款读取权限；要读借款就新建一个。令牌列表里每个令牌都带 `scope`（空格分隔的字符串）和 `scopes`（数组）。
 
 ### 调用
 
@@ -213,13 +235,14 @@ curl -H "Authorization: Bearer tjk_你的令牌" \
 {
   "ledger":  { "id": "…", "name": "我的账本", "revision": 41 },
   "currency": "CNY",
-  "summary": { "count": 104, "totalIn": 138000, "totalOut": 35000, "net": 103000 },
+  "summary": { "count": 104, "totalIn": 138000, "totalOut": 35000, "net": 103000, "transferCount": 3 },
   "cashflows": [
     {
       "id": "…", "date": "2026-09-09", "time": "11:25",
       "direction": "out", "type": "出金",
       "amount": 200, "currency": "CNY", "amountCNY": 200,
-      "platform": "欧易", "assetType": null, "note": "还贷款利息", "tags": []
+      "platform": "欧易", "toPlatform": null, "assetType": null, "note": "还贷款利息", "tags": [],
+      "fundSource": null, "destination": "interest", "loanId": "loan-…"
     }
   ],
   "truncated": false,
@@ -229,9 +252,14 @@ curl -H "Authorization: Bearer tjk_你的令牌" \
 
 要点：
 
-- **`direction`** 是 `in` / `out`，给程序判断用；`type` 保留中文原文，给人看。
+- **`direction`** 是 `in`（入金）/ `out`（出金）/ `transfer`（平台间互转），带上买卖时还有 `buy` / `sell`，给程序判断用；`type` 保留中文原文，给人看。
+- **互转**只是钱在自己的两个平台之间挪动：`platform` 是转出方，`toPlatform` 是转入方。它**不计入** `totalIn` / `totalOut` / `net`，只计入 `summary.transferCount`。
+- **`fundSource`**（仅入金）：`salary` 工资 / `savings` 积蓄 / `loan` 借款 / `other`。
+- **`destination`**（仅出金）：`card` 回到银行卡 / `repay` 还本金 / `interest` 付利息 / `other`。
+- **`loanId`**：借款入金，或还本、付息的出金所关联的借款，可对上 `/debts` 里的 `id`。
+- 以上四个新字段在没填、填了不认识的值、或出现在不对应的类型上时一律是 `null`。
 - **`amountCNY`** 已按该笔记录的汇率折算好，调用方不需要自己处理外币。
-- **`summary`** 统计的是**本次返回的这些记录**，不是整个账本——加了筛选就是筛选后的区间汇总。
+- **`summary`** 统计的是**本次返回的这些记录**，不是整个账本——加了筛选就是筛选后的区间汇总。`net` 的含义不变：入金减出金。
 - 记录按时间**升序**，删掉的记录不会出现。
 
 ### 参数
@@ -240,10 +268,52 @@ curl -H "Authorization: Bearer tjk_你的令牌" \
 |---|---|
 | `since` | `YYYY-MM-DD`，含当天 |
 | `until` | `YYYY-MM-DD`，含当天 |
-| `include` | `cash`（默认，仅出入金）或 `all`（并入买入卖出；买卖不计入 summary 的收支） |
+| `include` | `cash`（默认，出入金与互转）或 `all`（并入买入卖出；买卖不计入 summary 的收支） |
 | `limit` | 1–2000，默认 2000。超出时保留**最近的**部分，并把 `truncated` 置为 `true` |
 
-`GET /api/v1/feed`（不带路径）会返回这套参数说明本身，agent 可以先读它再决定怎么调，不必外部约定。
+### 借款（需要 `debts:read`）
+
+```bash
+curl -H "Authorization: Bearer tjk_你的令牌" \
+  "https://ledger.orbitshz.com/api/v1/feed/debts"
+```
+
+返回：
+
+```json
+{
+  "ledger": { "id": "…", "name": "我的账本", "revision": 41 },
+  "currency": "CNY",
+  "generatedAt": "2026-10-21T06:00:00.000Z",
+  "plan": { "paydayDom": 10, "monthlyPlan": 4000 },
+  "loans": [
+    {
+      "id": "loan-…", "name": "消费贷", "lender": "招行",
+      "principal": 50000, "annualRate": 0.03, "repayType": "interest_monthly", "interestDay": 20,
+      "startDate": "2026-03-01", "maturityDate": "2027-03-01", "closedAt": null, "note": null,
+      "repaidPrincipal": 4000, "paidInterest": 125, "remainingPrincipal": 46000,
+      "repayments": [
+        { "id": "r-…", "date": "2026-03-20", "principal": 1000, "interest": 125, "dueDate": "2026-03-20", "source": "salary", "note": null, "entryId": null },
+        { "id": "entry:…", "date": "2026-04-20", "principal": 3000, "interest": 0, "dueDate": null, "source": "ledger", "note": "还本", "entryId": "…" }
+      ]
+    }
+  ],
+  "summary": { "count": 1, "principal": 50000, "repaidPrincipal": 4000, "paidInterest": 125, "remainingPrincipal": 46000 }
+}
+```
+
+要点：
+
+- **`repayments`** 合并了两处来源：借款里手记的还款（`entryId` 为 `null`），以及流水里关联到这笔借款的还本 / 付息出金（`source` 为 `ledger`，`id` 是 `entry:` 加流水 id，`entryId` 指回那笔流水，金额按 `amountCNY` 折算）。按日期升序。
+- **`remainingPrincipal`** = 本金 − 已还本金，最低为 0；`summary` 是所有借款的合计，已结清的（`closedAt` 为毫秒时间戳）也算在内。
+- `repayType`：`interest_monthly` 按月付息 / `bullet` 到期一次还本付息 / `other`；手记还款的 `source`：`salary` / `savings` / `other`。认不出的值为 `null`。
+- `plan` 是还款计划（每月几号发薪、每月计划还多少），没设置时为 `null`。
+- 借款按用户排好的顺序返回，其次按到期日。不分页、不按日期筛选——余额只有看整笔借款才有意义。
+- 令牌没有 `debts:read` 时返回 `403 {"error":"INSUFFICIENT_SCOPE","required":"debts:read"}`。
+
+### 自描述
+
+`GET /api/v1/feed`（不带路径）会返回参数说明本身和令牌的 `scope`，且只列出这个令牌能调用的接口——agent 可以先读它再决定怎么调，不必外部约定。
 
 ### 部署提醒
 
@@ -295,7 +365,7 @@ sudo systemctl reload caddy
 ### 关于安全
 
 - 令牌走 `Authorization: Bearer`，服务器只存 SHA-256 哈希，**明文不落库、不写日志**。
-- 作用域固定为 `cashflows:read`，数据库层面有 CHECK 约束——将来要加写权限必须显式改 schema，不会被顺手放开。
+- 作用域只有 `cashflows:read` 和 `cashflows:read debts:read` 两种，数据库层面有 CHECK 约束——借款读取必须创建时显式勾选，将来要加写权限也必须显式改 schema，不会被顺手放开。
 - 响应带 `Cache-Control: no-store`，中间代理不会留副本。
 - 限流 60 次/分钟。出入金本来就不是高频数据，交易台几分钟拉一次足够。
 - 撤销后立即失效。怀疑泄露就撤销重建，不影响你在浏览器里的登录。
@@ -344,8 +414,32 @@ GitHub Pages 与本地 `index.html` 仍保持独立的本地模式，不依赖 O
   targetSymbol,  // 标的代码
   targetName,    // 标的名称
   positionId,    // 关联的持仓 ID
-  realizedPL     // 已实现盈亏（仅卖出记录，CNY）
+  realizedPL,    // 已实现盈亏（仅卖出记录，CNY）
+  // 资金口径（可选）
+  fundSource,    // 入金：'salary' | 'savings' | 'loan' | 'other'
+  destination,   // 出金：'card' | 'repay' | 'interest' | 'other'
+  loanId         // 借款入金 / 还贷出金关联的贷款 id
 }
+```
+
+### 负债（debt）
+
+```js
+// 贷款
+{
+  id, kind: 'loan',
+  name, lender,
+  principal,     // 原始本金（CNY），剩余本金由还款算出
+  annualRate,    // 0.03 = 3%
+  repayType,     // 'interest_monthly' | 'bullet' | 'other'
+  interestDay,   // 按月付息的付息日（1-31）
+  startDate, maturityDate,
+  closedAt, note, sortOrder,
+  repayments: [{ id, date, principal, interest, dueDate, source, via, note }],
+  updatedAt
+}
+// 还债计划（每个账本最多一条）
+{ id: 'debt-plan', kind: 'plan', paydayDom, monthlyPlan, nudge, updatedAt }
 ```
 
 ### 持仓（position）

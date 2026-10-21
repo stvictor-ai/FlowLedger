@@ -1,10 +1,11 @@
-const CACHE_NAME = 'touji-v2026-10-15-1';
+const CACHE_NAME = 'touji-v2026-10-21-1';
 
 const APP_ASSETS = [
   './js/entry-engine.js',
   './js/review-engine.js',
   './js/import-engine.js',
-  './js/server-sync.js'
+  './js/server-sync.js',
+  './js/debt-engine.js'
 ];
 
 // Third-party libraries, served from this origin under version-stamped names.

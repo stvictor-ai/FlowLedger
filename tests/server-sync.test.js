@@ -81,19 +81,24 @@ test('snapshot summary converts foreign currencies and counts tombstones', () =>
       { type: '出金', amount: 200, currency: 'CNY' }
     ],
     positions: [{ id: 'position-1' }],
+    debts: [{ id: 'loan-1', kind: 'loan' }],
     deletedIds: { old: 1 },
-    deletedPositionIds: { gone: 2 }
+    deletedPositionIds: { gone: 2 },
+    deletedDebtIds: { paid: 3 }
   })
 
   assert.deepEqual(summary, {
     entries: 2,
     positions: 1,
+    debts: 1,
     totalIn: 500,
     totalOut: 200,
-    deleted: 2
+    deleted: 3
   })
   assert.equal(hasSnapshotData({ entries: [], positions: [] }), false)
   assert.equal(hasSnapshotData({ entries: [{ id: 'entry-1' }] }), true)
+  // 只登记了贷款的账本也算有数据，首次同步不能被当成空账本直接覆盖。
+  assert.equal(hasSnapshotData({ entries: [], positions: [], debts: [{ id: 'loan-1', kind: 'loan' }] }), true)
 })
 
 test('auto sync coordinator debounces changes into one flush', async () => {
