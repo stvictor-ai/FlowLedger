@@ -1,16 +1,22 @@
 import { Router } from 'express'
 import { z } from 'zod'
-import { SyncError } from './service.js'
+import { SyncError, syncDebtLimit } from './service.js'
 
 const idSchema = z.string().min(1).max(120)
 const itemSchema = z.object({ id: idSchema }).loose()
-const deletedSchema = z.record(idSchema, z.number().int().nonnegative()).default({})
+const tombstoneSchema = z.record(idSchema, z.number().int().nonnegative())
+const deletedSchema = tombstoneSchema.default({})
 const snapshotSchema = z.object({
   baseRevision: z.number().int().nonnegative(),
   entries: z.array(itemSchema).max(10000),
   positions: z.array(itemSchema).max(10000),
   deletedIds: deletedSchema,
-  deletedPositionIds: deletedSchema
+  deletedPositionIds: deletedSchema,
+  // Optional with no default on purpose: a cached PWA from before debts sends
+  // neither, and "absent" must stay distinguishable from "empty" so the
+  // service can leave stored debts alone.
+  debts: z.array(itemSchema).max(syncDebtLimit).optional(),
+  deletedDebtIds: tombstoneSchema.optional()
 }).strict()
 const ledgerIdSchema = z.string().uuid()
 

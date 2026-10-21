@@ -3,6 +3,10 @@ import { hashSecret } from '../auth/tokens.js'
 
 const MAX_ACTIVE_TOKENS = 10
 export const TOKEN_SCOPE = 'cashflows:read'
+export const DEBTS_SCOPE = 'debts:read'
+// Every token reads cash flows; debts are opt-in on top. The stored string is
+// joined in this order, which is what the CHECK in migration 005 expects.
+export const TOKEN_SCOPES = [TOKEN_SCOPE, DEBTS_SCOPE]
 const TOKEN_PREFIX = 'tjk_'
 
 export class TokenError extends Error {
@@ -16,6 +20,23 @@ export class TokenError extends Error {
 
 export function createApiToken() {
   return `${TOKEN_PREFIX}${randomBytes(32).toString('base64url')}`
+}
+
+/** Space-separated, OAuth style. */
+export function parseScopes(scope) {
+  return String(scope || '').split(/\s+/).filter(Boolean)
+}
+
+/** Canonical, de-duplicated scope string, or null if it is not grantable. */
+function formatScopes(scopes) {
+  const wanted = new Set(Array.isArray(scopes) ? scopes : [])
+  if (!wanted.has(TOKEN_SCOPE)) return null
+  if ([...wanted].some(scope => !TOKEN_SCOPES.includes(scope))) return null
+  return TOKEN_SCOPES.filter(scope => wanted.has(scope)).join(' ')
+}
+
+function withScopes(record) {
+  return { ...record, scopes: parseScopes(record.scope) }
 }
 
 export function createTokenService({ repository, pepper = '' }) {
@@ -36,12 +57,15 @@ export function createTokenService({ repository, pepper = '' }) {
     },
 
     async list(userId) {
-      return repository.list(userId)
+      return (await repository.list(userId)).map(withScopes)
     },
 
-    async create({ userId, name, ledgerId = null }) {
+    async create({ userId, name, ledgerId = null, scopes = [TOKEN_SCOPE] }) {
       const label = String(name || '').trim()
       if (!label || label.length > 60) throw new TokenError('INVALID_NAME', 400)
+      // The route already validates; this guards every other caller.
+      const scope = formatScopes(scopes)
+      if (!scope) throw new TokenError('INVALID_SCOPE', 400)
 
       const active = await repository.countActive(userId)
       if (active >= MAX_ACTIVE_TOKENS) throw new TokenError('TOO_MANY_TOKENS', 409)
@@ -58,11 +82,11 @@ export function createTokenService({ repository, pepper = '' }) {
         name: label,
         prefix: token.slice(0, 12),
         tokenHash: hashSecret(token, pepper),
-        scope: TOKEN_SCOPE
+        scope
       })
 
       // The only time the secret exists outside the caller's machine.
-      return { ...record, ledgerName: ledger.name, token }
+      return { ...withScopes(record), ledgerName: ledger.name, token }
     },
 
     async revoke({ userId, id }) {

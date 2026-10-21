@@ -1,10 +1,15 @@
 import { Router } from 'express'
 import { z } from 'zod'
-import { TokenError } from './service.js'
+import { TOKEN_SCOPE, TOKEN_SCOPES, TokenError } from './service.js'
 
 const createSchema = z.object({
   name: z.string().trim().min(1).max(60),
-  ledgerId: z.string().uuid().optional()
+  ledgerId: z.string().uuid().optional(),
+  // Omitted means cash flows only, which is what every token got before.
+  scopes: z.array(z.enum(TOKEN_SCOPES))
+    .max(10)
+    .refine(scopes => scopes.includes(TOKEN_SCOPE))
+    .optional()
 }).strict()
 
 const idSchema = z.string().uuid()
@@ -31,7 +36,8 @@ export function createTokenRouter({ tokenService }) {
       const created = await tokenService.create({
         userId: request.auth.id,
         name: parsed.data.name,
-        ledgerId: parsed.data.ledgerId
+        ledgerId: parsed.data.ledgerId,
+        scopes: parsed.data.scopes
       })
       // `token` appears in this response and nowhere else, ever.
       return response.status(201).json(created)

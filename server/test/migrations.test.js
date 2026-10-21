@@ -31,7 +31,7 @@ function createFakePool({ versions = [], failOnMigration = false } = {}) {
 test('initial migration defines all account and ledger tables', async () => {
   const migrations = await loadMigrations()
 
-  assert.deepEqual(migrations.map(item => item.version), ['001_initial', '002_admin_roles', '003_orbit_identity', '004_api_tokens'])
+  assert.deepEqual(migrations.map(item => item.version), ['001_initial', '002_admin_roles', '003_orbit_identity', '004_api_tokens', '005_debts_and_scopes'])
   for (const table of ['users', 'invitation_codes', 'sessions', 'ledgers', 'entries', 'positions']) {
     assert.match(migrations[0].sql, new RegExp(`CREATE TABLE ${table}`))
   }
@@ -45,20 +45,27 @@ test('initial migration defines all account and ledger tables', async () => {
   assert.match(migrations[3].sql, /token_hash TEXT NOT NULL UNIQUE/)
   assert.match(migrations[3].sql, /CHECK \(scope IN \('cashflows:read'\)\)/)
   assert.doesNotMatch(migrations[3].sql, /token TEXT|secret TEXT/)
+  // Debts mirror positions, ledger-scoped and cascading with the ledger.
+  assert.match(migrations[4].sql, /CREATE TABLE debts/)
+  assert.match(migrations[4].sql, /FOREIGN KEY \(ledger_id, user_id\) REFERENCES ledgers\(id, user_id\) ON DELETE CASCADE/)
+  assert.match(migrations[4].sql, /PRIMARY KEY \(ledger_id, id\)/)
+  // Reading debts is opt-in, and still nothing can write.
+  assert.match(migrations[4].sql, /CHECK \(scope IN \('cashflows:read', 'cashflows:read debts:read'\)\)/)
+  assert.doesNotMatch(migrations[4].sql, /:write/)
 })
 
 test('migration runner applies pending migrations once and releases the client', async () => {
   const fake = createFakePool()
   const applied = await runMigrations({ pool: fake.pool })
 
-  assert.deepEqual(applied, ['001_initial', '002_admin_roles', '003_orbit_identity', '004_api_tokens'])
+  assert.deepEqual(applied, ['001_initial', '002_admin_roles', '003_orbit_identity', '004_api_tokens', '005_debts_and_scopes'])
   assert.equal(fake.calls.some(call => call.text.includes('CREATE TABLE users')), true)
   assert.equal(fake.calls.some(call => call.text === 'COMMIT'), true)
   assert.equal(fake.wasReleased(), true)
 })
 
 test('migration runner skips versions already recorded', async () => {
-  const fake = createFakePool({ versions: ['001_initial', '002_admin_roles', '003_orbit_identity', '004_api_tokens'] })
+  const fake = createFakePool({ versions: ['001_initial', '002_admin_roles', '003_orbit_identity', '004_api_tokens', '005_debts_and_scopes'] })
   const applied = await runMigrations({ pool: fake.pool })
 
   assert.deepEqual(applied, [])

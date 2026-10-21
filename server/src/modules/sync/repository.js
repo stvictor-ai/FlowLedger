@@ -48,7 +48,7 @@ export function createSyncRepository(pool) {
       const ledger = ledgerResult.rows[0]
       if (!ledger) return null
 
-      const [entryResult, positionResult] = await Promise.all([
+      const [entryResult, positionResult, debtResult] = await Promise.all([
         pool.query(`
           SELECT id, payload, client_updated_at, deleted_at
           FROM entries
@@ -60,6 +60,12 @@ export function createSyncRepository(pool) {
           FROM positions
           WHERE ledger_id = $1 AND user_id = $2
           ORDER BY id
+        `, [ledgerId, userId]),
+        pool.query(`
+          SELECT id, payload, client_updated_at, deleted_at
+          FROM debts
+          WHERE ledger_id = $1 AND user_id = $2
+          ORDER BY id
         `, [ledgerId, userId])
       ])
 
@@ -67,6 +73,8 @@ export function createSyncRepository(pool) {
       const deletedEntries = entryResult.rows.filter(row => row.deleted_at)
       const activePositions = positionResult.rows.filter(row => !row.deleted_at)
       const deletedPositions = positionResult.rows.filter(row => row.deleted_at)
+      const activeDebts = debtResult.rows.filter(row => !row.deleted_at)
+      const deletedDebts = debtResult.rows.filter(row => row.deleted_at)
 
       return {
         ledger: {
@@ -78,7 +86,9 @@ export function createSyncRepository(pool) {
         entries: activeEntries.map(row => row.payload),
         positions: activePositions.map(row => row.payload),
         deletedIds: toTimestampMap(deletedEntries),
-        deletedPositionIds: toTimestampMap(deletedPositions)
+        deletedPositionIds: toTimestampMap(deletedPositions),
+        debts: activeDebts.map(row => row.payload),
+        deletedDebtIds: toTimestampMap(deletedDebts)
       }
     },
 
@@ -119,6 +129,18 @@ export function createSyncRepository(pool) {
           userId,
           syncRows(snapshot.positions, snapshot.deletedPositionIds)
         )
+        // Absent means an old client that has never heard of debts: keep what
+        // is stored. Present (even empty) means a full replacement.
+        if (Array.isArray(snapshot.debts)) {
+          await client.query('DELETE FROM debts WHERE ledger_id = $1 AND user_id = $2', [ledgerId, userId])
+          await insertRows(
+            client,
+            'debts',
+            ledgerId,
+            userId,
+            syncRows(snapshot.debts, snapshot.deletedDebtIds || {})
+          )
+        }
 
         const updateResult = await client.query(`
           UPDATE ledgers

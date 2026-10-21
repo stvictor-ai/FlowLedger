@@ -20,7 +20,7 @@ function emptySnapshot() {
 function memorySyncRepository() {
   const state = {
     revision: 0,
-    snapshot: emptySnapshot()
+    snapshot: { ...emptySnapshot(), debts: [], deletedDebtIds: {} }
   }
   return {
     state,
@@ -35,7 +35,13 @@ function memorySyncRepository() {
       async writeSnapshot({ userId, ledgerId, baseRevision, snapshot }) {
         if (userId !== USER_ID || ledgerId !== LEDGER_ID) return { status: 'not_found' }
         if (baseRevision !== state.revision) return { status: 'conflict', revision: state.revision }
-        state.snapshot = structuredClone(snapshot)
+        const next = structuredClone(snapshot)
+        // Mirrors the Postgres repository: no debts key leaves debts alone.
+        if (!Array.isArray(next.debts)) {
+          next.debts = state.snapshot.debts
+          next.deletedDebtIds = state.snapshot.deletedDebtIds
+        }
+        state.snapshot = next
         state.revision += 1
         return { status: 'ok', revision: state.revision, updatedAt: new Date() }
       }
@@ -53,6 +59,40 @@ async function startApp(options) {
     close: () => new Promise((resolve, reject) => {
       server.close(error => error ? reject(error) : resolve())
     })
+  }
+}
+
+const authService = {
+  getSession: async token => token === 'valid-session'
+    ? { id: USER_ID, email: 'owner@example.com', ledger: { id: LEDGER_ID } }
+    : null,
+  register: async () => {},
+  login: async () => {},
+  logout: async () => {}
+}
+
+function syncClient(baseUrl) {
+  const url = `${baseUrl}/api/v1/ledgers/${LEDGER_ID}/sync`
+  const headers = { 'Content-Type': 'application/json', Cookie: 'touji_session=valid-session' }
+  return {
+    read: async () => (await fetch(url, { headers })).json(),
+    write: body => fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) })
+  }
+}
+
+/** Records every statement so a test can see what touched which table. */
+function recordingPool({ revision = 0, rows = () => [] } = {}) {
+  const calls = []
+  const query = async (sql, params) => {
+    const text = String(sql)
+    calls.push({ text, params })
+    if (text.includes('SELECT revision')) return { rows: [{ revision: String(revision) }] }
+    if (text.includes('RETURNING revision')) return { rows: [{ revision: String(revision + 1), updated_at: new Date(0) }] }
+    return { rows: rows(text) }
+  }
+  return {
+    calls,
+    pool: { query, connect: async () => ({ query, release() {} }) }
   }
 }
 
@@ -129,14 +169,6 @@ test('sync HTTP route requires a valid session and returns revision conflicts', 
   const memory = memorySyncRepository()
   memory.state.revision = 2
   const syncService = createSyncService({ repository: memory.repository })
-  const authService = {
-    getSession: async token => token === 'valid-session'
-      ? { id: USER_ID, email: 'owner@example.com', ledger: { id: LEDGER_ID } }
-      : null,
-    register: async () => {},
-    login: async () => {},
-    logout: async () => {}
-  }
   const running = await startApp({ authService, syncService })
   t.after(running.close)
 
@@ -182,4 +214,153 @@ test('repository conflict rolls back before deleting ledger records', async () =
   assert.equal(calls.includes('ROLLBACK'), true)
   assert.equal(calls.some(sql => sql.includes('DELETE FROM entries')), false)
   assert.equal(calls.some(sql => sql.includes('DELETE FROM positions')), false)
+})
+
+test('an old client that sends no debts leaves stored debts alone', async t => {
+  const memory = memorySyncRepository()
+  const syncService = createSyncService({ repository: memory.repository })
+  const running = await startApp({ authService, syncService })
+  t.after(running.close)
+  const client = syncClient(running.baseUrl)
+
+  const loan = { id: 'loan-1', kind: 'loan', principal: 50000, updatedAt: 10 }
+  const first = await client.write({ baseRevision: 0, ...emptySnapshot(), debts: [loan], deletedDebtIds: {} })
+  assert.equal(first.status, 200)
+  assert.equal((await first.json()).revision, 1)
+
+  // A cached PWA from before debts: the exact body it has always sent.
+  const old = await client.write({
+    baseRevision: 1,
+    ...emptySnapshot(),
+    entries: [{ id: 'entry-1', type: '入金', amount: 100, updatedAt: 11 }]
+  })
+  assert.equal(old.status, 200)
+  assert.equal((await old.json()).revision, 2)
+
+  const snapshot = await client.read()
+  assert.deepEqual(snapshot.debts, [loan])
+  assert.deepEqual(snapshot.deletedDebtIds, {})
+  assert.equal(snapshot.entries.length, 1)
+})
+
+test('sent debts replace stored debts and tombstones round-trip', async t => {
+  const memory = memorySyncRepository()
+  const syncService = createSyncService({ repository: memory.repository })
+  const running = await startApp({ authService, syncService })
+  t.after(running.close)
+  const client = syncClient(running.baseUrl)
+
+  await client.write({
+    baseRevision: 0,
+    ...emptySnapshot(),
+    debts: [{ id: 'loan-1', kind: 'loan' }, { id: 'loan-2', kind: 'loan' }]
+  })
+  const second = await client.write({
+    baseRevision: 1,
+    ...emptySnapshot(),
+    debts: [{ id: 'loan-2', kind: 'loan', name: '改名了' }],
+    deletedDebtIds: { 'loan-1': 1700000000000 }
+  })
+  assert.equal((await second.json()).revision, 2)
+
+  const snapshot = await client.read()
+  assert.deepEqual(snapshot.debts, [{ id: 'loan-2', kind: 'loan', name: '改名了' }])
+  assert.deepEqual(snapshot.deletedDebtIds, { 'loan-1': 1700000000000 })
+})
+
+test('sync rejects duplicate, colliding and excess debts', async () => {
+  const memory = memorySyncRepository()
+  const service = createSyncService({ repository: memory.repository })
+  const write = snapshot => service.writeSnapshot({
+    userId: USER_ID,
+    ledgerId: LEDGER_ID,
+    baseRevision: 0,
+    snapshot: { ...emptySnapshot(), ...snapshot }
+  })
+
+  await assert.rejects(
+    () => write({ debts: [{ id: 'loan-1' }, { id: 'loan-1' }] }),
+    error => error instanceof SyncError && error.code === 'DUPLICATE_ID' && error.details.collection === 'debts'
+  )
+  await assert.rejects(
+    () => write({ debts: [{ id: 'loan-1' }], deletedDebtIds: { 'loan-1': 1 } }),
+    error => error instanceof SyncError && error.code === 'ACTIVE_DELETED_COLLISION'
+  )
+  // Tombstones count towards the limit, as they do for entries.
+  const debts = Array.from({ length: 1500 }, (_, index) => ({ id: `loan-${index}` }))
+  const deletedDebtIds = Object.fromEntries(Array.from({ length: 501 }, (_, index) => [`gone-${index}`, 1]))
+  await assert.rejects(
+    () => write({ debts, deletedDebtIds }),
+    error => error instanceof SyncError && error.code === 'TOO_MANY_DEBTS' && error.status === 413
+  )
+  assert.equal(memory.state.revision, 0)
+})
+
+test('repository never touches debts when the client sends none', async () => {
+  const recorded = recordingPool({ revision: 3 })
+  const repository = createSyncRepository(recorded.pool)
+
+  const result = await repository.writeSnapshot({
+    userId: USER_ID,
+    ledgerId: LEDGER_ID,
+    baseRevision: 3,
+    snapshot: { ...emptySnapshot(), entries: [{ id: 'entry-1', updatedAt: 1 }] }
+  })
+
+  assert.equal(result.status, 'ok')
+  assert.equal(recorded.calls.some(call => /\bdebts\b/.test(call.text)), false)
+  assert.equal(recorded.calls.some(call => call.text.includes('DELETE FROM entries')), true)
+  assert.equal(recorded.calls.at(-1).text, 'COMMIT')
+})
+
+test('repository replaces debts inside the same transaction when sent', async () => {
+  const recorded = recordingPool({ revision: 3 })
+  const repository = createSyncRepository(recorded.pool)
+
+  await repository.writeSnapshot({
+    userId: USER_ID,
+    ledgerId: LEDGER_ID,
+    baseRevision: 3,
+    snapshot: {
+      ...emptySnapshot(),
+      debts: [{ id: 'loan-1', kind: 'loan', updatedAt: 5 }],
+      deletedDebtIds: { 'loan-2': 9 }
+    }
+  })
+
+  const texts = recorded.calls.map(call => call.text)
+  const deleteAt = texts.findIndex(text => text.includes('DELETE FROM debts'))
+  const insertAt = texts.findIndex(text => text.includes('INSERT INTO debts'))
+  const bumpAt = texts.findIndex(text => text.includes('SET revision = revision + 1'))
+  assert.ok(texts.indexOf('BEGIN') < deleteAt && deleteAt < insertAt && insertAt < bumpAt)
+  assert.equal(texts.filter(text => text.includes('SET revision = revision + 1')).length, 1)
+  assert.equal(texts.at(-1), 'COMMIT')
+
+  const rows = JSON.parse(recorded.calls[insertAt].params[2])
+  assert.deepEqual(rows.map(row => [row.id, row.client_updated_at, Boolean(row.deleted_at)]), [
+    ['loan-1', 5, false],
+    ['loan-2', 9, true]
+  ])
+})
+
+test('repository reads debts and their tombstones', async () => {
+  const recorded = recordingPool({
+    rows: text => {
+      if (text.includes('FROM ledgers')) return [{ id: LEDGER_ID, name: '我的账本', revision: '7', updated_at: new Date(0) }]
+      if (text.includes('FROM debts')) {
+        return [
+          { id: 'debt-plan', payload: { id: 'debt-plan', kind: 'plan' }, client_updated_at: '4', deleted_at: null },
+          { id: 'loan-1', payload: { id: 'loan-1', kind: 'loan' }, client_updated_at: '5', deleted_at: null },
+          { id: 'loan-2', payload: { id: 'loan-2' }, client_updated_at: '9', deleted_at: new Date(9) }
+        ]
+      }
+      return []
+    }
+  })
+  const repository = createSyncRepository(recorded.pool)
+
+  const snapshot = await repository.readSnapshot({ userId: USER_ID, ledgerId: LEDGER_ID })
+  assert.deepEqual(snapshot.debts, [{ id: 'debt-plan', kind: 'plan' }, { id: 'loan-1', kind: 'loan' }])
+  assert.deepEqual(snapshot.deletedDebtIds, { 'loan-2': 9 })
+  assert.deepEqual(snapshot.positions, [])
 })

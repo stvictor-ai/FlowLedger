@@ -8,6 +8,16 @@ export function createFeedRepository(pool) {
         WHERE ledger_id = $1 AND user_id = $2 AND deleted_at IS NULL
       `, [ledgerId, userId])
       return result.rows.map(row => row.payload)
+    },
+
+    /** Loans and the plan, tombstones excluded for the same reason. */
+    async readDebts({ userId, ledgerId }) {
+      const result = await pool.query(`
+        SELECT payload
+        FROM debts
+        WHERE ledger_id = $1 AND user_id = $2 AND deleted_at IS NULL
+      `, [ledgerId, userId])
+      return result.rows.map(row => row.payload)
     }
   }
 }

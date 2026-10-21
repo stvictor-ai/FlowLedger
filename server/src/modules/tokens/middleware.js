@@ -1,3 +1,5 @@
+import { parseScopes } from './service.js'
+
 /**
  * Bearer auth for machine callers. Deliberately separate from the browser
  * session: a trading desk or an agent has no cookie jar and no Origin, and it
@@ -18,7 +20,8 @@ export function createRequireApiToken(tokenService) {
       return response.status(401).json({ error: 'INVALID_TOKEN' })
     }
 
-    request.apiToken = grant
+    // Parsed once here so each feed route checks a list, not a string.
+    request.apiToken = { ...grant, scopes: parseScopes(grant.scope) }
     return next()
   }
 }

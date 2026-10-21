@@ -7,9 +7,13 @@
  * keeps them from drifting apart.
  */
 
+// A transfer between two of the user's own platforms is cash moving, so the
+// default view returns it, but it never enters or leaves the ledger — the
+// totals below skip it.
 const CASH_TYPES = new Map([
   ['入金', 'in'],
-  ['出金', 'out']
+  ['出金', 'out'],
+  ['互转', 'transfer']
 ])
 
 const TRADE_TYPES = new Map([
@@ -37,13 +41,43 @@ export function amountCNY(entry) {
   return currency === 'CNY' ? amount : (rate > 0 ? amount * rate : amount)
 }
 
-function round2(value) {
+export function round2(value) {
   return Math.round((value + Number.EPSILON) * 100) / 100
+}
+
+const FUND_SOURCES = new Set(['salary', 'savings', 'loan', 'other'])
+const DESTINATIONS = new Set(['card', 'repay', 'interest', 'other'])
+const LOAN_DESTINATIONS = new Set(['repay', 'interest'])
+
+function enumValue(allowed, value) {
+  return allowed.has(value) ? value : null
+}
+
+function text(value) {
+  return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+/**
+ * Where the money came from or went, read only on the type it belongs to.
+ * The client may leave a stale fundSource behind when a row is retyped; a
+ * desk should not see a 出金 claiming to be paid from salary.
+ */
+function fundingOf(entry) {
+  const fundSource = entry.type === '入金' ? enumValue(FUND_SOURCES, entry.fundSource) : null
+  const destination = entry.type === '出金' ? enumValue(DESTINATIONS, entry.destination) : null
+  const tiedToLoan = fundSource === 'loan' || LOAN_DESTINATIONS.has(destination)
+  return {
+    fundSource,
+    destination,
+    loanId: tiedToLoan ? text(entry.loanId) : null,
+    toPlatform: entry.type === '互转' ? text(entry.toExchange) : null
+  }
 }
 
 /** Machine-readable first, with the original Chinese kept alongside. */
 export function toCashflow(entry) {
   const direction = CASH_TYPES.get(entry.type) || TRADE_TYPES.get(entry.type) || 'other'
+  const { fundSource, destination, loanId, toPlatform } = fundingOf(entry)
   return {
     id: String(entry.id || ''),
     date: String(entry.date || '').slice(0, 10),
@@ -53,10 +87,15 @@ export function toCashflow(entry) {
     amount: round2(number(entry.amount)),
     currency: String(entry.currency || 'CNY').toUpperCase(),
     amountCNY: round2(amountCNY(entry)),
+    // For a transfer this is the platform the money left.
     platform: String(entry.exchange || entry.platform || '') || null,
+    toPlatform,
     assetType: String(entry.assetType || '') || null,
     note: String(entry.note || '') || null,
-    tags: Array.isArray(entry.tags) ? entry.tags.map(String) : []
+    tags: Array.isArray(entry.tags) ? entry.tags.map(String) : [],
+    fundSource,
+    destination,
+    loanId
   }
 }
 
@@ -71,20 +110,24 @@ export function isTradeType(entry) {
 /**
  * Totals over the rows actually returned, so a filtered request reports the
  * filtered window rather than the whole ledger. `net` is what is still in:
- * paid in minus taken out.
+ * paid in minus taken out. Transfers only move money between the user's own
+ * platforms, so they are counted but never summed.
  */
 export function summarise(rows) {
   let totalIn = 0
   let totalOut = 0
+  let transferCount = 0
   for (const row of rows) {
     if (row.direction === 'in') totalIn += row.amountCNY
     else if (row.direction === 'out') totalOut += row.amountCNY
+    else if (row.direction === 'transfer') transferCount += 1
   }
   return {
     count: rows.length,
     totalIn: round2(totalIn),
     totalOut: round2(totalOut),
-    net: round2(totalIn - totalOut)
+    net: round2(totalIn - totalOut),
+    transferCount
   }
 }
 
