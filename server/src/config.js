@@ -28,6 +28,14 @@ export function loadConfig(env = process.env) {
     throw new Error('IDENTITY_PROVIDER must be session or orbit')
   }
 
+  // Shared with the reverse proxy that authenticates Orbit users. With it set,
+  // identity headers count only on requests that also carry the secret, so a
+  // route that skips the proxy's login check cannot be used to pose as anyone.
+  const orbitProxySecret = String(env.ORBIT_PROXY_SECRET || '').trim()
+  if (orbitProxySecret && orbitProxySecret.length < 32) {
+    throw new Error('ORBIT_PROXY_SECRET must contain at least 32 characters')
+  }
+
   return Object.freeze({
     nodeEnv,
     port,
@@ -36,6 +44,7 @@ export function loadConfig(env = process.env) {
     appOrigin: String(env.APP_ORIGIN || `http://127.0.0.1:${port}`).trim(),
     accountOrigin: String(env.ACCOUNT_ORIGIN || 'https://orbitshz.com').trim(),
     identityProvider,
+    orbitProxySecret,
     isProduction: nodeEnv === 'production'
   })
 }

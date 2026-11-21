@@ -35,6 +35,30 @@ SESSION_SECRET=openssl生成的至少32字符随机值
 
 若域名接入个人站 Orbit 统一账号，将 `IDENTITY_PROVIDER` 改为 `orbit`，并在宿主机 Caddy 为投记站点配置 `forward_auth`，复制 `X-Orbit-User-Id`、`X-Orbit-User-Role`、`X-Orbit-User-Email` 三个响应头。此模式下投记自带注册/登录接口关闭，账号管理统一由个人站负责。
 
+此模式下 API 靠这三个头认人，所以还要让它能分清「头是 Caddy 在登录校验之后写的」和「头是别人自己带来的」。做法是 Caddy 与 API 共用一个密钥：
+
+```bash
+openssl rand -hex 32    # 生成密钥
+```
+
+```caddy
+handle {
+    forward_auth 127.0.0.1:3001 { ... }
+
+    @api path /api/*
+    reverse_proxy @api 127.0.0.1:8787 {
+        # 只写在登录校验之后的这一个 reverse_proxy 里
+        header_up X-Orbit-Proxy-Secret "上面生成的密钥"
+    }
+}
+```
+
+`.env` 里写同一个值：`ORBIT_PROXY_SECRET=上面生成的密钥`。**顺序不能反**：先改 Caddy 并 reload（API 会忽略不认识的头），再改 `.env` 并重建 API。先改 `.env` 的话，在 Caddy 生效之前所有人都会被当成未登录。
+
+设置之后，不带密钥的请求一律不认身份头——不走 `forward_auth` 的路径（例如给 feed 开的豁免）即使忘了剥掉 `X-Orbit-User-*`，也冒充不了任何人。没设置时 API 仍能工作，但启动日志会有一行警告。
+
+在投记管理页停用的账号不会因为再次通过 Orbit 登录而恢复，名下的只读令牌同时失效；要恢复只能在管理页重新启用。
+
 `.env` 已被 Git 忽略，不要提交，也不要截图分享。数据库密码如果包含 URL 特殊字符，需要在 `DATABASE_URL` 中进行百分号编码；最省事的做法是使用十六进制随机字符串。
 
 ## 3. 启动与检查

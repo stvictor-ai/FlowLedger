@@ -14,6 +14,9 @@ import { createTokenRepository } from './modules/tokens/repository.js'
 import { createTokenService } from './modules/tokens/service.js'
 
 const config = loadConfig()
+if (config.identityProvider === 'orbit' && !config.orbitProxySecret) {
+  console.warn('ORBIT_PROXY_SECRET is not set: X-Orbit-User-* headers are trusted from anything that can reach this port. Set it here and in the proxy (see docs/deployment/aws.md).')
+}
 const pool = createPool(config)
 await runMigrations({ pool })
 const authRepository = createAuthRepository(pool)

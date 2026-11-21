@@ -5,6 +5,11 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict'
 
+  // 账本格式的版本号。写服务器时放在 X-Touji-Schema 里：流水每加一个字段就加一，
+  // 并在 server/src/modules/sync/service.js 的 ENTRY_FIELDS_SINCE 里登记。
+  // 服务器靠它认出还在跑旧代码的页面，不让它把自己不认识的字段抹掉。
+  const SCHEMA_VERSION = 3
+
   class ServerSyncError extends Error {
     constructor(code, status, details) {
       super(code)
@@ -36,8 +41,8 @@
     async function request(path, init) {
       const response = await fetchImpl(`${baseUrl}${path}`, {
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...(init && init.headers) },
-        ...init
+        ...init,
+        headers: { 'Content-Type': 'application/json', ...(init && init.headers) }
       })
       const body = await responseBody(response)
       if (!response.ok) {
@@ -87,6 +92,7 @@
       writeSnapshot(ledgerId, payload) {
         return request(`/api/v1/ledgers/${encodeURIComponent(ledgerId)}/sync`, {
           method: 'PUT',
+          headers: { 'X-Touji-Schema': String(SCHEMA_VERSION) },
           body: JSON.stringify(payload)
         })
       },
@@ -117,6 +123,19 @@
         })
       }
     }
+  }
+
+  // 同一条记录的本机副本和远端副本取哪个：updatedAt 新的那个。
+  // 时间相同说明两边出自同一次保存，内容却不一样，只可能是其中一边被不认识新字段的
+  // 旧页面读过又存回 —— 这时以本机为准，本机没有的字段从远端补回来，而不是整条丢掉。
+  function mergeRecord(local, remote) {
+    if (!local) return remote
+    if (!remote) return local
+    const localAt = Number(local.updatedAt) || 0
+    const remoteAt = Number(remote.updatedAt) || 0
+    if (remoteAt > localAt) return remote
+    if (remoteAt < localAt) return local
+    return { ...remote, ...local }
   }
 
   function amountCNY(entry) {
@@ -235,5 +254,5 @@
     return { schedule, flush, dispose, isRunning: () => running, isQueued: () => queued }
   }
 
-  return { ServerSyncError, createClient, summarizeSnapshot, hasSnapshotData, createAutoSyncCoordinator }
+  return { SCHEMA_VERSION, ServerSyncError, createClient, mergeRecord, summarizeSnapshot, hasSnapshotData, createAutoSyncCoordinator }
 })

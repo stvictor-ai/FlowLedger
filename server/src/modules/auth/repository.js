@@ -15,7 +15,7 @@ export function createAuthRepository(pool) {
       try {
         await client.query('BEGIN')
         let result = await client.query(`
-          SELECT id
+          SELECT id, status
           FROM users
           WHERE orbit_user_id = $1
           FOR UPDATE
@@ -23,11 +23,18 @@ export function createAuthRepository(pool) {
 
         if (!result.rows[0] && email) {
           result = await client.query(`
-            SELECT id
+            SELECT id, status
             FROM users
             WHERE email = $1 AND orbit_user_id IS NULL
             FOR UPDATE
           `, [email])
+        }
+
+        // Disabling an account here has to survive the next request: signing
+        // in through Orbit must not switch it back on.
+        if (result.rows[0] && result.rows[0].status !== 'active') {
+          await client.query('ROLLBACK')
+          return null
         }
 
         let userId = result.rows[0]?.id
@@ -37,9 +44,9 @@ export function createAuthRepository(pool) {
             SET orbit_user_id = $2,
                 email = $3,
                 role = $4,
-                status = 'active',
                 updated_at = now()
             WHERE id = $1
+              AND (orbit_user_id IS DISTINCT FROM $2 OR email IS DISTINCT FROM $3 OR role IS DISTINCT FROM $4)
           `, [userId, orbitUserId, normalizedEmail, role])
         } else {
           const inserted = await client.query(`

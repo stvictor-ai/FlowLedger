@@ -43,3 +43,12 @@ test('invalid ports and short session secrets are rejected', () => {
   )
   assert.throws(() => loadConfig({ IDENTITY_PROVIDER: 'unknown' }), /IDENTITY_PROVIDER/)
 })
+
+test('the Orbit proxy secret is optional but must be long when given', () => {
+  assert.equal(loadConfig({}).orbitProxySecret, '')
+  assert.equal(
+    loadConfig({ ORBIT_PROXY_SECRET: ' proxy-secret-with-at-least-32-characters ' }).orbitProxySecret,
+    'proxy-secret-with-at-least-32-characters'
+  )
+  assert.throws(() => loadConfig({ ORBIT_PROXY_SECRET: 'short' }), /ORBIT_PROXY_SECRET/)
+})

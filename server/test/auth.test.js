@@ -3,9 +3,10 @@ import { once } from 'node:events'
 import { test } from 'node:test'
 import { createApp } from '../src/app.js'
 import { verifyPassword } from '../src/modules/auth/password.js'
-import { AuthRepositoryError } from '../src/modules/auth/repository.js'
+import { AuthRepositoryError, createAuthRepository } from '../src/modules/auth/repository.js'
 import { AuthError, createAuthService } from '../src/modules/auth/service.js'
 import { hashSecret } from '../src/modules/auth/tokens.js'
+import { createTokenRepository } from '../src/modules/tokens/repository.js'
 
 const NOW = new Date('2026-08-05T08:00:00.000Z')
 
@@ -282,4 +283,82 @@ test('successful login sets an HttpOnly production cookie', async t => {
   assert.match(cookie, /Secure/i)
   assert.match(cookie, /SameSite=Lax/i)
   assert.equal(response.headers.get('x-frame-options'), 'DENY')
+})
+
+function orbitApp(t, orbitProxySecret) {
+  const authService = {
+    register: async () => {}, login: async () => {}, logout: async () => {},
+    getSession: async () => null,
+    getOrbitSession: async identity => identity.orbitUserId
+      ? { id: 'user-42', orbitUserId: identity.orbitUserId, email: identity.email, role: identity.role, ledger: null }
+      : null
+  }
+  return startApp({
+    authService,
+    config: {
+      appOrigin: 'https://ledger.orbitshz.com',
+      accountOrigin: 'https://orbitshz.com',
+      identityProvider: 'orbit',
+      orbitProxySecret,
+      isProduction: true
+    }
+  })
+}
+
+test('with a proxy secret set, identity headers count only alongside it', async t => {
+  const secret = 'proxy-secret-with-at-least-32-characters'
+  const running = await orbitApp(t, secret)
+  t.after(running.close)
+  const identity = { 'X-Orbit-User-Id': '42', 'X-Orbit-User-Role': 'owner' }
+  const me = headers => fetch(`${running.baseUrl}/api/v1/auth/me`, { headers })
+
+  assert.equal((await me(identity)).status, 401)
+  assert.equal((await me({ ...identity, 'X-Orbit-Proxy-Secret': 'a-guess' })).status, 401)
+  assert.equal((await me({ ...identity, 'X-Orbit-Proxy-Secret': secret })).status, 200)
+  // the secret alone names nobody
+  assert.equal((await me({ 'X-Orbit-Proxy-Secret': secret })).status, 401)
+})
+
+function orbitUserPool(existing) {
+  const calls = []
+  const client = {
+    async query(sql, params) {
+      const text = String(sql).replace(/\s+/g, ' ').trim()
+      calls.push(text)
+      if (text.startsWith('SELECT id, status FROM users WHERE orbit_user_id')) return { rows: existing ? [existing] : [] }
+      if (text.startsWith('INSERT INTO users')) return { rows: [{ id: 'new-user' }] }
+      if (text.startsWith('SELECT u.id')) return { rows: [{ id: params[0], status: 'active', orbit_user_id: '42' }] }
+      return { rows: [] }
+    },
+    release() {}
+  }
+  return { calls, pool: { connect: async () => client } }
+}
+
+test('a disabled account stays disabled when its owner signs in through Orbit', async () => {
+  const { calls, pool } = orbitUserPool({ id: 'user-1', status: 'disabled' })
+  const repository = createAuthRepository(pool)
+  const service = createAuthService({ repository })
+
+  assert.equal(await service.getOrbitSession({ orbitUserId: '42', email: null, role: 'user' }), null)
+  assert.equal(calls.at(-1), 'ROLLBACK')
+  assert.equal(calls.some(sql => /^(UPDATE|INSERT)/.test(sql)), false)
+})
+
+test('an active Orbit account is refreshed without touching its status', async () => {
+  const { calls, pool } = orbitUserPool({ id: 'user-1', status: 'active' })
+  const user = await createAuthRepository(pool).findOrCreateOrbitUser({ orbitUserId: '42', email: 'a@example.com', role: 'user' })
+
+  assert.equal(user.id, 'user-1')
+  const update = calls.find(sql => sql.startsWith('UPDATE users'))
+  assert.ok(update)
+  assert.equal(/status\s*=/.test(update), false)
+  assert.equal(calls.at(-1), 'COMMIT')
+})
+
+test('an API token stops working once its owner is disabled', async () => {
+  let sql = ''
+  const repository = createTokenRepository({ query: async text => { sql = String(text); return { rows: [] } } })
+  assert.equal(await repository.findActiveByHash('hash'), null)
+  assert.match(sql, /JOIN users u ON u\.id = t\.user_id AND u\.status = 'active'/)
 })

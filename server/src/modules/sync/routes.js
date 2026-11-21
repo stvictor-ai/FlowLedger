@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { z } from 'zod'
-import { SyncError, syncDebtLimit } from './service.js'
+import { SyncError, clientSchemaOf, syncDebtLimit } from './service.js'
 
 const idSchema = z.string().min(1).max(120)
 const itemSchema = z.object({ id: idSchema }).loose()
@@ -55,7 +55,8 @@ export function createSyncRouter({ syncService }) {
         userId: request.auth.id,
         ledgerId: ledgerId.data,
         baseRevision,
-        snapshot
+        snapshot,
+        clientSchema: clientSchemaOf(request.get('x-touji-schema'), snapshot)
       })
       return response.json(result)
     } catch (error) {

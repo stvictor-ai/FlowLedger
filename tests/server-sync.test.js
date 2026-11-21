@@ -5,6 +5,8 @@ const {
   createAutoSyncCoordinator,
   createClient,
   hasSnapshotData,
+  mergeRecord,
+  SCHEMA_VERSION,
   summarizeSnapshot
 } = require('../js/server-sync.js')
 
@@ -138,4 +140,38 @@ test('auto sync coordinator retries a failed flush', async () => {
   await first
   assert.equal(runs, 1)
   assert.equal(timers.some(timer => timer.delay === 30), true)
+})
+
+test('writing the ledger states the client schema, and stays JSON', async () => {
+  const calls = []
+  const client = createClient({
+    fetchImpl: async (url, options) => {
+      calls.push(options)
+      return jsonResponse(200, { status: 'ok', revision: 3 })
+    }
+  })
+
+  await client.writeSnapshot('ledger-1', { baseRevision: 2, entries: [] })
+  await client.readSnapshot('ledger-1')
+
+  assert.equal(calls[0].method, 'PUT')
+  assert.equal(calls[0].headers['X-Touji-Schema'], String(SCHEMA_VERSION))
+  assert.equal(calls[0].headers['Content-Type'], 'application/json')
+  assert.equal(calls[0].credentials, 'include')
+  assert.equal(calls[1].headers['X-Touji-Schema'], undefined)
+})
+
+test('the newer copy of a record wins; at the same moment missing fields are filled in', () => {
+  const full = { id: 'e1', amount: 500, channel: 'alipay', counterparty: '海上生明月', updatedAt: 10 }
+  // what an old page left in local storage: same save, fields it never knew stripped
+  const stripped = { id: 'e1', amount: 500, updatedAt: 10 }
+
+  assert.deepEqual(mergeRecord(stripped, full), full)
+  assert.deepEqual(mergeRecord(full, stripped), full)
+  // a real edit carries a newer timestamp and is taken as it is, cleared fields included
+  const edited = { id: 'e1', amount: 600, updatedAt: 11 }
+  assert.equal(mergeRecord(edited, full), edited)
+  assert.equal(mergeRecord(full, edited), edited)
+  assert.equal(mergeRecord(null, full), full)
+  assert.equal(mergeRecord(full, undefined), full)
 })

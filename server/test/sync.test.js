@@ -3,7 +3,7 @@ import { once } from 'node:events'
 import { test } from 'node:test'
 import { createApp } from '../src/app.js'
 import { createSyncRepository } from '../src/modules/sync/repository.js'
-import { createSyncService, SyncError } from '../src/modules/sync/service.js'
+import { createSyncService, protectFromOutdatedClient, SYNC_SCHEMA, SyncError } from '../src/modules/sync/service.js'
 
 const USER_ID = 'user-1'
 const LEDGER_ID = '11111111-1111-4111-8111-111111111111'
@@ -32,10 +32,14 @@ function memorySyncRepository() {
           ...structuredClone(state.snapshot)
         }
       },
-      async writeSnapshot({ userId, ledgerId, baseRevision, snapshot }) {
+      async writeSnapshot({ userId, ledgerId, baseRevision, snapshot, reconcile = null }) {
         if (userId !== USER_ID || ledgerId !== LEDGER_ID) return { status: 'not_found' }
         if (baseRevision !== state.revision) return { status: 'conflict', revision: state.revision }
-        const next = structuredClone(snapshot)
+        // Mirrors the Postgres repository: the stored rows are handed over
+        // inside the write, after the revision check.
+        const next = structuredClone(reconcile
+          ? reconcile({ entries: structuredClone(state.snapshot.entries) })
+          : snapshot)
         // Mirrors the Postgres repository: no debts key leaves debts alone.
         if (!Array.isArray(next.debts)) {
           next.debts = state.snapshot.debts
@@ -76,7 +80,7 @@ function syncClient(baseUrl) {
   const headers = { 'Content-Type': 'application/json', Cookie: 'touji_session=valid-session' }
   return {
     read: async () => (await fetch(url, { headers })).json(),
-    write: body => fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) })
+    write: (body, extra = {}) => fetch(url, { method: 'PUT', headers: { ...headers, ...extra }, body: JSON.stringify(body) })
   }
 }
 
@@ -363,4 +367,115 @@ test('repository reads debts and their tombstones', async () => {
   assert.deepEqual(snapshot.debts, [{ id: 'debt-plan', kind: 'plan' }, { id: 'loan-1', kind: 'loan' }])
   assert.deepEqual(snapshot.deletedDebtIds, { 'loan-2': 9 })
   assert.deepEqual(snapshot.positions, [])
+})
+
+// A ledger as the current client wrote it, then the same ledger as two older
+// generations of the client would send it back.
+function currentLedger() {
+  return [
+    { id: 'in-1', type: '入金', date: '2026-09-10', amount: 116.78, currency: 'USDT', fundSource: 'salary', channel: 'alipay', counterparty: '海上生明月', updatedAt: 100 },
+    { id: 'out-1', type: '出金', date: '2026-09-12', amount: 690, currency: 'CNY', destination: 'repay', loanId: 'loan-1', channel: 'bank', updatedAt: 100 },
+    { id: 'move-1', type: '互转', date: '2026-09-13', amount: 200, currency: 'CNY', toExchange: '平台乙', updatedAt: 100 }
+  ]
+}
+const CURRENT = { 'X-Touji-Schema': String(SYNC_SCHEMA) }
+
+test('a page from before the new fields cannot strip them from the ledger', async t => {
+  const memory = memorySyncRepository()
+  const syncService = createSyncService({ repository: memory.repository })
+  const running = await startApp({ authService, syncService })
+  t.after(running.close)
+  const client = syncClient(running.baseUrl)
+
+  const seeded = await client.write({ baseRevision: 0, ...emptySnapshot(), entries: currentLedger(), debts: [], deletedDebtIds: {} }, CURRENT)
+  assert.equal((await seeded.json()).clientOutdated, undefined)
+
+  // The oldest generation: no header, no debts, never heard of 互转 (so that
+  // record is gone from its list) nor of any field added since.
+  const old = await client.write({
+    baseRevision: 1,
+    ...emptySnapshot(),
+    entries: [
+      { id: 'in-1', type: '入金', date: '2026-09-10', amount: 116.78, currency: 'USDT', updatedAt: 100 },
+      // edited on the old page: a new note and a newer timestamp
+      { id: 'out-1', type: '出金', date: '2026-09-12', amount: 690, currency: 'CNY', note: '还款', updatedAt: 200 },
+      { id: 'new-1', type: '入金', date: '2026-09-14', amount: 300, currency: 'CNY', updatedAt: 210 }
+    ]
+  })
+  assert.equal(old.status, 200)
+  assert.equal((await old.json()).clientOutdated, true)
+
+  const byId = Object.fromEntries((await client.read()).entries.map(e => [e.id, e]))
+  assert.deepEqual(byId['in-1'], currentLedger()[0])
+  assert.deepEqual(byId['out-1'], { ...currentLedger()[1], note: '还款', updatedAt: 200 })
+  assert.deepEqual(byId['move-1'], currentLedger()[2])
+  assert.equal(byId['new-1'].amount, 300)
+})
+
+test('the release before this one keeps what it knows and only the newest fields are carried', () => {
+  const stored = currentLedger()
+  const sent = {
+    ...emptySnapshot(),
+    entries: [
+      // it cleared the fund source on purpose; it has never seen a channel
+      { id: 'in-1', type: '入金', date: '2026-09-10', amount: 116.78, currency: 'USDT', updatedAt: 300 },
+      { id: 'move-1', type: '互转', date: '2026-09-13', amount: 200, currency: 'CNY', toExchange: '平台乙', updatedAt: 100 }
+    ],
+    deletedIds: { 'out-1': 310 }
+  }
+  const result = protectFromOutdatedClient(sent, stored, 2)
+  const kept = result.entries.find(e => e.id === 'in-1')
+  assert.equal('fundSource' in kept, false)
+  assert.equal(kept.channel, 'alipay')
+  assert.equal(kept.counterparty, '海上生明月')
+  // a deletion made on the old page is still a deletion
+  assert.deepEqual(result.entries.map(e => e.id), ['in-1', 'move-1'])
+})
+
+test('a current client replaces the ledger exactly as sent', async t => {
+  const memory = memorySyncRepository()
+  const syncService = createSyncService({ repository: memory.repository })
+  const running = await startApp({ authService, syncService })
+  t.after(running.close)
+  const client = syncClient(running.baseUrl)
+
+  await client.write({ baseRevision: 0, ...emptySnapshot(), entries: currentLedger() }, CURRENT)
+  const cleared = { id: 'in-1', type: '入金', date: '2026-09-10', amount: 116.78, currency: 'USDT', updatedAt: 100 }
+  const second = await client.write({ baseRevision: 1, ...emptySnapshot(), entries: [cleared] }, CURRENT)
+  assert.equal(second.status, 200)
+  assert.deepEqual((await client.read()).entries, [cleared])
+})
+
+test('repository reads the stored entries inside the write only when asked to reconcile', async () => {
+  const calls = []
+  const client = {
+    async query(sql, params) {
+      const text = String(sql)
+      calls.push({ text, params })
+      if (text.includes('SELECT revision')) return { rows: [{ revision: '0' }] }
+      if (text.includes('SELECT payload')) return { rows: [{ payload: { id: 'kept', updatedAt: 5 } }] }
+      if (text.includes('UPDATE ledgers')) return { rows: [{ revision: '1', updated_at: new Date() }] }
+      return { rows: [] }
+    },
+    release() {}
+  }
+  const repository = createSyncRepository({ connect: async () => client })
+
+  await repository.writeSnapshot({ userId: USER_ID, ledgerId: LEDGER_ID, baseRevision: 0, snapshot: emptySnapshot() })
+  assert.equal(calls.some(call => call.text.includes('SELECT payload')), false)
+
+  calls.length = 0
+  await repository.writeSnapshot({
+    userId: USER_ID,
+    ledgerId: LEDGER_ID,
+    baseRevision: 0,
+    snapshot: emptySnapshot(),
+    reconcile: stored => ({ ...emptySnapshot(), entries: stored.entries })
+  })
+  const order = calls.map(call => call.text)
+  const read = order.findIndex(text => text.includes('SELECT payload'))
+  const wipe = order.findIndex(text => text.includes('DELETE FROM entries'))
+  assert.ok(read > order.findIndex(text => text.includes('SELECT revision')) && read < wipe)
+  const inserted = calls.find(call => call.text.includes('INSERT INTO entries'))
+  assert.deepEqual(JSON.parse(inserted.params[2]).map(row => row.id), ['kept'])
 })

@@ -46,6 +46,7 @@ services:
       APP_ORIGIN: ${APP_ORIGIN:?set APP_ORIGIN in .env}
       ACCOUNT_ORIGIN: ${ACCOUNT_ORIGIN:-https://orbitshz.com}
       IDENTITY_PROVIDER: ${IDENTITY_PROVIDER:-session}
+      ORBIT_PROXY_SECRET: ${ORBIT_PROXY_SECRET:-}
       DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL in .env}
       SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
     depends_on:

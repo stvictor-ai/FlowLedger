@@ -6,6 +6,7 @@ export function createTokenRepository(pool) {
                l.name AS ledger_name, l.revision, l.updated_at
         FROM api_tokens t
         JOIN ledgers l ON l.id = t.ledger_id AND l.user_id = t.user_id
+        JOIN users u ON u.id = t.user_id AND u.status = 'active'
         WHERE t.token_hash = $1 AND t.revoked_at IS NULL
       `, [tokenHash])
       const row = result.rows[0]

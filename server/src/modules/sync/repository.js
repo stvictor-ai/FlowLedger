@@ -92,7 +92,8 @@ export function createSyncRepository(pool) {
       }
     },
 
-    async writeSnapshot({ userId, ledgerId, baseRevision, snapshot }) {
+    async writeSnapshot({ userId, ledgerId, baseRevision, snapshot: incoming, reconcile = null }) {
+      let snapshot = incoming
       const client = await pool.connect()
       try {
         await client.query('BEGIN')
@@ -111,6 +112,15 @@ export function createSyncRepository(pool) {
         if (currentRevision !== baseRevision) {
           await client.query('ROLLBACK')
           return { status: 'conflict', revision: currentRevision }
+        }
+
+        if (reconcile) {
+          const stored = await client.query(`
+            SELECT payload
+            FROM entries
+            WHERE ledger_id = $1 AND user_id = $2 AND deleted_at IS NULL
+          `, [ledgerId, userId])
+          snapshot = reconcile({ entries: stored.rows.map(row => row.payload) })
         }
 
         await client.query('DELETE FROM entries WHERE ledger_id = $1 AND user_id = $2', [ledgerId, userId])

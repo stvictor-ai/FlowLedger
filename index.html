@@ -287,6 +287,10 @@ tr.row-unmatched td{opacity:.35}
 .toast.error{background:rgba(248,113,113,.92);color:#450a0a}
 .toast.info{background:rgba(45,181,160,.92);color:white}
 
+.update-bar{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:290;display:flex;align-items:center;gap:12px;padding:8px 8px 8px 18px;border-radius:999px;background:var(--text);color:var(--bg);font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 8px 24px var(--shadow)}
+.update-bar button{border:0;border-radius:999px;padding:6px 14px;font:inherit;background:var(--bg);color:var(--text);cursor:pointer}
+@media(max-width:760px){.update-bar{bottom:calc(88px + env(safe-area-inset-bottom,0px))}}
+
 /* ===== MODAL (mobile add/edit) ===== */
 .modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:flex;align-items:flex-end;justify-content:center}
 .modal-box{
@@ -4401,6 +4405,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
   </div>
   <!-- Toast -->
   <div v-if="toast.show" :class="['toast',toast.type]">{{ toast.message }}</div>
+  <div v-if="updateReady" class="update-bar" role="status">投记有新版本<button type="button" @click="reloadForUpdate">刷新</button></div>
 
   <aside class="terminal-rail section-records section-stats section-data">
     <div class="terminal-brand">
@@ -7271,7 +7276,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.11.21-1'
+  const APP_VERSION='v2026.11.21-2'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -7576,6 +7581,23 @@ setup(){
   const orbitAuthRequired=location.hostname==='ledger.orbitshz.com'
   const serverAccount=reactive({loading:true,busy:false,user:null,mode:'login',email:'',password:'',inviteCode:'',error:''})
   const accountReady=ref(false)
+  // 页面一直开着（或 PWA 从后台恢复）就会一直跑旧代码。回到前台时看一眼线上的 sw.js，
+  // 版本号对不上就提示刷新；服务器发现这个页面比它旧时也会直接告诉我们。
+  const SW_CACHE_NAME='touji-'+APP_VERSION.replace(/\./g,'-')
+  const updateReady=ref(false)
+  let updateCheckedAt=Date.now()
+  async function checkForUpdate(){
+    if(updateReady.value||Date.now()-updateCheckedAt<10*60*1000)return
+    updateCheckedAt=Date.now()
+    try{
+      const response=await fetch('./sw.js',{cache:'no-store'})
+      if(!response.ok)return
+      const found=/CACHE_NAME\s*=\s*'([^']+)'/.exec(await response.text())
+      if(found&&found[1]!==SW_CACHE_NAME)updateReady.value=true
+    }catch(error){/* 离线：下次回到前台再看 */}
+  }
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkForUpdate()})
+  function reloadForUpdate(){location.reload()}
   const sessionGuardMessage=ref('正在通过个人站确认你的登录状态，账本数据暂时不会显示。')
   const orbitLoginUrl=`https://orbitshz.com/login?next=${encodeURIComponent(location.href)}`
   let boundAccountId=''
@@ -9661,11 +9683,7 @@ setup(){
   function mergeEntriesByTimestamp(local,remote,del){
     const map=new Map()
     normalizedEntryMap(local).forEach((e,id)=>map.set(id,e))
-    normalizedEntryMap(remote).forEach((e,id)=>{
-      const ex=map.get(id)
-      if(!ex)map.set(id,e)
-      else if((e.updatedAt||0)>(ex.updatedAt||0))map.set(id,e)
-    })
+    normalizedEntryMap(remote).forEach((e,id)=>map.set(id,window.ToujiServerSync.mergeRecord(map.get(id),e)))
     return [...map.values()].filter(e=>{
       const d=del[e.id]
       return !(d&&d>=(e.updatedAt||0))
@@ -10072,6 +10090,7 @@ setup(){
       baseRevision:Number(remote.ledger.revision)||0,
       ...snapshot
     })
+    if(result?.clientOutdated)updateReady.value=true
     if(serverAccount.user?.ledger)serverAccount.user.ledger.revision=result.revision
     await fetchServerRemote()
     return result
@@ -11037,7 +11056,7 @@ setup(){
   })
 
   return{c2c,openC2C,closeC2C,c2cParse,c2cRelabel,c2cSelected,c2cSummary,c2cPickImages,c2cApply,PAY_CHANNELS,isFxCash,onFxInput,canOfferFx,switchToFx,fxOf,channelLabel,editFxRate,editFxOn,editFxOff,typeTone,typeTagClass,typeColor,debts,loanList,debtViews,openLoans,loanOptions,debtSummary,debtSchedule,debtPayday,debtFunding,depositRisk,needsIntent,quickSaveBlocker,FUND_SOURCES,DESTINATIONS,REPAY_TYPES,DEPOSIT_INTENTS,loanName,fundSourceLabel,destinationLabel,debtLoanForm,debtRepayForm,debtPlanForm,expandedLoanId,openLoanForm,saveLoan,deleteLoan,openRepayForm,saveRepayment,removeRepayment,toggleDebtEvent,toggleDebtPlanForm,saveDebtPlanSettings,
-    APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
+    APP_VERSION,updateReady,reloadForUpdate,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,fmtQtyNum,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,capitalChart,capitalCurve,capitalCurveView,capitalRange,setCapitalRange,CAPITAL_RANGES,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,

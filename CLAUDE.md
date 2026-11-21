@@ -135,6 +135,9 @@ touji/
 }]
 // 换汇出入金：amount 是外币数量；入金 source=CNY/target=外币，出金 source=外币/target=CNY。
 // 统一用 ToujiEntry.fxParts(e) 读、fxFields(type, parts) 写，不要直接假设 source 是人民币。
+// 给流水加字段时三处一起改：normRow、syncEntryFingerprint，以及账本格式版本 ——
+// js/server-sync.js 的 SCHEMA_VERSION 加一，并在 server/src/modules/sync/service.js 的
+// SYNC_SCHEMA / ENTRY_FIELDS_SINCE 里登记新字段。服务器靠它保护字段不被没刷新的旧页面抹掉。
 
 // 负债 key: touji_debts_v1（贷款 kind:'loan' + 还债计划 kind:'plan'，见 README「数据模型」）
 // 负债删除墓碑 key: touji_debt_deleted_v1

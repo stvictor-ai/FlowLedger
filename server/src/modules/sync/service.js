@@ -2,6 +2,62 @@ const MAX_ITEMS_PER_COLLECTION = 10000
 // A household has a handful of loans; this only bounds a runaway client.
 const MAX_DEBTS = 2000
 
+// What the client's ledger format knows about. A page left open (or a PWA
+// resumed from memory) keeps running old code long after a release: it drops
+// every field it has never heard of when it reads the ledger, then writes the
+// whole thing back. Clients state their version in X-Touji-Schema; the two
+// generations that predate the header are told apart by whether they send
+// debts. Bump this, and list the new fields below, whenever entries gain one.
+export const SYNC_SCHEMA = 3
+const ENTRY_FIELDS_SINCE = {
+  2: ['fundSource', 'destination', 'loanId', 'toExchange'],
+  3: ['channel', 'counterparty']
+}
+
+export function clientSchemaOf(declared, snapshot) {
+  const version = Number(declared)
+  if (Number.isInteger(version) && version >= 1 && version <= 100000) return version
+  return Array.isArray(snapshot?.debts) ? 2 : 1
+}
+
+function stamp(item) {
+  return Number(item?.updatedAt) || 0
+}
+
+/**
+ * Rewrites what an outdated client sent so it cannot destroy what it cannot
+ * see. Three things such a client gets wrong, and what is done about each:
+ *  - a record it did not edit comes back stripped (same timestamp): the stored
+ *    copy is kept whole;
+ *  - a record it did edit lacks the newer fields: those are carried over;
+ *  - a record of a type it does not know was dropped on read, so it is simply
+ *    missing: kept, unless the client sent a tombstone for it.
+ * A current client is never routed through here — its snapshot replaces the
+ * ledger as sent.
+ */
+export function protectFromOutdatedClient(snapshot, storedEntries, clientSchema) {
+  const newer = Object.entries(ENTRY_FIELDS_SINCE)
+    .filter(([version]) => Number(version) > clientSchema)
+    .flatMap(([, fields]) => fields)
+  const stored = new Map(storedEntries.map(item => [item.id, item]))
+  const sent = new Set()
+  const entries = snapshot.entries.map(item => {
+    sent.add(item.id)
+    const kept = stored.get(item.id)
+    if (!kept) return item
+    if (stamp(item) <= stamp(kept)) return kept
+    const carried = {}
+    for (const field of newer) {
+      if (!(field in item) && field in kept) carried[field] = kept[field]
+    }
+    return { ...item, ...carried }
+  })
+  for (const kept of storedEntries) {
+    if (!sent.has(kept.id) && !(kept.id in snapshot.deletedIds)) entries.push(kept)
+  }
+  return { ...snapshot, entries }
+}
+
 export class SyncError extends Error {
   constructor(code, status, details = null) {
     super(code)
@@ -44,7 +100,7 @@ export function createSyncService({ repository }) {
       return snapshot
     },
 
-    async writeSnapshot({ userId, ledgerId, baseRevision, snapshot: input }) {
+    async writeSnapshot({ userId, ledgerId, baseRevision, snapshot: input, clientSchema = SYNC_SCHEMA }) {
       const snapshot = normaliseDebts(input)
       if (snapshot.entries.length + Object.keys(snapshot.deletedIds).length > MAX_ITEMS_PER_COLLECTION) {
         throw new SyncError('TOO_MANY_ENTRIES', 413)
@@ -59,17 +115,24 @@ export function createSyncService({ repository }) {
       assertUniqueState(snapshot.positions, snapshot.deletedPositionIds, 'positions')
       if (snapshot.debts) assertUniqueState(snapshot.debts, snapshot.deletedDebtIds, 'debts')
 
+      const outdated = clientSchema < SYNC_SCHEMA
       const result = await repository.writeSnapshot({
         userId,
         ledgerId,
         baseRevision,
-        snapshot
+        snapshot,
+        // Runs inside the write transaction, against the rows about to be
+        // replaced, so nothing can slip in between the read and the write.
+        reconcile: outdated
+          ? stored => protectFromOutdatedClient(snapshot, stored.entries, clientSchema)
+          : null
       })
       if (result.status === 'not_found') throw new SyncError('LEDGER_NOT_FOUND', 404)
       if (result.status === 'conflict') {
         throw new SyncError('REVISION_CONFLICT', 409, { revision: result.revision })
       }
-      return result
+      // Lets a client that understands the flag ask its user to reload.
+      return outdated ? { ...result, clientOutdated: true } : result
     }
   }
 }

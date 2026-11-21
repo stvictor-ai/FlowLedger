@@ -53,6 +53,8 @@ export function createAuthService({ repository, clock = () => new Date(), secret
     async getOrbitSession({ orbitUserId, email, role }) {
       if (!orbitUserId || !['admin', 'user'].includes(role)) return null
       const user = await repository.findOrCreateOrbitUser({ orbitUserId, email, role })
+      // null: the account exists here and an admin has disabled it.
+      if (!user) return null
       return publicUser(user, user)
     },
 
