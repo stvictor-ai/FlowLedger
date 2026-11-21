@@ -30,6 +30,7 @@
 <script src="js/import-engine.js"></script>
 <script src="js/server-sync.js"></script>
 <script src="js/debt-engine.js"></script>
+<script src="js/c2c-import.js"></script>
 <style>
 /* ===== RESET & BASE ===== */
 *{margin:0;padding:0;box-sizing:border-box}
@@ -3101,6 +3102,30 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .entry-page-head h2{margin:3px 0 4px;font-size:24px}
 .entry-page-head .hint{font-size:10px}
 .entry-template-select{width:210px}
+.entry-head-actions{display:flex;align-items:center;gap:8px}
+/* C2C 截图导入 */
+.c2c-panel{padding:18px 28px 20px;border-bottom:1px solid var(--border);background:var(--surface-quiet)}
+.c2c-head{display:flex;justify-content:space-between;gap:16px;margin-bottom:12px}
+.c2c-head h3{margin:0 0 4px;font-size:14px}
+.c2c-head p{margin:0;color:var(--muted);font-size:10px;line-height:1.6}
+.c2c-source{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:9px}
+.c2c-source span{color:var(--muted);font-size:10px}
+.c2c-text{width:100%;font:500 10px/1.6 'JetBrains Mono',monospace;resize:vertical}
+.c2c-error{margin:8px 0 0;color:var(--red);font-size:10px;font-weight:700;line-height:1.6}
+.c2c-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:14px}
+.c2c-options .form-group{margin-bottom:0}
+.c2c-rows{margin-top:12px;border:1px solid var(--border);border-radius:6px;background:var(--panel)}
+.c2c-row{display:grid;grid-template-columns:18px 70px 44px minmax(120px,1fr) minmax(110px,150px) minmax(130px,1.1fr);gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border)}
+.c2c-row:last-child{border-bottom:0}
+.c2c-row.off{opacity:.55}
+.c2c-row input[type=checkbox]{margin:0;accent-color:var(--accent)}
+.c2c-when strong,.c2c-money strong{display:block;font:800 12px/1.2 'JetBrains Mono',monospace}
+.c2c-when small,.c2c-money small{display:block;margin-top:3px;color:var(--dim);font-size:9px}
+.c2c-party{min-height:30px;padding:4px 8px;font-size:11px}
+.c2c-status{color:var(--muted);font-size:10px;line-height:1.5}
+.c2c-status.good{color:var(--accent)}
+.c2c-status.bad{color:var(--red);font-weight:700}
+.c2c-status button{display:block}
 .entry-action-bar{
   display:grid;
   grid-template-columns:repeat(5,minmax(0,1fr));
@@ -3244,6 +3269,10 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .entry-fund-options .chip.active,.entry-calm-intent .chip.active{background:var(--text);border-color:var(--text);color:var(--panel)}
 .entry-loan-select{width:auto;min-width:180px;max-width:260px}
 .entry-fund-hint{padding:0;color:var(--accent);font-size:10px;font-weight:800}
+.entry-fx-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin-top:10px}
+.entry-fx-rate{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}
+.entry-fx-hint{grid-column:1/-1;margin:0;color:var(--muted);font-size:10px}
+.entry-fx-offer{display:block;margin-top:9px}
 /* 冷静提醒：不再是弹窗，留在表单里，能看到数字再决定。 */
 .entry-calm-card{
   margin-top:14px;
@@ -3327,6 +3356,11 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   .position-mobile-actions{display:flex;gap:7px}
   .entry-page-head{display:grid;gap:11px}
   .entry-template-select{width:100%}
+  .entry-head-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:7px}
+  .c2c-panel{padding:14px}
+  .c2c-options{grid-template-columns:minmax(0,1fr)}
+  .c2c-row{grid-template-columns:18px 62px 44px minmax(0,1fr);gap:6px 8px}
+  .c2c-party,.c2c-status{grid-column:2/-1}
   .entry-action-bar{grid-template-columns:repeat(5,minmax(0,1fr))}
   .entry-action-button{min-height:56px;padding:7px 5px;text-align:center}
   .entry-action-button strong{font-size:11px}
@@ -5038,11 +5072,59 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <h2>记一笔</h2>
         <p class="hint">先选择资金动作，再填写这笔操作真正需要的信息。</p>
       </div>
-      <select v-if="quickTemplates.length" class="form-input entry-template-select" :value="''" @change="applyQuickTemplateKey($event.target.value);$event.target.value=''">
-        <option value="">套用常用模板</option>
-        <option v-for="tpl in quickTemplates" :key="tpl.key" :value="tpl.key">{{ tpl.label }}</option>
-      </select>
+      <div class="entry-head-actions">
+        <button type="button" class="btn btn-ghost btn-sm" @click="c2c.open?closeC2C():openC2C()">{{ c2c.open?'收起截图导入':'从截图导入' }}</button>
+        <select v-if="quickTemplates.length" class="form-input entry-template-select" :value="''" @change="applyQuickTemplateKey($event.target.value);$event.target.value=''">
+          <option value="">套用常用模板</option>
+          <option v-for="tpl in quickTemplates" :key="tpl.key" :value="tpl.key">{{ tpl.label }}</option>
+        </select>
+      </div>
     </header>
+
+    <!-- C2C 订单截图导入：文字在本机识别（或粘贴），按固定版式解析，逐笔核对后入账。 -->
+    <div v-if="c2c.open" class="c2c-panel">
+      <div class="c2c-head">
+        <div>
+          <h3>从 C2C 订单截图导入</h3>
+          <p>用交易所「C2C → 订单」列表的截图，一张可以有多笔。识别在这台设备上完成，截图不会上传。</p>
+        </div>
+        <button class="ledger-inspector-close" @click="closeC2C" title="关闭" aria-label="关闭截图导入">×</button>
+      </div>
+      <div class="c2c-source">
+        <button type="button" class="btn btn-primary btn-sm" :disabled="c2c.busy" @click="$refs.c2cFile.click()">{{ c2c.busy?c2c.progress:'选择截图' }}</button>
+        <input ref="c2cFile" type="file" accept="image/*" multiple hidden @change="c2cPickImages">
+        <span>或者在相册里长按截图 →「复制文字」，粘贴到下面</span>
+      </div>
+      <textarea class="form-input c2c-text" v-model="c2c.text" rows="4" placeholder="识别出的文字会出现在这里；也可以直接粘贴。读错的数字可以在这里改，下面会跟着变。" @input="c2cParse"></textarea>
+      <p v-if="c2c.error" class="c2c-error">{{ c2c.error }}</p>
+
+      <template v-if="c2c.rows.length">
+        <div class="c2c-options">
+          <div class="form-group"><label>平台</label><input class="form-input" v-model="c2c.platform" list="dl-ex-focused" placeholder="例如：欧易"></div>
+          <div class="form-group"><label>新增入金的资金来源</label><select class="form-input" v-model="c2c.fundSource"><option value="">先不标注</option><option v-for="o in FUND_SOURCES" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
+          <div class="form-group"><label>收付款渠道</label><select class="form-input" v-model="c2c.channel"><option value="">先不标注</option><option v-for="o in PAY_CHANNELS" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
+        </div>
+        <div class="c2c-rows">
+          <div v-for="(row,i) in c2c.rows" :key="i" :class="['c2c-row',{off:!row.on,blocked:row.blocked}]">
+            <input type="checkbox" v-model="row.on" :disabled="row.blocked" :aria-label="'导入第 '+(i+1)+' 笔'">
+            <span class="c2c-when"><strong>{{ row.order.date.slice(5) }}</strong><small>{{ row.order.date.slice(0,4) }} · {{ row.order.time }}</small></span>
+            <span :class="['ledger-type','type-'+(row.order.side==='buy'?'in':'out')]">{{ row.order.side==='buy'?'入金':'出金' }}</span>
+            <span class="c2c-money"><strong class="privacy-number">{{ fmt(row.order.total) }} CNY</strong><small>{{ fmtUnits(row.order.quantity) }} {{ row.order.coin }} · @ {{ row.order.price }}</small></span>
+            <input class="form-input c2c-party" v-model="row.order.counterparty" placeholder="商家名" :disabled="row.blocked" aria-label="交易对手">
+            <span :class="['c2c-status',row.tone]">
+              {{ row.label }}
+              <button v-if="row.kind==='enrich'&&!row.blocked" type="button" class="entry-fund-hint" @click="row.asNew=!row.asNew;c2cRelabel(row)">{{ row.asNew?'改回补全':'改为新增' }}</button>
+            </span>
+          </div>
+        </div>
+        <p class="debt-muted">{{ c2cSummary }}</p>
+        <div class="debt-form-actions">
+          <button class="btn btn-ghost btn-sm" @click="closeC2C">取消</button>
+          <button class="btn btn-primary btn-sm" :disabled="!c2cSelected.length||!c2c.platform.trim()" @click="c2cApply">导入 {{ c2cSelected.length }} 笔</button>
+        </div>
+      </template>
+      <p v-else-if="c2c.text.trim()&&!c2c.busy" class="debt-muted">没有读到完整的订单。确认是订单列表的截图，每笔要露出日期、价格和数量。</p>
+    </div>
 
     <div class="entry-action-bar">
       <button v-for="a in quickActions" :key="a.key" :class="['entry-action-button',{active:quickAction===a.key}]" @click="setQuickAction(a.key)">
@@ -5058,8 +5140,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
       <p class="entry-section-label">{{ quickAction==='buy'||quickAction==='sell'?'成交信息':'资金信息' }}</p>
 
       <div v-if="quickAction==='deposit'||quickAction==='withdraw'||quickAction==='transfer'" class="entry-cash-grid">
-        <div class="form-group"><label>{{ isFxDeposit?'到账币种':'币种' }}</label><select class="form-input" v-model="form.currency" @change="handleCashCurrencyChange"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select></div>
-        <div v-if="isFxDeposit" class="form-group"><label>支付金额</label><input class="form-input" type="number" step="0.01" v-model.number="form.sourceAmount" placeholder="输入人民币金额" inputmode="decimal" @keyup.enter="addEntry(true)"></div>
+        <div class="form-group"><label>{{ isFxCash?(quickAction==='withdraw'?'卖出币种':'到账币种'):'币种' }}</label><select class="form-input" v-model="form.currency" @change="handleCashCurrencyChange"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select></div>
+        <div v-if="isFxCash" class="form-group"><label>{{ quickAction==='withdraw'?'到账人民币':'支付人民币' }}</label><input class="form-input" type="number" step="0.01" v-model.number="form.sourceAmount" placeholder="输入人民币金额" inputmode="decimal" @input="onFxInput('cny')" @keyup.enter="addEntry(true)"></div>
         <div v-else class="form-group"><label>{{ quickAmountLabel }}</label><input class="form-input" type="number" step="0.01" v-model.number="form.amount" placeholder="输入金额" inputmode="decimal" @keyup.enter="addEntry(true)"></div>
         <div class="form-group"><label>{{ quickAction==='transfer'?'从哪个平台转出':'账户 / 平台' }}</label><input class="form-input" v-model="form.exchange" placeholder="例如：招商证券" list="dl-ex-focused"></div>
         <div class="form-group" v-if="quickAction==='transfer'"><label>转入哪个平台</label><input class="form-input" v-model="form.toExchange" placeholder="例如：币安" list="dl-ex-focused"></div>
@@ -5081,17 +5163,24 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
       </template>
       <datalist id="dl-ex-focused"><option v-for="ex in platformSuggestions" :key="ex" :value="ex"></option></datalist>
 
-      <div v-if="form.currency!=='CNY'" class="entry-rate-row">
-        <span>{{ isFxDeposit?'本笔实际汇率':'汇率' }} · 1 {{ form.currency }} 等于多少 CNY</span>
+      <div v-if="isFxCash" class="entry-fx-row">
+        <div class="form-group">
+          <label>单价 · 1 {{ form.currency }} 多少 CNY</label>
+          <div class="entry-fx-rate"><input class="form-input" type="number" step="0.0001" v-model="form.rate" :placeholder="form.currency==='HKD'?'0.92':'7.25'" inputmode="decimal" @input="onFxInput('rate')"><button class="rate-fetch-btn" @click="fetchRate(form.currency,'form')" :disabled="rateLoading">{{ rateLoading?'获取中…':'市价' }}</button></div>
+        </div>
+        <div class="form-group">
+          <label>{{ quickAction==='withdraw'?'卖出数量':'到账数量' }} · {{ form.currency }}</label>
+          <input class="form-input" type="number" step="any" v-model.number="form.fxUnits" placeholder="例如：74.85" inputmode="decimal" @input="onFxInput('units')" @keyup.enter="addEntry(true)">
+        </div>
+        <p class="entry-fx-hint">人民币金额、单价、数量填两个，第三个自动算。照着订单上的数字填就行。</p>
+      </div>
+      <div v-else-if="form.currency!=='CNY'" class="entry-rate-row">
+        <span>汇率 · 1 {{ form.currency }} 等于多少 CNY</span>
         <input class="form-input" type="number" step="0.0001" v-model="form.rate" :placeholder="form.currency==='HKD'?'0.92':'7.25'" inputmode="decimal">
         <button class="rate-fetch-btn" @click="fetchRate(form.currency,'form')" :disabled="rateLoading">{{ rateLoading?'获取中…':'自动获取' }}</button>
       </div>
-      <div v-if="isFxDeposit&&form.sourceAmount&&form.rate" class="entry-fx-result">
-        <span>按本笔汇率自动计算到账数量</span>
-        <strong class="privacy-number">{{ fmtUnits(fxTargetAmount) }} {{ form.currency }}</strong>
-        <small>支付 {{ fmt(form.sourceAmount) }} CNY · 1 {{ form.currency }} = {{ form.rate }} CNY</small>
-      </div>
-      <p class="rate-hint" v-else-if="form.currency!=='CNY'&&form.rate&&form.amount">折合人民币约 {{ fmt(form.amount*Number(form.rate)) }} 元</p>
+      <button v-if="canOfferFx" type="button" class="entry-fund-hint entry-fx-offer" @click="switchToFx">这是买卖 USDT？记下数量和单价 →</button>
+      <p class="rate-hint" v-if="!isFxCash&&form.currency!=='CNY'&&form.rate&&form.amount">折合人民币约 {{ fmt(form.amount*Number(form.rate)) }} 元</p>
 
       <div v-if="quickAction==='deposit'" class="entry-fund-row">
         <span class="entry-fund-label">这笔钱从哪来</span>
@@ -5117,6 +5206,13 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         </template>
       </div>
 
+      <div v-if="quickAction==='deposit'||quickAction==='withdraw'" class="entry-fund-row">
+        <span class="entry-fund-label">{{ quickAction==='withdraw'?'收款渠道':'付款渠道' }}</span>
+        <div class="entry-fund-options" role="radiogroup" :aria-label="quickAction==='withdraw'?'收款渠道':'付款渠道'">
+          <button v-for="o in PAY_CHANNELS" :key="o.key" type="button" role="radio" :aria-checked="form.channel===o.key" :class="['chip',{active:form.channel===o.key}]" @click="form.channel=form.channel===o.key?'':o.key">{{ o.label }}</button>
+        </div>
+      </div>
+
       <div v-if="quickAction==='deposit'&&depositRisk.warnings.length" :class="['entry-calm-card','level-'+depositRisk.level]" role="status">
         <p class="entry-calm-title">{{ depositRisk.level==='danger'?'先停一下':'留意一下' }}</p>
         <ul>
@@ -5131,8 +5227,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
 
       <button class="entry-more-toggle" @click="showQuickMore=!showQuickMore">
         <span :class="['arrow',{open:showQuickMore}]">&#9654;</span>
-        {{ showQuickMore?'收起补充信息':'补充资产类型、理由与标签' }}
-        <span v-if="!showQuickMore&&(form.assetType||form.note||form.tagText)" class="quick-more-hint">· 已填写</span>
+        {{ showQuickMore?'收起补充信息':'补充资产类型、理由、标签与交易对手' }}
+        <span v-if="!showQuickMore&&(form.assetType||form.note||form.tagText||form.counterparty)" class="quick-more-hint">· 已填写</span>
       </button>
 
       <div v-show="showQuickMore" class="entry-optional">
@@ -5140,6 +5236,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <div class="form-group"><label>资产类型</label><select class="form-input" v-model="form.assetType"><option value="">未分类</option><option v-for="asset in ASSET_TYPES" :key="asset" :value="asset">{{ asset }}</option></select></div>
           <div v-if="quickAction==='buy'||quickAction==='sell'" class="form-group"><label>日期与时间</label><div class="entry-datetime-fields"><input class="form-input" type="date" v-model="form.date"><input class="form-input" type="time" v-model="form.time" aria-label="发生时间"></div></div>
           <div class="form-group"><label>标签</label><input class="form-input" v-model="form.tagText" list="dl-tags-focused" placeholder="可填写多个标签"></div>
+          <div v-if="quickAction==='deposit'||quickAction==='withdraw'" class="form-group"><label>交易对手 / 商家</label><input class="form-input" v-model="form.counterparty" placeholder="C2C 商家名，出问题时有据可查"></div>
         </div>
         <div class="entry-note-grid">
           <div class="form-group"><label>{{ quickNoteLabel }}</label><input class="form-input" v-model="form.note" :placeholder="quickNotePlaceholder"></div>
@@ -5675,12 +5772,12 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
             </span>
             <span class="ledger-entry-context">
               <strong>{{ e.exchange||'未知平台' }}{{ e.type==='互转'&&e.toExchange?' → '+e.toExchange:'' }}</strong>
-              <small>{{ e.fundSource?fundSourceLabel(e.fundSource)+' · ':'' }}{{ e.destination?destinationLabel(e.destination)+' · ':'' }}{{ e.assetType||'未分类' }}<template v-if="parseTags(e.tags).length"> · #{{ parseTags(e.tags).slice(0,2).join(' #') }}</template></small>
+              <small>{{ e.fundSource?fundSourceLabel(e.fundSource)+' · ':'' }}{{ e.destination?destinationLabel(e.destination)+' · ':'' }}{{ e.channel?channelLabel(e.channel)+' · ':'' }}{{ e.assetType||'未分类' }}<template v-if="parseTags(e.tags).length"> · #{{ parseTags(e.tags).slice(0,2).join(' #') }}</template></small>
             </span>
             <span class="ledger-entry-amount" :style="{color:typeColor(e.type)}">
-              <template v-if="isFxEntry(e)">
-                <strong>{{ fmt(e.sourceAmount) }} <small>{{ e.sourceCurrency }}</small></strong>
-                <small class="ledger-fx-path">→ {{ fmtUnits(fxEntryTargetAmount(e)) }} {{ e.targetCurrency||e.currency }} · @ {{ fxEntryRate(e) }}</small>
+              <template v-if="fxOf(e)">
+                <strong>{{ fmt(fxOf(e).cny) }} <small>CNY</small></strong>
+                <small class="ledger-fx-path">{{ fmtUnits(fxOf(e).units) }} {{ fxOf(e).unit }} · @ {{ fxOf(e).rate }}</small>
               </template>
               <template v-else>
                 <strong>{{ fmt(e.amount) }} <small>{{ e.currency||'CNY' }}</small></strong>
@@ -5701,8 +5798,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <button class="ledger-inspector-close" @click="editingEntry=null" title="关闭" aria-label="关闭记录详情">×</button>
         </div>
         <div class="ledger-inspector-hero" v-if="editingDetail">
-          <strong :style="{color:typeColor(editingEntry.type)}">{{ fmt(isFxEntry(editingEntry)?editingEntry.sourceAmount:editingEntry.amount) }} <small>{{ isFxEntry(editingEntry)?editingEntry.sourceCurrency:(editingEntry.currency||'CNY') }}</small></strong>
-          <span v-if="isFxEntry(editingEntry)">到账 {{ fmtUnits(fxEntryTargetAmount(editingEntry)) }} {{ editingEntry.targetCurrency||editingEntry.currency }} · 实际汇率 {{ fxEntryRate(editingEntry) }}</span>
+          <strong :style="{color:typeColor(editingEntry.type)}">{{ fmt(editingEntry.fxMode?editingEntry.fxCny:editingEntry.amount) }} <small>{{ editingEntry.fxMode?'CNY':(editingEntry.currency||'CNY') }}</small></strong>
+          <span v-if="editingEntry.fxMode">{{ fmtUnits(editingEntry.fxUnits) }} {{ editingEntry.fxUnit }}{{ editFxRate?' · 单价 '+editFxRate:'' }}</span>
           <span v-else>折合 {{ fmt(editingDetail.cny) }} CNY</span>
         </div>
         <div class="ledger-inspector-metrics" v-if="editingDetail">
@@ -5716,16 +5813,25 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="editingEntry.assetType" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="">{{ t("uncategorized") }}</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select></div>
           <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="editingEntry.exchange" list="dl-ex-ledger"></div>
           <datalist id="dl-ex-ledger"><option v-for="ex in editPlatformSuggestions" :key="ex" :value="ex"></option></datalist>
-          <div class="form-group">
-            <label>{{ isFxEntry(editingEntry)?'支付金额':t('amount') }}</label>
-            <div class="ledger-amount-edit" v-if="isFxEntry(editingEntry)">
-              <input class="form-input" value="CNY" disabled>
-              <input class="form-input" type="number" step="0.01" v-model.number="editingEntry.sourceAmount" inputmode="decimal">
+<template v-if="editingEntry.fxMode">
+            <div class="form-group"><label>{{ editingEntry.type==='出金'?'到账人民币':'支付人民币' }}</label><input class="form-input" type="number" step="0.01" v-model.number="editingEntry.fxCny" inputmode="decimal"></div>
+            <div class="form-group">
+              <label>{{ editingEntry.type==='出金'?'卖出数量':'到账数量' }}</label>
+              <div class="ledger-amount-edit">
+                <select class="form-input" v-model="editingEntry.fxUnit"><option value="USDT">USDT</option><option value="USD">USD</option><option value="HKD">HKD</option></select>
+                <input class="form-input" type="number" step="any" v-model.number="editingEntry.fxUnits" inputmode="decimal">
+              </div>
+              <p class="rate-hint">{{ editFxRate?'单价 '+editFxRate+' CNY（改金额或数量会重算）':'填好金额和数量，单价自动算出' }} · <button type="button" class="entry-fund-hint" @click="editFxOff">只记人民币</button></p>
             </div>
-            <div class="ledger-amount-edit" v-else>
+          </template>
+          <template v-else>
+          <div class="form-group">
+            <label>{{ t('amount') }}</label>
+            <div class="ledger-amount-edit">
               <select class="form-input" v-model="editingEntry.currency" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="CNY">CNY</option><option value="USD">USD</option><option value="HKD">HKD</option><option value="USDT">USDT</option></select>
               <input class="form-input" type="number" step="0.01" v-model.number="editingEntry.amount" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'">
             </div>
+            <p class="rate-hint" v-if="(editingEntry.type==='入金'||editingEntry.type==='出金')&&(editingEntry.currency||'CNY')==='CNY'"><button type="button" class="entry-fund-hint" @click="editFxOn">这是买卖 USDT？补上数量和单价 →</button></p>
           </div>
           <div class="form-group" v-if="editingEntry.currency&&editingEntry.currency!=='CNY'">
             <label>{{ t('rate') }}</label>
@@ -5733,8 +5839,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
               <input class="form-input" type="number" step="0.0001" v-model="editingEntry.rate" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'">
               <button class="rate-fetch-btn" @click="fetchRate(editingEntry.currency,'edit')" :disabled="rateLoading||editingEntry.type==='买入'||editingEntry.type==='卖出'">{{ rateLoading?'获取中…':'更新' }}</button>
             </div>
-            <p class="rate-hint" v-if="isFxEntry(editingEntry)&&editingEntry.sourceAmount&&editingEntry.rate">到账 {{ fmtUnits(fxTargetFromSource(editingEntry)) }} {{ editingEntry.targetCurrency||editingEntry.currency }} · 以本笔实际汇率保存</p>
           </div>
+          </template>
           <div class="form-group" v-if="editingEntry.type==='互转'"><label>转入平台</label><input class="form-input" v-model="editingEntry.toExchange" list="dl-ex-ledger"></div>
           <div class="form-group" v-if="editingEntry.type==='入金'"><label>资金来源</label><select class="form-input" v-model="editingEntry.fundSource"><option value="">未标注</option><option v-for="o in FUND_SOURCES" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
           <div class="form-group" v-if="editingEntry.type==='出金'"><label>资金去向</label><select class="form-input" v-model="editingEntry.destination"><option value="">未标注</option><option v-for="o in DESTINATIONS" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
@@ -5742,6 +5848,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
             <label>{{ editingEntry.type==='入金'?'来自哪笔贷款':'还哪笔贷款' }}</label>
             <select class="form-input" v-model="editingEntry.loanId"><option value="">不指定</option><option v-for="l in debtViews" :key="l.id" :value="l.id">{{ l.name }}{{ l.closed?'（已结清）':'' }}</option></select>
           </div>
+          <div class="form-group" v-if="editingEntry.type==='入金'||editingEntry.type==='出金'"><label>{{ editingEntry.type==='出金'?'收款渠道':'付款渠道' }}</label><select class="form-input" v-model="editingEntry.channel"><option value="">未标注</option><option v-for="o in PAY_CHANNELS" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
+          <div class="form-group" v-if="editingEntry.type==='入金'||editingEntry.type==='出金'"><label>交易对手 / 商家</label><input class="form-input" v-model="editingEntry.counterparty" placeholder="C2C 商家名"></div>
           <div class="form-group"><label>{{ editingEntry.type==='入金'?'投入理由':editingEntry.type==='买入'?'买入理由':editingEntry.type==='卖出'?'卖出理由':'出金备注' }}</label><textarea class="form-input ledger-note-input" v-model="editingEntry.note" rows="3"></textarea></div>
           <div class="form-group"><label>{{ t('tagStats') }}</label><input class="form-input" v-model="editingEntry.tagText" list="dl-tags-ledger" placeholder="定投，补仓，FOMO"></div>
           <datalist id="dl-tags-ledger"><option v-for="tag in allTags" :key="tag" :value="tag"></option></datalist>
@@ -5774,9 +5882,9 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
               <span :class="['record-card-tag',typeTagClass(e.type)]">{{ e.type }}</span>
             </div>
             <div :class="['record-card-amount']" :style="{color:typeColor(e.type)}">
-              <template v-if="isFxEntry(e)">
-                {{ fmt(e.sourceAmount) }} {{ e.sourceCurrency }}
-                <span style="font-size:12px;color:var(--muted);font-weight:500"> → {{ fmtUnits(fxEntryTargetAmount(e)) }} {{ e.targetCurrency||e.currency }} @ {{ fxEntryRate(e) }}</span>
+              <template v-if="fxOf(e)">
+                {{ fmt(fxOf(e).cny) }} CNY
+                <span style="font-size:12px;color:var(--muted);font-weight:500"> · {{ fmtUnits(fxOf(e).units) }} {{ fxOf(e).unit }} @ {{ fxOf(e).rate }}</span>
               </template>
               <template v-else>
                 {{ fmt(e.amount) }} {{ e.currency&&e.currency!=='CNY'?e.currency:'元' }}
@@ -6291,9 +6399,9 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
       <div class="modal-head"><div class="modal-title">记录详情</div><button class="modal-close" @click="editingEntry=null">&times;</button></div>
       <div class="modal-body">
         <div class="detail-hero" v-if="editingDetail">
-          <div class="detail-amount" :style="{color:typeColor(editingEntry.type)}">{{ fmt(isFxEntry(editingEntry)?editingEntry.sourceAmount:editingEntry.amount) }} {{ isFxEntry(editingEntry)?editingEntry.sourceCurrency:(editingEntry.currency&&editingEntry.currency!=='CNY'?editingEntry.currency:'元') }}</div>
+          <div class="detail-amount" :style="{color:typeColor(editingEntry.type)}">{{ fmt(editingEntry.fxMode?editingEntry.fxCny:editingEntry.amount) }} {{ editingEntry.fxMode?'元':(editingEntry.currency&&editingEntry.currency!=='CNY'?editingEntry.currency:'元') }}</div>
           <div class="detail-meta">
-            <template v-if="isFxEntry(editingEntry)">到账 {{ fmtUnits(fxEntryTargetAmount(editingEntry)) }} {{ editingEntry.targetCurrency||editingEntry.currency }} · @ {{ fxEntryRate(editingEntry) }}</template>
+            <template v-if="editingEntry.fxMode">{{ fmtUnits(editingEntry.fxUnits) }} {{ editingEntry.fxUnit }}{{ editFxRate?' · @ '+editFxRate:'' }}</template>
             <template v-else>折合 {{ fmt(editingDetail.cny) }} CNY</template>
             · {{ editingEntry.assetType||'未分类' }} · {{ editingEntry.exchange||'未知平台' }}
           </div>
@@ -6318,25 +6426,43 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <div class="form-group"><label>日期与时间</label><div class="entry-datetime-fields"><input class="form-input" type="date" v-model="editingEntry.date"><input class="form-input" type="time" v-model="editingEntry.time" aria-label="发生时间"></div></div>
         <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="editingEntry.assetType" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="">{{ t("uncategorized") }}</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select></div>
         <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="editingEntry.exchange" list="dl-ex3"><datalist id="dl-ex3"><option v-for="ex in editPlatformSuggestions" :key="ex" :value="ex"></option></datalist></div>
+<template v-if="editingEntry.fxMode">
+            <div class="form-group"><label>{{ editingEntry.type==='出金'?'到账人民币':'支付人民币' }}</label><input class="form-input" type="number" step="0.01" v-model.number="editingEntry.fxCny" inputmode="decimal"></div>
+            <div class="form-group">
+              <label>{{ editingEntry.type==='出金'?'卖出数量':'到账数量' }}</label>
+              <div class="ledger-amount-edit">
+                <select class="form-input" v-model="editingEntry.fxUnit"><option value="USDT">USDT</option><option value="USD">USD</option><option value="HKD">HKD</option></select>
+                <input class="form-input" type="number" step="any" v-model.number="editingEntry.fxUnits" inputmode="decimal">
+              </div>
+              <p class="rate-hint">{{ editFxRate?'单价 '+editFxRate+' CNY（改金额或数量会重算）':'填好金额和数量，单价自动算出' }} · <button type="button" class="entry-fund-hint" @click="editFxOff">只记人民币</button></p>
+            </div>
+          </template>
+          <template v-else>
         <div class="form-group">
-          <label>{{ isFxEntry(editingEntry)?'支付金额':t('amount') }}</label>
-          <div v-if="isFxEntry(editingEntry)" style="display:flex;gap:6px">
-            <input class="form-input" value="CNY" disabled style="width:110px;flex-shrink:0">
-            <input class="form-input" type="number" step="0.01" v-model.number="editingEntry.sourceAmount" inputmode="decimal" style="flex:1;min-width:0">
-          </div>
-          <div v-else style="display:flex;gap:6px">
+          <label>{{ t('amount') }}</label>
+          <div style="display:flex;gap:6px">
             <select class="form-input" v-model="editingEntry.currency" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'" style="width:110px;flex-shrink:0"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select>
             <input class="form-input" type="number" step="0.01" v-model.number="editingEntry.amount" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'" inputmode="decimal" style="flex:1;min-width:0">
           </div>
+          <p class="rate-hint" v-if="(editingEntry.type==='入金'||editingEntry.type==='出金')&&(editingEntry.currency||'CNY')==='CNY'"><button type="button" class="entry-fund-hint" @click="editFxOn">这是买卖 USDT？补上数量和单价 →</button></p>
           <div v-if="editingEntry.currency&&editingEntry.currency!=='CNY'" style="display:flex;gap:6px;margin-top:6px;align-items:center">
             <span style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0">{{ t('rate') }}</span>
             <input class="form-input" type="number" step="0.0001" v-model="editingEntry.rate" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'" inputmode="decimal" style="flex:1;min-width:0">
             <button class="rate-fetch-btn" @click="fetchRate(editingEntry.currency,'edit')" :disabled="rateLoading||editingEntry.type==='买入'||editingEntry.type==='卖出'">{{ rateLoading?'获取中…':'获取汇率' }}</button>
           </div>
-          <p class="rate-hint" v-if="isFxEntry(editingEntry)&&editingEntry.sourceAmount&&editingEntry.rate">到账 {{ fmtUnits(fxTargetFromSource(editingEntry)) }} {{ editingEntry.targetCurrency||editingEntry.currency }} · 以本笔实际汇率保存</p>
-          <p class="rate-hint" v-else-if="editingEntry.currency&&editingEntry.currency!=='CNY'&&editingEntry.rate&&editingEntry.amount">本笔 ≈ {{ fmt(amountCNY(editingEntry)) }} 元（1 {{ editingEntry.currency }} = {{ editingEntry.rate }} CNY）</p>
+          <p class="rate-hint" v-if="editingEntry.currency&&editingEntry.currency!=='CNY'&&editingEntry.rate&&editingEntry.amount">本笔 ≈ {{ fmt(amountCNY(editingEntry)) }} 元（1 {{ editingEntry.currency }} = {{ editingEntry.rate }} CNY）</p>
         </div>
-        <div class="form-group"><label>{{ editingEntry.type==='入金'?'投入理由':'出金备注' }}</label><input class="form-input" v-model="editingEntry.note" :placeholder="editingEntry.type==='入金'?'为什么要投入这笔？':'收款渠道/备注'"></div>
+        </template>
+        <div class="form-group" v-if="editingEntry.type==='互转'"><label>转入平台</label><input class="form-input" v-model="editingEntry.toExchange" list="dl-ex3"></div>
+        <div class="form-group" v-if="editingEntry.type==='入金'"><label>资金来源</label><select class="form-input" v-model="editingEntry.fundSource"><option value="">未标注</option><option v-for="o in FUND_SOURCES" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
+        <div class="form-group" v-if="editingEntry.type==='出金'"><label>资金去向</label><select class="form-input" v-model="editingEntry.destination"><option value="">未标注</option><option v-for="o in DESTINATIONS" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
+        <div class="form-group" v-if="(editingEntry.type==='入金'&&editingEntry.fundSource==='loan')||(editingEntry.type==='出金'&&(editingEntry.destination==='repay'||editingEntry.destination==='interest'))">
+          <label>{{ editingEntry.type==='入金'?'来自哪笔贷款':'还哪笔贷款' }}</label>
+          <select class="form-input" v-model="editingEntry.loanId"><option value="">不指定</option><option v-for="l in debtViews" :key="l.id" :value="l.id">{{ l.name }}{{ l.closed?'（已结清）':'' }}</option></select>
+        </div>
+        <div class="form-group" v-if="editingEntry.type==='入金'||editingEntry.type==='出金'"><label>{{ editingEntry.type==='出金'?'收款渠道':'付款渠道' }}</label><select class="form-input" v-model="editingEntry.channel"><option value="">未标注</option><option v-for="o in PAY_CHANNELS" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
+        <div class="form-group" v-if="editingEntry.type==='入金'||editingEntry.type==='出金'"><label>交易对手 / 商家</label><input class="form-input" v-model="editingEntry.counterparty" placeholder="C2C 商家名"></div>
+        <div class="form-group"><label>{{ editingEntry.type==='入金'?'投入理由':'出金备注' }}</label><input class="form-input" v-model="editingEntry.note" :placeholder="editingEntry.type==='入金'?'为什么要投入这笔？':'取出原因 / 备注'"></div>
         <div class="form-group"><label>{{ t('tagStats') }}</label><input class="form-input" v-model="editingEntry.tagText" list="dl-tags3" placeholder="定投，补仓，FOMO"><datalist id="dl-tags3"><option v-for="t in allTags" :key="t" :value="t"></option></datalist></div>
       </div>
       <div class="modal-foot">
@@ -6529,11 +6655,16 @@ function normRow(row){
   const loanId=String(row.loanId||'').trim()
   const linksLoan=fundSource==='loan'||destination==='repay'||destination==='interest'
   const toExchange=type==='互转'?String(row.toExchange||row['转入平台']||'').trim():''
+  const isCash=type==='入金'||type==='出金'
+  const channel=isCash?window.ToujiEntry.normalizeChannel(row.channel??row['收付款渠道']):''
+  const counterparty=isCash?String(row.counterparty||row['交易对手']||'').trim().slice(0,80):''
   return{id:row.id||genId(),date,time,amount:amt,rate:rate===''?'':normNum(rate),exchange,note,type,assetType,currency,tags,
     ...(fundSource?{fundSource}:{}),
     ...(destination?{destination}:{}),
     ...(loanId&&linksLoan?{loanId}:{}),
     ...(toExchange?{toExchange}:{}),
+    ...(channel?{channel}:{}),
+    ...(counterparty?{counterparty}:{}),
     ...(sourceAmount&&sourceCurrency?{sourceAmount,sourceCurrency}:{}),
     ...(targetAmount&&targetCurrency?{targetAmount,targetCurrency}:{}),
     ...(fxRate?{fxRate}:{}),
@@ -7139,7 +7270,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.10.21-1'
+  const APP_VERSION='v2026.11.21-1'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -7324,7 +7455,7 @@ setup(){
       if(tab==='positions')renderPosPieChart()
     })
   }
-  const form=reactive({date:dayjs().format('YYYY-MM-DD'),time:dayjs().format('HH:mm'),amount:'',sourceAmount:'',sourceCurrency:'CNY',rate:'',exchange:'',note:'',type:'入金',assetType:'',currency:'CNY',tagText:'',positionId:'',targetKey:'',targetMarket:'沪深市',tradeQty:'',tradePrice:'',fundSource:'',destination:'card',loanId:'',intent:'',toExchange:''})
+  const form=reactive({date:dayjs().format('YYYY-MM-DD'),time:dayjs().format('HH:mm'),amount:'',sourceAmount:'',sourceCurrency:'CNY',rate:'',exchange:'',note:'',type:'入金',assetType:'',currency:'CNY',tagText:'',positionId:'',targetKey:'',targetMarket:'沪深市',tradeQty:'',tradePrice:'',fundSource:'',destination:'card',loanId:'',intent:'',toExchange:'',fxUnits:'',channel:'',counterparty:''})
   const filters=reactive({year:'',month:'',type:'',keyword:'',dateFrom:'',dateTo:'',amountMin:'',amountMax:'',exchanges:[],assetTypes:[],tags:[]})
   const showQuickMore=ref(false)
   const quickAction=ref('deposit')
@@ -7339,8 +7470,41 @@ setup(){
   // 「工资入金」「转出」已由资金来源 / 去向表达，不再放进常用标签。
   const quickTagOptions=['定投','补仓','止盈','FOMO','买入','卖出']
   const quickAmountLabel=computed(()=>quickAction.value==='withdraw'?'取出金额':quickAction.value==='deposit'?'投入金额':quickAction.value==='transfer'?'转出金额':'成交金额')
-  const isFxDeposit=computed(()=>quickAction.value==='deposit'&&form.currency!=='CNY')
-  const fxTargetAmount=computed(()=>isFxDeposit.value?window.ToujiEntry.targetAmount(form.sourceAmount,form.rate):0)
+  // 人民币 ↔ 外币的出入金（C2C 买卖 USDT）：人民币金额、单价、数量三个填两个。
+  const PAY_CHANNELS=window.ToujiEntry.PAY_CHANNELS
+  const isFxCash=computed(()=>(quickAction.value==='deposit'||quickAction.value==='withdraw')&&form.currency!=='CNY')
+  const isFxDeposit=computed(()=>quickAction.value==='deposit'&&isFxCash.value)
+  const fxTargetAmount=computed(()=>isFxCash.value?Number(form.fxUnits)||0:0)
+  // 只自动补「没填过」的那一个数：照着订单把三个数都填上时，谁也不会被改写
+  // （交易所的数量是四舍五入过的，单价 × 数量常常差一两分钱，以填的人民币金额为准）。
+  const fxTouched=new Set()
+  let fxSolving=false
+  function fxValue(key){return key==='cny'?form.sourceAmount:key==='rate'?form.rate:form.fxUnits}
+  function solveFxForm(){
+    if(!isFxCash.value)return
+    const missing=['cny','rate','units'].filter(k=>!fxTouched.has(k))
+    if(missing.length!==1)return
+    const value=window.ToujiEntry.solveFx({cny:form.sourceAmount,rate:form.rate,units:form.fxUnits},missing[0])
+    fxSolving=true
+    if(missing[0]==='cny')form.sourceAmount=value||''
+    else if(missing[0]==='rate')form.rate=value?String(value):''
+    else form.fxUnits=value||''
+    Vue.nextTick(()=>{fxSolving=false})
+  }
+  function onFxInput(key){
+    if(Number(fxValue(key))>0)fxTouched.add(key);else fxTouched.delete(key)
+    solveFxForm()
+  }
+  function resetFxTouched(keys=[]){fxTouched.clear();keys.forEach(k=>fxTouched.add(k))}
+  // 「市价」按钮是程序填的单价，算作填过，同样带动没填的那个数。
+  watch(()=>form.rate,value=>{if(isFxCash.value&&!fxSolving&&Number(value)>0&&!fxTouched.has('rate'))onFxInput('rate')})
+  // 平台是加密交易所、币种却选了人民币：多半是 C2C 买卖，提示可以把币的数量也记下。
+  const canOfferFx=computed(()=>(quickAction.value==='deposit'||quickAction.value==='withdraw')&&form.currency==='CNY'&&(form.assetType==='加密货币'||/欧易|币安|okx|binance|bybit|gate|火币|htx|bitget/i.test(form.exchange||'')))
+  function switchToFx(){
+    const cny=Number(form.amount)||''
+    form.currency='USDT';form.sourceAmount=cny;form.fxUnits='';form.rate='';resetFxTouched(cny?['cny']:[])
+    if(!form.assetType)form.assetType='加密货币'
+  }
   const tradeAmountPreview=computed(()=>{
     const price=Number(form.tradePrice)||0
     const qty=Number(form.tradeQty)||0
@@ -7351,7 +7515,7 @@ setup(){
     if(quickAction.value==='deposit'&&(!form.fundSource||(needsIntent.value&&!form.intent)))return false
     if(quickAction.value==='withdraw'&&withdrawNeedsLoan.value&&!form.loanId)return false
     if(quickAction.value==='transfer'&&(!String(form.exchange||'').trim()||!String(form.toExchange||'').trim()))return false
-    if(isFxDeposit.value)return Number(form.sourceAmount)>0&&Number(form.rate)>0&&fxTargetAmount.value>0
+    if(isFxCash.value)return Number(form.sourceAmount)>0&&Number(form.rate)>0&&fxTargetAmount.value>0
     return Number(form.amount)>0
   })
   // 为什么现在点不了保存 —— 按钮灰着却不说原因，用户只会以为坏了。
@@ -7376,10 +7540,10 @@ setup(){
     return form.type==='入金'?'为什么要入这笔？如：定投 / 补仓 / 抄底':'收款渠道 / 取出原因'
   })
   function setQuickAction(action){
-    const wasFxDeposit=quickAction.value==='deposit'&&form.currency!=='CNY'&&Number(form.sourceAmount)>0
-    if(wasFxDeposit&&action!=='deposit'){
+    const wasFxCash=isFxCash.value&&Number(form.sourceAmount)>0
+    if(wasFxCash&&action!=='deposit'&&action!=='withdraw'){
       form.amount=fxTargetAmount.value||form.amount
-      form.sourceAmount=''
+      form.sourceAmount='';form.fxUnits=''
     }
     quickAction.value=action
     form.type=action==='withdraw'?'出金':action==='deposit'?'入金':action==='transfer'?'互转':action==='buy'?'买入':'卖出'
@@ -7390,6 +7554,8 @@ setup(){
     if(action==='buy'||action==='sell')applyQuickTarget()
   }
   function handleCashCurrencyChange(){
+    resetFxTouched()
+    form.fxUnits=''
     if(form.currency==='CNY'){form.rate='';return}
     form.rate=''
     fetchRate(form.currency,'form')
@@ -7706,7 +7872,126 @@ setup(){
     debtPlanForm.open=false
     showToast('还债设置已保存','success')
   }
+  // ===== C2C 订单截图导入 =====
+  const TESSERACT_BASE=new URL('vendor/tesseract-6.0.1',location.href).href
+  const c2c=reactive({open:false,busy:false,progress:'',text:'',error:'',rows:[],incomplete:0,platform:'',fundSource:'',channel:''})
+  let tesseractReady=null
+  function loadTesseract(){
+    if(window.Tesseract)return Promise.resolve(window.Tesseract)
+    if(!tesseractReady)tesseractReady=new Promise((resolve,reject)=>{
+      const el=document.createElement('script')
+      el.src=TESSERACT_BASE+'/tesseract.min.js'
+      el.onload=()=>window.Tesseract?resolve(window.Tesseract):reject(new Error('tesseract unavailable'))
+      el.onerror=()=>{tesseractReady=null;el.remove();reject(new Error('tesseract failed to load'))}
+      document.head.appendChild(el)
+    })
+    return tesseractReady
+  }
+  function openC2C(){
+    if(!c2c.platform){
+      // 默认填最常用的加密平台，省一次输入。
+      const count=new Map()
+      entries.value.forEach(e=>{if((e.type==='入金'||e.type==='出金')&&e.exchange&&(e.assetType==='加密货币'||fxOf(e)))count.set(e.exchange,(count.get(e.exchange)||0)+1)})
+      c2c.platform=[...count.entries()].sort((a,b)=>b[1]-a[1])[0]?.[0]||''
+    }
+    c2c.error='';c2c.open=true
+  }
+  function closeC2C(){if(c2c.busy)return;c2c.open=false;c2c.text='';c2c.rows=[];c2c.error='';c2c.incomplete=0}
+  function c2cRelabel(row){
+    const o=row.order
+    const fixed=o.issues.includes('price-corrected')||o.issues.includes('quantity-corrected')?' · 已补上漏掉的小数点，请核对':''
+    row.blocked=true;row.tone='bad'
+    if(o.status==='cancelled')row.label='已取消的订单，不导入'
+    else if(o.status==='pending')row.label='订单还没完成，不导入'
+    else if(o.issues.includes('not-cny'))row.label='不是人民币订单，暂不支持'
+    else if(o.coin!=='USDT')row.label='暂只支持 USDT 订单'
+    else if(o.issues.includes('mismatch'))row.label='单价 × 数量和金额对不上，可能有数字读错，请在上面的文字里改正'
+    else if(row.kind==='duplicate'){row.label='账本里已经有这笔';row.tone=''}
+    else{
+      row.blocked=false
+      row.tone=fixed?'bad':'good'
+      if(row.kind==='enrich'&&!row.asNew)row.label=`补全 ${row.entryDate} 那笔只记了人民币的记录${row.nearDate?'（日期差一天，会改成订单的日期）':''}${fixed}`
+      else row.label='新增'+(o.status==='unknown'?' · 没读到订单状态':'')+fixed
+    }
+    if(row.blocked)row.on=false
+  }
+  function c2cParse(){
+    const parsed=window.ToujiC2C.parseOrders(c2c.text)
+    const matches=window.ToujiC2C.matchOrders(parsed.orders,entries.value,{amountCNY,fxParts:window.ToujiEntry.fxParts})
+    c2c.incomplete=parsed.incomplete
+    c2c.rows=matches.map(m=>{const row={...m,on:true,asNew:false,blocked:false,label:'',tone:''};c2cRelabel(row);return row})
+  }
+  const c2cSelected=computed(()=>c2c.rows.filter(row=>row.on&&!row.blocked))
+  const c2cSummary=computed(()=>{
+    const picked=c2cSelected.value
+    const enrich=picked.filter(r=>r.kind==='enrich'&&!r.asNew).length
+    const parts=[`读到 ${c2c.rows.length} 笔`,`将新增 ${picked.length-enrich} 笔、补全 ${enrich} 笔`]
+    if(c2c.incomplete)parts.push(`另有 ${c2c.incomplete} 笔被截图边缘截断，已跳过`)
+    return parts.join('，')+'。导入前本机会先存一份快照。'
+  })
+  async function c2cPickImages(ev){
+    const files=[...(ev.target.files||[])]
+    ev.target.value=''
+    if(!files.length)return
+    c2c.error='';c2c.busy=true;c2c.progress='正在加载识别组件…'
+    let worker=null
+    try{
+      const Tesseract=await loadTesseract()
+      // 同源加载 worker，不用 blob URL：站点的内容安全策略不放行 blob。
+      worker=await Tesseract.createWorker('chi_sim',1,{workerPath:TESSERACT_BASE+'/worker.min.js',corePath:TESSERACT_BASE,langPath:TESSERACT_BASE,gzip:true,workerBlobURL:false})
+      const texts=[]
+      for(let i=0;i<files.length;i++){
+        c2c.progress=`正在识别 ${i+1}/${files.length}…`
+        const{data}=await worker.recognize(files[i])
+        texts.push(data.text||'')
+      }
+      c2c.text=[c2c.text.trim(),...texts].filter(Boolean).join('\n')
+      c2cParse()
+    }catch(error){
+      console.info('[投记] 本地识别失败',error)
+      c2c.error='这台设备上本地识别没能运行。可以改用：在相册里长按截图 →「复制文字」，粘贴到下面的框里，效果一样。'
+    }finally{
+      if(worker)worker.terminate().catch(()=>{})
+      c2c.busy=false;c2c.progress=''
+    }
+  }
+  function c2cApply(){
+    const picked=c2cSelected.value
+    const platform=c2c.platform.trim()
+    if(!picked.length||!platform)return
+    snap()
+    const now=Date.now()
+    let added=0,enriched=0
+    picked.forEach(row=>{
+      const o=row.order
+      const type=o.side==='buy'?'入金':'出金'
+      const fx=window.ToujiEntry.fxFields(type,{cny:o.total,units:o.quantity,unit:o.coin,rate:o.price})
+      const counterparty=String(o.counterparty||'').trim().slice(0,80)
+      const existing=row.kind==='enrich'&&!row.asNew?entries.value.find(e=>e.id===row.entryId):null
+      if(existing){
+        // 补全：金额不变，只补数量、单价、时间；已有的备注、标签、来源都保留。
+        Object.assign(existing,fx,{date:o.date,time:o.time,updatedAt:now})
+        if(!existing.assetType)existing.assetType='加密货币'
+        if(counterparty&&!existing.counterparty)existing.counterparty=counterparty
+        if(c2c.channel&&!existing.channel)existing.channel=c2c.channel
+        enriched++
+        return
+      }
+      entries.value.push({id:genId(),date:o.date,time:o.time,exchange:platform,note:'',type,assetType:'加密货币',tags:[],...fx,
+        ...(type==='入金'&&c2c.fundSource?{fundSource:c2c.fundSource}:{}),
+        ...(c2c.channel?{channel:c2c.channel}:{}),
+        ...(counterparty?{counterparty}:{}),
+        tradeQty:'',tradePrice:'',targetSymbol:'',targetName:'',targetMarket:'',positionId:'',updatedAt:now})
+      added++
+    })
+    entries.value.sort(window.ToujiEntry.compareEntriesDesc)
+    save()
+    c2c.busy=false;closeC2C()
+    showToast(`已导入：新增 ${added} 笔，补全 ${enriched} 笔`,'success')
+  }
   function isFxEntry(e){return !!window.ToujiEntry?.isFxEntry(e)}
+  function fxOf(e){return window.ToujiEntry?.fxParts(e)||null}
+  function channelLabel(key){return PAY_CHANNELS.find(o=>o.key===key)?.label||''}
   function fxEntryTargetAmount(e){return Number(e?.targetAmount||e?.amount)||0}
   function fxEntryRate(e){return Number(e?.fxRate||e?.rate)||0}
   function fxTargetFromSource(e){return window.ToujiEntry?.targetAmount(e?.sourceAmount,e?.fxRate||e?.rate)||0}
@@ -7995,7 +8280,28 @@ setup(){
       related
     }
   })
-  function openEditModal(e){editingEntry.value={...e,tags:parseTags(e.tags),tagText:tagsText(e.tags)}}
+  function openEditModal(e){
+    const fx=fxOf(e)
+    editingEntry.value={...e,tags:parseTags(e.tags),tagText:tagsText(e.tags),fxMode:!!fx,fxCny:fx?fx.cny:'',fxUnits:fx?fx.units:'',fxUnit:fx?fx.unit:'USDT',fxOrig:fx?{...fx}:null}
+  }
+  // 换汇记录在编辑时只改人民币金额和数量，单价由两者得出，三个数永远对得上。
+  const editFxRate=computed(()=>{
+    const e=editingEntry.value
+    if(!e||!e.fxMode)return 0
+    // 金额和数量没动，就保留订单上原本的单价（6.7），不用除出来的 6.700168 去覆盖它。
+    const o=e.fxOrig
+    if(o&&o.rate>0&&Number(e.fxCny)===o.cny&&Number(e.fxUnits)===o.units)return o.rate
+    return window.ToujiEntry.solveFx({cny:e.fxCny,units:e.fxUnits},'rate')
+  })
+  function editFxOn(){
+    const e=editingEntry.value;if(!e)return
+    e.fxCny=Number(e.amount)||'';e.fxUnits='';e.fxUnit='USDT';e.fxMode=true
+    if(!e.assetType)e.assetType='加密货币'
+  }
+  function editFxOff(){
+    const e=editingEntry.value;if(!e)return
+    e.amount=Number(e.fxCny)||0;e.currency='CNY';e.rate='';e.fxMode=false
+  }
   function saveEditEntry(){
     if(!editingEntry.value)return
     const e=entries.value.find(x=>x.id===editingEntry.value.id)
@@ -8012,20 +8318,19 @@ setup(){
         return
       }
     }
-    const editingFx=isFxEntry(editingEntry.value)
-    if(editingFx&&(!Number(editingEntry.value.sourceAmount)||!Number(editingEntry.value.rate))){
-      showToast('请填写有效的支付金额和实际汇率','error')
+    const editingFx=!!editingEntry.value.fxMode&&(editingEntry.value.type==='入金'||editingEntry.value.type==='出金')
+    if(editingFx&&!editFxRate.value){
+      showToast('请填写人民币金额和数量','error')
       return
     }
     snap()
     e.date=editingEntry.value.date;e.time=normTime(editingEntry.value.time)
-    e.amount=editingFx?window.ToujiEntry.targetAmount(editingEntry.value.sourceAmount,editingEntry.value.rate):Number(editingEntry.value.amount)||0
+    e.amount=Number(editingEntry.value.amount)||0
     e.rate=editingEntry.value.rate===''?'':Number(editingEntry.value.rate)
     e.exchange=(editingEntry.value.exchange||'').trim();e.note=(editingEntry.value.note||'').trim()
     e.type=editingEntry.value.type;e.assetType=editingEntry.value.assetType||'';e.currency=editingEntry.value.currency||'CNY'
     if(editingFx){
-      e.sourceAmount=Number(editingEntry.value.sourceAmount);e.sourceCurrency='CNY'
-      e.targetAmount=e.amount;e.targetCurrency=e.currency;e.fxRate=Number(e.rate)
+      Object.assign(e,window.ToujiEntry.fxFields(e.type,{cny:editingEntry.value.fxCny,units:editingEntry.value.fxUnits,unit:editingEntry.value.fxUnit,rate:editFxRate.value}))
     }else{
       delete e.sourceAmount;delete e.sourceCurrency;delete e.targetAmount;delete e.targetCurrency;delete e.fxRate
     }
@@ -8039,6 +8344,11 @@ setup(){
     if(linksLoan&&editingEntry.value.loanId)e.loanId=editingEntry.value.loanId;else delete e.loanId
     const toExchange=e.type==='互转'?String(editingEntry.value.toExchange||'').trim():''
     if(toExchange)e.toExchange=toExchange;else delete e.toExchange
+    const isCash=e.type==='入金'||e.type==='出金'
+    const channel=isCash?window.ToujiEntry.normalizeChannel(editingEntry.value.channel):''
+    const counterparty=isCash?String(editingEntry.value.counterparty||'').trim():''
+    if(channel)e.channel=channel;else delete e.channel
+    if(counterparty)e.counterparty=counterparty;else delete e.counterparty
     save();editingEntry.value=null;showToast('已保存','success')
   }
   function handleLedgerKeydown(event){
@@ -8625,9 +8935,11 @@ setup(){
       if(!form.targetKey){showToast('请先选择标的','error');return}
       if(!Number(form.tradeQty)||!Number(form.tradePrice)){showToast('请填写成交价格和数量','error');return}
     }
-    const convertedDeposit=isFxDeposit.value
-    if(convertedDeposit){
-      if(!Number(form.sourceAmount)||!Number(form.rate)){showToast('请填写支付金额和实际汇率','error');return}
+    const fxCash=isFxCash.value
+    if(fxCash){
+      if(!Number(form.sourceAmount)||!Number(form.rate)||!fxTargetAmount.value){showToast('人民币金额、单价、数量至少填两个','error');return}
+      const implied=Number(form.rate)*fxTargetAmount.value
+      if(Math.abs(implied-Number(form.sourceAmount))>Math.max(1,Number(form.sourceAmount)*0.01)){showToast(`三个数对不上：单价 × 数量 = ${fmt(implied)}，和人民币金额差太多`,'error');return}
       form.amount=fxTargetAmount.value
     }
     if(!form.amount||form.amount<=0){showToast('请输入有效金额','error');return}
@@ -8657,14 +8969,16 @@ setup(){
       ...(form.type==='入金'&&form.fundSource?{fundSource:form.fundSource}:{}),
       ...(form.type==='出金'&&form.destination?{destination:form.destination}:{}),
       ...(linksLoan&&form.loanId?{loanId:form.loanId}:{}),
-      ...(form.type==='互转'?{toExchange:String(form.toExchange||'').trim()}:{})
+      ...(form.type==='互转'?{toExchange:String(form.toExchange||'').trim()}:{}),
+      ...((form.type==='入金'||form.type==='出金')&&form.channel?{channel:form.channel}:{}),
+      ...((form.type==='入金'||form.type==='出金')&&String(form.counterparty||'').trim()?{counterparty:String(form.counterparty).trim()}:{})
     }
     const actionTag=quickAction.value==='buy'?'买入':quickAction.value==='sell'?'卖出':''
     if(actionTag&&!tags.includes(actionTag))tags.push(actionTag)
     if(p){[positionTag(p),String(p.symbol||'').trim().toUpperCase()].filter(Boolean).forEach(tag=>{if(!tags.includes(tag))tags.push(tag)})}
     const note=(form.note||(!p?'':`${quickAction.value==='sell'?'卖出':'买入'} ${p.name||p.symbol} (${p.symbol})`)).trim()
     const entry={id:genId(),date:form.date||dayjs().format('YYYY-MM-DD'),time:normTime(form.time),amount:Number(form.amount),rate:form.rate?Number(form.rate):'',exchange:form.exchange.trim(),note,type:form.type,assetType:normalizeAssetType(form.assetType),currency:form.currency||'CNY',tags,
-      ...(convertedDeposit?{sourceAmount:Number(form.sourceAmount),sourceCurrency:'CNY',targetAmount:Number(form.amount),targetCurrency:form.currency,fxRate:Number(form.rate)}:{}),
+      ...(fxCash?window.ToujiEntry.fxFields(form.type,{cny:form.sourceAmount,units:form.amount,unit:form.currency,rate:form.rate}):{}),
       ...fundMeta,
       tradeQty:Number(form.tradeQty)||'',tradePrice:Number(form.tradePrice)||'',targetSymbol:target?.symbol||'',targetName:target?.name||'',targetMarket:form.targetMarket||'',positionId:form.positionId||'',updatedAt:Date.now()}
     entries.value.unshift(entry)
@@ -8678,12 +8992,12 @@ setup(){
       saveDeletedPositions()
       savePositions({sync:false})
     }
-    save();form.amount='';form.sourceAmount='';form.note='';form.tradeQty='';form.tradePrice='';form.intent=''
-    if(!keepContext){form.tagText='';form.positionId='';form.targetKey='';form.targetMarket='沪深市';quickTargetQuery.value='';quickTargetResults.value=[];form.fundSource='';form.destination='card';form.loanId=''}
+    save();form.amount='';form.sourceAmount='';form.fxUnits='';form.note='';form.tradeQty='';form.tradePrice='';form.intent='';form.counterparty='';resetFxTouched(Number(form.rate)>0?['rate']:[])
+    if(!keepContext){form.tagText='';form.positionId='';form.targetKey='';form.targetMarket='沪深市';quickTargetQuery.value='';quickTargetResults.value=[];form.fundSource='';form.destination='card';form.loanId='';form.channel=''}
     const repaidLoan=fundMeta.loanId&&entry.type==='出金'?loanList.value.find(l=>l.id===fundMeta.loanId):null
     showToast(repaidLoan?`已保存，并记为「${repaidLoan.name}」的${entry.destination==='repay'?'还本':'付息'}`:keepContext?'已保存，可继续录入':'已添加','success')
   }
-  function copyLast(){const e=sortedEntries.value[0];if(!e)return;form.date=e.date;form.time=normTime(e.time)||dayjs().format('HH:mm');form.amount=e.amount;form.sourceAmount=e.sourceAmount||'';form.rate=e.fxRate||e.rate||'';form.exchange=e.exchange;form.note='';form.type=e.type;form.assetType=normalizeAssetType(e.assetType)||'';form.currency=e.targetCurrency||e.currency||'CNY';form.tagText=tagsText(e.tags);form.tradeQty=e.tradeQty||'';form.tradePrice=e.tradePrice||'';form.targetKey='';form.positionId='';form.fundSource=e.fundSource||'';form.destination=e.destination||'card';form.loanId=e.loanId||'';form.intent='';form.toExchange=e.toExchange||'';quickAction.value=e.type==='买入'?'buy':e.type==='卖出'?'sell':e.type==='互转'?'transfer':(e.type==='出金'?'withdraw':'deposit');showToast('已复制','info')}
+  function copyLast(){const e=sortedEntries.value[0];if(!e)return;form.date=e.date;form.time=normTime(e.time)||dayjs().format('HH:mm');form.amount=e.amount;const fxp=window.ToujiEntry.fxParts(e);form.sourceAmount=fxp?fxp.cny:'';form.fxUnits=fxp?fxp.units:'';resetFxTouched(fxp?['cny','rate','units']:[]);form.channel=e.channel||'';form.counterparty='';form.rate=e.fxRate||e.rate||'';form.exchange=e.exchange;form.note='';form.type=e.type;form.assetType=normalizeAssetType(e.assetType)||'';form.currency=e.targetCurrency||e.currency||'CNY';form.tagText=tagsText(e.tags);form.tradeQty=e.tradeQty||'';form.tradePrice=e.tradePrice||'';form.targetKey='';form.positionId='';form.fundSource=e.fundSource||'';form.destination=e.destination||'card';form.loanId=e.loanId||'';form.intent='';form.toExchange=e.toExchange||'';quickAction.value=e.type==='买入'?'buy':e.type==='卖出'?'sell':e.type==='互转'?'transfer':(e.type==='出金'?'withdraw':'deposit');showToast('已复制','info')}
   function removeEntry(id){
     const e=entries.value.find(x=>x.id===id);if(!e)return
     const isTrade=e.type==='买入'||e.type==='卖出'
@@ -9328,7 +9642,7 @@ setup(){
       targetAmount:e.targetAmount||'',targetCurrency:e.targetCurrency||'',fxRate:e.fxRate||'',
       tradeQty:e.tradeQty||'',tradePrice:e.tradePrice||'',targetSymbol:e.targetSymbol||'',
       targetName:e.targetName||'',targetMarket:e.targetMarket||'',positionId:e.positionId||'',
-      realizedPL:e.realizedPL??'',fundSource:e.fundSource||'',destination:e.destination||'',loanId:e.loanId||'',toExchange:e.toExchange||''
+      realizedPL:e.realizedPL??'',fundSource:e.fundSource||'',destination:e.destination||'',loanId:e.loanId||'',toExchange:e.toExchange||'',channel:e.channel||'',counterparty:e.counterparty||''
     })
   }
   function entriesDiffer(a,b){return syncEntryFingerprint(a)!==syncEntryFingerprint(b)}
@@ -10324,7 +10638,7 @@ setup(){
     if(showcaseMode.value&&!confirm('展示模式只隐藏页面显示，导出的 Excel 会包含真实数据。继续导出吗？'))return
     const inR=[],outR=[],tradeR=[],flowR=[]
     sortedEntries.value.forEach(e=>{
-      const base={'日期':e.date,'时间':e.time||'','资产类型':e.assetType||'','账户/平台':e.exchange,'货币':e.currency||'CNY','金额':e.amount,'汇率':e.rate||'','支付金额':e.sourceAmount||'','支付币种':e.sourceCurrency||'','到账金额':e.targetAmount||'','到账币种':e.targetCurrency||'','实际汇率':e.fxRate||'','折合CNY':amountCNY(e),'类型':e.type,'标签':tagsText(e.tags),'资金来源':fundSourceLabel(e.fundSource),'资金去向':destinationLabel(e.destination),'关联贷款':e.loanId?loanName(e.loanId):'','转入平台':e.toExchange||''}
+      const base={'日期':e.date,'时间':e.time||'','资产类型':e.assetType||'','账户/平台':e.exchange,'货币':e.currency||'CNY','金额':e.amount,'汇率':e.rate||'','支付金额':e.sourceAmount||'','支付币种':e.sourceCurrency||'','到账金额':e.targetAmount||'','到账币种':e.targetCurrency||'','实际汇率':e.fxRate||'','折合CNY':amountCNY(e),'类型':e.type,'标签':tagsText(e.tags),'资金来源':fundSourceLabel(e.fundSource),'资金去向':destinationLabel(e.destination),'关联贷款':e.loanId?loanName(e.loanId):'','转入平台':e.toExchange||'','收付款渠道':channelLabel(e.channel),'交易对手':e.counterparty||''}
       const tradeExtra={'标的代码':e.targetSymbol||'','成交数量':e.tradeQty||'','成交单价':e.tradePrice||'','已实现盈亏':e.realizedPL!=null?e.realizedPL:''}
       flowR.push({...base,...tradeExtra,'备注':e.note,'月份(yyyy-MM)':e.date?e.date.slice(0,7):''})
       if(e.type==='入金')inR.push({...base,'投入理由':e.note})
@@ -10703,7 +11017,7 @@ setup(){
     serverAutoSync.dispose()
   })
 
-  return{typeTone,typeTagClass,typeColor,debts,loanList,debtViews,openLoans,loanOptions,debtSummary,debtSchedule,debtPayday,debtFunding,depositRisk,needsIntent,quickSaveBlocker,FUND_SOURCES,DESTINATIONS,REPAY_TYPES,DEPOSIT_INTENTS,loanName,fundSourceLabel,destinationLabel,debtLoanForm,debtRepayForm,debtPlanForm,expandedLoanId,openLoanForm,saveLoan,deleteLoan,openRepayForm,saveRepayment,removeRepayment,toggleDebtEvent,toggleDebtPlanForm,saveDebtPlanSettings,
+  return{c2c,openC2C,closeC2C,c2cParse,c2cRelabel,c2cSelected,c2cSummary,c2cPickImages,c2cApply,PAY_CHANNELS,isFxCash,onFxInput,canOfferFx,switchToFx,fxOf,channelLabel,editFxRate,editFxOn,editFxOff,typeTone,typeTagClass,typeColor,debts,loanList,debtViews,openLoans,loanOptions,debtSummary,debtSchedule,debtPayday,debtFunding,depositRisk,needsIntent,quickSaveBlocker,FUND_SOURCES,DESTINATIONS,REPAY_TYPES,DEPOSIT_INTENTS,loanName,fundSourceLabel,destinationLabel,debtLoanForm,debtRepayForm,debtPlanForm,expandedLoanId,openLoanForm,saveLoan,deleteLoan,openRepayForm,saveRepayment,removeRepayment,toggleDebtEvent,toggleDebtPlanForm,saveDebtPlanSettings,
     APP_VERSION,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,

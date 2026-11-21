@@ -20,7 +20,9 @@ touji/
 │   ├── review-engine.js # 纯函数复盘引擎（UMD）
 │   ├── import-engine.js # 导入去重（UMD）
 │   ├── server-sync.js   # 账号同步客户端（UMD）
-│   └── debt-engine.js   # 负债：利息、待付日程、发薪日还债计划、入金冷静提醒（UMD）
+│   ├── debt-engine.js   # 负债：利息、待付日程、发薪日还债计划、入金冷静提醒（UMD）
+│   └── c2c-import.js    # C2C 订单截图文字 → 订单 → 与已有流水配对（UMD）
+├── vendor/tesseract-6.0.1/ # 本地 OCR（按需加载，不进预缓存）；语言数据是 tessdata_fast 的 chi_sim
 ├── tests/
 │   ├── entry-engine.test.js # 时间与换汇计算测试
 │   └── review-engine.test.js # Node 内置测试
@@ -127,8 +129,12 @@ touji/
   positionId, realizedPL, updatedAt,
   fundSource,   // 入金资金来源 'salary' | 'savings' | 'loan' | 'other'
   destination,  // 出金去向 'card' | 'repay' | 'interest' | 'other'
-  loanId        // 借款入金 / 还贷出金关联的贷款
+  loanId,       // 借款入金 / 还贷出金关联的贷款
+  channel,      // 收付款渠道 'alipay' | 'wechat' | 'bank' | 'other'
+  counterparty  // 交易对手（C2C 商家名）
 }]
+// 换汇出入金：amount 是外币数量；入金 source=CNY/target=外币，出金 source=外币/target=CNY。
+// 统一用 ToujiEntry.fxParts(e) 读、fxFields(type, parts) 写，不要直接假设 source 是人民币。
 
 // 负债 key: touji_debts_v1（贷款 kind:'loan' + 还债计划 kind:'plan'，见 README「数据模型」）
 // 负债删除墓碑 key: touji_debt_deleted_v1

@@ -74,10 +74,33 @@ function fundingOf(entry) {
   }
 }
 
+const CHANNELS = new Set(['alipay', 'wechat', 'bank', 'other'])
+
+/**
+ * How the money moved: the price actually paid per unit of a foreign
+ * currency (a C2C USDT order has one, and a desk valuing the ledger at
+ * today's rate gets a different answer), the payment channel, and who was on
+ * the other side. Only cash in and out carry these.
+ */
+function settlementOf(entry, currency) {
+  const isCash = entry.type === '入金' || entry.type === '出金'
+  const units = number(entry.amount)
+  const stated = number(entry.fxRate) || number(entry.rate)
+  const implied = units > 0 ? amountCNY(entry) / units : 0
+  const rate = stated > 0 ? stated : implied
+  return {
+    fxRate: isCash && currency !== 'CNY' && rate > 0 ? Math.round(rate * 1e6) / 1e6 : null,
+    channel: isCash ? enumValue(CHANNELS, entry.channel) : null,
+    counterparty: isCash ? text(entry.counterparty) : null
+  }
+}
+
 /** Machine-readable first, with the original Chinese kept alongside. */
 export function toCashflow(entry) {
   const direction = CASH_TYPES.get(entry.type) || TRADE_TYPES.get(entry.type) || 'other'
   const { fundSource, destination, loanId, toPlatform } = fundingOf(entry)
+  const currency = String(entry.currency || 'CNY').toUpperCase()
+  const { fxRate, channel, counterparty } = settlementOf(entry, currency)
   return {
     id: String(entry.id || ''),
     date: String(entry.date || '').slice(0, 10),
@@ -85,8 +108,9 @@ export function toCashflow(entry) {
     direction,
     type: String(entry.type || ''),
     amount: round2(number(entry.amount)),
-    currency: String(entry.currency || 'CNY').toUpperCase(),
+    currency,
     amountCNY: round2(amountCNY(entry)),
+    fxRate,
     // For a transfer this is the platform the money left.
     platform: String(entry.exchange || entry.platform || '') || null,
     toPlatform,
@@ -95,7 +119,9 @@ export function toCashflow(entry) {
     tags: Array.isArray(entry.tags) ? entry.tags.map(String) : [],
     fundSource,
     destination,
-    loanId
+    loanId,
+    channel,
+    counterparty
   }
 }
 

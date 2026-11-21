@@ -239,6 +239,39 @@ test('summary counts only what was returned', () => {
   assert.equal(summary.net, 60)
 })
 
+test('cash flow rows carry the price paid, the channel and the counterparty', async () => {
+  const { get, server } = await startApp([
+    // A C2C purchase: 500 CNY paid for 74.85 USDT at 6.68.
+    entry({
+      id: 'bought', type: '入金', amount: 74.85, currency: 'USDT', rate: 6.68, fxRate: 6.68, date: '2026-05-01',
+      sourceAmount: 500, sourceCurrency: 'CNY', targetAmount: 74.85, targetCurrency: 'USDT',
+      channel: 'alipay', counterparty: '某商家'
+    }),
+    // The mirror sale: 89.55 USDT sold for 600 CNY, no stated rate.
+    entry({
+      id: 'sold', type: '出金', amount: 89.55, currency: 'USDT', date: '2026-05-02',
+      sourceAmount: 89.55, sourceCurrency: 'USDT', targetAmount: 600, targetCurrency: 'CNY',
+      channel: 'bank'
+    }),
+    entry({ id: 'plain', type: '入金', amount: 300, date: '2026-05-03', channel: 'cash' }),
+    entry({ id: 'moved', type: '互转', amount: 100, date: '2026-05-04', channel: 'bank', counterparty: 'x' })
+  ])
+  try {
+    const body = await (await get('/api/v1/feed/cashflows')).json()
+    const byId = Object.fromEntries(body.cashflows.map(row => [row.id, row]))
+    const pick = row => [row.amount, row.currency, row.amountCNY, row.fxRate, row.channel, row.counterparty]
+
+    assert.deepEqual(pick(byId.bought), [74.85, 'USDT', 500, 6.68, 'alipay', '某商家'])
+    // Without a stated rate the price is what the two sides imply.
+    assert.deepEqual(pick(byId.sold), [89.55, 'USDT', 600, 6.700168, 'bank', null])
+    // CNY has no rate; an unknown channel reads as null; transfers carry neither.
+    assert.deepEqual(pick(byId.plain), [300, 'CNY', 300, null, null, null])
+    assert.deepEqual(pick(byId.moved), [100, 'CNY', 100, null, null, null])
+  } finally {
+    server.close()
+  }
+})
+
 test('cash flow rows carry funding fields, and transfers are counted but not summed', async () => {
   const { get, server } = await startApp([
     entry({ id: 'salary', type: '入金', amount: 30000, date: '2026-04-01', fundSource: 'salary' }),

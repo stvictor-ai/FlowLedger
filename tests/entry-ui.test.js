@@ -5,11 +5,19 @@ const test = require('node:test')
 const html = fs.readFileSync('index.html', 'utf8')
 const worker = fs.readFileSync('sw.js', 'utf8')
 
-test('quick entry exposes minute time and converted foreign deposit fields', () => {
+test('quick entry exposes minute time and both sides of a conversion, in or out', () => {
   assert.match(html, /type="time" v-model="form\.time"/)
   assert.match(html, /v-model\.number="form\.sourceAmount"/)
-  assert.match(html, /本笔实际汇率/)
-  assert.match(html, /按本笔汇率自动计算到账数量/)
+  assert.match(html, /v-model\.number="form\.fxUnits"/)
+  // 出金也能记单价和数量，不只是入金
+  assert.match(html, /quickAction==='withdraw'\?'到账人民币':'支付人民币'/)
+  assert.match(html, /人民币金额、单价、数量填两个/)
+})
+
+test('cash entries can carry a payment channel and a counterparty', () => {
+  assert.match(html, /v-for="o in PAY_CHANNELS"/)
+  assert.match(html, /v-model="form\.counterparty"/)
+  assert.match(html, /'收付款渠道':channelLabel\(e\.channel\)/)
 })
 
 test('entry engine is loaded and available offline', () => {
