@@ -294,7 +294,13 @@
     const all = []
     for (const view of views) {
       for (const event of view.events) {
-        if (event.date < today) continue
+        // 到期没还的本金不会因为日子过了就消失：留在最前面，标出逾期几天。
+        // 过了的付息日不留 —— 银行会自动扣息，没勾不代表没付。
+        if (event.date < today) {
+          if (event.kind !== 'maturity' || event.paid) continue
+          all.push({ ...event, overdue: true, overdueDays: daysBetween(event.date, today) })
+          continue
+        }
         if (!event.paid && event.amount <= 0) continue
         all.push(event)
       }
@@ -444,7 +450,7 @@
       const step = plan ? paydayPlan(views, plan, today).steps[0] : null
       const due = owed.nextEvent && owed.nextEvent.kind === 'maturity' ? owed.nextEvent : null
       let text = `还欠 ¥${owed.totalOwed.toLocaleString('zh-CN', { maximumFractionDigits: 2 })}`
-      if (step) text += `，最近一笔 ${step.date} 到期（还有 ${step.days} 天）`
+      if (step) text += step.days < 0 ? `，${step.date} 到期的那笔已经逾期 ${-step.days} 天` : `，最近一笔 ${step.date} 到期（还有 ${step.days} 天）`
       if (step && step.planGap) text += `，按计划还差 ¥${step.planGap.toLocaleString('zh-CN', { maximumFractionDigits: 2 })}`
       else if (due) text += `，${due.date} 要还 ¥${due.amount.toLocaleString('zh-CN', { maximumFractionDigits: 2 })}`
       if (amount > 0) text += `。这 ¥${amount.toLocaleString('zh-CN', { maximumFractionDigits: 2 })} 本可以先还掉`

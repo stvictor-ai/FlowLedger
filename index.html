@@ -3379,6 +3379,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   .entry-ticket-foot{grid-template-columns:1fr}
   .entry-ticket-foot>button{width:100%;justify-content:center}
   .entry-ticket-foot p{display:none}
+  .entry-ticket-foot p.entry-save-blocker{display:block;grid-column:1/-1;grid-row:auto;justify-self:start;text-align:left}
   .entry-save-actions{display:grid;grid-template-columns:1fr 1fr}
   .entry-save-actions .btn{justify-content:center}
 }
@@ -4981,7 +4982,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <div class="debt-steps">
           <div class="debt-step-head"><span>到期日</span><span>贷款</span><span>之前的发薪日</span><span>到这天累计要还</span><span>按计划能还</span><span>还差</span></div>
           <div v-for="st in debtPayday.steps" :key="st.loanId" class="debt-step">
-            <span><strong>{{ st.date }}</strong><small>还有 {{ st.days }} 天</small></span>
+            <span><strong>{{ st.date }}</strong><small :class="{'debt-gap':st.days<0}">{{ st.days<0?'已逾期 '+(-st.days)+' 天':'还有 '+st.days+' 天' }}</small></span>
             <span>{{ st.loanName }}<small>到期付 {{ fmt(st.due) }}</small></span>
             <span>{{ st.paydays }} 个</span>
             <span class="privacy-number">{{ fmt(st.cumDue) }}</span>
@@ -5000,7 +5001,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <label v-for="ev in debtSchedule" :key="ev.loanId+ev.kind+ev.date" :class="['debt-event',{paid:ev.paid}]">
           <input type="checkbox" :checked="ev.paid" @change="toggleDebtEvent(ev,$event.target.checked)">
           <span class="debt-event-date">{{ ev.date.slice(5) }}<small>{{ ev.date.slice(0,4) }}</small></span>
-          <span class="debt-event-what"><strong>{{ ev.kind==='interest'?'付息':'到期还本' }}</strong><small>{{ ev.loanName }}</small></span>
+          <span class="debt-event-what"><strong :class="{'debt-gap':ev.overdue}">{{ ev.kind==='interest'?'付息':'到期还本' }}{{ ev.overdue?' · 已逾期 '+ev.overdueDays+' 天':'' }}</strong><small>{{ ev.loanName }}</small></span>
           <span class="debt-event-amount privacy-number">{{ fmt(ev.amount) }}</span>
         </label>
       </section>
@@ -5017,7 +5018,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
               <small>{{ l.lender||'—' }} · {{ (REPAY_TYPES.find(o=>o.key===l.repayType)||{}).label||'其他' }} · {{ (l.annualRate*100).toFixed(2) }}%</small>
             </div>
             <div class="debt-loan-figure"><span>剩余本金</span><strong class="privacy-number">{{ fmt(l.remaining) }}</strong></div>
-            <div class="debt-loan-figure"><span>到期</span><strong>{{ l.closed?'已结清':l.maturityDate||'—' }}</strong><small v-if="!l.closed&&l.daysToMaturity!=null">还有 {{ l.daysToMaturity }} 天</small></div>
+            <div class="debt-loan-figure"><span>到期</span><strong>{{ l.closed?'已结清':l.maturityDate||'—' }}</strong><small v-if="!l.closed&&l.daysToMaturity!=null" :class="{'debt-gap':l.daysToMaturity<0}">{{ l.daysToMaturity<0?'已逾期 '+(-l.daysToMaturity)+' 天':'还有 '+l.daysToMaturity+' 天' }}</small></div>
             <div class="debt-loan-figure"><span>已还本 / 已付息</span><strong class="privacy-number">{{ fmt(l.repaidPrincipal) }} / {{ fmt(l.paidInterest) }}</strong></div>
           </div>
           <div class="debt-loan-actions">
@@ -5808,7 +5809,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         </div>
         <div class="ledger-inspector-form">
           <div class="trade-lock-note" v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'">成交金额、币种和资产已参与持仓成本计算。需要改动这些字段时，请删除后重新录入。</div>
-          <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option><option value="互转">互转</option></select></div>
+          <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><template v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></template><option value="互转">互转</option></select></div>
           <div class="form-group"><label>日期与时间</label><div class="entry-datetime-fields"><input class="form-input" type="date" v-model="editingEntry.date"><input class="form-input" type="time" v-model="editingEntry.time" aria-label="发生时间"></div></div>
           <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="editingEntry.assetType" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="">{{ t("uncategorized") }}</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select></div>
           <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="editingEntry.exchange" list="dl-ex-ledger"></div>
@@ -6422,7 +6423,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           </div>
         </div>
         <div class="trade-lock-note" v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'">成交金额、币种和资产会参与持仓成本计算。需要改动时请删除后重新录入；日期、平台、备注和标签仍可编辑。</div>
-        <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option><option value="互转">互转</option></select></div>
+        <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><template v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></template><option value="互转">互转</option></select></div>
         <div class="form-group"><label>日期与时间</label><div class="entry-datetime-fields"><input class="form-input" type="date" v-model="editingEntry.date"><input class="form-input" type="time" v-model="editingEntry.time" aria-label="发生时间"></div></div>
         <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="editingEntry.assetType" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="">{{ t("uncategorized") }}</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select></div>
         <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="editingEntry.exchange" list="dl-ex3"><datalist id="dl-ex3"><option v-for="ex in editPlatformSuggestions" :key="ex" :value="ex"></option></datalist></div>
@@ -7789,6 +7790,7 @@ setup(){
     if(!(Number(f.principal)>0)){showToast('本金要大于 0','error');return}
     if(!f.maturityDate){showToast('请填写到期日','error');return}
     if(f.startDate&&f.startDate>f.maturityDate){showToast('起息日不能晚于到期日','error');return}
+    if(f.repayType==='bullet'&&!f.startDate){showToast('到期一次还本付息的贷款要填起息日，否则算不出利息','error');return}
     const existing=loanList.value.find(l=>l.id===f.id)
     upsertDebt({
       ...(existing||{}),
@@ -7850,7 +7852,7 @@ setup(){
     const loan=loanList.value.find(l=>l.id===event.loanId)
     if(!loan)return
     if(paid&&!event.paid){
-      upsertDebt(Debt.checkOff(loan,event,{today:debtToday.value,paidOn:debtToday.value<event.date?debtToday.value:event.date,id:'rp-'+genId()}))
+      upsertDebt(Debt.checkOff(loan,event,{today:debtToday.value,paidOn:debtToday.value<event.date?debtToday.value:event.date,id:'rp-'+genId(),ledgerRepayments:Debt.ledgerRepayments(entries.value,amountCNY)}))
       showToast(event.kind==='interest'?'这期利息已记为已付':'到期还本已记，这笔贷款已结清','success')
     }else if(!paid&&event.paid){
       upsertDebt(Debt.uncheck(loan,event))
@@ -8318,7 +8320,9 @@ setup(){
         return
       }
     }
+    if(!normDate(editingEntry.value.date)){showToast('请填写日期','error');return}
     const editingFx=!!editingEntry.value.fxMode&&(editingEntry.value.type==='入金'||editingEntry.value.type==='出金')
+    if(!editingFx&&!tradeLocked&&!(Number(editingEntry.value.amount)>0)){showToast('金额要大于 0','error');return}
     if(editingFx&&!editFxRate.value){
       showToast('请填写人民币金额和数量','error')
       return
@@ -9956,8 +9960,11 @@ setup(){
   }
   async function checkServerSession(){
     if(!serverClient){serverAccount.loading=false;sessionGuardMessage.value='账号服务暂时不可用，请返回个人站重试。';return}
-    accountReady.value=false
-    sessionGuardMessage.value='正在通过个人站确认你的登录状态，账本数据暂时不会显示。'
+    // 切回页面时的复查：这台设备已经确认过账号，就不再把账本藏起来重新确认一遍。
+    if(!boundAccountId){
+      accountReady.value=false
+      sessionGuardMessage.value='正在通过个人站确认你的登录状态，账本数据暂时不会显示。'
+    }
     serverAccount.loading=true
     try{
       const result=await serverClient.me()
@@ -10001,9 +10008,21 @@ setup(){
       accountReady.value=true
       if(wasAutoSyncReady&&serverAutoSyncEnabled.value&&_serverDirty)serverAutoSync.schedule(0)
     }catch(error){
-      if(error?.code!=='UNAUTHENTICATED')console.info('[投记] 账号服务器暂不可用')
+      const signedOut=error?.code==='UNAUTHENTICATED'||error?.message==='UNAUTHENTICATED'
+      if(!signedOut){
+        console.info('[投记] 账号服务器暂不可用')
+        // 断网、超时、服务器出错都不是「登录失效」。已经确认过账号的设备保留账本继续用：
+        // 清空内存再等下次成功，本机没同步的记录会被服务器副本直接覆盖。
+        if(boundAccountId){
+          syncStatus.value=navigator.onLine?'服务器暂不可用，本地已保存':'离线 · 本地已保存，联网后自动上传'
+          return
+        }
+      }
       serverAccount.user=null
       clearVisibleAccountData()
+      // 清空之后必须让下次登录重新从本机存储加载，否则内存是空的，会被当成空账本去下载服务器副本。
+      boundAccountId=''
+      accountReady.value=false
       resetServerAdmin()
       sessionGuardMessage.value=error?.code==='UNAUTHENTICATED'||error?.message==='UNAUTHENTICATED'
         ?'登录已退出。重新登录后，只会加载该账号自己的账本。'

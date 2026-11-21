@@ -148,3 +148,29 @@ test('paydays clamp to month end and include today', () => {
   assert.equal(Debt.lastPayday(20, '2026-10-19'), '2026-09-20')
   assert.equal(Debt.findPlan([]).paydayDom, 20)
 })
+
+test('a loan past its maturity stays at the top of the schedule, marked overdue', () => {
+  const today = '2027-01-26'
+  const views = Debt.loanViews(loans(), { today })
+  const events = Debt.schedule(views, today, 6)
+  assert.equal(events[0].loanId, 'b')
+  assert.equal(events[0].kind, 'maturity')
+  assert.equal(events[0].overdue, true)
+  assert.equal(events[0].overdueDays, 6)
+  assert.equal(Debt.summary(views, today).nextEvent.date, '2027-01-20')
+  const risk = Debt.depositWarnings({ entries: [], form: { date: today, amountCNY: 500, fundSource: 'salary' }, views, plan: Debt.findPlan([plan]), today, amountCNY })
+  assert.ok(risk.warnings.some(w => w.text.includes('已经逾期 6 天')))
+})
+
+test('ticking a maturity only repays what the ledger has not already repaid', () => {
+  const today = '2027-01-18'
+  const entries = [{ id: 'w1', type: '出金', date: '2026-12-01', amount: 10000, currency: 'CNY', destination: 'repay', loanId: 'b' }]
+  const fromLedger = Debt.ledgerRepayments(entries, amountCNY)
+  const [, b] = Debt.loanViews(loans(), { today, entries, amountCNY })
+  assert.equal(b.remaining, 48500)
+  const maturity = b.events.find(e => e.kind === 'maturity')
+  const paid = Debt.checkOff(loans()[1], maturity, { today, ledgerRepayments: fromLedger })
+  const after = Debt.loanView(paid, { today, ledgerRepayments: fromLedger })
+  assert.equal(after.repaidPrincipal, 60000)
+  assert.equal(after.closed, true)
+})
