@@ -42,6 +42,20 @@ test('the entry form is one column with the optional fields behind 更多', () =
   assert.match(html, /v-for="o in visibleDestinations"/)
 })
 
+test('tags and the reason are one field, and the optional labels carry icons', () => {
+  const start = html.indexOf('class="entry-optional"')
+  const optional = html.slice(start, html.indexOf('<footer class="entry-ticket-foot"', start))
+  // 标签（点选）和理由（一行字）合在同一栏里，不再各占一个输入框
+  assert.equal((optional.match(/class="form-group entry-reason"/g) || []).length, 1)
+  assert.match(optional, /v-for="tag in quickReasonOptions"/)
+  assert.doesNotMatch(optional, /v-model="form\.tagText"/)
+  assert.equal((optional.match(/v-model="form\.note"/g) || []).length, 1)
+  // 每个标签前都有小图标
+  const labels = optional.match(/<label>[\s\S]*?<\/label>/g) || []
+  assert.equal(labels.length, 4)
+  for (const label of labels) assert.match(label, /class="entry-label-icon"/)
+})
+
 test('no text in the stylesheet is smaller than 11px', () => {
   const css = html.slice(html.indexOf('<style>'), html.indexOf('</style>'))
   const sizes = [...css.matchAll(/font-size:([0-9.]+)px/g)].map(m => Number(m[1]))
