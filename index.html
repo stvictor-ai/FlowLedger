@@ -306,6 +306,15 @@ html[data-pl="intl"]{--gain:var(--green);--loss:var(--red)}
 .balance-box h3{margin:0;font-size:17px}
 .balance-box .hint{margin:0}
 .balance-actions{display:flex;justify-content:flex-end;gap:10px}
+.me-number{width:96px;text-align:right}
+.me-actions>span{color:var(--muted);font-size:13px}
+.c2c-raw-toggle{justify-self:start;font-size:12px;margin:2px 0}
+.account-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.entry-action-more{opacity:.75}
+.month-cap{display:grid;gap:10px;padding:4px 0 2px}
+.month-cap-row{display:flex;justify-content:space-between;align-items:baseline}
+.month-cap-row strong{font-size:20px;font-weight:650}
+.month-cap-row.small{font-size:12px;color:var(--muted)}
 .me-settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:16px 0 20px}
 .me-group{border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 16px}
 .me-group h3{margin:10px 0 2px;font-size:12px;font-weight:600;color:var(--muted)}
@@ -4575,6 +4584,20 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
   </section>
 
   <div class="overview-grid" v-show="activeTab==='overview'">
+    <section class="panel overview-module" v-if="entries.length">
+      <div class="panel-header">
+        <div><h2>这个月</h2></div>
+        <button class="text-command" @click="setActiveTab('data')">{{ rules.monthlyCap>0?'改上限':'定个上限' }} <span>→</span></button>
+      </div>
+      <div class="month-cap">
+        <div class="month-cap-row"><span>投入</span><strong class="privacy-number">{{ fmt(monthInvested) }}</strong></div>
+        <template v-if="rules.monthlyCap>0">
+          <div class="allocation-track"><i :style="{width:Math.min(100,monthInvested/rules.monthlyCap*100)+'%',background:monthInvested>rules.monthlyCap?'var(--red)':'var(--text)'}"></i></div>
+          <div class="month-cap-row small"><span>给自己定的上限 <span class="privacy-number">{{ fmt(rules.monthlyCap) }}</span></span><span class="privacy-number">{{ monthInvested>rules.monthlyCap?'已超出 '+fmt(monthInvested-rules.monthlyCap):'还剩 '+fmt(rules.monthlyCap-monthInvested) }}</span></div>
+        </template>
+        <p v-else class="funding-note">给自己定一个每月投入上限，超过时记一笔会先提醒你。</p>
+      </div>
+    </section>
     <section class="panel overview-module" v-if="featureOn.loans&&openLoans.length">
       <div class="panel-header">
         <div><h2>借款</h2></div>
@@ -4987,10 +5010,10 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
     <header class="entry-page-head">
       <div>
         <h2>记一笔</h2>
-        <p class="hint">先选择资金动作，再填写这笔操作真正需要的信息。</p>
+        <p class="hint">金额、账户、钱从哪来，三样就够。其余都可以不填。</p>
       </div>
       <div class="entry-head-actions">
-        <button type="button" class="btn btn-ghost btn-sm" @click="c2c.open?closeC2C():openC2C()">{{ c2c.open?'收起截图导入':'从截图导入' }}</button>
+        <button type="button" class="btn btn-ghost btn-sm" @click="c2c.open?closeC2C():openC2C()">{{ c2c.open?'收起截图导入':'截图导入' }}</button>
         <select v-if="quickTemplates.length" class="form-input entry-template-select" :value="''" @change="applyQuickTemplateKey($event.target.value);$event.target.value=''">
           <option value="">套用常用模板</option>
           <option v-for="tpl in quickTemplates" :key="tpl.key" :value="tpl.key">{{ tpl.label }}</option>
@@ -5002,8 +5025,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
     <div v-if="c2c.open" class="c2c-panel">
       <div class="c2c-head">
         <div>
-          <h3>从 C2C 订单截图导入</h3>
-          <p>用交易所「C2C → 订单」列表的截图，一张可以有多笔。识别在这台设备上完成，截图不会上传。</p>
+          <h3>截图导入</h3>
+          <p>用交易所 App 里买币 / 卖币订单列表的截图，一张可以有多笔。在这台设备上识别，截图不会上传。</p>
         </div>
         <button class="ledger-inspector-close" @click="closeC2C" title="关闭" aria-label="关闭截图导入">×</button>
       </div>
@@ -5012,7 +5035,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <input ref="c2cFile" type="file" accept="image/*" multiple hidden @change="c2cPickImages">
         <span>或者在相册里长按截图 →「复制文字」，粘贴到下面</span>
       </div>
-      <textarea class="form-input c2c-text" v-model="c2c.text" rows="4" placeholder="识别出的文字会出现在这里；也可以直接粘贴。读错的数字可以在这里改，下面会跟着变。" @input="c2cParse"></textarea>
+      <button v-if="c2c.rows.length" type="button" class="text-command c2c-raw-toggle" @click="c2c.showText=!c2c.showText">{{ c2c.showText?'收起识别出的原始文字':'看识别出的原始文字（读错的数字可以在里面改）' }}</button>
+      <textarea v-show="!c2c.rows.length||c2c.showText" class="form-input c2c-text" v-model="c2c.text" rows="4" placeholder="识别出的文字会出现在这里；也可以直接粘贴。读错的数字可以在这里改，下面会跟着变。" @input="c2cParse"></textarea>
       <p v-if="c2c.error" class="c2c-error">{{ c2c.error }}</p>
 
       <template v-if="c2c.rows.length">
@@ -5044,8 +5068,11 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
     </div>
 
     <div class="entry-action-bar">
-      <button v-for="a in quickActions" :key="a.key" :class="['entry-action-button',{active:quickAction===a.key}]" @click="setQuickAction(a.key)">
+      <button v-for="a in visibleQuickActions" :key="a.key" :class="['entry-action-button',{active:quickAction===a.key}]" @click="setQuickAction(a.key)">
         <strong>{{ a.label }}</strong><span>{{ a.short }}</span>
+      </button>
+      <button v-if="visibleQuickActions.length<quickActions.length" type="button" class="entry-action-button entry-action-more" @click="showAllActions=true">
+        <strong>更多</strong><span>转移、买入、卖出</span>
       </button>
     </div>
     <div class="entry-action-description">
@@ -5060,7 +5087,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <div class="form-group"><label>{{ isFxCash?(quickAction==='withdraw'?'卖出币种':'到账币种'):'币种' }}</label><select class="form-input" v-model="form.currency" @change="handleCashCurrencyChange"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select></div>
         <div v-if="isFxCash" class="form-group"><label>{{ quickAction==='withdraw'?'到账人民币':'支付人民币' }}</label><input class="form-input" type="number" step="0.01" v-model.number="form.sourceAmount" placeholder="输入人民币金额" inputmode="decimal" @input="onFxInput('cny')" @keyup.enter="addEntry(true)"></div>
         <div v-else class="form-group"><label>{{ quickAmountLabel }}</label><input class="form-input" type="number" step="0.01" v-model.number="form.amount" placeholder="输入金额" inputmode="decimal" @keyup.enter="addEntry(true)"></div>
-        <div class="form-group"><label>{{ quickAction==='transfer'?'从哪个账户转出':'账户' }}</label><input class="form-input" v-model="form.exchange" placeholder="例如：招商证券" list="dl-ex-focused"></div>
+        <div class="form-group"><label>{{ quickAction==='transfer'?'从哪个账户转出':'账户' }}</label><input class="form-input" v-model="form.exchange" placeholder="例如：招商证券" list="dl-ex-focused"><div v-if="recentAccounts.length" class="account-chips"><button v-for="name in recentAccounts" :key="name" type="button" :class="['chip',{active:form.exchange===name}]" @click="form.exchange=name">{{ name }}</button></div></div>
         <div class="form-group" v-if="quickAction==='transfer'"><label>转入哪个账户</label><input class="form-input" v-model="form.toExchange" placeholder="例如：币安" list="dl-ex-focused"></div>
         <div class="form-group"><label>日期与时间</label><div class="entry-datetime-fields"><input class="form-input" type="date" v-model="form.date"><input class="form-input" type="time" v-model="form.time" aria-label="发生时间"></div></div>
       </div>
@@ -5214,6 +5241,17 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
             <button v-if="featureOn.loans" type="button" class="btn btn-ghost btn-sm" @click="setActiveTab('debts')">打开</button>
             <button type="button" role="switch" aria-label="借款" :aria-checked="featureOn.loans" :class="['me-switch',{on:featureOn.loans}]" @click="setFeature('loans',!featureOn.loans)"></button>
           </div>
+        </div>
+      </section>
+      <section class="me-group">
+        <h3>给自己定的规矩</h3>
+        <div class="me-row">
+          <div><strong>每月最多投入</strong><small>{{ rules.monthlyCap>0?'这个月已投入 '+fmt(monthInvested)+' 元，超过时记一笔会先提醒':'填 0 就是不设上限' }}</small></div>
+          <div class="me-actions"><input class="form-input me-number" type="number" min="0" step="100" inputmode="numeric" v-model.number="rules.monthlyCap" @change="saveRules" aria-label="每月最多投入（元）"><span>元</span></div>
+        </div>
+        <div class="me-row">
+          <div><strong>大额提醒</strong><small>单笔超过这个数，复盘里会标出来</small></div>
+          <div class="me-actions"><input class="form-input me-number" type="number" min="0" step="100" inputmode="numeric" v-model.number="rules.largeTx" @change="saveRules" aria-label="大额提醒（元）"><span>元</span></div>
         </div>
       </section>
       <section class="me-group">
@@ -6373,7 +6411,7 @@ function normRow(row){
     updatedAt:row.updatedAt||0}
 }
 
-function defRules(){return{lossWarn:3000,lossCritical:5000,roiWarn:0.6,inflowRatio:1.8,largeTx:5000,lossStreak:2,denseBuyCount:3,denseBuyDays:7,concentrationPct:60}}
+function defRules(){return{monthlyCap:0,lossWarn:3000,lossCritical:5000,roiWarn:0.6,inflowRatio:1.8,largeTx:5000,lossStreak:2,denseBuyCount:3,denseBuyDays:7,concentrationPct:60}}
 function isoWeekKey(ds){const p=ds.split('-');if(p.length<3)return'';const d=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]));const dn=d.getUTCDay()||7;d.setUTCDate(d.getUTCDate()+4-dn);const ys=new Date(Date.UTC(d.getUTCFullYear(),0,1));const w=Math.ceil((((d-ys)/864e5)+1)/7);return`${d.getUTCFullYear()}-W${String(w).padStart(2,'0')}`}
 function pKey(ds,period){if(!ds)return'';if(period==='month')return ds.slice(0,7);if(period==='year')return ds.slice(0,4);return isoWeekKey(ds)}
 function todayKey(period){const n=new Date();const ds=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;return pKey(ds,period)}
@@ -7182,6 +7220,23 @@ setup(){
     {key:'buy',label:'买入',short:'买入某个标的',title:'买入是什么？',desc:'记录你用账户内资金购入某个资产，自动更新持仓数量和加权均价，不影响投入和取出的统计。'},
     {key:'sell',label:'卖出',short:'卖出某个标的',title:'卖出是什么？',desc:'记录你卖出持有资产，自动减少持仓数量并计算已实现盈亏，不影响投入和取出的统计。'}
   ]
+  // 大多数人只用投入和取出。另外三个收在「更多」后面；正在用其中一个时自然全部展开。
+  const showAllActions=ref(false)
+  const visibleQuickActions=computed(()=>showAllActions.value||!['deposit','withdraw'].includes(quickAction.value)?quickActions:quickActions.slice(0,2))
+  // 账户用点的，不用每次打字：按最近用过的顺序给出前几个。
+  const recentAccounts=computed(()=>{
+    const seen=[]
+    for(const e of entries.value){
+      const name=String(e.exchange||'').trim()
+      if(name&&!seen.includes(name))seen.push(name)
+      if(seen.length>=5)break
+    }
+    return seen
+  })
+  const monthInvested=computed(()=>{
+    const month=debtToday.value.slice(0,7)
+    return entries.value.filter(e=>e.type==='入金'&&String(e.date||'').slice(0,7)===month).reduce((sum,e)=>sum+amountCNY(e),0)
+  })
   const quickActionInfo=computed(()=>quickActions.find(a=>a.key===quickAction.value)||quickActions[0])
   // 「工资入金」「转出」已由资金来源 / 去向表达，不再放进常用标签。
   const quickTagOptions=['定投','补仓','止盈','FOMO','买入','卖出']
@@ -7496,7 +7551,7 @@ setup(){
   const depositRisk=computed(()=>{
     if(quickAction.value!=='deposit')return{level:null,warnings:[]}
     const cny=isFxDeposit.value?Number(form.sourceAmount)||0:amountCNY({amount:Number(form.amount)||0,rate:form.rate,currency:form.currency})
-    return Debt.depositWarnings({entries:entries.value,form:{date:form.date,amountCNY:cny,fundSource:form.fundSource},views:debtViews.value,plan:debtPlanSettings.value,today:debtToday.value,amountCNY})
+    return Debt.depositWarnings({entries:entries.value,form:{date:form.date,amountCNY:cny,fundSource:form.fundSource},views:debtViews.value,plan:debtPlanSettings.value,today:debtToday.value,amountCNY,monthlyCap:rules.monthlyCap})
   })
   const needsIntent=computed(()=>depositRisk.value.level==='danger')
   function loanName(id){return loanList.value.find(l=>l.id===id)?.name||'已删除的贷款'}
@@ -7612,7 +7667,7 @@ setup(){
   }
   // ===== C2C 订单截图导入 =====
   const TESSERACT_BASE=new URL('vendor/tesseract-6.0.1',location.href).href
-  const c2c=reactive({open:false,busy:false,progress:'',text:'',error:'',rows:[],incomplete:0,platform:'',fundSource:'',channel:''})
+  const c2c=reactive({open:false,showText:false,busy:false,progress:'',text:'',error:'',rows:[],incomplete:0,platform:'',fundSource:'',channel:''})
   let tesseractReady=null
   function loadTesseract(){
     if(window.Tesseract)return Promise.resolve(window.Tesseract)
@@ -9221,7 +9276,7 @@ setup(){
   }
   function saveChecklist(){const pk=reviewStorageKey();try{const r=localStorage.getItem(CHECKLIST_K);const d=r?JSON.parse(r):{};d[pk]=clone(reviewChecklist.value);writeStorageJSON(CHECKLIST_K,d,'复盘清单')}catch(e){showToast('复盘清单保存失败','error')}}
   function saveReviewNote(){const pk=reviewStorageKey();try{const r=localStorage.getItem(REVIEW_K);const d=r?JSON.parse(r):{};d[pk]={note:reviewNote.value,savedAt:new Date().toLocaleString(lang==='zh'?'zh-CN':'en-US')};if(writeStorageJSON(REVIEW_K,d,'复盘笔记')){reviewSavedAt.value=d[pk].savedAt;showToast('笔记已保存','success')}}catch(e){showToast('复盘笔记保存失败','error')}}
-  function saveRules(){if(writeStorageJSON(RULES_K,{lossWarn:rules.lossWarn,lossCritical:rules.lossCritical,roiWarn:rules.roiWarn,inflowRatio:rules.inflowRatio,largeTx:rules.largeTx,lossStreak:rules.lossStreak,denseBuyCount:rules.denseBuyCount,denseBuyDays:rules.denseBuyDays,concentrationPct:rules.concentrationPct},'复盘规则'))showToast('规则已保存','success')}
+  function saveRules(){if(writeStorageJSON(RULES_K,{monthlyCap:Math.max(0,Number(rules.monthlyCap)||0),lossWarn:rules.lossWarn,lossCritical:rules.lossCritical,roiWarn:rules.roiWarn,inflowRatio:rules.inflowRatio,largeTx:rules.largeTx,lossStreak:rules.lossStreak,denseBuyCount:rules.denseBuyCount,denseBuyDays:rules.denseBuyDays,concentrationPct:rules.concentrationPct},'复盘规则'))showToast('规则已保存','success')}
 
   // Snapshots
   function createSnap(){snap();showToast('快照已创建','success')}
@@ -10847,7 +10902,7 @@ setup(){
   })
 
   return{c2c,openC2C,closeC2C,c2cParse,c2cRelabel,c2cSelected,c2cSummary,c2cPickImages,c2cApply,PAY_CHANNELS,isFxCash,onFxInput,canOfferFx,switchToFx,fxOf,channelLabel,editFxRate,editFxOn,editFxOff,typeTone,typeTagClass,typeColor,debts,loanList,debtViews,openLoans,loanOptions,debtSummary,debtSchedule,debtPayday,debtFunding,depositRisk,needsIntent,quickSaveBlocker,FUND_SOURCES,DESTINATIONS,REPAY_TYPES,DEPOSIT_INTENTS,loanName,fundSourceLabel,destinationLabel,debtLoanForm,debtRepayForm,debtPlanForm,expandedLoanId,openLoanForm,saveLoan,deleteLoan,openRepayForm,saveRepayment,removeRepayment,toggleDebtEvent,toggleDebtPlanForm,saveDebtPlanSettings,
-    APP_VERSION,updateReady,reloadForUpdate,typeLabel,accountRows,accountSummary,useHoldingsValue,homeValue,homeProfit,homeROI,balanceForm,openBalance,saveBalance,featureOn,setFeature,mobileTabs,railTabs,navActive,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,guestMode,continueAsGuest,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
+    APP_VERSION,updateReady,reloadForUpdate,typeLabel,showAllActions,visibleQuickActions,recentAccounts,monthInvested,accountRows,accountSummary,useHoldingsValue,homeValue,homeProfit,homeROI,balanceForm,openBalance,saveBalance,featureOn,setFeature,mobileTabs,railTabs,navActive,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,guestMode,continueAsGuest,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,fmtQtyNum,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,capitalChart,capitalCurve,capitalCurveView,capitalRange,setCapitalRange,CAPITAL_RANGES,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,

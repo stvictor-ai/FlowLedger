@@ -174,3 +174,22 @@ test('ticking a maturity only repays what the ledger has not already repaid', ()
   assert.equal(after.repaidPrincipal, 60000)
   assert.equal(after.closed, true)
 })
+
+test('a monthly cap warns anyone, with or without loans', () => {
+  const today = '2026-10-26'
+  const entries = [{ id: 'd1', type: '入金', date: '2026-10-03', amount: 3500, currency: 'CNY' }]
+  const check = (amount, cap) => Debt.depositWarnings({ entries, form: { date: today, amountCNY: amount, fundSource: 'salary' }, views: [], plan: null, today, amountCNY, monthlyCap: cap })
+
+  assert.equal(check(1000, 5000).warnings.some(w => w.key === 'cap'), false)
+  const over = check(2000, 5000)
+  assert.equal(over.level, 'warn')
+  assert.ok(over.warnings.find(w => w.key === 'cap').text.includes('5,500'))
+  // 没设上限就不提
+  assert.equal(check(2000, 0).warnings.some(w => w.key === 'cap'), false)
+
+  const already = Debt.depositWarnings({
+    entries: [...entries, { id: 'd2', type: '入金', date: '2026-10-10', amount: 2000, currency: 'CNY' }],
+    form: { date: today, amountCNY: 100, fundSource: 'salary' }, views: [], plan: null, today, amountCNY, monthlyCap: 5000
+  })
+  assert.equal(already.warnings.find(w => w.key === 'cap').level, 'danger')
+})

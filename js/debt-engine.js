@@ -434,6 +434,7 @@
   // 出现，并且带上下文：还欠多少、本月第几笔。level: info < warn < danger。
   function depositWarnings(input) {
     const { entries, form, views, plan, today, amountCNY } = input
+    const cap = number(input.monthlyCap)
     const out = []
     const amount = number(form.amountCNY)
     const owed = summary(views || [], today)
@@ -444,7 +445,7 @@
     const nth = monthDeposits.length + 1
 
     if (form.fundSource === 'loan') {
-      out.push({ level: 'danger', key: 'loan', text: '这笔是借来的钱。借来的钱进交易所，亏掉的部分要用工资连本带息还。' })
+      out.push({ level: 'danger', key: 'loan', text: '这笔是借来的钱。拿借来的钱去投资，亏掉的部分要用工资连本带息还。' })
     }
     if (owed.totalOwed > 0) {
       const step = plan ? paydayPlan(views, plan, today).steps[0] : null
@@ -457,11 +458,23 @@
       out.push({ level: nth >= 2 ? 'danger' : 'warn', key: 'debt', text: text + '。' })
     }
     if (nth >= 2 && (owed.totalOwed > 0 || nth >= 4)) {
-      out.push({ level: nth >= 4 ? 'danger' : 'warn', key: 'month', text: `本月第 ${nth} 笔入金，合计 ¥${monthTotal.toLocaleString('zh-CN', { maximumFractionDigits: 2 })}。` })
+      out.push({ level: nth >= 4 ? 'danger' : 'warn', key: 'month', text: `本月第 ${nth} 笔投入，合计 ¥${monthTotal.toLocaleString('zh-CN', { maximumFractionDigits: 2 })}。` })
+    }
+    // 给自己定的每月上限：不欠钱的人也用得上。之前就已经超了的，再投一笔要更醒目。
+    if (cap > 0 && amount > 0 && monthTotal > cap) {
+      const before = round2(monthTotal - amount)
+      const money = value => value.toLocaleString('zh-CN', { maximumFractionDigits: 2 })
+      out.push({
+        level: before >= cap ? 'danger' : 'warn',
+        key: 'cap',
+        text: before >= cap
+          ? `本月已投入 ¥${money(before)}，已经超过你定的每月上限 ¥${money(cap)}。`
+          : `本月已投入 ¥${money(before)}，加上这笔是 ¥${money(monthTotal)}，会超过你定的每月上限 ¥${money(cap)}。`
+      })
     }
     const last = [...deposits].sort((a, b) => String(b.date).localeCompare(String(a.date)))[0]
     if (last && form.date && daysBetween(last.date, form.date) >= 0 && daysBetween(last.date, form.date) <= 1) {
-      out.push({ level: 'warn', key: 'gap', text: `上一笔入金是 ${last.date}，不到 24 小时又要转。` })
+      out.push({ level: 'warn', key: 'gap', text: `上一笔投入是 ${last.date}，不到 24 小时又要投。` })
     }
     const recent = [...deposits].sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 10)
     if (recent.length >= 3 && amount > 0) {
