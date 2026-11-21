@@ -175,3 +175,18 @@ test('the newer copy of a record wins; at the same moment missing fields are fil
   assert.equal(mergeRecord(null, full), full)
   assert.equal(mergeRecord(full, undefined), full)
 })
+
+test('being sent to a login page counts as signed out, not as a network failure', async () => {
+  const seen = []
+  const redirected = createClient({
+    fetchImpl: async (url, options) => {
+      seen.push(options.redirect)
+      return { ok: false, status: 0, type: 'opaqueredirect', headers: { get: () => null } }
+    }
+  })
+  await assert.rejects(() => redirected.me(), error => error.code === 'UNAUTHENTICATED' && error.status === 401)
+  assert.deepEqual(seen, ['manual'])
+
+  const found = createClient({ fetchImpl: async () => ({ ok: false, status: 302, headers: { get: () => null } }) })
+  await assert.rejects(() => found.readSnapshot('ledger-1'), error => error.code === 'UNAUTHENTICATED')
+})

@@ -57,6 +57,31 @@ handle {
 
 设置之后，不带密钥的请求一律不认身份头——不走 `forward_auth` 的路径（例如给 feed 开的豁免）即使忘了剥掉 `X-Orbit-User-*`，也冒充不了任何人。没设置时 API 仍能工作，但启动日志会有一行警告。
 
+### 让没登录的人也能用
+
+页面本身不含任何账本数据，可以公开；需要登录的只有 `/api/*`。把 `forward_auth` 从整个站点收到 API 这一条路径上：
+
+```caddy
+handle {
+    @api path /api/*
+    handle @api {
+        forward_auth 127.0.0.1:3001 {
+            uri /v1/internal/authorize
+            copy_headers X-Orbit-User-Id X-Orbit-User-Role X-Orbit-User-Email
+        }
+        reverse_proxy 127.0.0.1:8787 {
+            header_up X-Orbit-Proxy-Secret "…"
+        }
+    }
+
+    root * /var/www/flowledger
+    # 其余静态文件配置不变
+    file_server
+}
+```
+
+没登录的访客请求 `/api/*` 时会被校验服务拒绝或重定向到登录页，前端把这两种情况都认作「未登录」，按访客模式打开本机账本。
+
 在投记管理页停用的账号不会因为再次通过 Orbit 登录而恢复，名下的只读令牌同时失效；要恢复只能在管理页重新启用。
 
 `.env` 已被 Git 忽略，不要提交，也不要截图分享。数据库密码如果包含 URL 特殊字符，需要在 `DATABASE_URL` 中进行百分号编码；最省事的做法是使用十六进制随机字符串。

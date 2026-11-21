@@ -287,6 +287,9 @@ tr.row-unmatched td{opacity:.35}
 .toast.error{background:rgba(248,113,113,.92);color:#450a0a}
 .toast.info{background:rgba(45,181,160,.92);color:white}
 
+.guest-note{border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin:12px 0}
+.guest-note strong{display:block;margin-bottom:4px}
+.guest-note p{margin:0 0 12px;color:var(--muted);font-size:13px;line-height:1.6}
 .update-bar{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:290;display:flex;align-items:center;gap:12px;padding:8px 8px 8px 18px;border-radius:999px;background:var(--text);color:var(--bg);font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 8px 24px var(--shadow)}
 .update-bar button{border:0;border-radius:999px;padding:6px 14px;font:inherit;background:var(--bg);color:var(--text);cursor:pointer}
 @media(max-width:760px){.update-bar{bottom:calc(88px + env(safe-area-inset-bottom,0px))}}
@@ -4397,10 +4400,11 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
 <div id="app" :class="['app', 'tab-'+activeTab, { 'showcase-mode': showcaseMode }]">
   <div v-if="orbitAuthRequired&&!accountReady" class="account-session-guard" role="status" aria-live="polite">
     <div class="account-session-guard-card">
-      <span>ORBIT ACCOUNT</span>
-      <h2>{{ serverAccount.loading?'正在确认账号':'需要登录' }}</h2>
+      <span>投记</span>
+      <h2>{{ serverAccount.loading?'正在打开账本':'需要重新登录' }}</h2>
       <p>{{ sessionGuardMessage }}</p>
-      <a v-if="!serverAccount.loading" class="btn btn-primary" :href="orbitLoginUrl">前往个人站登录</a>
+      <a v-if="!serverAccount.loading" class="btn btn-primary" :href="orbitLoginUrl">登录</a>
+      <button v-if="!serverAccount.loading" type="button" class="btn btn-ghost" style="margin-top:8px" @click="continueAsGuest">先不登录，在这台设备上使用</button>
     </div>
   </div>
   <!-- Toast -->
@@ -5412,7 +5416,12 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <div v-if="syncProvider==='server'">
           <div class="data-view-head">
             <div><h3>账号数据库同步</h3><p>登录、密码、邀请和成员统一在个人站管理；这里仅处理当前账号的账本同步。</p></div>
-            <span class="data-state"><span :class="['data-state-dot',{offline:!serverAccount.user}]"></span>{{ serverAccount.user?'已连接':'未连接' }}</span>
+            <span class="data-state"><span :class="['data-state-dot',{offline:!serverAccount.user}]"></span>{{ serverAccount.user?'已连接':(guestMode?'仅本机':'未连接') }}</span>
+          </div>
+          <div v-if="guestMode" class="guest-note">
+            <strong>现在没有登录，账本只保存在这台设备的浏览器里。</strong>
+            <p>换设备或清除浏览器数据后就没有了，建议定期在「导入导出」里导出备份。有账号的话，登录后账本会保存到云端并在多台设备间同步，这台设备上已经记的内容会一起带过去。</p>
+            <a class="btn btn-primary btn-sm" :href="orbitLoginUrl">登录</a>
           </div>
           <div v-if="serverAccount.user" class="server-account-line">
             <div class="server-account-identity"><span class="server-account-mark">O</span><div><strong>{{ serverAccountLabel }}</strong><span>{{ serverAccount.user.ledger?.name||'我的账本' }} · revision {{ serverRemote?.ledger?.revision??serverAccount.user.ledger?.revision??0 }}</span></div></div>
@@ -5422,7 +5431,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
             <div><span>本地流水</span><strong>{{ entries.length }}</strong></div><div><span>本地持仓</span><strong>{{ positions.length }}</strong></div><div><span>服务器流水</span><strong>{{ serverRemoteSummary.entries }}</strong></div><div><span>服务器持仓</span><strong>{{ serverRemoteSummary.positions }}</strong></div>
           </div>
           <p v-if="serverAccount.error" class="form-error" style="margin-top:12px">{{ serverAccount.error }}</p>
-          <p class="server-sync-note">{{ serverAutoSyncEnabled?'自动保存已开启：修改会先写入本机，再同步到服务器；断网恢复后会自动补传。':'首次同步需要确认本机与服务器账本，确认后将自动保存。' }}</p>
+          <p v-if="!guestMode" class="server-sync-note">{{ serverAutoSyncEnabled?'自动保存已开启：修改会先写入本机，再同步到服务器；断网恢复后会自动补传。':'首次同步需要确认本机与服务器账本，确认后将自动保存。' }}</p>
         </div>
 
         <div v-else-if="false">
@@ -6554,6 +6563,12 @@ function bindAccountStorage(accountId){
   ;({SK,SNAP_K,RULES_K,REVIEW_K,DAY_REVIEW_K,SYNC_K,IMPORT_K,CHECKLIST_K,POS_K,DEL_K,POS_DEL_K,DEBT_K,DEBT_DEL_K}=scoped)
   return id
 }
+// 回到不带账号后缀的那组 key：访客（没登录的人）的账本就存在这里。
+function unbindAccountStorage(){
+  ;({SK,SNAP_K,RULES_K,REVIEW_K,DAY_REVIEW_K,SYNC_K,IMPORT_K,CHECKLIST_K,POS_K,DEL_K,POS_DEL_K,DEBT_K,DEBT_DEL_K}=ACCOUNT_STORAGE_BASE)
+}
+// 这台设备上一次登录的是哪个账号。有它，会话失效时才提示登录；没有，就是访客，直接用本机账本。
+const LAST_ACCOUNT_K='touji_last_account_v1'
 const genId=()=>crypto.randomUUID?crypto.randomUUID():('r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6))
 const clone=o=>JSON.parse(JSON.stringify(o))
 
@@ -7578,7 +7593,11 @@ setup(){
   const SERVER_SYNC_PROVIDER_K='touji_sync_provider_v1'
   const syncProvider=ref(localStorage.getItem(SERVER_SYNC_PROVIDER_K)||'server')
   const serverClient=window.ToujiServerSync?.createClient?.()||null
+  // 个人站域名下可以登录账号、云端保存；不登录也能用，账本只存在这台设备上。
+  // 本地预览没有账号服务，localStorage 里放 touji_dev_orbit=1 可以走同一套流程来调试。
   const orbitAuthRequired=location.hostname==='ledger.orbitshz.com'
+    ||(['localhost','127.0.0.1'].includes(location.hostname)&&localStorage.getItem('touji_dev_orbit')==='1')
+  const guestMode=ref(false)
   const serverAccount=reactive({loading:true,busy:false,user:null,mode:'login',email:'',password:'',inviteCode:'',error:''})
   const accountReady=ref(false)
   // 页面一直开着（或 PWA 从后台恢复）就会一直跑旧代码。回到前台时看一眼线上的 sw.js，
@@ -7609,7 +7628,7 @@ setup(){
   const serverLocalSummary=computed(()=>window.ToujiServerSync?.summarizeSnapshot?.({entries:entries.value,positions:positions.value,debts:debts.value,deletedIds:deletedIds.value,deletedPositionIds:deletedPositionIds.value,deletedDebtIds:deletedDebtIds.value})||emptyServerSummary)
   const serverRemoteSummary=computed(()=>window.ToujiServerSync?.summarizeSnapshot?.(serverRemote.value)||emptyServerSummary)
   const cloudReady=computed(()=>!!serverAccount.user||!!syncCfg.token)
-  const cloudStatusLabel=computed(()=>serverAccount.user?'Orbit 账号已连接':syncCfg.token?'Gist 已配置':'等待账号连接')
+  const cloudStatusLabel=computed(()=>serverAccount.user?'账号已连接':syncCfg.token?'Gist 已配置':guestMode.value?'仅保存在这台设备':'等待账号连接')
   const serverAccountLabel=computed(()=>{
     const email=serverAccount.user?.email||''
     return email.endsWith('@users.orbit.invalid')?`Orbit 账号 #${serverAccount.user?.orbitUserId||''}`:email
@@ -9969,6 +9988,8 @@ setup(){
   function activateAccountStorage(user){
     const accountId=String(user?.orbitUserId||'').trim()
     if(!accountId)throw new Error('UNAUTHENTICATED')
+    localStorage.setItem(LAST_ACCOUNT_K,accountId)
+    guestMode.value=false
     if(boundAccountId===accountId)return false
     clearVisibleAccountData()
     boundAccountId=bindAccountStorage(accountId)
@@ -9976,12 +9997,32 @@ setup(){
     serverAutoSyncEnabled.value=readServerAutoSyncReady()
     return true
   }
+  // 不登录使用：账本读写不带账号后缀的本机存储，不碰任何账号的数据，也不同步。
+  function enterGuestMode(){
+    serverAccount.user=null
+    resetServerAdmin()
+    clearVisibleAccountData()
+    boundAccountId=''
+    unbindAccountStorage()
+    load();loadPositions()
+    guestMode.value=true
+    accountReady.value=true
+    serverAccount.loading=false
+    syncStatus.value='仅保存在这台设备'
+  }
+  // 登录过的设备上会话失效时，用户选择先不登录：之后这台设备按访客打开，账号的本机副本原样留着。
+  function continueAsGuest(){
+    localStorage.removeItem(LAST_ACCOUNT_K)
+    enterGuestMode()
+    Vue.nextTick(()=>{renderChart();renderPosPieChart();renderCapitalChart()})
+  }
   async function checkServerSession(){
     if(!serverClient){serverAccount.loading=false;sessionGuardMessage.value='账号服务暂时不可用，请返回个人站重试。';return}
     // 切回页面时的复查：这台设备已经确认过账号，就不再把账本藏起来重新确认一遍。
-    if(!boundAccountId){
+    const wasGuest=guestMode.value
+    if(!boundAccountId&&!wasGuest){
       accountReady.value=false
-      sessionGuardMessage.value='正在通过个人站确认你的登录状态，账本数据暂时不会显示。'
+      sessionGuardMessage.value='正在打开你的账本…'
     }
     serverAccount.loading=true
     try{
@@ -9989,6 +10030,7 @@ setup(){
       if(!result?.user?.orbitUserId)throw new Error('UNAUTHENTICATED')
       serverAccount.user=result.user
       activateAccountStorage(serverAccount.user)
+      if(wasGuest)Vue.nextTick(()=>{renderChart();renderPosPieChart();renderCapitalChart()})
       await fetchServerRemote()
       const localHasData=window.ToujiServerSync?.hasSnapshotData?.(localServerSnapshot())
       const remoteHasData=window.ToujiServerSync?.hasSnapshotData?.(serverRemote.value)
@@ -10036,6 +10078,22 @@ setup(){
           return
         }
       }
+      // 访客的复查：没登录是常态，什么都不用变。
+      if(wasGuest)return
+      const lastAccount=localStorage.getItem(LAST_ACCOUNT_K)||''
+      // 从没登录过的设备：不管是没登录还是连不上，都按访客打开本机账本。
+      if(!lastAccount){enterGuestMode();return}
+      // 登录过的设备冷启动时连不上服务器（不是登录失效）：打开该账号留在本机的副本，联网后再同步。
+      if(!signedOut&&!boundAccountId){
+        try{
+          boundAccountId=bindAccountStorage(lastAccount)
+          load();loadPositions()
+          serverAutoSyncEnabled.value=readServerAutoSyncReady()
+          accountReady.value=true
+          syncStatus.value=navigator.onLine?'服务器暂不可用，本地已保存':'离线 · 本地已保存，联网后自动上传'
+          return
+        }catch(storageError){boundAccountId=''}
+      }
       serverAccount.user=null
       clearVisibleAccountData()
       // 清空之后必须让下次登录重新从本机存储加载，否则内存是空的，会被当成空账本去下载服务器副本。
@@ -10043,7 +10101,7 @@ setup(){
       accountReady.value=false
       resetServerAdmin()
       sessionGuardMessage.value=error?.code==='UNAUTHENTICATED'||error?.message==='UNAUTHENTICATED'
-        ?'登录已退出。重新登录后，只会加载该账号自己的账本。'
+        ?'登录已失效。重新登录后继续使用云端账本；也可以先不登录，在这台设备上另记一本。'
         :'暂时无法验证登录状态。为保护账本，页面数据已锁定。'
     }finally{serverAccount.loading=false}
   }
@@ -10958,11 +11016,19 @@ setup(){
     })
   }
 
+  let guestCheckedAt=0
   async function verifyOrbitSession(){
     if(document.hidden||serverAccount.loading)return
+    // 访客每次切回来都问一遍没有必要：隔一会儿看一次，够发现「刚在另一个标签页登录了」。
+    if(guestMode.value){
+      if(Date.now()-guestCheckedAt<60000)return
+      guestCheckedAt=Date.now()
+    }
     await checkServerSession()
   }
   function retryOrbitAutoSync(){
+    // 离线打开的账号副本：联网后先把登录状态确认回来，同步才能继续。
+    if(!serverAccount.user&&boundAccountId){checkServerSession();return}
     if(!serverAccount.user||!serverAutoSyncEnabled.value)return
     if(_serverDirty)serverAutoSync.schedule(0)
     else serverAutoSync.schedule(250)
@@ -10972,7 +11038,10 @@ setup(){
     if(orbitAuthRequired){
       window.addEventListener('focus',verifyOrbitSession)
       window.addEventListener('online',retryOrbitAutoSync)
-      await checkServerSession()
+      // 没登录过的设备先按访客把账本打开，不让人对着「正在确认」干等；
+      // 登录状态在后台查，查到已登录再切到账号的账本。
+      if(!localStorage.getItem(LAST_ACCOUNT_K)){enterGuestMode();checkServerSession()}
+      else await checkServerSession()
     }else{
       load();loadPositions();serverAccount.loading=false;accountReady.value=true
     }
@@ -11056,7 +11125,7 @@ setup(){
   })
 
   return{c2c,openC2C,closeC2C,c2cParse,c2cRelabel,c2cSelected,c2cSummary,c2cPickImages,c2cApply,PAY_CHANNELS,isFxCash,onFxInput,canOfferFx,switchToFx,fxOf,channelLabel,editFxRate,editFxOn,editFxOff,typeTone,typeTagClass,typeColor,debts,loanList,debtViews,openLoans,loanOptions,debtSummary,debtSchedule,debtPayday,debtFunding,depositRisk,needsIntent,quickSaveBlocker,FUND_SOURCES,DESTINATIONS,REPAY_TYPES,DEPOSIT_INTENTS,loanName,fundSourceLabel,destinationLabel,debtLoanForm,debtRepayForm,debtPlanForm,expandedLoanId,openLoanForm,saveLoan,deleteLoan,openRepayForm,saveRepayment,removeRepayment,toggleDebtEvent,toggleDebtPlanForm,saveDebtPlanSettings,
-    APP_VERSION,updateReady,reloadForUpdate,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
+    APP_VERSION,updateReady,reloadForUpdate,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,guestMode,continueAsGuest,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,fmtQtyNum,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,capitalChart,capitalCurve,capitalCurveView,capitalRange,setCapitalRange,CAPITAL_RANGES,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,

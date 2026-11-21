@@ -41,9 +41,15 @@
     async function request(path, init) {
       const response = await fetchImpl(`${baseUrl}${path}`, {
         credentials: 'include',
+        // 没登录时，前面的代理会把请求 302 到登录页。跟着跳过去只会得到一个跨域错误，
+        // 和断网分不清 —— 所以不跟，直接把「被要求去登录」认作未登录。
+        redirect: 'manual',
         ...init,
         headers: { 'Content-Type': 'application/json', ...(init && init.headers) }
       })
+      if (response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) {
+        throw new ServerSyncError('UNAUTHENTICATED', 401)
+      }
       const body = await responseBody(response)
       if (!response.ok) {
         throw new ServerSyncError(
