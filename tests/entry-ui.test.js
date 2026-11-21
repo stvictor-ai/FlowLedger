@@ -31,3 +31,20 @@ test('Excel export preserves time and both sides of a conversion', () => {
   assert.match(html, /'到账金额':e\.targetAmount\|\|''/)
   assert.match(html, /'实际汇率':e\.fxRate\|\|''/)
 })
+
+test('the entry form is one column with the optional fields behind 更多', () => {
+  assert.match(html, /class="entry-layout"/)
+  assert.doesNotMatch(html, /entry-cash-grid|entry-action-bar/)
+  // 付款渠道是可选项，放在「更多」里面
+  const more = html.indexOf('class="entry-optional"')
+  assert.ok(more > 0 && html.indexOf('v-for="o in PAY_CHANNELS" :key="o.key" type="button"') > more)
+  // 没有借款的人看不到还贷的去向
+  assert.match(html, /v-for="o in visibleDestinations"/)
+})
+
+test('no text in the stylesheet is smaller than 11px', () => {
+  const css = html.slice(html.indexOf('<style>'), html.indexOf('</style>'))
+  const sizes = [...css.matchAll(/font-size:([0-9.]+)px/g)].map(m => Number(m[1]))
+  assert.ok(sizes.length > 100)
+  assert.ok(Math.min(...sizes) >= 11, `smallest font-size is ${Math.min(...sizes)}px`)
+})

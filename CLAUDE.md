@@ -22,7 +22,8 @@ touji/
 │   ├── server-sync.js   # 账号同步客户端（UMD）
 │   ├── debt-engine.js   # 负债：利息、待付日程、发薪日还债计划、入金冷静提醒（UMD）
 │   ├── c2c-import.js    # C2C 订单截图文字 → 订单 → 与已有流水配对（UMD）
-│   └── account-engine.js # 账户现值与首页盈亏（UMD）
+│   ├── account-engine.js # 账户现值与首页盈亏（UMD）
+│   └── position-engine.js # 持仓成本重算：删除买入后把剩下的买卖重走一遍（UMD）
 ├── vendor/tesseract-6.0.1/ # 本地 OCR（按需加载，不进预缓存）；语言数据是 tessdata_fast 的 chi_sim
 ├── tests/
 │   ├── entry-engine.test.js # 时间与换汇计算测试
@@ -146,6 +147,9 @@ touji/
 // 往这个集合加新的 kind 时，服务器 sync/service.js 的 DEBT_KINDS_SINCE 也要登记并升 schema。
 // 负债删除墓碑 key: touji_debt_deleted_v1
 // 同步：服务器 GET 快照里带 debts 才会上传负债（旧服务器的写接口是 strict 的）
+
+// 导入时「是不是同一笔」的规则在 js/import-engine.js 的 entryKey：只用 Excel 带得回来的字段。
+// 给 Excel 导出加列时，normRow 要能读回来，否则导出再导入会变成新增。
 
 // 持仓 key: touji_positions_v1
 // 流水删除墓碑 key: touji_deleted_v1
