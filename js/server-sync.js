@@ -8,7 +8,7 @@
   // 账本格式的版本号。写服务器时放在 X-Touji-Schema 里：流水每加一个字段就加一，
   // 并在 server/src/modules/sync/service.js 的 ENTRY_FIELDS_SINCE 里登记。
   // 服务器靠它认出还在跑旧代码的页面，不让它把自己不认识的字段抹掉。
-  const SCHEMA_VERSION = 3
+  const SCHEMA_VERSION = 4
 
   class ServerSyncError extends Error {
     constructor(code, status, details) {

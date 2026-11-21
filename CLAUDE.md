@@ -21,7 +21,8 @@ touji/
 │   ├── import-engine.js # 导入去重（UMD）
 │   ├── server-sync.js   # 账号同步客户端（UMD）
 │   ├── debt-engine.js   # 负债：利息、待付日程、发薪日还债计划、入金冷静提醒（UMD）
-│   └── c2c-import.js    # C2C 订单截图文字 → 订单 → 与已有流水配对（UMD）
+│   ├── c2c-import.js    # C2C 订单截图文字 → 订单 → 与已有流水配对（UMD）
+│   └── account-engine.js # 账户现值与首页盈亏（UMD）
 ├── vendor/tesseract-6.0.1/ # 本地 OCR（按需加载，不进预缓存）；语言数据是 tessdata_fast 的 chi_sim
 ├── tests/
 │   ├── entry-engine.test.js # 时间与换汇计算测试
@@ -139,7 +140,10 @@ touji/
 // js/server-sync.js 的 SCHEMA_VERSION 加一，并在 server/src/modules/sync/service.js 的
 // SYNC_SCHEMA / ENTRY_FIELDS_SINCE 里登记新字段。服务器靠它保护字段不被没刷新的旧页面抹掉。
 
-// 负债 key: touji_debts_v1（贷款 kind:'loan' + 还债计划 kind:'plan'，见 README「数据模型」）
+// 借款 key: touji_debts_v1（贷款 kind:'loan' + 还债计划 kind:'plan' + 账户现值 kind:'balance'）
+// 账户现值：{id:'balance:<账户名>', kind:'balance', account, value, asOf, history:[{date,value}]}，见 js/account-engine.js。
+// 首页盈亏 = 各账户现值之和 + 已取出 − 总投入；没填现值的账户按本金算。
+// 往这个集合加新的 kind 时，服务器 sync/service.js 的 DEBT_KINDS_SINCE 也要登记并升 schema。
 // 负债删除墓碑 key: touji_debt_deleted_v1
 // 同步：服务器 GET 快照里带 debts 才会上传负债（旧服务器的写接口是 strict 的）
 

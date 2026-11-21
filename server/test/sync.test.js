@@ -38,7 +38,7 @@ function memorySyncRepository() {
         // Mirrors the Postgres repository: the stored rows are handed over
         // inside the write, after the revision check.
         const next = structuredClone(reconcile
-          ? reconcile({ entries: structuredClone(state.snapshot.entries) })
+          ? reconcile({ entries: structuredClone(state.snapshot.entries), debts: structuredClone(state.snapshot.debts) })
           : snapshot)
         // Mirrors the Postgres repository: no debts key leaves debts alone.
         if (!Array.isArray(next.debts)) {
@@ -478,4 +478,42 @@ test('repository reads the stored entries inside the write only when asked to re
   assert.ok(read > order.findIndex(text => text.includes('SELECT revision')) && read < wipe)
   const inserted = calls.find(call => call.text.includes('INSERT INTO entries'))
   assert.deepEqual(JSON.parse(inserted.params[2]).map(row => row.id), ['kept'])
+})
+
+test('a page from before account values cannot drop them along with its debts', async t => {
+  const memory = memorySyncRepository()
+  const syncService = createSyncService({ repository: memory.repository })
+  const running = await startApp({ authService, syncService })
+  t.after(running.close)
+  const client = syncClient(running.baseUrl)
+
+  const loan = { id: 'loan-1', kind: 'loan', principal: 50000, updatedAt: 10 }
+  const worth = { id: 'balance:基金账户', kind: 'balance', account: '基金账户', value: 8420, asOf: '2026-11-18', updatedAt: 20 }
+  const removed = { id: 'balance:旧账户', kind: 'balance', account: '旧账户', value: 10, asOf: '2026-11-01', updatedAt: 5 }
+  await client.write({ baseRevision: 0, ...emptySnapshot(), debts: [loan, worth, removed], deletedDebtIds: {} }, CURRENT)
+
+  // The previous release: it sends debts (so it is schema 2 or 3), but read the
+  // collection through a filter that only lets loans and the plan through.
+  const older = await client.write({
+    baseRevision: 1,
+    ...emptySnapshot(),
+    debts: [{ ...loan, principal: 48000, updatedAt: 30 }],
+    deletedDebtIds: {}
+  }, { 'X-Touji-Schema': '3' })
+  assert.equal(older.status, 200)
+  assert.equal((await older.json()).clientOutdated, true)
+  let debts = (await client.read()).debts
+  assert.deepEqual(debts.map(item => item.id).sort(), ['balance:基金账户', 'balance:旧账户', 'loan-1'].sort())
+  assert.equal(debts.find(item => item.id === 'loan-1').principal, 48000)
+
+  // A current client deleting a value is believed.
+  const current = await client.write({
+    baseRevision: 2,
+    ...emptySnapshot(),
+    debts: [{ ...loan, principal: 48000, updatedAt: 30 }, worth],
+    deletedDebtIds: { 'balance:旧账户': 40 }
+  }, CURRENT)
+  assert.equal(current.status, 200)
+  debts = (await client.read()).debts
+  assert.deepEqual(debts.map(item => item.id).sort(), ['balance:基金账户', 'loan-1'].sort())
 })

@@ -8,10 +8,16 @@ const MAX_DEBTS = 2000
 // whole thing back. Clients state their version in X-Touji-Schema; the two
 // generations that predate the header are told apart by whether they send
 // debts. Bump this, and list the new fields below, whenever entries gain one.
-export const SYNC_SCHEMA = 3
+export const SYNC_SCHEMA = 4
 const ENTRY_FIELDS_SINCE = {
   2: ['fundSource', 'destination', 'loanId', 'toExchange'],
   3: ['channel', 'counterparty']
+}
+// The debts collection holds more than loans: each document says what it is in
+// `kind`. A client drops the kinds it has never heard of when it reads them,
+// so the same reasoning applies to whole documents here as to fields above.
+const DEBT_KINDS_SINCE = {
+  4: ['balance']
 }
 
 export function clientSchemaOf(declared, snapshot) {
@@ -31,11 +37,12 @@ function stamp(item) {
  *    copy is kept whole;
  *  - a record it did edit lacks the newer fields: those are carried over;
  *  - a record of a type it does not know was dropped on read, so it is simply
- *    missing: kept, unless the client sent a tombstone for it.
+ *    missing: kept, unless the client sent a tombstone for it. The same goes
+ *    for documents in the debts collection whose kind is newer than the client.
  * A current client is never routed through here — its snapshot replaces the
  * ledger as sent.
  */
-export function protectFromOutdatedClient(snapshot, storedEntries, clientSchema) {
+export function protectFromOutdatedClient(snapshot, storedEntries, clientSchema, storedDebts = []) {
   const newer = Object.entries(ENTRY_FIELDS_SINCE)
     .filter(([version]) => Number(version) > clientSchema)
     .flatMap(([, fields]) => fields)
@@ -55,7 +62,18 @@ export function protectFromOutdatedClient(snapshot, storedEntries, clientSchema)
   for (const kept of storedEntries) {
     if (!sent.has(kept.id) && !(kept.id in snapshot.deletedIds)) entries.push(kept)
   }
-  return { ...snapshot, entries }
+  if (!Array.isArray(snapshot.debts)) return { ...snapshot, entries }
+
+  const unknownKinds = new Set(Object.entries(DEBT_KINDS_SINCE)
+    .filter(([version]) => Number(version) > clientSchema)
+    .flatMap(([, kinds]) => kinds))
+  const sentDebts = new Set(snapshot.debts.map(item => item.id))
+  const tombstones = snapshot.deletedDebtIds || {}
+  const debts = [...snapshot.debts]
+  for (const kept of storedDebts) {
+    if (unknownKinds.has(kept.kind) && !sentDebts.has(kept.id) && !(kept.id in tombstones)) debts.push(kept)
+  }
+  return { ...snapshot, entries, debts }
 }
 
 export class SyncError extends Error {
@@ -124,7 +142,7 @@ export function createSyncService({ repository }) {
         // Runs inside the write transaction, against the rows about to be
         // replaced, so nothing can slip in between the read and the write.
         reconcile: outdated
-          ? stored => protectFromOutdatedClient(snapshot, stored.entries, clientSchema)
+          ? stored => protectFromOutdatedClient(snapshot, stored.entries, clientSchema, stored.debts)
           : null
       })
       if (result.status === 'not_found') throw new SyncError('LEDGER_NOT_FOUND', 404)

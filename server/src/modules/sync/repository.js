@@ -120,7 +120,15 @@ export function createSyncRepository(pool) {
             FROM entries
             WHERE ledger_id = $1 AND user_id = $2 AND deleted_at IS NULL
           `, [ledgerId, userId])
-          snapshot = reconcile({ entries: stored.rows.map(row => row.payload) })
+          const storedDebts = await client.query(`
+            SELECT payload
+            FROM debts
+            WHERE ledger_id = $1 AND user_id = $2 AND deleted_at IS NULL
+          `, [ledgerId, userId])
+          snapshot = reconcile({
+            entries: stored.rows.map(row => row.payload),
+            debts: storedDebts.rows.map(row => row.payload)
+          })
         }
 
         await client.query('DELETE FROM entries WHERE ledger_id = $1 AND user_id = $2', [ledgerId, userId])

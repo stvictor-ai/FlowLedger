@@ -30,6 +30,7 @@
 <script src="js/import-engine.js"></script>
 <script src="js/server-sync.js"></script>
 <script src="js/debt-engine.js"></script>
+<script src="js/account-engine.js"></script>
 <script src="js/c2c-import.js"></script>
 <style>
 /* ===== RESET & BASE ===== */
@@ -287,6 +288,24 @@ tr.row-unmatched td{opacity:.35}
 .toast.error{background:rgba(248,113,113,.92);color:#450a0a}
 .toast.info{background:rgba(45,181,160,.92);color:white}
 
+/* 盈亏有自己的颜色变量，和报错的红、成功的绿分开，这样涨跌颜色可以单独切换。 */
+:root{--gain:var(--red);--loss:var(--green)}
+html[data-pl="intl"]{--gain:var(--green);--loss:var(--red)}
+.text-gain{color:var(--gain)!important}.text-loss{color:var(--loss)!important}
+.home-account-list{display:grid}
+.home-account{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--border)}
+.home-account:first-child{border-top:0}
+.home-account-main{flex:1;min-width:0}
+.home-account-main strong{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.home-account-main small{color:var(--muted);font-size:12px}
+.home-account-main small.stale{color:var(--amber,#B7791F)}
+.home-account-value{text-align:right}
+.home-account-value strong{display:block;font-weight:600}
+.home-account-value small{font-size:12px}
+.balance-box{display:grid;gap:12px}
+.balance-box h3{margin:0;font-size:17px}
+.balance-box .hint{margin:0}
+.balance-actions{display:flex;justify-content:flex-end;gap:10px}
 .me-settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:16px 0 20px}
 .me-group{border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 16px}
 .me-group h3{margin:10px 0 2px;font-size:12px;font-weight:600;color:var(--muted)}
@@ -4429,6 +4448,17 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
   </div>
   <!-- Toast -->
   <div v-if="toast.show" :class="['toast',toast.type]">{{ toast.message }}</div>
+  <div v-if="balanceForm.open" class="modal-mask" @click.self="balanceForm.open=false">
+    <form class="modal-box balance-box" @submit.prevent="saveBalance">
+      <h3>{{ balanceForm.account||'账户' }} 现在值多少</h3>
+      <p class="hint">打开这个账户的 App，把总资产那个数填进来（折成人民币）。不用很准，隔一阵更新一次就行。</p>
+      <div class="form-group" v-if="balanceForm.pick"><label>账户</label><input class="form-input" v-model.trim="balanceForm.account" placeholder="例如：招商证券"></div>
+      <div class="form-group"><label>现在值（元）</label><input class="form-input" v-model="balanceForm.value" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例如 8420"></div>
+      <div class="form-group"><label>哪天的数</label><input class="form-input" v-model="balanceForm.date" type="date"></div>
+      <p v-if="balanceForm.error" class="form-error">{{ balanceForm.error }}</p>
+      <div class="balance-actions"><button type="button" class="btn btn-ghost" @click="balanceForm.open=false">取消</button><button type="submit" class="btn btn-primary">保存</button></div>
+    </form>
+  </div>
   <div v-if="updateReady" class="update-bar" role="status">投记有新版本<button type="button" @click="reloadForUpdate">刷新</button></div>
 
   <aside class="terminal-rail section-records section-stats section-data">
@@ -4469,7 +4499,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
   <section id="overview" class="panel overview-dashboard section-records section-stats section-data" v-show="activeTab==='overview'">
     <header class="overview-dashboard-head">
       <div class="overview-dashboard-title">
-        <h1>{{ hasTrackedHoldings?'资产快照':'资金快照' }}</h1>
+        <h1>我的投资</h1>
         <p class="hint">{{ overviewLastUpdated }}</p>
       </div>
       <div class="overview-dashboard-actions">
@@ -4483,21 +4513,16 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
     </header>
     <div class="overview-statement">
       <div class="overview-wealth">
-        <div v-if="hasTrackedHoldings">
-          <p class="overview-balance-label">当前持仓市值</p>
-          <p class="overview-balance-value privacy-number">{{ fmt(holdingsValue) }} <small>CNY</small></p>
-          <p class="overview-return">
-            <span>真实总收益</span>
-            <strong class="privacy-number" :style="{color:trueReturn>=0?'var(--green)':'var(--red)'}">{{ (trueReturn>=0?'+':'')+fmt(trueReturn) }}</strong>
-            <small class="privacy-number" :style="{color:trueROI>=0?'var(--green)':'var(--red)'}">{{ fmtPct(trueROI*100,1) }}</small>
+        <div class="home-hero">
+          <p class="overview-balance-label">{{ entries.length?'到今天，你一共'+(homeProfit>=0?'赚了':'亏了'):'记下第一笔，就能看到赚了还是亏了' }}</p>
+          <p :class="['overview-balance-value','privacy-number',entries.length?(homeProfit>=0?'text-gain':'text-loss'):'']">{{ (homeProfit>=0?'+':'−')+fmt(Math.abs(homeProfit)) }} <small>元</small></p>
+          <p class="overview-return" v-if="totalIn>0">
+            <strong :class="['privacy-number',homeProfit>=0?'text-gain':'text-loss']">{{ fmtPct(homeROI*100,1) }}</strong>
+            <span>相对总投入</span>
           </p>
-        </div>
-        <div v-else>
-          <p class="overview-balance-label">已投入净额</p>
-          <p class="overview-balance-value privacy-number">{{ fmt(netInvested) }} <small>CNY</small></p>
-          <p class="overview-untracked" v-if="entries.length">
-            <span>还没有填持仓，真实收益暂时算不出来。</span>
-            <button class="text-command" @click="setActiveTab('positions')">建立持仓 →</button>
+          <p class="overview-untracked" v-if="!useHoldingsValue&&accountSummary.unvalued.length">
+            <span>{{ accountSummary.unvalued.length }} 个账户还没填现在值多少，先按本金算，所以盈亏还不准。</span>
+            <button class="text-command" @click="openBalance(accountRows.find(row=>row.name===accountSummary.unvalued[0]))">去填 →</button>
           </p>
         </div>
         <div class="capital-curve-head" v-if="capitalCurve.length>1">
@@ -4511,62 +4536,78 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <canvas ref="capitalChart"></canvas>
         </div>
         <div class="capital-equation">
-          <div class="capital-equation-head"><span>资金关系</span><code>持仓 + 取出 - 投入 = 收益</code></div>
+          <div class="capital-equation-head"><span>怎么算的</span><code>现在值 + 已取出 − 总投入</code></div>
           <div class="capital-equation-grid">
-            <div><span>当前持仓</span><strong v-if="hasTrackedHoldings" class="privacy-number">{{ fmt(holdingsValue) }}</strong><strong v-else class="equation-unknown">未填</strong></div>
-            <div><span>＋ 累计取出</span><strong class="privacy-number text-flow-out">{{ fmt(totalOut) }}</strong></div>
-            <div><span>－ 累计投入</span><strong class="privacy-number text-flow-in">{{ fmt(totalIn) }}</strong></div>
-            <div class="equation-result"><span>＝ 真实收益</span><strong v-if="hasTrackedHoldings" class="privacy-number">{{ (trueReturn>=0?'+':'')+fmt(trueReturn) }}</strong><strong v-else class="equation-unknown">—</strong></div>
+            <div><span>现在值</span><strong class="privacy-number">{{ fmt(homeValue) }}</strong></div>
+            <div><span>＋ 已取出</span><strong class="privacy-number">{{ fmt(totalOut) }}</strong></div>
+            <div><span>－ 总投入</span><strong class="privacy-number">{{ fmt(totalIn) }}</strong></div>
+            <div class="equation-result"><span>＝ {{ homeProfit>=0?'赚':'亏' }}</span><strong :class="['privacy-number',homeProfit>=0?'text-gain':'text-loss']">{{ (homeProfit>=0?'+':'−')+fmt(Math.abs(homeProfit)) }}</strong></div>
           </div>
         </div>
       </div>
-      <aside class="overview-allocation" v-if="positions.length">
+      <aside class="overview-allocation home-accounts">
         <div class="overview-allocation-head">
-          <div><h2>资产配置</h2></div>
-          <span>{{ positions.length }} 个持仓</span>
+          <div><h2>账户</h2></div>
+          <span>{{ accountRows.length }} 个</span>
         </div>
-        <div v-if="overviewAllocation.length" class="allocation-list">
-          <div v-for="item in overviewAllocation" :key="item.label" class="allocation-row">
-            <div class="allocation-meta">
-              <strong>{{ item.label }}</strong>
-              <span class="privacy-number">{{ fmt(item.value) }}</span>
-              <b>{{ fmtPct(item.pct,1) }}</b>
+        <div v-if="accountRows.length" class="home-account-list">
+          <div v-for="row in accountRows" :key="row.name" class="home-account">
+            <span class="asset-mark">{{ row.name.slice(0,1) }}</span>
+            <div class="home-account-main">
+              <strong>{{ row.name }}</strong>
+              <small v-if="row.valued" :class="{stale:row.staleDays>30}">{{ row.staleDays===0?'今天更新':row.staleDays+' 天前更新' }}</small>
+              <small v-else>本金 <span class="privacy-number">{{ fmt(Math.max(row.net,0)) }}</span> · 还没填现值</small>
             </div>
-            <div class="allocation-track"><i :style="{width:item.pct+'%',background:item.color}"></i></div>
+            <div class="home-account-value" v-if="row.valued">
+              <strong class="privacy-number">{{ fmt(row.value) }}</strong>
+              <small :class="['privacy-number',row.profit>=0?'text-gain':'text-loss']">{{ (row.profit>=0?'+':'−')+fmt(Math.abs(row.profit)) }}</small>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" @click="openBalance(row)">{{ row.valued?'更新':'填现值' }}</button>
           </div>
+          <p class="funding-note" v-if="useHoldingsValue">现在按持仓市值算盈亏。给账户填了现值后，改为按账户现值算。</p>
         </div>
         <div v-else class="allocation-empty">
-          <strong>还没有可展示的持仓</strong>
-          <span>建立初始仓位或记录第一笔买入后，这里会自动形成资产配置。</span>
-        </div>
-      </aside>
-      <!-- A ledger kept for deposits and withdrawals only has no allocation to
-           show, so the slot answers the question it can: where the money sits. -->
-      <aside class="overview-allocation" v-else>
-        <div class="overview-allocation-head">
-          <div><h2>资金分布</h2></div>
-          <span>{{ overviewFunding.rows.length }} 个账户</span>
-        </div>
-        <div v-if="overviewFunding.rows.length" class="allocation-list">
-          <div v-for="item in overviewFunding.rows" :key="item.label" class="allocation-row">
-            <div class="allocation-meta">
-              <strong>{{ item.label }}</strong>
-              <span class="privacy-number">{{ fmt(item.value) }}</span>
-              <b>{{ fmtPct(item.pct,1) }}</b>
-            </div>
-            <div class="allocation-track"><i :style="{width:item.pct+'%',background:'var(--flow-in)'}"></i></div>
-          </div>
-          <p class="funding-note">按账户的净投入（投入减取出）<template v-if="overviewFunding.settled">，另有 {{ overviewFunding.settled }} 个账户已全部取回</template>。</p>
-        </div>
-        <div v-else class="allocation-empty">
-          <strong>还没有放在账户里的钱</strong>
-          <span>记下第一笔投入后，这里会按账户显示钱放在哪里。</span>
+          <strong>还没有账户</strong>
+          <span>记下第一笔投入后，账户会出现在这里。给它填上「现在值多少」，就能看到赚了还是亏了。</span>
         </div>
       </aside>
     </div>
   </section>
 
   <div class="overview-grid" v-show="activeTab==='overview'">
+    <section class="panel overview-module" v-if="featureOn.loans&&openLoans.length">
+      <div class="panel-header">
+        <div><h2>借款</h2></div>
+        <button class="text-command" @click="setActiveTab('debts')">查看 <span>→</span></button>
+      </div>
+      <div class="overview-rows">
+        <button class="overview-row" @click="setActiveTab('debts')">
+          <span class="asset-mark">{{ debtSummary.nextEvent?debtSummary.nextEvent.date.slice(5):'—' }}</span>
+          <span class="overview-row-main"><strong>{{ debtSummary.nextEvent?'要付 '+fmt(debtSummary.nextEvent.amount)+' 元':'近期没有要付的' }}</strong><small>最晚 {{ debtSummary.lastMaturity||'—' }} 到期</small></span>
+          <span class="overview-row-value"><strong class="privacy-number">{{ fmt(debtSummary.totalOwed) }}</strong><small>还欠</small></span>
+        </button>
+      </div>
+    </section>
+    <section class="panel overview-module overview-allocation" v-if="positions.length">
+      <div class="overview-allocation-head">
+        <div><h2>资产配置</h2></div>
+        <span>{{ positions.length }} 个持仓</span>
+      </div>
+      <div v-if="overviewAllocation.length" class="allocation-list">
+        <div v-for="item in overviewAllocation" :key="item.label" class="allocation-row">
+          <div class="allocation-meta">
+            <strong>{{ item.label }}</strong>
+            <span class="privacy-number">{{ fmt(item.value) }}</span>
+            <b>{{ fmtPct(item.pct,1) }}</b>
+          </div>
+          <div class="allocation-track"><i :style="{width:item.pct+'%',background:item.color}"></i></div>
+        </div>
+      </div>
+      <div v-else class="allocation-empty">
+        <strong>还没有可展示的持仓</strong>
+        <span>建立初始仓位或记录第一笔买入后，这里会自动形成资产配置。</span>
+      </div>
+    </section>
     <section class="panel overview-module" v-if="positions.length">
       <div class="panel-header">
         <div><h2>主要持仓</h2></div>
@@ -4576,7 +4617,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <button v-for="p in overviewTopPositions" :key="p.id" class="overview-row" @click="setActiveTab('positions')">
           <span class="asset-mark">{{ (p.symbol||'?').slice(0,2) }}</span>
           <span class="overview-row-main"><strong>{{ p.name||p.symbol }}</strong><small>{{ p.symbol }} · {{ p.assetType||'未分类' }}</small></span>
-          <span class="overview-row-value"><strong>{{ fmt(p.value) }}</strong><small :class="p.pl>=0?'text-green':'text-red'">{{ p.hasCost?(p.pl>=0?'+':'')+fmt(p.pl):'待补成本' }}</small></span>
+          <span class="overview-row-value"><strong>{{ fmt(p.value) }}</strong><small :class="p.pl>=0?'text-gain':'text-loss'">{{ p.hasCost?(p.pl>=0?'+':'')+fmt(p.pl):'待补成本' }}</small></span>
         </button>
       </div>
       <div class="empty-block" v-else><strong>还没有持仓</strong><span>从「记一笔」添加第一笔买入，或在持仓页手动建立初始仓位。</span></div>
@@ -4631,8 +4672,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
     <div class="position-summary-strip">
       <div><span>持仓市值</span><strong class="privacy-number">{{ fmt(posSummary.totalValue) }}</strong></div>
       <div><span>持仓成本</span><strong class="privacy-number">{{ fmt(posSummary.totalCost) }}</strong></div>
-      <div><span>浮动盈亏</span><strong class="privacy-number" :style="{color:posSummary.pl>=0?'var(--green)':'var(--red)'}">{{ posSummary.pl>=0?'+':'' }}{{ fmt(posSummary.pl) }}</strong></div>
-      <div><span>收益率</span><strong class="privacy-number" :style="{color:posSummary.pl>=0?'var(--green)':'var(--red)'}">{{ fmtPct(posSummary.plPct,1) }}</strong></div>
+      <div><span>浮动盈亏</span><strong class="privacy-number" :style="{color:posSummary.pl>=0?'var(--gain)':'var(--loss)'}">{{ posSummary.pl>=0?'+':'' }}{{ fmt(posSummary.pl) }}</strong></div>
+      <div><span>收益率</span><strong class="privacy-number" :style="{color:posSummary.pl>=0?'var(--gain)':'var(--loss)'}">{{ fmtPct(posSummary.plPct,1) }}</strong></div>
     </div>
 
     <nav class="position-filter-bar" aria-label="持仓市场筛选">
@@ -4695,7 +4736,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <span class="position-cell"><strong>{{ fmtQtyNum(p.qty) }}</strong><small>{{ p.hasCost?fmt(p.avgCost)+' '+p.currency:'未录成本' }}</small></span>
           <span class="position-cell"><strong>{{ p.price?fmt(p.price):'—' }}</strong><small>{{ p.price?p.currency:'等待行情' }}</small></span>
           <span class="position-cell"><strong class="privacy-number">{{ fmt(p.value) }}</strong><small>CNY</small></span>
-          <span class="position-cell"><strong class="privacy-number" :style="{color:p.pl>=0?'var(--green)':'var(--red)'}">{{ p.hasCost?(p.pl>=0?'+':'')+fmt(p.pl):'—' }}</strong><small>{{ p.hasCost?fmtPct(p.plPct,1):'缺少成本' }}</small></span>
+          <span class="position-cell"><strong class="privacy-number" :style="{color:p.pl>=0?'var(--gain)':'var(--loss)'}">{{ p.hasCost?(p.pl>=0?'+':'')+fmt(p.pl):'—' }}</strong><small>{{ p.hasCost?fmtPct(p.plPct,1):'缺少成本' }}</small></span>
           <span class="position-row-arrow">›</span>
         </button>
         <div v-if="!positionRowsSorted.length" class="position-list-empty">
@@ -4712,7 +4753,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         </div>
         <div class="position-inspector-value">
           <strong class="privacy-number">{{ fmt(selectedPosition.value) }} CNY</strong>
-          <span :style="{color:selectedPosition.pl>=0?'var(--green)':'var(--red)'}">浮动盈亏 {{ selectedPosition.pl>=0?'+':'' }}{{ fmt(selectedPosition.pl) }} · {{ fmtPct(selectedPosition.plPct,1) }}</span>
+          <span :style="{color:selectedPosition.pl>=0?'var(--gain)':'var(--loss)'}">浮动盈亏 {{ selectedPosition.pl>=0?'+':'' }}{{ fmt(selectedPosition.pl) }} · {{ fmtPct(selectedPosition.plPct,1) }}</span>
         </div>
         <div class="position-inspector-actions">
           <button class="btn btn-primary btn-sm" @click="createPositionFlow(selectedPosition,'buy')">继续买入</button>
@@ -4753,7 +4794,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <div class="position-mobile-metrics">
           <div><span>份额</span><strong>{{ fmtQtyNum(p.qty) }}</strong></div>
           <div><span>平均成本</span><strong>{{ p.hasCost?fmt(p.avgCost):'—' }}</strong></div>
-          <div><span>浮动盈亏</span><strong class="privacy-number" :style="{color:p.pl>=0?'var(--green)':'var(--red)'}">{{ p.hasCost?(p.pl>=0?'+':'')+fmt(p.pl):'—' }}</strong></div>
+          <div><span>浮动盈亏</span><strong class="privacy-number" :style="{color:p.pl>=0?'var(--gain)':'var(--loss)'}">{{ p.hasCost?(p.pl>=0?'+':'')+fmt(p.pl):'—' }}</strong></div>
         </div>
         <div class="position-mobile-actions">
           <button class="btn btn-primary btn-sm" @click="createPositionFlow(p,'buy')">买入</button>
@@ -5591,7 +5632,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
             </div>
             <div class="pos-flow-meta" v-if="e.tradeQty||e.tradePrice">
               成交 {{ e.tradeQty||'-' }} × {{ e.tradePrice?fmt(e.tradePrice):'-' }} {{ e.currency||'CNY' }}
-              <span v-if="e.type==='卖出'&&e.realizedPL!=null" :style="{color:e.realizedPL>=0?'var(--green)':'var(--red)',fontWeight:700,marginLeft:'8px'}">{{ e.realizedPL>=0?'盈利 +':'亏损 ' }}{{ fmt(Math.abs(e.realizedPL)) }}</span>
+              <span v-if="e.type==='卖出'&&e.realizedPL!=null" :style="{color:e.realizedPL>=0?'var(--gain)':'var(--loss)',fontWeight:700,marginLeft:'8px'}">{{ e.realizedPL>=0?'盈利 +':'亏损 ' }}{{ fmt(Math.abs(e.realizedPL)) }}</span>
             </div>
             <div class="tag-strip" v-if="parseTags(e.tags).length"><span v-for="tag in parseTags(e.tags)" :key="tag" class="tag-chip">#{{ tag }}</span></div>
             <div class="record-card-bottom">
@@ -5690,7 +5731,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
       <div class="review-summary-cell"><p>记录</p><strong>{{ reviewSummary.count }}</strong><small>笔操作</small></div>
       <div class="review-summary-cell"><p>净投入</p><strong :class="reviewSummary.netFunding>0?'text-flow-in':reviewSummary.netFunding<0?'text-flow-out':''">{{ fmt(reviewSummary.netFunding) }}</strong><small>投入减取出</small></div>
       <div class="review-summary-cell"><p>买卖</p><strong>{{ reviewSummary.tradeCount }}</strong><small>{{ reviewSummary.buyCount }} 买 · {{ reviewSummary.sellCount }} 卖</small></div>
-      <div class="review-summary-cell"><p>已实现盈亏</p><strong :class="reviewSummary.realizedPL>=0?'text-green':'text-red'">{{ (reviewSummary.realizedPL>=0?'+':'')+fmt(reviewSummary.realizedPL) }}</strong><small>仅统计卖出记录</small></div>
+      <div class="review-summary-cell"><p>已实现盈亏</p><strong :class="reviewSummary.realizedPL>=0?'text-gain':'text-loss'">{{ (reviewSummary.realizedPL>=0?'+':'')+fmt(reviewSummary.realizedPL) }}</strong><small>仅统计卖出记录</small></div>
     </div>
 
     <nav class="review-mode-bar" aria-label="复盘视图">
@@ -6266,7 +6307,8 @@ function normDestination(v){
 // 负债集合（贷款 + 还债计划）。字段由 debt-engine 解释，这里只保证 id / kind 合法。
 function normalizeDebt(item){
   if(!item||typeof item!=='object'||!item.id)return null
-  if(item.kind!=='loan'&&item.kind!=='plan')return null
+  // balance：某个账户现在值多少（见 js/account-engine.js），和贷款放在同一个集合里一起同步。
+  if(item.kind!=='loan'&&item.kind!=='plan'&&item.kind!=='balance')return null
   return{...item,id:String(item.id),updatedAt:Number(item.updatedAt)||0}
 }
 function normalizeDebtList(list){return(Array.isArray(list)?list:[]).map(normalizeDebt).filter(Boolean)}
@@ -7870,6 +7912,31 @@ setup(){
   // money became (a position, or a buy/sell entry).
   const hasTrackedHoldings=computed(()=>positions.value.length>0||entries.value.some(e=>e.type==='买入'||e.type==='卖出'))
   const netInvested=computed(()=>totalIn.value-totalOut.value)
+  // 首页的盈亏：填了账户现值就按账户算；没填但录了持仓，沿用持仓市值；都没有就先按本金（不赚不亏）。
+  const Accounts=window.ToujiAccounts
+  const accountRows=computed(()=>Accounts.accountRows(entries.value,debts.value,amountCNY,debtToday.value))
+  const accountSummary=computed(()=>Accounts.summary(accountRows.value,totalIn.value,totalOut.value))
+  const useHoldingsValue=computed(()=>!debts.value.some(Accounts.isBalance)&&hasTrackedHoldings.value)
+  const homeValue=computed(()=>useHoldingsValue.value?holdingsValue.value:accountSummary.value.currentValue)
+  const homeProfit=computed(()=>useHoldingsValue.value?totalOut.value+holdingsValue.value-totalIn.value:accountSummary.value.profit)
+  const homeROI=computed(()=>totalIn.value?homeProfit.value/totalIn.value:0)
+  const balanceForm=reactive({open:false,pick:false,account:'',value:'',date:'',error:''})
+  function openBalance(row){
+    Object.assign(balanceForm,{open:true,pick:!row,account:row?.name||'',value:row?.valued?row.value:'',date:debtToday.value,error:''})
+  }
+  function saveBalance(){
+    const typed=String(balanceForm.value??'').trim()
+    const doc=Accounts.setBalance(debts.value,{account:balanceForm.account,value:typed===''?NaN:Number(typed),date:balanceForm.date,now:Date.now()})
+    if(!doc){balanceForm.error=balanceForm.account?'填一个不小于 0 的金额，并选好日期':'先写账户名';return}
+    debts.value=[...debts.value.filter(item=>item.id!==doc.id),doc]
+    if(deletedDebtIds.value[doc.id]){
+      const rest={...deletedDebtIds.value};delete rest[doc.id]
+      deletedDebtIds.value=rest;saveDeletedDebts()
+    }
+    saveDebts()
+    balanceForm.open=false
+    showToast('已更新 '+doc.account+' 的现值','success')
+  }
   const trueReturn=computed(()=>totalOut.value+holdingsValue.value-totalIn.value)
   const trueROI=computed(()=>totalIn.value?trueReturn.value/totalIn.value:0)
 
@@ -10780,7 +10847,7 @@ setup(){
   })
 
   return{c2c,openC2C,closeC2C,c2cParse,c2cRelabel,c2cSelected,c2cSummary,c2cPickImages,c2cApply,PAY_CHANNELS,isFxCash,onFxInput,canOfferFx,switchToFx,fxOf,channelLabel,editFxRate,editFxOn,editFxOff,typeTone,typeTagClass,typeColor,debts,loanList,debtViews,openLoans,loanOptions,debtSummary,debtSchedule,debtPayday,debtFunding,depositRisk,needsIntent,quickSaveBlocker,FUND_SOURCES,DESTINATIONS,REPAY_TYPES,DEPOSIT_INTENTS,loanName,fundSourceLabel,destinationLabel,debtLoanForm,debtRepayForm,debtPlanForm,expandedLoanId,openLoanForm,saveLoan,deleteLoan,openRepayForm,saveRepayment,removeRepayment,toggleDebtEvent,toggleDebtPlanForm,saveDebtPlanSettings,
-    APP_VERSION,updateReady,reloadForUpdate,typeLabel,featureOn,setFeature,mobileTabs,railTabs,navActive,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,guestMode,continueAsGuest,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
+    APP_VERSION,updateReady,reloadForUpdate,typeLabel,accountRows,accountSummary,useHoldingsValue,homeValue,homeProfit,homeROI,balanceForm,openBalance,saveBalance,featureOn,setFeature,mobileTabs,railTabs,navActive,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,guestMode,continueAsGuest,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,fmtQtyNum,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,capitalChart,capitalCurve,capitalCurveView,capitalRange,setCapitalRange,CAPITAL_RANGES,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
