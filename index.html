@@ -287,6 +287,26 @@ tr.row-unmatched td{opacity:.35}
 .toast.error{background:rgba(248,113,113,.92);color:#450a0a}
 .toast.info{background:rgba(45,181,160,.92);color:white}
 
+.me-settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:16px 0 20px}
+.me-group{border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 16px}
+.me-group h3{margin:10px 0 2px;font-size:12px;font-weight:600;color:var(--muted)}
+.me-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--border)}
+.me-group h3+.me-row{border-top:0}
+.me-row strong{display:block;font-size:14px;font-weight:600}
+.me-row small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.me-actions{display:flex;align-items:center;gap:10px;flex:none}
+.me-switch{width:44px;height:26px;border-radius:999px;border:0;background:var(--border-light);position:relative;cursor:pointer;flex:none;padding:0;transition:background .15s}
+.me-switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .15s}
+.me-switch.on{background:var(--text)}
+.me-switch.on::after{left:21px}
+.me-row .skin-toggle{display:flex}
+.back-home{display:none;border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;padding:4px 0 10px;cursor:pointer}
+@media(max-width:1180px){.back-home{display:inline-block}}
+@media(max-width:1180px){
+  .workspace-tabs{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+  .workspace-tab.is-add .workspace-icon{background:var(--text);color:var(--bg);border-radius:50%;width:38px;height:38px;display:grid;place-items:center}
+  .workspace-tab.is-add>span:last-child{display:none}
+}
 .guest-note{border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin:12px 0}
 .guest-note strong{display:block;margin-bottom:4px}
 .guest-note p{margin:0 0 12px;color:var(--muted);font-size:13px;line-height:1.6}
@@ -4414,23 +4434,20 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
   <aside class="terminal-rail section-records section-stats section-data">
     <div class="terminal-brand">
       <img src="icon.svg" alt="投记">
-      <div><strong>投记</strong><span>WEALTH JOURNAL</span></div>
+      <div><strong>投记</strong></div>
     </div>
     <nav class="terminal-nav" aria-label="投记工作台导航">
-      <button v-for="tab in workspaceTabs" :key="tab.key" :class="{active:activeTab===tab.key}" @click="setActiveTab(tab.key)" :aria-current="activeTab===tab.key?'page':null">
+      <button v-for="tab in railTabs" :key="tab.key" :class="{active:activeTab===tab.key}" @click="setActiveTab(tab.key)" :aria-current="activeTab===tab.key?'page':null">
         <span class="nav-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" v-html="tab.icon"></svg></span>
         <span class="nav-copy"><strong>{{ tab.label }}</strong><small>{{ tab.caption }}</small></span>
       </button>
     </nav>
     <button class="rail-entry-btn" @click="setActiveTab('quick')"><span>＋</span>记一笔</button>
-    <div class="skin-toggle" role="radiogroup" aria-label="皮肤">
-      <button v-for="item in THEMES" :key="item.key" type="button" role="radio" :aria-checked="theme===item.key" :class="{active:theme===item.key}" @click="setTheme(item.key)">{{ item.label }}</button>
-    </div>
     <div class="terminal-rail-meta">
       <p><span :class="['sync-dot',{syncing,stale:!syncing&&lastChangeAt>lastSyncedAt}]"></span> 数据状态</p>
       <strong>{{ syncStatus }}</strong>
       <div class="rail-meta-counts">
-        <span>{{ entries.length }} 条流水</span>
+        <span>{{ entries.length }} 条记录</span>
         <span>{{ positions.length }} 个持仓</span>
       </div>
     </div>
@@ -4439,14 +4456,11 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
   <!-- PRICE TICKER (hidden) -->
 
   <div class="responsive-head section-records section-stats section-data">
-    <div class="responsive-brand"><img src="icon.svg" alt=""><div><strong>投记</strong><small>WEALTH JOURNAL</small></div></div>
-    <div class="skin-toggle" role="radiogroup" aria-label="皮肤">
-      <button v-for="item in THEMES" :key="item.key" type="button" role="radio" :aria-checked="theme===item.key" :class="{active:theme===item.key}" @click="setTheme(item.key)">{{ item.label }}</button>
-    </div>
+    <div class="responsive-brand"><img src="icon.svg" alt=""><div><strong>投记</strong></div></div>
   </div>
 
   <nav class="workspace-tabs" aria-label="投记工作区">
-    <button v-for="tab in workspaceTabs" :key="tab.key" :class="['workspace-tab',{active:activeTab===tab.key}]" :aria-label="tab.label" :aria-current="activeTab===tab.key?'page':null" @click="setActiveTab(tab.key)">
+    <button v-for="tab in mobileTabs" :key="tab.key" :class="['workspace-tab',{active:navActive===tab.key,'is-add':tab.add}]" :aria-label="tab.label" :aria-current="navActive===tab.key?'page':null" @click="setActiveTab(tab.key)">
       <span class="workspace-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" v-html="tab.icon"></svg></span><span>{{ tab.short||tab.label }}</span>
     </button>
   </nav>
@@ -4455,7 +4469,6 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
   <section id="overview" class="panel overview-dashboard section-records section-stats section-data" v-show="activeTab==='overview'">
     <header class="overview-dashboard-head">
       <div class="overview-dashboard-title">
-        <p class="module-kicker">{{ hasTrackedHoldings?'PORTFOLIO STATEMENT':'CAPITAL STATEMENT' }} · {{ APP_VERSION }}</p>
         <h1>{{ hasTrackedHoldings?'资产快照':'资金快照' }}</h1>
         <p class="hint">{{ overviewLastUpdated }}</p>
       </div>
@@ -4483,7 +4496,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <p class="overview-balance-label">已投入净额</p>
           <p class="overview-balance-value privacy-number">{{ fmt(netInvested) }} <small>CNY</small></p>
           <p class="overview-untracked" v-if="entries.length">
-            <span>还没有录入持仓，真实收益暂时算不出来。</span>
+            <span>还没有填持仓，真实收益暂时算不出来。</span>
             <button class="text-command" @click="setActiveTab('positions')">建立持仓 →</button>
           </p>
         </div>
@@ -4500,7 +4513,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <div class="capital-equation">
           <div class="capital-equation-head"><span>资金关系</span><code>持仓 + 取出 - 投入 = 收益</code></div>
           <div class="capital-equation-grid">
-            <div><span>当前持仓</span><strong v-if="hasTrackedHoldings" class="privacy-number">{{ fmt(holdingsValue) }}</strong><strong v-else class="equation-unknown">未录入</strong></div>
+            <div><span>当前持仓</span><strong v-if="hasTrackedHoldings" class="privacy-number">{{ fmt(holdingsValue) }}</strong><strong v-else class="equation-unknown">未填</strong></div>
             <div><span>＋ 累计取出</span><strong class="privacy-number text-flow-out">{{ fmt(totalOut) }}</strong></div>
             <div><span>－ 累计投入</span><strong class="privacy-number text-flow-in">{{ fmt(totalIn) }}</strong></div>
             <div class="equation-result"><span>＝ 真实收益</span><strong v-if="hasTrackedHoldings" class="privacy-number">{{ (trueReturn>=0?'+':'')+fmt(trueReturn) }}</strong><strong v-else class="equation-unknown">—</strong></div>
@@ -4509,7 +4522,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
       </div>
       <aside class="overview-allocation" v-if="positions.length">
         <div class="overview-allocation-head">
-          <div><p class="module-kicker">ALLOCATION</p><h2>资产配置</h2></div>
+          <div><h2>资产配置</h2></div>
           <span>{{ positions.length }} 个持仓</span>
         </div>
         <div v-if="overviewAllocation.length" class="allocation-list">
@@ -4531,8 +4544,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
            show, so the slot answers the question it can: where the money sits. -->
       <aside class="overview-allocation" v-else>
         <div class="overview-allocation-head">
-          <div><p class="module-kicker">FUNDING</p><h2>资金分布</h2></div>
-          <span>{{ overviewFunding.rows.length }} 个平台</span>
+          <div><h2>资金分布</h2></div>
+          <span>{{ overviewFunding.rows.length }} 个账户</span>
         </div>
         <div v-if="overviewFunding.rows.length" class="allocation-list">
           <div v-for="item in overviewFunding.rows" :key="item.label" class="allocation-row">
@@ -4543,11 +4556,11 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
             </div>
             <div class="allocation-track"><i :style="{width:item.pct+'%',background:'var(--flow-in)'}"></i></div>
           </div>
-          <p class="funding-note">按平台的净投入（入金减出金）<template v-if="overviewFunding.settled">，另有 {{ overviewFunding.settled }} 个平台已全部取回</template>。</p>
+          <p class="funding-note">按账户的净投入（投入减取出）<template v-if="overviewFunding.settled">，另有 {{ overviewFunding.settled }} 个账户已全部取回</template>。</p>
         </div>
         <div v-else class="allocation-empty">
-          <strong>还没有留在平台里的资金</strong>
-          <span>记录入金后，这里会按平台显示钱目前放在哪里。</span>
+          <strong>还没有放在账户里的钱</strong>
+          <span>记下第一笔投入后，这里会按账户显示钱放在哪里。</span>
         </div>
       </aside>
     </div>
@@ -4556,7 +4569,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
   <div class="overview-grid" v-show="activeTab==='overview'">
     <section class="panel overview-module" v-if="positions.length">
       <div class="panel-header">
-        <div><p class="module-kicker">CORE HOLDINGS</p><h2>主要持仓</h2></div>
+        <div><h2>主要持仓</h2></div>
         <button class="text-command" @click="setActiveTab('positions')">查看全部 <span>→</span></button>
       </div>
       <div class="overview-rows" v-if="overviewTopPositions.length">
@@ -4566,11 +4579,11 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <span class="overview-row-value"><strong>{{ fmt(p.value) }}</strong><small :class="p.pl>=0?'text-green':'text-red'">{{ p.hasCost?(p.pl>=0?'+':'')+fmt(p.pl):'待补成本' }}</small></span>
         </button>
       </div>
-      <div class="empty-block" v-else><strong>还没有持仓</strong><span>从“录入”添加第一笔买入，或在持仓页手动建立初始仓位。</span></div>
+      <div class="empty-block" v-else><strong>还没有持仓</strong><span>从「记一笔」添加第一笔买入，或在持仓页手动建立初始仓位。</span></div>
     </section>
     <section class="panel overview-module" v-else>
       <div class="panel-header">
-        <div><p class="module-kicker">MONTHLY FLOW</p><h2>按月出入金</h2></div>
+        <div><h2>每月投入和取出</h2></div>
         <button class="text-command" @click="setActiveTab('records')">查看统计 <span>→</span></button>
       </div>
       <div class="overview-rows" v-if="overviewMonths.length">
@@ -4583,31 +4596,31 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           </span>
         </button>
       </div>
-      <div class="empty-block" v-else><strong>还没有出入金</strong><span>记录第一笔入金后，这里会按月汇总。</span><button class="text-command" @click="setActiveTab('quick')">记第一笔 →</button></div>
+      <div class="empty-block" v-else><strong>还没有记录</strong><span>记下第一笔投入后，这里会按月汇总。</span><button class="text-command" @click="setActiveTab('quick')">记第一笔 →</button></div>
     </section>
     <section class="panel overview-module">
       <div class="panel-header">
-        <div><p class="module-kicker">RECENT ACTIVITY</p><h2>最近流水</h2></div>
+        <div><h2>最近记录</h2></div>
         <button class="text-command" @click="setActiveTab('records')">查看全部 <span>→</span></button>
       </div>
       <div class="overview-rows" v-if="sortedEntries.length">
         <button v-for="e in sortedEntries.slice(0,6)" :key="e.id" class="overview-row" @click="setActiveTab('records');openEditModal(e)">
-          <span :class="['flow-mark','flow-'+e.type]">{{ e.type.slice(0,1) }}</span>
+          <span :class="['flow-mark','flow-'+e.type]">{{ typeLabel(e.type).slice(0,1) }}</span>
           <span class="overview-row-main"><strong>{{ e.exchange||e.targetName||'未命名账户' }}</strong><small>{{ e.date }} · {{ e.assetType||'未分类' }}</small></span>
           <span class="overview-row-value"><strong>{{ fmt(e.amount) }} {{ e.currency||'CNY' }}</strong><small>{{ e.note||tagsText(e.tags)||'无备注' }}</small></span>
         </button>
       </div>
-      <div class="empty-block" v-else><strong>账本还是空的</strong><span>第一笔可以是入金，也可以直接记录买入。</span><button class="text-command" @click="setActiveTab('quick')">记第一笔 →</button></div>
+      <div class="empty-block" v-else><strong>账本还是空的</strong><span>第一笔可以是投入，也可以直接记买入。</span><button class="text-command" @click="setActiveTab('quick')">记第一笔 →</button></div>
     </section>
   </div>
 
   <!-- ===== POSITIONS ===== -->
   <section id="positions" class="panel section-stats section-not-records section-not-data position-panel" v-show="activeTab==='positions'">
+    <button type="button" class="back-home" @click="setActiveTab('overview')">‹ 首页</button>
     <header class="position-page-head">
       <div>
-        <p class="module-kicker">POSITION BOOK</p>
         <h2>持仓工作台</h2>
-        <p class="hint">先看仓位与盈亏，再进入单项核对成本、流水或继续交易。</p>
+        <p class="hint">先看仓位与盈亏，再进入单项核对成本、记录或继续交易。</p>
       </div>
       <div class="position-head-actions">
         <button class="btn btn-ghost btn-sm" @click="fetchPosPrices" v-if="positions.length">刷新价格</button>
@@ -4631,7 +4644,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
     <div v-show="showPosForm" class="position-create-block">
       <div class="position-create-title">
         <h3>建立初始持仓</h3>
-        <span>价格和份额用于计算持仓成本，不会额外生成流水。</span>
+        <span>价格和份额用于计算持仓成本，不会额外生成记录。</span>
       </div>
       <div class="position-create-grid">
         <div class="form-group" style="position:relative">
@@ -4687,14 +4700,14 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         </button>
         <div v-if="!positionRowsSorted.length" class="position-list-empty">
           <strong>{{ positions.length?'这个市场还没有持仓':'还没有建立持仓' }}</strong>
-          <span>{{ positions.length?'切换市场查看其他标的。':'先建立初始持仓，之后买卖流水可以直接与它关联。' }}</span>
+          <span>{{ positions.length?'切换市场查看其他标的。':'先建立初始持仓，之后买卖记录可以直接与它关联。' }}</span>
           <button v-if="!positions.length" class="btn btn-primary btn-sm" @click="showPosForm=true">新增第一只持仓</button>
         </div>
       </div>
 
       <aside v-if="selectedPosition" class="position-inspector">
         <div class="position-inspector-head">
-          <div><p class="module-kicker">{{ selectedPosition.assetType||'POSITION' }}</p><h3>{{ selectedPosition.name||selectedPosition.symbol }}</h3></div>
+          <div><p class="module-kicker">{{ selectedPosition.assetType||'持仓' }}</p><h3>{{ selectedPosition.name||selectedPosition.symbol }}</h3></div>
           <button class="icon-btn" title="关闭详情" @click="selectedPositionId=''">×</button>
         </div>
         <div class="position-inspector-value">
@@ -4719,13 +4732,13 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           </div>
         </div>
         <div class="position-flow-history">
-          <h4>关联流水 · {{ selectedPosition.flow.count }} 笔</h4>
+          <h4>关联记录 · {{ selectedPosition.flow.count }} 笔</h4>
           <div v-if="selectedPosition.flow.rows.length" class="position-flow-list">
             <button v-for="r in selectedPosition.flow.rows.slice(0,8)" :key="r.id" class="position-flow-row" @click="setActiveTab('records');openEditModal(r)">
-              <time>{{ r.date.slice(5) }}{{ r.time?' '+r.time:'' }}</time><span>{{ r.type }}</span><span>{{ r.note||r.exchange||'未填写备注' }}</span><strong class="privacy-number">{{ fmt(amountCNY(r)) }}</strong>
+              <time>{{ r.date.slice(5) }}{{ r.time?' '+r.time:'' }}</time><span>{{ typeLabel(r.type) }}</span><span>{{ r.note||r.exchange||'未填写备注' }}</span><strong class="privacy-number">{{ fmt(amountCNY(r)) }}</strong>
             </button>
           </div>
-          <p v-else class="hint">还没有关联流水。下一笔买卖会自动出现在这里。</p>
+          <p v-else class="hint">还没有关联记录。下一笔买卖会自动出现在这里。</p>
         </div>
         <button class="btn btn-ghost btn-sm position-inspector-delete" @click="removePosition(selectedPosition.id)">删除这项持仓</button>
       </aside>
@@ -4758,11 +4771,11 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
        借来的钱单独记账。贷款与还款存在 debts 集合里；从交易所取出来直接还贷的
        出金（去向 = 还本 / 付息）也算作还款，但它仍是一笔出金，净值口径不变。 -->
   <section id="debts" class="panel section-stats section-not-records section-not-data debt-panel" v-show="activeTab==='debts'">
+    <button type="button" class="back-home" @click="setActiveTab('overview')">‹ 首页</button>
     <header class="position-page-head">
       <div>
-        <p class="module-kicker">DEBT BOOK</p>
-        <h2>负债</h2>
-        <p class="hint">借来的钱单独记账：每期该还多少、每笔到期还差多少，以及借来的钱有多少进了交易所。</p>
+        <h2>借款</h2>
+        <p class="hint">借来的钱单独记账：每期该还多少、每笔到期还差多少，以及借来的钱有多少进了投资账户。</p>
       </div>
       <div class="position-head-actions">
         <button class="btn btn-ghost btn-sm" @click="toggleDebtPlanForm">{{ debtPlanForm.open?'收起设置':'还债设置' }}</button>
@@ -4896,7 +4909,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
               <div class="form-group"><label>钱从哪来</label><select class="form-input" v-model="debtRepayForm.source"><option value="salary">工资</option><option value="savings">存款</option><option value="other">其他</option></select></div>
               <div class="form-group debt-form-wide"><label>备注</label><input class="form-input" v-model="debtRepayForm.note" placeholder="可选"></div>
             </div>
-            <p class="debt-muted">从交易所取出来直接还的，去「录入 → 出金」选「还贷款本金」，会自动算进这里，不用再记一次。</p>
+            <p class="debt-muted">从投资账户取出来直接还的，去「记一笔 → 取出」选「还贷款本金」，会自动算进这里，不用再记一次。</p>
             <div class="debt-form-actions">
               <button class="btn btn-ghost btn-sm" @click="debtRepayForm.loanId=''">取消</button>
               <button class="btn btn-primary btn-sm" @click="saveRepayment">保存还款</button>
@@ -4907,7 +4920,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
             <div v-for="r in [...l.repayments].reverse()" :key="r.id" class="debt-repayment">
               <span>{{ r.date }}</span>
               <span>{{ r.principal?'还本 '+fmt(r.principal):'' }}{{ r.principal&&r.interest?' · ':'' }}{{ r.interest?'付息 '+fmt(r.interest):'' }}</span>
-              <small>{{ r.entryId?'来自出金':r.via==='schedule'?'日程勾选':(r.source==='salary'?'工资':r.source==='savings'?'存款':'其他') }}{{ r.note?' · '+r.note:'' }}</small>
+              <small>{{ r.entryId?'来自取出':r.via==='schedule'?'日程勾选':(r.source==='salary'?'工资':r.source==='savings'?'存款':'其他') }}{{ r.note?' · '+r.note:'' }}</small>
               <button v-if="!r.entryId" class="action-link del" @click="removeRepayment(l.id,r.id)" title="删除这条还款">删除</button>
             </div>
             <p v-if="l.note" class="debt-muted">备注：{{ l.note }}</p>
@@ -4918,12 +4931,12 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
       <section class="debt-block debt-funding">
         <header class="debt-block-head">
           <h3>借来的钱去了哪</h3>
-          <span>互转不算；没标来源的老入金只能按时间看。</span>
+          <span>转移不算；没标来源的旧记录只能按时间看。</span>
         </header>
         <div class="debt-funding-grid">
-          <div><span>标了「借款」的入金</span><strong class="privacy-number">{{ fmt(debtFunding.taggedLoan) }}</strong><small>{{ debtFunding.taggedLoanCount }} 笔</small></div>
+          <div><span>标了「借的」的投入</span><strong class="privacy-number">{{ fmt(debtFunding.taggedLoan) }}</strong><small>{{ debtFunding.taggedLoanCount }} 笔</small></div>
           <div v-if="debtFunding.since"><span>{{ debtFunding.since }} 贷款下来以后转进去</span><strong class="privacy-number">{{ fmt(debtFunding.sinceIn) }}</strong><small>取回 {{ fmt(debtFunding.sinceOut) }} · 净流入 {{ fmt(debtFunding.sinceNet) }}</small></div>
-          <div :class="{'debt-gap':debtSummary.openCount&&debtFunding.monthCount>=2}"><span>本月入金</span><strong class="privacy-number">{{ fmt(debtFunding.monthIn) }}</strong><small>{{ debtFunding.monthCount }} 笔{{ debtSummary.openCount?' · 还欠着钱':'' }}</small></div>
+          <div :class="{'debt-gap':debtSummary.openCount&&debtFunding.monthCount>=2}"><span>本月投入</span><strong class="privacy-number">{{ fmt(debtFunding.monthIn) }}</strong><small>{{ debtFunding.monthCount }} 笔{{ debtSummary.openCount?' · 还欠着钱':'' }}</small></div>
         </div>
       </section>
     </div>
@@ -4932,7 +4945,6 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
   <section class="panel section-records section-not-stats section-not-data quick-add-panel entry-panel" v-show="activeTab==='quick'">
     <header class="entry-page-head">
       <div>
-        <p class="module-kicker">NEW ENTRY</p>
         <h2>记一笔</h2>
         <p class="hint">先选择资金动作，再填写这笔操作真正需要的信息。</p>
       </div>
@@ -4964,8 +4976,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
 
       <template v-if="c2c.rows.length">
         <div class="c2c-options">
-          <div class="form-group"><label>平台</label><input class="form-input" v-model="c2c.platform" list="dl-ex-focused" placeholder="例如：欧易"></div>
-          <div class="form-group"><label>新增入金的资金来源</label><select class="form-input" v-model="c2c.fundSource"><option value="">先不标注</option><option v-for="o in FUND_SOURCES" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
+          <div class="form-group"><label>账户</label><input class="form-input" v-model="c2c.platform" list="dl-ex-focused" placeholder="例如：欧易"></div>
+          <div class="form-group"><label>新增投入的钱从哪来</label><select class="form-input" v-model="c2c.fundSource"><option value="">先不标注</option><option v-for="o in FUND_SOURCES" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
           <div class="form-group"><label>收付款渠道</label><select class="form-input" v-model="c2c.channel"><option value="">先不标注</option><option v-for="o in PAY_CHANNELS" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
         </div>
         <div class="c2c-rows">
@@ -5007,8 +5019,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <div class="form-group"><label>{{ isFxCash?(quickAction==='withdraw'?'卖出币种':'到账币种'):'币种' }}</label><select class="form-input" v-model="form.currency" @change="handleCashCurrencyChange"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select></div>
         <div v-if="isFxCash" class="form-group"><label>{{ quickAction==='withdraw'?'到账人民币':'支付人民币' }}</label><input class="form-input" type="number" step="0.01" v-model.number="form.sourceAmount" placeholder="输入人民币金额" inputmode="decimal" @input="onFxInput('cny')" @keyup.enter="addEntry(true)"></div>
         <div v-else class="form-group"><label>{{ quickAmountLabel }}</label><input class="form-input" type="number" step="0.01" v-model.number="form.amount" placeholder="输入金额" inputmode="decimal" @keyup.enter="addEntry(true)"></div>
-        <div class="form-group"><label>{{ quickAction==='transfer'?'从哪个平台转出':'账户 / 平台' }}</label><input class="form-input" v-model="form.exchange" placeholder="例如：招商证券" list="dl-ex-focused"></div>
-        <div class="form-group" v-if="quickAction==='transfer'"><label>转入哪个平台</label><input class="form-input" v-model="form.toExchange" placeholder="例如：币安" list="dl-ex-focused"></div>
+        <div class="form-group"><label>{{ quickAction==='transfer'?'从哪个账户转出':'账户' }}</label><input class="form-input" v-model="form.exchange" placeholder="例如：招商证券" list="dl-ex-focused"></div>
+        <div class="form-group" v-if="quickAction==='transfer'"><label>转入哪个账户</label><input class="form-input" v-model="form.toExchange" placeholder="例如：币安" list="dl-ex-focused"></div>
         <div class="form-group"><label>日期与时间</label><div class="entry-datetime-fields"><input class="form-input" type="date" v-model="form.date"><input class="form-input" type="time" v-model="form.time" aria-label="发生时间"></div></div>
       </div>
 
@@ -5022,7 +5034,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <div class="form-group"><label>{{ quickAction==='buy'?'买入价格':'卖出价格' }}</label><input class="form-input" type="number" step="any" v-model.number="form.tradePrice" :placeholder="(form.currency||'CNY')+' 单价'" inputmode="decimal" @input="syncTradeAmount"></div>
           <div class="form-group"><label>{{ quickAction==='buy'?'买入数量 / 份额':'卖出数量 / 份额' }}</label><input class="form-input" type="number" step="any" v-model.number="form.tradeQty" placeholder="例如：100" inputmode="decimal" @input="syncTradeAmount"></div>
           <div class="entry-total-readout"><span>成交总额</span><strong class="privacy-number">{{ tradeAmountPreview?fmt(tradeAmountPreview):'—' }} {{ form.currency||'CNY' }}</strong></div>
-          <div class="form-group"><label>账户 / 平台</label><input class="form-input" v-model="form.exchange" placeholder="例如：招商证券" list="dl-ex-focused"></div>
+          <div class="form-group"><label>账户</label><input class="form-input" v-model="form.exchange" placeholder="例如：招商证券" list="dl-ex-focused"></div>
         </div>
       </template>
       <datalist id="dl-ex-focused"><option v-for="ex in platformSuggestions" :key="ex" :value="ex"></option></datalist>
@@ -5066,7 +5078,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
             <option value="">选择还哪笔贷款</option>
             <option v-for="l in loanOptions" :key="l.id" :value="l.id">{{ l.name }}</option>
           </select>
-          <button v-else type="button" class="entry-fund-hint" @click="setActiveTab('debts')">还没登记贷款，去「负债」登记 →</button>
+          <button v-else type="button" class="entry-fund-hint" @click="setActiveTab('debts')">还没登记借款，去「借款」登记 →</button>
         </template>
       </div>
 
@@ -5129,9 +5141,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
   <section id="sync" class="panel section-records section-not-stats section-not-data data-center" v-show="activeTab==='data'">
     <header class="data-center-head">
       <div>
-        <p class="module-kicker">DATA CENTER</p>
-        <h2>同步与数据</h2>
-        <p class="hint">管理多端同步、文件迁移和本地恢复，不改变账本内容本身。</p>
+        <h2>我的</h2>
+        <p class="hint">账号、功能开关、外观，以及账本的导入、导出和恢复。</p>
       </div>
       <div class="data-state">
         <span :class="['data-state-dot',{offline:!cloudReady}]"></span>
@@ -5140,10 +5151,39 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
     </header>
 
     <div class="data-summary-strip">
-      <div><span>流水记录</span><strong>{{ entries.length }}</strong></div>
+      <div><span>记录</span><strong>{{ entries.length }}</strong></div>
       <div><span>持仓项目</span><strong>{{ positions.length }}</strong></div>
       <div><span>本地快照</span><strong>{{ snapshots.length }}</strong></div>
-      <div><span>同步状态</span><strong>{{ cloudReady?'READY':'LOCAL' }}</strong></div>
+      <div><span>保存在</span><strong>{{ serverAccount.user?'云端':'本机' }}</strong></div>
+    </div>
+
+    <div class="me-settings">
+      <section class="me-group">
+        <h3>功能</h3>
+        <div class="me-row">
+          <div><strong>持仓明细</strong><small>想逐个标的看成本和盈亏时打开</small></div>
+          <div class="me-actions">
+            <button v-if="featureOn.positions" type="button" class="btn btn-ghost btn-sm" @click="setActiveTab('positions')">打开</button>
+            <button type="button" role="switch" aria-label="持仓明细" :aria-checked="featureOn.positions" :class="['me-switch',{on:featureOn.positions}]" @click="setFeature('positions',!featureOn.positions)"></button>
+          </div>
+        </div>
+        <div class="me-row">
+          <div><strong>借款</strong><small>{{ openLoans.length?openLoans.length+' 笔没还清':'借钱投资时打开，用来看还欠多少、什么时候要还' }}</small></div>
+          <div class="me-actions">
+            <button v-if="featureOn.loans" type="button" class="btn btn-ghost btn-sm" @click="setActiveTab('debts')">打开</button>
+            <button type="button" role="switch" aria-label="借款" :aria-checked="featureOn.loans" :class="['me-switch',{on:featureOn.loans}]" @click="setFeature('loans',!featureOn.loans)"></button>
+          </div>
+        </div>
+      </section>
+      <section class="me-group">
+        <h3>显示</h3>
+        <div class="me-row">
+          <div><strong>外观</strong></div>
+          <div class="skin-toggle" role="radiogroup" aria-label="外观">
+            <button v-for="item in THEMES" :key="item.key" type="button" role="radio" :aria-checked="theme===item.key" :class="{active:theme===item.key}" @click="setTheme(item.key)">{{ item.label }}</button>
+          </div>
+        </div>
+      </section>
     </div>
 
     <div class="data-center-body">
@@ -5155,13 +5195,13 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
 
       <div v-if="dataView==='sync'" class="data-center-view">
         <div class="sync-provider-switch" role="tablist" aria-label="同步方式">
-          <button :class="['sync-provider-button',{active:syncProvider==='server'}]" @click="syncProvider='server'" role="tab"><strong>Orbit 账号</strong><span>个人站统一身份 · 数据库同步</span></button>
-          <button :class="['sync-provider-button',{active:syncProvider==='gist'}]" @click="syncProvider='gist'" role="tab"><strong>GitHub Gist</strong><span>自带 Token · 高级选项</span></button>
+          <button :class="['sync-provider-button',{active:syncProvider==='server'}]" @click="syncProvider='server'" role="tab"><strong>账号</strong><span>登录后云端保存</span></button>
+          <button :class="['sync-provider-button',{active:syncProvider==='gist'}]" @click="syncProvider='gist'" role="tab"><strong>GitHub Gist</strong><span>自己搭的同步 · 高级</span></button>
         </div>
 
         <div v-if="syncProvider==='server'">
           <div class="data-view-head">
-            <div><h3>账号数据库同步</h3><p>登录、密码、邀请和成员统一在个人站管理；这里仅处理当前账号的账本同步。</p></div>
+            <div><h3>账号同步</h3><p>登录后账本保存到云端，手机和电脑看到的是同一本。账号在个人站管理。</p></div>
             <span class="data-state"><span :class="['data-state-dot',{offline:!serverAccount.user}]"></span>{{ serverAccount.user?'已连接':(guestMode?'仅本机':'未连接') }}</span>
           </div>
           <div v-if="guestMode" class="guest-note">
@@ -5174,7 +5214,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
             <div class="server-account-actions"><button class="btn btn-primary btn-sm" @click="openServerComparison" :disabled="serverAccount.busy">{{ serverAccount.busy?'读取中…':'比较并同步' }}</button><a class="btn btn-ghost btn-sm" href="https://orbitshz.com/account">账号中心</a></div>
           </div>
           <div v-if="serverAccount.user" class="server-account-metrics">
-            <div><span>本地流水</span><strong>{{ entries.length }}</strong></div><div><span>本地持仓</span><strong>{{ positions.length }}</strong></div><div><span>服务器流水</span><strong>{{ serverRemoteSummary.entries }}</strong></div><div><span>服务器持仓</span><strong>{{ serverRemoteSummary.positions }}</strong></div>
+            <div><span>本地记录</span><strong>{{ entries.length }}</strong></div><div><span>本地持仓</span><strong>{{ positions.length }}</strong></div><div><span>服务器记录</span><strong>{{ serverRemoteSummary.entries }}</strong></div><div><span>服务器持仓</span><strong>{{ serverRemoteSummary.positions }}</strong></div>
           </div>
           <p v-if="serverAccount.error" class="form-error" style="margin-top:12px">{{ serverAccount.error }}</p>
           <p v-if="!guestMode" class="server-sync-note">{{ serverAutoSyncEnabled?'自动保存已开启：修改会先写入本机，再同步到服务器；断网恢复后会自动补传。':'首次同步需要确认本机与服务器账本，确认后将自动保存。' }}</p>
@@ -5202,26 +5242,26 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <section class="data-transfer-group">
           <h4>导入到当前账本</h4>
           <div class="data-transfer-list">
-            <button class="data-transfer-action" @click="$refs.xlsxFile.click()"><span class="data-transfer-icon">XL</span><span><strong>导入 Excel</strong><small>预览后再合并或覆盖流水</small></span><span>›</span></button>
-            <button class="data-transfer-action" @click="$refs.jsonFile.click()"><span class="data-transfer-icon">{ }</span><span><strong>导入 JSON</strong><small>同时恢复流水、持仓与设置</small></span><span>›</span></button>
+            <button class="data-transfer-action" @click="$refs.xlsxFile.click()"><span class="data-transfer-icon">XL</span><span><strong>导入 Excel</strong><small>预览后再合并或覆盖记录</small></span><span>›</span></button>
+            <button class="data-transfer-action" @click="$refs.jsonFile.click()"><span class="data-transfer-icon">{ }</span><span><strong>导入 JSON</strong><small>同时恢复记录、持仓与设置</small></span><span>›</span></button>
           </div>
         </section>
         <section class="data-transfer-group">
           <h4>导出当前账本</h4>
           <div class="data-transfer-list">
             <button class="data-transfer-action" @click="exportExcel"><span class="data-transfer-icon">XL</span><span><strong>导出 Excel</strong><small>适合核对、筛选和打印</small></span><span>›</span></button>
-            <button class="data-transfer-action" @click="exportJSON"><span class="data-transfer-icon">{ }</span><span><strong>JSON 数据备份</strong><small>包含流水、持仓与资产设置</small></span><span>›</span></button>
+            <button class="data-transfer-action" @click="exportJSON"><span class="data-transfer-icon">{ }</span><span><strong>JSON 数据备份</strong><small>包含记录、持仓与资产设置</small></span><span>›</span></button>
           </div>
         </section>
       </div>
 
       <div v-else-if="dataView==='access'" class="data-center-view">
         <div class="data-view-head">
-          <div><h3>接口访问</h3><p>给交易台、脚本或 agent 一个只读令牌，它只能读出入金，不能改动账本。</p></div>
+          <div><h3>接口访问</h3><p>给交易台、脚本或 agent 一个只读令牌，它只能读投入和取出，不能改动账本。</p></div>
         </div>
 
         <div v-if="!cloudReady" class="api-access-empty">
-          需要先连接 Orbit 账号，令牌才能绑定到你的账本。
+          需要先连接 账号，令牌才能绑定到你的账本。
         </div>
 
         <template v-else>
@@ -5231,7 +5271,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
               <code>{{ apiFeedBase }}/cashflows</code>
             </div>
             <p class="api-hint">
-              按时间升序返回出入金，附折合人民币金额与区间汇总。支持
+              按时间升序返回投入和取出，附折合人民币金额与区间汇总。支持
               <code>since</code> / <code>until</code>（YYYY-MM-DD）、
               <code>include=all</code>（并入买卖）、<code>limit</code>。
             </p>
@@ -5239,7 +5279,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
               <span class="api-endpoint-label">GET</span>
               <code>{{ apiFeedBase }}/debts</code>
             </div>
-            <p class="api-hint">返回贷款、还款与还债计划；令牌要勾选「同时可读负债」才能访问。</p>
+            <p class="api-hint">返回贷款、还款与还债计划；令牌要勾选「同时可读借款」才能访问。</p>
           </section>
 
           <section class="api-access-section">
@@ -5250,7 +5290,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
                 {{ apiTokenCreating?'创建中…':'创建令牌' }}
               </button>
             </div>
-            <label class="api-scope-option"><input type="checkbox" v-model="apiTokenDebts"> 同时可读负债（贷款、还款、还债计划）</label>
+            <label class="api-scope-option"><input type="checkbox" v-model="apiTokenDebts"> 同时可读借款（贷款、还款、还债计划）</label>
 
             <div v-if="apiTokenPlain" class="api-token-reveal">
               <div class="api-token-reveal-head">
@@ -5281,7 +5321,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
                     <span v-if="token.revokedAt" class="api-token-badge">已撤销</span>
                   </div>
                   <div class="api-token-meta">
-                    <code>{{ token.prefix }}…</code> · {{ String(token.scope||'').includes('debts:read')?'出入金 + 负债':'只读出入金' }} · 最近使用 {{ apiTokenTime(token.lastUsedAt) }}
+                    <code>{{ token.prefix }}…</code> · {{ String(token.scope||'').includes('debts:read')?'投入取出 + 借款':'只读投入取出' }} · 最近使用 {{ apiTokenTime(token.lastUsedAt) }}
                   </div>
                 </div>
                 <button v-if="!token.revokedAt" class="btn btn-ghost btn-xs" @click="revokeApiToken(token)">撤销</button>
@@ -5298,7 +5338,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <div class="data-recovery-list">
             <div v-if="!snapshots.length" class="data-recovery-empty">还没有快照。修改或删除前系统也会自动创建。</div>
             <div v-for="(snapshot,index) in snapshots" :key="index" class="snap-row">
-              <div><div style="font-size:11px;font-weight:700">{{ snapshot.at }}</div><div style="font-size:9px;color:var(--muted)">{{ (snapshot.entries||[]).length }} 条流水</div></div>
+              <div><div style="font-size:11px;font-weight:700">{{ snapshot.at }}</div><div style="font-size:9px;color:var(--muted)">{{ (snapshot.entries||[]).length }} 条记录</div></div>
               <button class="btn btn-ghost btn-xs" @click="restoreSnap(index)">恢复到这里</button>
             </div>
           </div>
@@ -5321,8 +5361,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
   <section id="records" class="panel section-records section-not-stats section-not-data ledger-panel" v-show="activeTab==='records'">
     <div class="ledger-page-head">
       <div>
-        <p class="module-kicker">INVESTMENT LEDGER</p>
-        <h2>流水账本</h2>
+        <h2>明细</h2>
         <p class="hint">
           <span class="ledger-desktop-copy">按时间阅读每一笔资金与交易，选择记录后在右侧查看和修改。</span>
           <span class="ledger-mobile-copy">按时间查看每一笔资金与交易，点击卡片即可修改。</span>
@@ -5336,10 +5375,10 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
     <!-- Compact Filters -->
     <div class="ledger-filter-shell">
       <div class="ledger-toolbar">
-        <div class="form-group"><label>年份</label><select class="form-input" aria-label="流水年份" :value="filters.year" @change="setFlowYear($event.target.value)"><option value="">全部</option><option v-for="year in allYears" :key="year" :value="year">{{ year }} 年</option></select></div>
+        <div class="form-group"><label>年份</label><select class="form-input" aria-label="年份" :value="filters.year" @change="setFlowYear($event.target.value)"><option value="">全部</option><option v-for="year in allYears" :key="year" :value="year">{{ year }} 年</option></select></div>
         <div class="form-group"><label>{{ t('month') }}</label><select class="form-input" v-model="filters.month"><option value="">{{ t('typeAll') }}</option><option v-for="m in allMonths" :key="m" :value="m">{{ m }}</option></select></div>
-        <div class="form-group"><label>类型</label><select class="form-input" v-model="filters.type"><option value="">{{ t('typeAll') }}</option><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option><option value="互转">互转</option></select></div>
-        <div class="form-group"><label>{{ t('keyword') }}</label><input class="form-input" v-model="filters.keyword" placeholder="交易所 / 备注 / 标签"></div>
+        <div class="form-group"><label>类型</label><select class="form-input" v-model="filters.type"><option value="">{{ t('typeAll') }}</option><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option><option value="互转">转移</option></select></div>
+        <div class="form-group"><label>{{ t('keyword') }}</label><input class="form-input" v-model="filters.keyword" placeholder="账户 / 备注 / 标签"></div>
         <div style="display:flex;gap:8px;justify-content:flex-end;align-items:end">
           <button :class="['btn','btn-ghost','btn-sm',{'has-filter':activeFilterCount>0}]" @click="showFilters=!showFilters">{{ showFilters?'收起':'更多筛选' }}{{ activeFilterCount?' · '+activeFilterCount:'' }}</button>
           <button class="btn btn-ghost btn-sm" @click="clearFilters">{{ t('clearFilters') }}</button>
@@ -5357,7 +5396,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <span v-for="at in allAssetTypes" :key="at" :class="['chip',{active:filters.assetTypes.includes(at)}]" @click="toggleAssetType(at)">{{ at }}</span>
         </div>
         <div class="filter-exchange" v-if="allExchanges.length">
-          <span class="filter-title">账户/平台</span>
+          <span class="filter-title">账户</span>
           <span v-for="ex in allExchanges" :key="ex" :class="['chip',{active:filters.exchanges.includes(ex)}]" @click="toggleEx(ex)">{{ ex }}</span>
         </div>
         <div class="filter-exchange" v-if="allTags.length">
@@ -5384,7 +5423,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
       <div class="ledger-book">
         <div v-if="!entries.length" class="ledger-empty">
           <strong>账本还是空的</strong>
-          <span>记录第一笔入金或交易后，时间会替你把它们整理好。</span>
+          <span>记下第一笔后，时间会替你把它们整理好。</span>
           <button class="btn btn-primary btn-sm" @click="setActiveTab('quick')">记第一笔</button>
         </div>
         <div v-else-if="hasActiveFilter&&!matchCount" class="ledger-empty">
@@ -5417,7 +5456,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
             @click="openEditModal(e)"
           >
             <time>{{ dayjs(e.date).format('MM.DD') }}<small v-if="e.time">{{ e.time }}</small></time>
-            <span :class="['ledger-type','type-'+typeTone(e.type)]">{{ e.type }}</span>
+            <span :class="['ledger-type','type-'+typeTone(e.type)]">{{ typeLabel(e.type) }}</span>
             <span class="ledger-entry-main">
               <strong>{{ e.targetName||e.note||e.exchange||'未命名记录' }}</strong>
               <small v-if="e.targetSymbol||e.tradeQty||e.tradePrice">
@@ -5426,7 +5465,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
               <small v-else>{{ e.targetName?(e.note||'暂无备注'):(e.note?(e.assetType||'记录'):'暂无备注') }}</small>
             </span>
             <span class="ledger-entry-context">
-              <strong>{{ e.exchange||'未知平台' }}{{ e.type==='互转'&&e.toExchange?' → '+e.toExchange:'' }}</strong>
+              <strong>{{ e.exchange||'未填账户' }}{{ e.type==='互转'&&e.toExchange?' → '+e.toExchange:'' }}</strong>
               <small>{{ e.fundSource?fundSourceLabel(e.fundSource)+' · ':'' }}{{ e.destination?destinationLabel(e.destination)+' · ':'' }}{{ e.channel?channelLabel(e.channel)+' · ':'' }}{{ e.assetType||'未分类' }}<template v-if="parseTags(e.tags).length"> · #{{ parseTags(e.tags).slice(0,2).join(' #') }}</template></small>
             </span>
             <span class="ledger-entry-amount" :style="{color:typeColor(e.type)}">
@@ -5448,7 +5487,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <div class="ledger-inspector-head">
           <div>
             <p>RECORD DETAIL</p>
-            <h3>{{ editingEntry.type }}记录</h3>
+            <h3>{{ typeLabel(editingEntry.type) }}记录</h3>
           </div>
           <button class="ledger-inspector-close" @click="editingEntry=null" title="关闭" aria-label="关闭记录详情">×</button>
         </div>
@@ -5459,14 +5498,14 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         </div>
         <div class="ledger-inspector-metrics" v-if="editingDetail">
           <div><span>本月记录</span><strong>{{ editingDetail.monthCount }} 笔</strong></div>
-          <div><span>同平台出入净额</span><strong>{{ (editingDetail.platformNet>=0?'+':'')+fmt(editingDetail.platformNet) }}</strong></div>
+          <div><span>这个账户的净投入</span><strong>{{ (editingDetail.platformNet>=0?'+':'')+fmt(editingDetail.platformNet) }}</strong></div>
         </div>
         <div class="ledger-inspector-form">
-          <div class="trade-lock-note" v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'">成交金额、币种和资产已参与持仓成本计算。需要改动这些字段时，请删除后重新录入。</div>
-          <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><template v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></template><option value="互转">互转</option></select></div>
+          <div class="trade-lock-note" v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'">成交金额、币种和资产已参与持仓成本计算。需要改动这些字段时，请删除后重新记一笔。</div>
+          <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><template v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></template><option value="互转">转移</option></select></div>
           <div class="form-group"><label>日期与时间</label><div class="entry-datetime-fields"><input class="form-input" type="date" v-model="editingEntry.date"><input class="form-input" type="time" v-model="editingEntry.time" aria-label="发生时间"></div></div>
           <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="editingEntry.assetType" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="">{{ t("uncategorized") }}</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select></div>
-          <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="editingEntry.exchange" list="dl-ex-ledger"></div>
+          <div class="form-group"><label>账户</label><input class="form-input" v-model="editingEntry.exchange" list="dl-ex-ledger"></div>
           <datalist id="dl-ex-ledger"><option v-for="ex in editPlatformSuggestions" :key="ex" :value="ex"></option></datalist>
 <template v-if="editingEntry.fxMode">
             <div class="form-group"><label>{{ editingEntry.type==='出金'?'到账人民币':'支付人民币' }}</label><input class="form-input" type="number" step="0.01" v-model.number="editingEntry.fxCny" inputmode="decimal"></div>
@@ -5496,7 +5535,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
             </div>
           </div>
           </template>
-          <div class="form-group" v-if="editingEntry.type==='互转'"><label>转入平台</label><input class="form-input" v-model="editingEntry.toExchange" list="dl-ex-ledger"></div>
+          <div class="form-group" v-if="editingEntry.type==='互转'"><label>转入账户</label><input class="form-input" v-model="editingEntry.toExchange" list="dl-ex-ledger"></div>
           <div class="form-group" v-if="editingEntry.type==='入金'"><label>资金来源</label><select class="form-input" v-model="editingEntry.fundSource"><option value="">未标注</option><option v-for="o in FUND_SOURCES" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
           <div class="form-group" v-if="editingEntry.type==='出金'"><label>资金去向</label><select class="form-input" v-model="editingEntry.destination"><option value="">未标注</option><option v-for="o in DESTINATIONS" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
           <div class="form-group" v-if="(editingEntry.type==='入金'&&editingEntry.fundSource==='loan')||(editingEntry.type==='出金'&&(editingEntry.destination==='repay'||editingEntry.destination==='interest'))">
@@ -5505,7 +5544,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           </div>
           <div class="form-group" v-if="editingEntry.type==='入金'||editingEntry.type==='出金'"><label>{{ editingEntry.type==='出金'?'收款渠道':'付款渠道' }}</label><select class="form-input" v-model="editingEntry.channel"><option value="">未标注</option><option v-for="o in PAY_CHANNELS" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
           <div class="form-group" v-if="editingEntry.type==='入金'||editingEntry.type==='出金'"><label>交易对手 / 商家</label><input class="form-input" v-model="editingEntry.counterparty" placeholder="C2C 商家名"></div>
-          <div class="form-group"><label>{{ editingEntry.type==='入金'?'投入理由':editingEntry.type==='买入'?'买入理由':editingEntry.type==='卖出'?'卖出理由':'出金备注' }}</label><textarea class="form-input ledger-note-input" v-model="editingEntry.note" rows="3"></textarea></div>
+          <div class="form-group"><label>{{ editingEntry.type==='入金'?'投入理由':editingEntry.type==='买入'?'买入理由':editingEntry.type==='卖出'?'卖出理由':'取出备注' }}</label><textarea class="form-input ledger-note-input" v-model="editingEntry.note" rows="3"></textarea></div>
           <div class="form-group"><label>{{ t('tagStats') }}</label><input class="form-input" v-model="editingEntry.tagText" list="dl-tags-ledger" placeholder="定投，补仓，FOMO"></div>
           <datalist id="dl-tags-ledger"><option v-for="tag in allTags" :key="tag" :value="tag"></option></datalist>
         </div>
@@ -5534,7 +5573,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <div v-for="e in g.entries" :key="e.id" :class="['record-card',rowClass(e)]" @click="openEditModal(e)">
             <div class="record-card-top">
               <span class="record-card-date">{{ e.date }}<template v-if="e.time"> · {{ e.time }}</template></span>
-              <span :class="['record-card-tag',typeTagClass(e.type)]">{{ e.type }}</span>
+              <span :class="['record-card-tag',typeTagClass(e.type)]">{{ typeLabel(e.type) }}</span>
             </div>
             <div :class="['record-card-amount']" :style="{color:typeColor(e.type)}">
               <template v-if="fxOf(e)">
@@ -5586,8 +5625,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
       <canvas ref="trendChart"></canvas>
     </div>
     <div v-if="period==='month'" class="cashflow-overview">
-      <div class="cashflow-card"><p>本年入金</p><strong class="text-flow-in">{{ fmt(cashflowOverview.yearIn) }}</strong></div>
-      <div class="cashflow-card"><p>本年出金</p><strong class="text-flow-out">{{ fmt(cashflowOverview.yearOut) }}</strong></div>
+      <div class="cashflow-card"><p>本年投入</p><strong class="text-flow-in">{{ fmt(cashflowOverview.yearIn) }}</strong></div>
+      <div class="cashflow-card"><p>本年取出</p><strong class="text-flow-out">{{ fmt(cashflowOverview.yearOut) }}</strong></div>
       <div class="cashflow-card"><p>本年净额</p><strong :style="{color:cashflowOverview.yearNet>=0?'var(--blue)':'var(--red)'}">{{ (cashflowOverview.yearNet>=0?'+':'')+fmt(cashflowOverview.yearNet) }}</strong></div>
       <div class="cashflow-card"><p>累计净额</p><strong :style="{color:cashflowOverview.cum>=0?'var(--blue)':'var(--red)'}">{{ (cashflowOverview.cum>=0?'+':'')+fmt(cashflowOverview.cum) }}</strong></div>
     </div>
@@ -5633,7 +5672,6 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
   <section id="review" class="panel section-stats section-not-records section-not-data" v-show="activeTab==='review'">
     <div class="panel-header review-head">
       <div>
-        <p class="module-kicker">RECENT REVIEW</p>
         <h2>近期复盘</h2>
         <p class="hint">{{ reviewScopeText }} · 只分析当前窗口，旧数据仍完整保留</p>
       </div>
@@ -5650,7 +5688,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
 
     <div class="review-summary-grid">
       <div class="review-summary-cell"><p>记录</p><strong>{{ reviewSummary.count }}</strong><small>笔操作</small></div>
-      <div class="review-summary-cell"><p>净投入</p><strong :class="reviewSummary.netFunding>0?'text-flow-in':reviewSummary.netFunding<0?'text-flow-out':''">{{ fmt(reviewSummary.netFunding) }}</strong><small>入金减出金</small></div>
+      <div class="review-summary-cell"><p>净投入</p><strong :class="reviewSummary.netFunding>0?'text-flow-in':reviewSummary.netFunding<0?'text-flow-out':''">{{ fmt(reviewSummary.netFunding) }}</strong><small>投入减取出</small></div>
       <div class="review-summary-cell"><p>买卖</p><strong>{{ reviewSummary.tradeCount }}</strong><small>{{ reviewSummary.buyCount }} 买 · {{ reviewSummary.sellCount }} 卖</small></div>
       <div class="review-summary-cell"><p>已实现盈亏</p><strong :class="reviewSummary.realizedPL>=0?'text-green':'text-red'">{{ (reviewSummary.realizedPL>=0?'+':'')+fmt(reviewSummary.realizedPL) }}</strong><small>仅统计卖出记录</small></div>
     </div>
@@ -5706,10 +5744,10 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         </div>
         <div v-if="selectedReviewEntries.length" class="review-day-entries">
           <div v-for="entry in selectedReviewEntries" :key="entry.id" class="review-day-entry">
-            <span :class="['flow-mark','flow-'+entry.type]">{{ entry.type.slice(0,1) }}</span>
+            <span :class="['flow-mark','flow-'+entry.type]">{{ typeLabel(entry.type).slice(0,1) }}</span>
             <div>
-              <strong>{{ entry.type }} · {{ entry.targetName||entry.exchange||'未填写标的或平台' }}</strong>
-              <small>{{ entry.exchange||'未填写平台' }} · {{ entry.assetType||'未分类' }}</small>
+              <strong>{{ typeLabel(entry.type) }} · {{ entry.targetName||entry.exchange||'未填标的或账户' }}</strong>
+              <small>{{ entry.exchange||'未填账户' }} · {{ entry.assetType||'未分类' }}</small>
             </div>
             <strong :class="entry.type==='出金'||entry.type==='卖出'?'text-flow-out':'text-flow-in'">{{ fmt(entry.amountCNY) }}</strong>
           </div>
@@ -5730,7 +5768,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <p class="review-day-subhead">当日复盘</p>
           <textarea class="form-input" v-model="reviewDayNote" placeholder="当时为什么这样操作？结果是否符合原计划？" rows="3"></textarea>
           <div class="review-day-note-actions">
-            <small>{{ reviewDayNoteSavedAt||'仅保存在当前浏览器，不会修改流水数据' }}</small>
+            <small>{{ reviewDayNoteSavedAt||'仅保存在当前浏览器，不会修改记录数据' }}</small>
             <button class="btn btn-primary btn-sm" @click="saveReviewDayNote">保存当日复盘</button>
           </div>
         </div>
@@ -5739,7 +5777,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
 
     <div v-if="!reviewSummary.count&&reviewView==='calendar'" class="empty-block review-empty review-view-section">
       <strong>近期还没有可复盘的操作</strong>
-      <span>切换更长时间范围查看历史，或从下一笔入金、出金、买入、卖出开始记录。</span>
+      <span>切换更长时间范围查看历史，或从下一笔投入、取出、买入、卖出开始记。</span>
       <button class="btn btn-primary btn-sm" @click="setActiveTab('quick')">去记一笔</button>
     </div>
 
@@ -5752,10 +5790,10 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <div class="review-timeline-list">
           <div v-for="item in reviewTimeline" :key="item.entry.id" class="review-timeline-row">
             <time class="review-timeline-date">{{ item.entry.date.slice(5) }}</time>
-            <span :class="['flow-mark','flow-'+item.entry.type]">{{ item.entry.type.slice(0,1) }}</span>
+            <span :class="['flow-mark','flow-'+item.entry.type]">{{ typeLabel(item.entry.type).slice(0,1) }}</span>
             <div class="review-timeline-main">
-              <strong>{{ item.entry.type }} · {{ item.entry.targetName||item.entry.exchange||'未填写标的或平台' }}</strong>
-              <small>{{ item.entry.exchange||'未填写平台' }} · {{ item.entry.assetType||'未分类' }}<template v-if="item.entry.note"> · {{ item.entry.note }}</template></small>
+              <strong>{{ typeLabel(item.entry.type) }} · {{ item.entry.targetName||item.entry.exchange||'未填标的或账户' }}</strong>
+              <small>{{ item.entry.exchange||'未填账户' }} · {{ item.entry.assetType||'未分类' }}<template v-if="item.entry.note"> · {{ item.entry.note }}</template></small>
               <div v-if="item.signals.length" class="review-timeline-tags">
                 <span v-for="signal in item.signals" :key="signal.id" :class="['review-signal-chip',signal.severity]" :title="signal.reason">{{ signal.title }}</span>
               </div>
@@ -5767,7 +5805,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
 
       <div v-show="reviewView==='insights'" class="review-layout review-view-section">
         <section class="review-block">
-          <div class="review-block-head"><h3>行为信号</h3><small>基于所选范围内的入金节奏</small></div>
+          <div class="review-block-head"><h3>行为信号</h3><small>基于所选范围内的投入节奏</small></div>
           <template v-if="behaviorAnalysis">
             <div class="tag-list">
               <span v-for="(tag,i) in psychoTags" :key="i" :class="['psych-tag',tag.type]" :title="tag.tip">
@@ -5781,7 +5819,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
               <div class="behavior-metric"><p>{{ t('maxSingle') }}</p><strong>{{ fmt(behaviorAnalysis.maxAmount) }}</strong></div>
             </div>
           </template>
-          <p v-else class="review-muted">这个范围内没有入金记录，暂时无法判断投入节奏。</p>
+          <p v-else class="review-muted">这个范围内没有投入记录，暂时无法判断投入节奏。</p>
         </section>
 
         <section class="review-block">
@@ -5827,7 +5865,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <div class="insight-config">
           <div class="form-group"><label>已实现亏损提醒（元）</label><input class="form-input" type="number" v-model.number="rules.lossWarn"></div>
           <div class="form-group"><label>已实现亏损强提醒（元）</label><input class="form-input" type="number" v-model.number="rules.lossCritical"></div>
-          <div class="form-group"><label>大额出入金阈值（元）</label><input class="form-input" type="number" v-model.number="rules.largeTx"></div>
+          <div class="form-group"><label>大额提醒阈值（元）</label><input class="form-input" type="number" v-model.number="rules.largeTx"></div>
           <div class="form-group"><label>密集买入次数</label><input class="form-input" type="number" min="2" v-model.number="rules.denseBuyCount"></div>
           <div class="form-group"><label>密集买入窗口（天）</label><input class="form-input" type="number" min="1" v-model.number="rules.denseBuyDays"></div>
           <div class="form-group"><label>单一持仓集中阈值（%）</label><input class="form-input" type="number" min="1" max="100" v-model.number="rules.concentrationPct"></div>
@@ -5875,8 +5913,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <div v-for="row in importPreviewRows" :key="row.key" class="import-preview-row">
             <span :class="['import-status',row.status]">{{ row.label }}</span>
             <div class="import-preview-main">
-              <div class="import-preview-title">{{ row.entry.date }}{{ row.entry.time?' '+row.entry.time:'' }} · {{ row.entry.type }} · {{ fmt(row.entry.amount) }} {{ row.entry.currency||'CNY' }}</div>
-              <div class="import-preview-sub">{{ row.entry.assetType||'未分类' }} · {{ row.entry.exchange||'未知平台' }}{{ row.entry.note?' · '+row.entry.note:'' }}</div>
+              <div class="import-preview-title">{{ row.entry.date }}{{ row.entry.time?' '+row.entry.time:'' }} · {{ typeLabel(row.entry.type) }} · {{ fmt(row.entry.amount) }} {{ row.entry.currency||'CNY' }}</div>
+              <div class="import-preview-sub">{{ row.entry.assetType||'未分类' }} · {{ row.entry.exchange||'未填账户' }}{{ row.entry.note?' · '+row.entry.note:'' }}</div>
             </div>
             <div class="import-reason">{{ row.reason }}</div>
           </div>
@@ -5908,14 +5946,14 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <div class="server-migration-compare">
           <section>
             <span>这台设备</span>
-            <strong>{{ serverLocalSummary.entries }} 条流水</strong>
-            <small>{{ serverLocalSummary.positions }} 个持仓{{ serverLocalSummary.debts?' · '+serverLocalSummary.debts+' 项负债':'' }} · 入金 {{ fmt(serverLocalSummary.totalIn) }} · 出金 {{ fmt(serverLocalSummary.totalOut) }}</small>
+            <strong>{{ serverLocalSummary.entries }} 条记录</strong>
+            <small>{{ serverLocalSummary.positions }} 个持仓{{ serverLocalSummary.debts?' · '+serverLocalSummary.debts+' 项借款':'' }} · 投入 {{ fmt(serverLocalSummary.totalIn) }} · 取出 {{ fmt(serverLocalSummary.totalOut) }}</small>
           </section>
           <div class="server-migration-arrow">⇄</div>
           <section>
             <span>服务器</span>
-            <strong>{{ serverRemoteSummary.entries }} 条流水</strong>
-            <small>{{ serverRemoteSummary.positions }} 个持仓{{ serverRemoteSummary.debts?' · '+serverRemoteSummary.debts+' 项负债':'' }} · 入金 {{ fmt(serverRemoteSummary.totalIn) }} · 出金 {{ fmt(serverRemoteSummary.totalOut) }}</small>
+            <strong>{{ serverRemoteSummary.entries }} 条记录</strong>
+            <small>{{ serverRemoteSummary.positions }} 个持仓{{ serverRemoteSummary.debts?' · '+serverRemoteSummary.debts+' 项借款':'' }} · 投入 {{ fmt(serverRemoteSummary.totalIn) }} · 取出 {{ fmt(serverRemoteSummary.totalOut) }}</small>
           </section>
         </div>
 
@@ -5932,7 +5970,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           </button>
           <button class="server-migration-option" @click="uploadLocalToServer" :disabled="serverAccount.busy">
             <strong>以本机覆盖服务器</strong>
-            <small>服务器现有账本将被这台设备的流水、持仓和删除记录完整替换。</small>
+            <small>服务器现有账本将被这台设备的记录、持仓和删除记录完整替换。</small>
           </button>
           <button class="server-migration-option" @click="downloadServerToLocal" :disabled="serverAccount.busy">
             <strong>以服务器覆盖本机</strong>
@@ -5971,9 +6009,9 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         </div>
 
         <div class="import-impact">
-          <div><p>本地</p><strong>{{ entries.length }} 流水 / {{ positions.length }} 持仓</strong></div>
-          <div><p>云端</p><strong>{{ syncPreview.remoteCount }} 流水 / {{ syncPreview.remotePositionCount }} 持仓</strong></div>
-          <div><p>合并后</p><strong>{{ syncPreview.mergedCount }} 流水 / {{ syncPreview.mergedPositionCount }} 持仓</strong></div>
+          <div><p>本地</p><strong>{{ entries.length }} 记录 / {{ positions.length }} 持仓</strong></div>
+          <div><p>云端</p><strong>{{ syncPreview.remoteCount }} 记录 / {{ syncPreview.remotePositionCount }} 持仓</strong></div>
+          <div><p>合并后</p><strong>{{ syncPreview.mergedCount }} 记录 / {{ syncPreview.mergedPositionCount }} 持仓</strong></div>
           <div><p>本地保留</p><strong>{{ syncPreview.summary.localOnly+syncPreview.summary.localNewer+syncPreview.summary.localDeleted }} 条</strong></div>
         </div>
 
@@ -5981,7 +6019,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <span>云端已经有和本地不同的数据。建议先合并再上传；只有确认本机数据才是唯一正确版本时，才强制上传覆盖云端。</span>
         </div>
         <div class="import-option" v-else>
-          <span>确认后会同时合并流水与持仓：更新的一边胜出，本地新增会保留，删除也会同步到另一台设备。</span>
+          <span>确认后会同时合并记录与持仓：更新的一边胜出，本地新增会保留，删除也会同步到另一台设备。</span>
         </div>
 
         <div class="import-preview-list">
@@ -5989,8 +6027,8 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <div v-for="row in syncPreviewRows" :key="row.key" class="import-preview-row">
             <span :class="['import-status',row.status]">{{ row.label }}</span>
             <div class="import-preview-main">
-              <div class="import-preview-title">{{ row.entry.date }}{{ row.entry.time?' '+row.entry.time:'' }} · {{ row.entry.type }} · {{ fmt(row.entry.amount) }} {{ row.entry.currency||'CNY' }}</div>
-              <div class="import-preview-sub">{{ row.entry.assetType||'未分类' }} · {{ row.entry.exchange||'未知平台' }}{{ row.entry.note?' · '+row.entry.note:'' }}</div>
+              <div class="import-preview-title">{{ row.entry.date }}{{ row.entry.time?' '+row.entry.time:'' }} · {{ typeLabel(row.entry.type) }} · {{ fmt(row.entry.amount) }} {{ row.entry.currency||'CNY' }}</div>
+              <div class="import-preview-sub">{{ row.entry.assetType||'未分类' }} · {{ row.entry.exchange||'未填账户' }}{{ row.entry.note?' · '+row.entry.note:'' }}</div>
             </div>
             <div class="import-reason">{{ row.reason }}</div>
           </div>
@@ -6015,7 +6053,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <div class="detail-meta">
             <template v-if="editingEntry.fxMode">{{ fmtUnits(editingEntry.fxUnits) }} {{ editingEntry.fxUnit }}{{ editFxRate?' · @ '+editFxRate:'' }}</template>
             <template v-else>折合 {{ fmt(editingDetail.cny) }} CNY</template>
-            · {{ editingEntry.assetType||'未分类' }} · {{ editingEntry.exchange||'未知平台' }}
+            · {{ editingEntry.assetType||'未分类' }} · {{ editingEntry.exchange||'未填账户' }}
           </div>
           <div class="tag-strip" v-if="parseTags(editingEntry.tagText||editingEntry.tags).length">
             <span v-for="tag in parseTags(editingEntry.tagText||editingEntry.tags)" :key="tag" class="tag-chip">#{{ tag }}</span>
@@ -6029,15 +6067,15 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <h4 v-if="editingDetail&&editingDetail.related.length" style="font-size:12px;color:var(--muted);margin:0 0 8px;text-transform:uppercase;letter-spacing:.3px">相关记录</h4>
         <div class="related-list" v-if="editingDetail&&editingDetail.related.length">
           <div v-for="r in editingDetail.related" :key="r.id" class="related-row">
-            <span>{{ r.date }}{{ r.time?' '+r.time:'' }} · {{ r.assetType||'未分类' }} · {{ r.exchange||'未知平台' }}</span>
-            <strong :style="{color:typeColor(r.type)}">{{ r.type }}</strong> {{ fmt(amountCNY(r)) }}
+            <span>{{ r.date }}{{ r.time?' '+r.time:'' }} · {{ r.assetType||'未分类' }} · {{ r.exchange||'未填账户' }}</span>
+            <strong :style="{color:typeColor(r.type)}">{{ typeLabel(r.type) }}</strong> {{ fmt(amountCNY(r)) }}
           </div>
         </div>
-        <div class="trade-lock-note" v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'">成交金额、币种和资产会参与持仓成本计算。需要改动时请删除后重新录入；日期、平台、备注和标签仍可编辑。</div>
-        <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><template v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></template><option value="互转">互转</option></select></div>
+        <div class="trade-lock-note" v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'">成交金额、币种和资产会参与持仓成本计算。需要改动时请删除后重新记一笔；日期、账户、备注和标签仍可编辑。</div>
+        <div class="form-group"><label>类型</label><select class="form-input" v-model="editingEntry.type" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="入金">{{ t('typeIn') }}</option><option value="出金">{{ t('typeOut') }}</option><template v-if="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="买入">{{ t('typeBuy') }}</option><option value="卖出">{{ t('typeSell') }}</option></template><option value="互转">转移</option></select></div>
         <div class="form-group"><label>日期与时间</label><div class="entry-datetime-fields"><input class="form-input" type="date" v-model="editingEntry.date"><input class="form-input" type="time" v-model="editingEntry.time" aria-label="发生时间"></div></div>
         <div class="form-group"><label>{{ t('assetType') }}</label><select class="form-input" v-model="editingEntry.assetType" :disabled="editingEntry.type==='买入'||editingEntry.type==='卖出'"><option value="">{{ t("uncategorized") }}</option><option v-for="t in ASSET_TYPES" :key="t" :value="t">{{ t }}</option></select></div>
-        <div class="form-group"><label>账户/平台</label><input class="form-input" v-model="editingEntry.exchange" list="dl-ex3"><datalist id="dl-ex3"><option v-for="ex in editPlatformSuggestions" :key="ex" :value="ex"></option></datalist></div>
+        <div class="form-group"><label>账户</label><input class="form-input" v-model="editingEntry.exchange" list="dl-ex3"><datalist id="dl-ex3"><option v-for="ex in editPlatformSuggestions" :key="ex" :value="ex"></option></datalist></div>
 <template v-if="editingEntry.fxMode">
             <div class="form-group"><label>{{ editingEntry.type==='出金'?'到账人民币':'支付人民币' }}</label><input class="form-input" type="number" step="0.01" v-model.number="editingEntry.fxCny" inputmode="decimal"></div>
             <div class="form-group">
@@ -6065,7 +6103,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <p class="rate-hint" v-if="editingEntry.currency&&editingEntry.currency!=='CNY'&&editingEntry.rate&&editingEntry.amount">本笔 ≈ {{ fmt(amountCNY(editingEntry)) }} 元（1 {{ editingEntry.currency }} = {{ editingEntry.rate }} CNY）</p>
         </div>
         </template>
-        <div class="form-group" v-if="editingEntry.type==='互转'"><label>转入平台</label><input class="form-input" v-model="editingEntry.toExchange" list="dl-ex3"></div>
+        <div class="form-group" v-if="editingEntry.type==='互转'"><label>转入账户</label><input class="form-input" v-model="editingEntry.toExchange" list="dl-ex3"></div>
         <div class="form-group" v-if="editingEntry.type==='入金'"><label>资金来源</label><select class="form-input" v-model="editingEntry.fundSource"><option value="">未标注</option><option v-for="o in FUND_SOURCES" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
         <div class="form-group" v-if="editingEntry.type==='出金'"><label>资金去向</label><select class="form-input" v-model="editingEntry.destination"><option value="">未标注</option><option v-for="o in DESTINATIONS" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
         <div class="form-group" v-if="(editingEntry.type==='入金'&&editingEntry.fundSource==='loan')||(editingEntry.type==='出金'&&(editingEntry.destination==='repay'||editingEntry.destination==='interest'))">
@@ -6074,7 +6112,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         </div>
         <div class="form-group" v-if="editingEntry.type==='入金'||editingEntry.type==='出金'"><label>{{ editingEntry.type==='出金'?'收款渠道':'付款渠道' }}</label><select class="form-input" v-model="editingEntry.channel"><option value="">未标注</option><option v-for="o in PAY_CHANNELS" :key="o.key" :value="o.key">{{ o.label }}</option></select></div>
         <div class="form-group" v-if="editingEntry.type==='入金'||editingEntry.type==='出金'"><label>交易对手 / 商家</label><input class="form-input" v-model="editingEntry.counterparty" placeholder="C2C 商家名"></div>
-        <div class="form-group"><label>{{ editingEntry.type==='入金'?'投入理由':'出金备注' }}</label><input class="form-input" v-model="editingEntry.note" :placeholder="editingEntry.type==='入金'?'为什么要投入这笔？':'取出原因 / 备注'"></div>
+        <div class="form-group"><label>{{ editingEntry.type==='入金'?'投入理由':'取出备注' }}</label><input class="form-input" v-model="editingEntry.note" :placeholder="editingEntry.type==='入金'?'为什么要投入这笔？':'取出原因 / 备注'"></div>
         <div class="form-group"><label>{{ t('tagStats') }}</label><input class="form-input" v-model="editingEntry.tagText" list="dl-tags3" placeholder="定投，补仓，FOMO"><datalist id="dl-tags3"><option v-for="t in allTags" :key="t" :value="t"></option></datalist></div>
       </div>
       <div class="modal-foot">
@@ -6312,26 +6350,26 @@ const I18N={
   zh:{
     appTitle:'投记 · 投资账户记账与持仓管理',
     appKicker:'投资账户记账与持仓管理',
-    appDesc:'记录投资账户的每一笔出入金。通过买入 / 卖出记录自动同步持仓数量与加权成本，实时拉取股票、基金、加密货币等资产价格，计算持仓浮盈与已实现盈亏，汇总出你的真实净值与收益率。',
+    appDesc:'记下每一笔投入和取出。通过买入 / 卖出记录自动同步持仓数量与加权成本，实时拉取股票、基金、加密货币等资产价格，计算持仓浮盈与已实现盈亏，汇总出你的真实净值与收益率。',
     records:'记录',
     stats:'统计',
     data:'数据',
-    quickAdd:'快速录入',
+    quickAdd:'记一笔',
     copyLast:'复制上一笔',
     add:'添加',
     date:'日期',
     assetType:'资产类型',
-    exchange:'账户 / 平台',
+    exchange:'账户',
     currency:'货币',
     amount:'金额',
     rate:'汇率',
     getRate:'获取汇率',
     gettingRate:'获取中…',
     noteIn:'投入理由',
-    noteOut:'出金备注',
+    noteOut:'取出备注',
     note:'备注 / 理由',
-    typeIn:'入金',
-    typeOut:'出金',
+    typeIn:'投入',
+    typeOut:'取出',
     typeBuy:'买入',
     typeSell:'卖出',
     typeAll:'全部',
@@ -6351,8 +6389,8 @@ const I18N={
     locateFirst:'定位首条',
     clearFilters:'清除筛选',
     matchCount:'{match}/{total} 命中',
-    totalIn:'总入金',
-    totalOut:'已出金',
+    totalIn:'总投入',
+    totalOut:'已取出',
     netPL:'净盈亏',
     roi:'回本比例',
     holdingsValue:'持仓市值',
@@ -6365,12 +6403,12 @@ const I18N={
     periodLabel:{month:'月份',week:'周',year:'年份'},
     periodTitle:{month:'月度盈亏',week:'周度盈亏',year:'年度盈亏'},
     cumPL:'累计盈亏',
-    inTotal:'入金合计',
-    outTotal:'出金合计',
+    inTotal:'投入合计',
+    outTotal:'取出合计',
     curPeriodNet:'当前周期净盈亏',
     lastPeriod:'上个周期净盈亏',
     compareChange:'环比变化',
-    exchangeStats:'账户 / 平台统计',
+    exchangeStats:'账户统计',
     assetStats:'资产类型统计',
     tagStats:'标签统计',
     largeTxWarn:'大额提醒',
@@ -6393,12 +6431,12 @@ const I18N={
     denseCount:'密集投入',
     maxSingle:'最大单笔',
     avgAmount:'平均金额',
-    maxStreak:'最长连续入金',
+    maxStreak:'最长连续投入',
     totalCount:'总投入笔数',
     weekdayDist:'星期分布',
     amountRange:'金额区间',
     assetDesc:'各类资产的投入分布与盈亏情况（折合 CNY）',
-    flowRecords:'流水记录',
+    flowRecords:'记录',
     expandAll:'展开全部',
     collapseAll:'收起全部',
     periodSwitch:'周期',
@@ -6417,8 +6455,8 @@ const I18N={
     importConfirm:'确认导入',
     importCancel:'取消',
     importImpact:'导入后',
-    importAfterIn:'合并后总入金',
-    importAfterOut:'合并后总出金',
+    importAfterIn:'合并后总投入',
+    importAfterOut:'合并后总取出',
     importAfterNet:'合并后净盈亏',
     importAfterCount:'合并后记录数',
     importHistory:'导入历史',
@@ -6489,7 +6527,7 @@ const I18N={
       steady:'很少出现密集操作，情绪控制良好',
       weekendActive:'周末投入占比 {pct}%，注意周末市场流动性较低',
       frequentTrade:'{n} 次间隔不到 3 天的密集投入，占比 {pct}%，可能是情绪驱动',
-      postLossAdd:'取出后投入金额偏高（{a}/{b} 次超过均值 30%），可能存在急于回本的心态',
+      postLossAdd:'取出后投投入额偏高（{a}/{b} 次超过均值 30%），可能存在急于回本的心态',
       largeImpulse:'最大单笔 {max} 是平均值 {avg} 的 {ratio} 倍，注意仓位控制',
       continuousIn:'最长连续 {n} 笔投入无取出，注意适时锁定利润',
       lowData:'继续记录，积累更多数据后分析会更准确'
@@ -6511,7 +6549,7 @@ const I18N={
       calmConfirm:'确定要继续投入吗？'
     },
     emptyState:'还没有记录',emptyStateHint:'还没有记录，请添加或导入数据',emptyStateMobile:'还没有记录，点击 + 添加',noMatch:'没有匹配的记录',
-    unknownPlatform:'未知平台',
+    unknownPlatform:'未知账户',
     uncategorized:'未分类',
     all:'全部',
     day:'天',
@@ -6525,7 +6563,7 @@ const I18N={
     mon:'周一',tue:'周二',wed:'周三',thu:'周四',fri:'周五',sat:'周六',sun:'周日',
     count:'笔数',dataMgmt:'数据管理',
     demoData:'演示数据',
-    preloaded:'首次打开即有演示数据，可清空后自行录入',
+    preloaded:'首次打开即有演示数据，可清空后自己记',
     crypto:'Crypto',
     fund:'Funds',
     gold:'Gold',
@@ -6544,7 +6582,7 @@ const I18N={
     clearAllRecords:'清空记录',
     confirmClear:'确认清空所有记录？',
     detailRelated:'相关记录',
-    detailSamePlatform:'同平台净盈亏',
+    detailSamePlatform:'同账户净盈亏',
     detailSameAsset:'同资产净盈亏',
     detailHistory:'历史记录',
     detailSummary:'记录详情',
@@ -6583,9 +6621,9 @@ const I18N={
     posPriceCol:'现价',
     posValueCol:'市值',
     posPLCol:'盈亏',
-    posFlowCol:'关联流水',
-    posFlowBuy:'买入流水',
-    posFlowSell:'卖出流水',
+    posFlowCol:'关联记录',
+    posFlowBuy:'买入记录',
+    posFlowSell:'卖出记录',
     posFlowLinked:'关联',
     posNetInvested:'净投入',
     posActionCol:'操作',
@@ -6925,10 +6963,10 @@ setup(){
   const showSync=ref(false)
   const dataView=ref('sync')
   const dataViews=[
-    {key:'sync',label:'云同步',caption:'手机与电脑'},
+    {key:'sync',label:'账号与同步',caption:'手机与电脑'},
     {key:'transfer',label:'导入导出',caption:'文件迁移'},
-    {key:'recovery',label:'恢复记录',caption:'快照与撤销'},
-    {key:'access',label:'接口访问',caption:'只读 API'}
+    {key:'recovery',label:'恢复',caption:'回到之前的版本'},
+    {key:'access',label:'高级',caption:'只读接口'}
   ]
 
   // Read-only API tokens. The secret comes back exactly once, on creation;
@@ -7040,26 +7078,44 @@ setup(){
   const NAV_ICONS={
     overview:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
     quick:'<path d="M12 5v14M5 12h14"/>',
+    home:'<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>',
+    me:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20c1-4 4-5.5 7-5.5s6 1.5 7 5.5"/>',
     positions:'<path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/>',
     debts:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>',
     records:'<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2V3Z"/><path d="M9 8h6M9 12h6"/>',
     review:'<path d="M9 5H6a2 2 0 0 0-2 2v13h16V7a2 2 0 0 0-2-2h-3"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m8.5 13 2.2 2.2 4.8-4.8"/>',
     data:'<path d="M20 7h-4V3M4 17h4v4"/><path d="M5.1 9A8 8 0 0 1 18.7 5.3L20 7M4 17l1.3 1.7A8 8 0 0 0 18.9 15"/>'
   }
+  // nav:true 的五项是主导航（手机底栏）；持仓和借款是可选功能，开了才出现在侧栏，手机上从首页和「我的」进入。
   const workspaceTabs=[
-    {key:'overview',no:'01',icon:NAV_ICONS.overview,label:'总览',caption:'净值与动态'},
-    {key:'quick',no:'02',icon:NAV_ICONS.quick,label:'录入',caption:'入金与交易'},
-    {key:'positions',no:'03',icon:NAV_ICONS.positions,label:'持仓',caption:'仓位与成本'},
-    {key:'debts',no:'04',icon:NAV_ICONS.debts,label:'负债',caption:'借款与还款'},
-    {key:'records',no:'05',icon:NAV_ICONS.records,label:'流水统计',short:'流水',caption:'筛选与分析'},
-    {key:'review',no:'06',icon:NAV_ICONS.review,label:'复盘',caption:'行为与纪律'},
-    {key:'data',no:'07',icon:NAV_ICONS.data,label:'同步数据',short:'同步',caption:'备份与迁移'}
+    {key:'overview',icon:NAV_ICONS.home,label:'首页',caption:'赚了还是亏了',nav:true},
+    {key:'records',icon:NAV_ICONS.records,label:'明细',caption:'每一笔记录',nav:true},
+    {key:'quick',icon:NAV_ICONS.quick,label:'记一笔',caption:'投入与取出',nav:true,add:true},
+    {key:'review',icon:NAV_ICONS.review,label:'复盘',caption:'行为与纪律',nav:true},
+    {key:'positions',icon:NAV_ICONS.positions,label:'持仓',caption:'仓位与成本',feature:'positions'},
+    {key:'debts',icon:NAV_ICONS.debts,label:'借款',caption:'还款与计划',feature:'loans'},
+    {key:'data',icon:NAV_ICONS.me,label:'我的',caption:'账号与设置',nav:true}
   ]
+  // 可选功能：没手动设过时，有数据就显示、没数据就不出现。
+  const FEATURES_K='touji_features_v1'
+  const featurePrefs=reactive((()=>{try{return JSON.parse(localStorage.getItem(FEATURES_K))||{}}catch(e){return{}}})())
+  const featureOn=computed(()=>({
+    positions:featurePrefs.positions??positions.value.length>0,
+    loans:featurePrefs.loans??loanList.value.length>0
+  }))
+  function setFeature(key,on){
+    featurePrefs[key]=!!on
+    localStorage.setItem(FEATURES_K,JSON.stringify(featurePrefs))
+  }
+  const mobileTabs=workspaceTabs.filter(tab=>tab.nav)
+  const railTabs=computed(()=>workspaceTabs.filter(tab=>!tab.add&&(tab.nav||featureOn.value[tab.feature])))
   const activeTabKeys=workspaceTabs.map(t=>t.key)
   const savedActiveTab=localStorage.getItem(ACTIVE_TAB_K)
   const legacyTabMap={stats:'records',sync:'data'}
   const initialActiveTab=legacyTabMap[savedActiveTab]||savedActiveTab
-  const activeTab=ref(activeTabKeys.includes(initialActiveTab)?initialActiveTab:'quick')
+  const activeTab=ref(activeTabKeys.includes(initialActiveTab)?initialActiveTab:'overview')
+  // 持仓和借款不在手机底栏里，打开它们时底栏亮「首页」。
+  const navActive=computed(()=>({positions:'overview',debts:'overview'}[activeTab.value]||activeTab.value))
   function setActiveTab(tab){
     tab=legacyTabMap[tab]||tab
     if(!activeTabKeys.includes(tab))tab='quick'
@@ -7078,11 +7134,11 @@ setup(){
   const showQuickMore=ref(false)
   const quickAction=ref('deposit')
   const quickActions=[
-    {key:'deposit',label:'入金',short:'钱进入投资账户',title:'入金是什么？',desc:'记录你把现金转入某个投资账户，比如工资转入东方财富、给币安充值、往基金账户打钱。它增加投入本金。'},
-    {key:'withdraw',label:'出金',short:'钱离开投资账户',title:'出金是什么？',desc:'记录你从投资账户取回现金，比如卖出后提现、赎回基金到账、从交易所转回银行卡。它减少占用资金。'},
-    {key:'transfer',label:'互转',short:'平台之间挪钱',title:'互转是什么？',desc:'记录钱在两个投资平台之间挪动，比如从欧易转到币安。它不算投入也不算取出，不影响入金 / 出金统计；记下来是为了对账时知道钱去了哪个平台。'},
-    {key:'buy',label:'买入',short:'买入某个标的',title:'买入是什么？',desc:'记录你用账户内资金购入某个资产，自动更新持仓数量和加权均价，不影响入金/出金统计。'},
-    {key:'sell',label:'卖出',short:'卖出某个标的',title:'卖出是什么？',desc:'记录你卖出持有资产，自动减少持仓数量并计算已实现盈亏，不影响入金/出金统计。'}
+    {key:'deposit',label:'投入',short:'钱转进投资账户',title:'什么算投入？',desc:'记录你把现金转入某个投资账户，比如工资转入东方财富、给币安充值、往基金账户打钱。它增加投入本金。'},
+    {key:'withdraw',label:'取出',short:'钱转回银行卡',title:'什么算取出？',desc:'记录你从投资账户取回现金，比如卖出后提现、赎回基金到账、从投资账户转回银行卡。它减少占用资金。'},
+    {key:'transfer',label:'转移',short:'账户之间挪钱',title:'什么算转移？',desc:'记录钱在两个投资账户之间挪动，比如从欧易转到币安。它不算投入也不算取出，不影响投入和取出的统计；记下来是为了对账时知道钱去了哪个账户。'},
+    {key:'buy',label:'买入',short:'买入某个标的',title:'买入是什么？',desc:'记录你用账户内资金购入某个资产，自动更新持仓数量和加权均价，不影响投入和取出的统计。'},
+    {key:'sell',label:'卖出',short:'卖出某个标的',title:'卖出是什么？',desc:'记录你卖出持有资产，自动减少持仓数量并计算已实现盈亏，不影响投入和取出的统计。'}
   ]
   const quickActionInfo=computed(()=>quickActions.find(a=>a.key===quickAction.value)||quickActions[0])
   // 「工资入金」「转出」已由资金来源 / 去向表达，不再放进常用标签。
@@ -7141,7 +7197,7 @@ setup(){
     if(quickAction.value==='deposit'&&!form.fundSource)return'先选这笔钱从哪来'
     if(quickAction.value==='deposit'&&needsIntent.value&&!form.intent)return'先选这笔钱的打算'
     if(quickAction.value==='withdraw'&&withdrawNeedsLoan.value&&!form.loanId)return'先选还的是哪笔贷款'
-    if(quickAction.value==='transfer'&&(!String(form.exchange||'').trim()||!String(form.toExchange||'').trim()))return'填写从哪个平台转到哪个平台'
+    if(quickAction.value==='transfer'&&(!String(form.exchange||'').trim()||!String(form.toExchange||'').trim()))return'填写从哪个账户转到哪个账户'
     return''
   })
   const quickNoteLabel=computed(()=>{
@@ -7154,7 +7210,7 @@ setup(){
   const quickNotePlaceholder=computed(()=>{
     if(quickAction.value==='buy')return'为什么买入？如：定投 / 补仓 / 看好基本面'
     if(quickAction.value==='sell')return'为什么卖出？如：止盈 / 止损 / 调仓'
-    if(form.type==='互转')return'为什么转？如：换个平台交易'
+    if(form.type==='互转')return'为什么转？如：换个账户交易'
     return form.type==='入金'?'为什么要入这笔？如：定投 / 补仓 / 抄底':'收款渠道 / 取出原因'
   })
   function setQuickAction(action){
@@ -7228,7 +7284,7 @@ setup(){
   const cloudStatusLabel=computed(()=>serverAccount.user?'账号已连接':syncCfg.token?'Gist 已配置':guestMode.value?'仅保存在这台设备':'等待账号连接')
   const serverAccountLabel=computed(()=>{
     const email=serverAccount.user?.email||''
-    return email.endsWith('@users.orbit.invalid')?`Orbit 账号 #${serverAccount.user?.orbitUserId||''}`:email
+    return email.endsWith('@users.orbit.invalid')?`账号 #${serverAccount.user?.orbitUserId||''}`:email
   })
   watch(syncProvider,value=>localStorage.setItem(SERVER_SYNC_PROVIDER_K,value))
   const syncStatus=ref('未配置')
@@ -7318,7 +7374,7 @@ setup(){
     }
   }
   function load(){
-    const storedEntries=readStorageJSON(SK,'流水数据',null)
+    const storedEntries=readStorageJSON(SK,'账本记录',null)
     if(Array.isArray(storedEntries)){
       entries.value=storedEntries.map(e=>({...e,time:normTime(e.time),assetType:normalizeAssetType(e.assetType),tags:parseTags(e.tags||e.tagText||e['标签'])}))
     }else if(storedEntries===null&&!localStorage.getItem(SK)&&PRELOADED.length){
@@ -7330,21 +7386,21 @@ setup(){
     Object.assign(rules,{...defRules(),...(readStorageJSON(RULES_K,'提醒规则',{})||{})})
     Object.assign(syncCfg,readStorageJSON(SYNC_K,'同步设置',{})||{})
     syncStatus.value=syncCfg.token?'已配置':'未配置'
-    deletedIds.value=readStorageJSON(DEL_K,'流水删除记录',{})||{}
+    deletedIds.value=readStorageJSON(DEL_K,'删除记录',{})||{}
     deletedPositionIds.value=readStorageJSON(POS_DEL_K,'持仓删除记录',{})||{}
-    debts.value=normalizeDebtList(readStorageJSON(DEBT_K,'负债数据',[]))
-    deletedDebtIds.value=readStorageJSON(DEBT_DEL_K,'负债删除记录',{})||{}
+    debts.value=normalizeDebtList(readStorageJSON(DEBT_K,'借款数据',[]))
+    deletedDebtIds.value=readStorageJSON(DEBT_DEL_K,'借款删除记录',{})||{}
     loadReview()
     loadReviewDayNotes()
   }
-  function save(){const ok=writeStorageJSON(SK,entries.value,'流水数据');if(ok&&typeof scheduleAutoPush==='function')scheduleAutoPush();return ok}
-  function saveDeleted(){writeStorageJSON(DEL_K,deletedIds.value,'流水删除记录')}
+  function save(){const ok=writeStorageJSON(SK,entries.value,'账本记录');if(ok&&typeof scheduleAutoPush==='function')scheduleAutoPush();return ok}
+  function saveDeleted(){writeStorageJSON(DEL_K,deletedIds.value,'删除记录')}
   function saveDeletedPositions(){writeStorageJSON(POS_DEL_K,deletedPositionIds.value,'持仓删除记录')}
   // 记录墓碑（删除/清空时调用）
   function recordDeleted(ids){const now=Date.now();ids.forEach(id=>{deletedIds.value[id]=now});saveDeleted()}
   function recordDeletedPositions(ids){const now=Date.now();ids.forEach(id=>{deletedPositionIds.value[id]=now});saveDeletedPositions()}
-  function saveDebts({sync=true}={}){const ok=writeStorageJSON(DEBT_K,debts.value,'负债数据');if(ok&&sync&&typeof scheduleAutoPush==='function')scheduleAutoPush();return ok}
-  function saveDeletedDebts(){writeStorageJSON(DEBT_DEL_K,deletedDebtIds.value,'负债删除记录')}
+  function saveDebts({sync=true}={}){const ok=writeStorageJSON(DEBT_K,debts.value,'借款数据');if(ok&&sync&&typeof scheduleAutoPush==='function')scheduleAutoPush();return ok}
+  function saveDeletedDebts(){writeStorageJSON(DEBT_DEL_K,deletedDebtIds.value,'借款删除记录')}
   function recordDeletedDebts(ids){const now=Date.now();ids.forEach(id=>{deletedDebtIds.value[id]=now});saveDeletedDebts()}
   function snap(){
     const s={
@@ -7454,7 +7510,7 @@ setup(){
     const loan=loanList.value.find(l=>l.id===id)
     if(!loan)return
     const linked=entries.value.filter(e=>e.loanId===id).length
-    if(!confirm(`删除「${loan.name}」和它的 ${(loan.repayments||[]).length} 条还款记录吗？${linked?`有 ${linked} 笔流水关联到它，流水本身不会删除。`:''}本机会先存一份快照。`))return
+    if(!confirm(`删除「${loan.name}」和它的 ${(loan.repayments||[]).length} 条还款记录吗？${linked?`有 ${linked} 笔记录关联到它，记录本身不会删除。`:''}本机会先存一份快照。`))return
     snap()
     debts.value=debts.value.filter(d=>d.id!==id)
     recordDeletedDebts([id])
@@ -7655,7 +7711,7 @@ setup(){
       seen.add(key)
       const action=tags.includes('买入')?'buy':tags.includes('卖出')?'sell':e.type==='互转'?'transfer':(e.type==='出金'?'withdraw':'deposit')
       items.push({
-        key,label:`${e.exchange||'未知平台'} · ${e.assetType||'未分类'}${tags.length?' · '+tags.join('/') : ''}`,
+        key,label:`${e.exchange||'未填账户'} · ${e.assetType||'未分类'}${tags.length?' · '+tags.join('/') : ''}`,
         action,type:e.type,assetType:e.assetType||'',exchange:e.exchange||'',currency:e.currency||'CNY',rate:e.rate||'',tagText:tags.join('，')
       })
     })
@@ -7883,7 +7939,7 @@ setup(){
       const visible=filtering?g.entries.filter(e=>matchedIds.value.has(e.id)):g.entries
       const tags=[
         ...topLabels(visible.map(e=>e.assetType||'未分类'),2),
-        ...topLabels(visible.map(e=>e.exchange||'未知平台'),2)
+        ...topLabels(visible.map(e=>e.exchange||'未填账户'),2)
       ].slice(0,4)
       return{...g,visibleEntries:visible,net:g.outTotal-g.inTotal,summaryTags:tags}
     })
@@ -7954,7 +8010,7 @@ setup(){
         ||e.currency!==editingEntry.value.currency
         ||normalizeAssetType(e.assetType)!==normalizeAssetType(editingEntry.value.assetType)
       if(protectedChanged){
-        showToast('交易记录的类型、金额、币种和资产不可直接修改；请删除后重新录入，系统会同步回退持仓','error')
+        showToast('交易记录的类型、金额、币种和资产不可直接修改；请删除后重新记一笔，系统会同步回退持仓','error')
         return
       }
     }
@@ -8137,7 +8193,7 @@ setup(){
     posSymbolSearch.value='';posSearchResults.value=[];showPosForm.value=false;showToast('已添加持仓','success')
   }
   function removePosition(id){
-    if(!confirm('确定删除持仓？关联流水会保留。'))return
+    if(!confirm('确定删除持仓？关联的记录会保留。'))return
     snap()
     positions.value=positions.value.filter(p=>p.id!==id)
     if(selectedPositionId.value===id)selectedPositionId.value=''
@@ -8445,7 +8501,7 @@ setup(){
       return Number.isFinite(parsed)?parsed:0
     }).filter(Boolean)
     if(!timestamps.length)return'尚无账本更新 · 数据仅保存在当前浏览器'
-    return`账本更新于 ${dayjs(Math.max(...timestamps)).format('YYYY-MM-DD HH:mm')} · ${entries.value.length} 条流水`
+    return`账本更新于 ${dayjs(Math.max(...timestamps)).format('YYYY-MM-DD HH:mm')} · ${entries.value.length} 条记录`
   })
   // 持仓价格缓存的 key：股票用 secid，加密用 symbol
   function posKey(p){return p.source==='eastmoney'?p.secid:p.symbol}
@@ -8602,7 +8658,7 @@ setup(){
     if(form.type==='入金'&&!form.fundSource){showToast('先选这笔钱从哪来','error');return}
     if(form.type==='入金'&&needsIntent.value&&!form.intent){showToast('先选这笔钱的打算','error');return}
     if(form.type==='出金'&&withdrawNeedsLoan.value&&!form.loanId){showToast('先选还的是哪笔贷款','error');return}
-    if(form.type==='互转'&&(!String(form.exchange||'').trim()||!String(form.toExchange||'').trim())){showToast('填写从哪个平台转到哪个平台','error');return}
+    if(form.type==='互转'&&(!String(form.exchange||'').trim()||!String(form.toExchange||'').trim())){showToast('填写从哪个账户转到哪个账户','error');return}
     snap()
     const tags=parseTags(form.tagText)
     if(form.type==='入金'&&form.intent&&!tags.includes(form.intent))tags.push(form.intent)
@@ -8637,7 +8693,7 @@ setup(){
     save();form.amount='';form.sourceAmount='';form.fxUnits='';form.note='';form.tradeQty='';form.tradePrice='';form.intent='';form.counterparty='';resetFxTouched(Number(form.rate)>0?['rate']:[])
     if(!keepContext){form.tagText='';form.positionId='';form.targetKey='';form.targetMarket='沪深市';quickTargetQuery.value='';quickTargetResults.value=[];form.fundSource='';form.destination='card';form.loanId='';form.channel=''}
     const repaidLoan=fundMeta.loanId&&entry.type==='出金'?loanList.value.find(l=>l.id===fundMeta.loanId):null
-    showToast(repaidLoan?`已保存，并记为「${repaidLoan.name}」的${entry.destination==='repay'?'还本':'付息'}`:keepContext?'已保存，可继续录入':'已添加','success')
+    showToast(repaidLoan?`已保存，并记为「${repaidLoan.name}」的${entry.destination==='repay'?'还本':'付息'}`:keepContext?'已保存，可以接着记':'已添加','success')
   }
   function copyLast(){const e=sortedEntries.value[0];if(!e)return;form.date=e.date;form.time=normTime(e.time)||dayjs().format('HH:mm');form.amount=e.amount;const fxp=window.ToujiEntry.fxParts(e);form.sourceAmount=fxp?fxp.cny:'';form.fxUnits=fxp?fxp.units:'';resetFxTouched(fxp?['cny','rate','units']:[]);form.channel=e.channel||'';form.counterparty='';form.rate=e.fxRate||e.rate||'';form.exchange=e.exchange;form.note='';form.type=e.type;form.assetType=normalizeAssetType(e.assetType)||'';form.currency=e.targetCurrency||e.currency||'CNY';form.tagText=tagsText(e.tags);form.tradeQty=e.tradeQty||'';form.tradePrice=e.tradePrice||'';form.targetKey='';form.positionId='';form.fundSource=e.fundSource||'';form.destination=e.destination||'card';form.loanId=e.loanId||'';form.intent='';form.toExchange=e.toExchange||'';quickAction.value=e.type==='买入'?'buy':e.type==='卖出'?'sell':e.type==='互转'?'transfer':(e.type==='出金'?'withdraw':'deposit');showToast('已复制','info')}
   function removeEntry(id){
@@ -8664,7 +8720,7 @@ setup(){
   function updateField(id,key,val){
     const e=entries.value.find(x=>x.id===id);if(!e)return
     if((e.type==='买入'||e.type==='卖出')&&['type','amount','rate','currency','assetType'].includes(key)){
-      showToast('买卖记录的关键字段请删除后重新录入，避免持仓成本失真','error')
+      showToast('买卖记录的关键字段请删除后重新记一笔，避免持仓成本失真','error')
       return
     }
     const next=(key==='amount'||key==='rate')?(val===''?'':Number(val)):(key==='assetType'?normalizeAssetType(val):val)
@@ -8672,7 +8728,7 @@ setup(){
     snap();e[key]=next;e.updatedAt=Date.now();save()
   }
   function loadDemo(){
-    if(!confirm('加载演示数据会覆盖当前流水和持仓，并先生成一份完整快照。继续吗？'))return
+    if(!confirm('加载演示数据会覆盖当前记录和持仓，并先生成一份完整快照。继续吗？'))return
     snap()
     recordDeleted(entries.value.map(e=>e.id))
     recordDeletedPositions(positions.value.map(p=>p.id))
@@ -8683,7 +8739,7 @@ setup(){
     showToast('已加载演示数据','success')
   }
   function clearData(){
-    if(!confirm('确认清空全部流水和持仓？系统会先创建完整快照。'))return
+    if(!confirm('确认清空全部记录和持仓？系统会先创建完整快照。'))return
     snap()
     recordDeleted(entries.value.map(e=>e.id))
     recordDeletedPositions(positions.value.map(p=>p.id))
@@ -8691,7 +8747,7 @@ setup(){
     positions.value=[]
     savePositions({sync:false})
     save()
-    showToast('流水和持仓已清空','success')
+    showToast('记录和持仓已清空','success')
   }
 
   // Period Stats
@@ -8867,6 +8923,8 @@ setup(){
     return{入金:'deposit',出金:'withdraw',买入:'buy',卖出:'sell'}[type]||'other'
   }
   // 互转是第五种类型：钱在两个平台之间挪，不算投入也不算取出。
+  // 账本里存的类型值不变（入金 / 出金 / 互转），界面上换成大家都懂的说法。
+  function typeLabel(type){return{入金:'投入',出金:'取出',互转:'转移'}[type]||type||''}
   function typeTone(type){return{入金:'in',出金:'out',买入:'buy',卖出:'sell',互转:'transfer'}[type]||'sell'}
   function typeTagClass(type){return'tag-'+typeTone(type)}
   function typeColor(type){return{入金:'var(--flow-in)',出金:'var(--flow-out)',买入:'var(--blue)',卖出:'var(--purple)',互转:'var(--muted)'}[type]||'var(--purple)'}
@@ -9062,8 +9120,8 @@ setup(){
   // Insights
   const insightSummary=computed(()=>{
     const s=reviewSummary.value
-    if(!s.count)return`${reviewRangeMeta.value.label}暂无流水或交易记录。`
-    return`${reviewRangeMeta.value.label}共 ${s.count} 笔记录：入金 ${fmt(s.inTotal)}，出金 ${fmt(s.outTotal)}，买卖 ${s.tradeCount} 笔，已实现盈亏 ${fmt(s.realizedPL)}。`
+    if(!s.count)return`${reviewRangeMeta.value.label}暂无记录。`
+    return`${reviewRangeMeta.value.label}共 ${s.count} 笔记录：投入 ${fmt(s.inTotal)}，取出 ${fmt(s.outTotal)}，买卖 ${s.tradeCount} 笔，已实现盈亏 ${fmt(s.realizedPL)}。`
   })
 
   const insightAdvice=computed(()=>{
@@ -9102,7 +9160,7 @@ setup(){
   function createSnap(){snap();showToast('快照已创建','success')}
   function restoreSnap(i){
     const s=snapshots.value[i]
-    if(!s||!confirm('确认恢复？当前流水和持仓会先备份，再替换为该快照。'))return
+    if(!s||!confirm('确认恢复？当前记录和持仓会先备份，再替换为该快照。'))return
     snap()
     const now=Date.now()
     const nextEntries=clone(s.entries||[]).map(e=>({...e,updatedAt:now}))
@@ -9130,7 +9188,7 @@ setup(){
     saveDeleted()
     saveDeletedPositions()
     save()
-    showToast(Array.isArray(s.positions)?'流水和持仓已恢复':'旧快照仅含流水；持仓保持当前状态','success')
+    showToast(Array.isArray(s.positions)?'记录和持仓已恢复':'旧快照只有记录；持仓保持当前状态','success')
   }
   function clearSnaps(){if(!confirm('清空所有快照？'))return;snapshots.value=[];localStorage.removeItem(SNAP_K);showToast('已清空','success')}
   function undoImportBatch(batch){
@@ -9424,7 +9482,7 @@ setup(){
     if((entriesChanged||positionsChanged||debtsChanged)&&snapshotOnChange)snap()
     if(entriesChanged){
       entries.value=mergedEntries
-      writeStorageJSON(SK,entries.value,'流水数据')
+      writeStorageJSON(SK,entries.value,'账本记录')
     }
     if(positionsChanged){
       positions.value=mergedPositions
@@ -9785,7 +9843,7 @@ setup(){
         deletedDebtIds.value=normalizeDeletedMap(remote.deletedDebtIds)
         saveDebts({sync:false});saveDeletedDebts()
       }
-      writeStorageJSON(SK,entries.value,'流水数据')
+      writeStorageJSON(SK,entries.value,'账本记录')
       savePositions({sync:false})
       saveDeleted();saveDeletedPositions()
       setServerAutoSyncReady(true)
@@ -9809,7 +9867,7 @@ setup(){
       markServerSyncComplete()
       serverMigrationOpen.value=false
       Vue.nextTick(()=>{renderChart();renderPosPieChart();renderCapitalChart()})
-      showToast(`合并完成：${entries.value.length} 条流水，${positions.value.length} 个持仓`,'success')
+      showToast(`合并完成：${entries.value.length} 条记录，${positions.value.length} 个持仓`,'success')
     }catch(error){
       if(error?.code==='REVISION_CONFLICT')await fetchServerRemote().catch(()=>{})
       serverAccount.error=serverErrorMessage(error)
@@ -10015,7 +10073,7 @@ setup(){
       saveSyncConfig(true)
     }
     lastSyncedAt.value=Date.now()
-    syncStatus.value=`已上传 ${entries.value.length} 条流水 · ${positions.value.length} 个持仓 · ${new Date().toLocaleTimeString()}`
+    syncStatus.value=`已上传 ${entries.value.length} 条记录 · ${positions.value.length} 个持仓 · ${new Date().toLocaleTimeString()}`
   }
   function openSyncPreview(mode,remoteCtx){
     const ctx=remoteCtx||{gist:null,data:{entries:[],positions:[],deletedIds:{},deletedPositionIds:{}},list:[],deletedIds:{},positionList:[],deletedPositionIds:{}}
@@ -10060,11 +10118,11 @@ setup(){
       if(pushAfter){
         syncStatus.value='合并后上传中…'
         await uploadCurrentSyncData()
-        showToast(`已合并并上传：${entries.value.length} 条流水，${positions.value.length} 个持仓`,'success')
+        showToast(`已合并并上传：${entries.value.length} 条记录，${positions.value.length} 个持仓`,'success')
       }else{
         lastSyncedAt.value=Date.now()
         syncStatus.value=`已合并 ${entries.value.length} 条 · ${new Date().toLocaleTimeString()}`
-        showToast(`已合并云端数据：${entries.value.length} 条流水，${positions.value.length} 个持仓`,'success')
+        showToast(`已合并云端数据：${entries.value.length} 条记录，${positions.value.length} 个持仓`,'success')
       }
     }catch(e){
       syncStatus.value='合并失败'
@@ -10124,7 +10182,7 @@ setup(){
         applyRemoteData(remote)
       }
       await uploadCurrentSyncData()
-      syncStatus.value=`已同步 ${entries.value.length} 条流水 · ${positions.value.length} 个持仓 · ${new Date().toLocaleTimeString()}`
+      syncStatus.value=`已同步 ${entries.value.length} 条记录 · ${positions.value.length} 个持仓 · ${new Date().toLocaleTimeString()}`
       showToast('一键同步完成','success')
     }catch(e){
       syncStatus.value='同步失败'
@@ -10402,7 +10460,7 @@ setup(){
   function importDebtRows(rows,fileName){
     const loanCount=rows.filter(d=>d.kind==='loan').length
     const hasPlan=rows.some(d=>d.kind==='plan')
-    if(!confirm(`${fileName} 里有 ${loanCount} 笔贷款${hasPlan?'和还债计划':''}。合并到负债吗？同一笔会以文件为准。`))return
+    if(!confirm(`${fileName} 里有 ${loanCount} 笔贷款${hasPlan?'和还债计划':''}。合并到借款吗？同一笔会以文件为准。`))return
     snap()
     const now=Date.now()
     const incoming=new Map(rows.map(d=>[d.id,{...d,updatedAt:now}]))
@@ -10701,9 +10759,9 @@ setup(){
             const data=JSON.parse(file.content)
             const result=applyRemoteData(data)
             if(result.changed){
-              syncStatus.value=`已同步 ${entries.value.length} 条流水 · ${positions.value.length} 个持仓 · ${new Date(gist.updated_at).toLocaleString()}`
+              syncStatus.value=`已同步 ${entries.value.length} 条记录 · ${positions.value.length} 个持仓 · ${new Date(gist.updated_at).toLocaleString()}`
             }else{
-              syncStatus.value=`已配置 · ${entries.value.length} 条流水 · ${positions.value.length} 个持仓`
+              syncStatus.value=`已配置 · ${entries.value.length} 条记录 · ${positions.value.length} 个持仓`
             }
           }
         }catch(e){syncStatus.value='同步失败，请检查网络或 Token'}
@@ -10722,7 +10780,7 @@ setup(){
   })
 
   return{c2c,openC2C,closeC2C,c2cParse,c2cRelabel,c2cSelected,c2cSummary,c2cPickImages,c2cApply,PAY_CHANNELS,isFxCash,onFxInput,canOfferFx,switchToFx,fxOf,channelLabel,editFxRate,editFxOn,editFxOff,typeTone,typeTagClass,typeColor,debts,loanList,debtViews,openLoans,loanOptions,debtSummary,debtSchedule,debtPayday,debtFunding,depositRisk,needsIntent,quickSaveBlocker,FUND_SOURCES,DESTINATIONS,REPAY_TYPES,DEPOSIT_INTENTS,loanName,fundSourceLabel,destinationLabel,debtLoanForm,debtRepayForm,debtPlanForm,expandedLoanId,openLoanForm,saveLoan,deleteLoan,openRepayForm,saveRepayment,removeRepayment,toggleDebtEvent,toggleDebtPlanForm,saveDebtPlanSettings,
-    APP_VERSION,updateReady,reloadForUpdate,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,guestMode,continueAsGuest,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
+    APP_VERSION,updateReady,reloadForUpdate,typeLabel,featureOn,setFeature,mobileTabs,railTabs,navActive,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,guestMode,continueAsGuest,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,fmtQtyNum,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,capitalChart,capitalCurve,capitalCurveView,capitalRange,setCapitalRange,CAPITAL_RANGES,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
@@ -10800,7 +10858,7 @@ const QUOTES=[
   '最脆弱的系统是那些看起来最稳定的。—— 塔勒布',
   // 交易通用智慧
   '市场永远不缺机会，缺的是等待的耐心。',
-  '每一次冲动入金，都是在给市场交学费。',
+  '每一次冲动投入，都是在给市场交学费。',
   '盈亏同源，控制回撤比追求收益更重要。',
   '不要用生活费去赌一个不确定的未来。',
   '你打败不了市场，但可以管住自己的手。',
