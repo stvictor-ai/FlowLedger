@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#faf9f7">
 <!-- The skin is set before first paint so 霓虹 never flashes white. A saved
      choice wins; otherwise it follows the system, as orbitshz.com does. -->
-<script>(function(){try{var s=localStorage.getItem('touji_theme_v2');var t=s==='mist'||s==='neon'||s==='sky'?s:matchMedia('(prefers-color-scheme: dark)').matches?'neon':'mist';document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.content={mist:'#faf9f7',neon:'#07080b',sky:'#cfe6f8'}[t]}catch(e){}})();</script>
+<script>(function(){try{if(localStorage.getItem('touji_pl_colors_v1')==='intl')document.documentElement.dataset.pl='intl';var s=localStorage.getItem('touji_theme_v2');var t=s==='mist'||s==='neon'||s==='sky'?s:matchMedia('(prefers-color-scheme: dark)').matches?'neon':'mist';document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.content={mist:'#faf9f7',neon:'#07080b',sky:'#cfe6f8'}[t]}catch(e){}})();</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="投记">
@@ -288,10 +288,40 @@ tr.row-unmatched td{opacity:.35}
 .toast.error{background:rgba(248,113,113,.92);color:#450a0a}
 .toast.info{background:rgba(45,181,160,.92);color:white}
 
+/* ===== 大众化改版：默认外观换成暖灰底、白卡片、细线、大圆角；数字不再用等宽字体 ===== */
+html[data-theme="mist"]{
+  --background:45 14% 94%;--muted-token:43 14% 93%;--border-token:43 12% 89%;--sidebar:45 14% 94%;
+  --radius:1.5rem;--radius-panel:18px;--radius-control:12px;--radius-compact:8px;
+  --shadow-2xs:none;--shadow-xs:none;--shadow-sm:0 1px 2px hsl(220 12% 10%/.04);
+}
+html[data-theme="mist"] :not(code):not(pre):not(textarea){font-family:var(--font-sans)!important;font-variant-numeric:tabular-nums}
+html[data-theme="mist"] .panel,
+html[data-theme="mist"] .overview-module,
+html[data-theme="mist"] .overview-wealth,
+html[data-theme="mist"] .overview-allocation,
+html[data-theme="mist"] .responsive-head,
+html[data-theme="mist"] .me-group,
+html[data-theme="mist"] .guest-note{border:1px solid var(--border);border-radius:18px;background:var(--card);box-shadow:none}
+html[data-theme="mist"] .overview-grid{gap:12px;border:0;background:transparent}
+html[data-theme="mist"] .overview-grid>.overview-module{border-radius:18px!important;border:1px solid var(--border)!important}
+.date-mark{width:auto!important;min-width:46px;padding:0 8px;white-space:nowrap}
+html[data-theme="mist"] .btn{border-radius:12px}
+html[data-theme="mist"] .form-input{border-radius:12px}
+html[data-theme="mist"] .chip{border-radius:999px}
+html[data-theme="mist"] .asset-mark{border-radius:11px;font-size:12px;font-weight:600}
+html[data-theme="mist"] .overview-balance-value{font-weight:650;letter-spacing:-.01em}
+html[data-theme="mist"] .modal-box{border-radius:22px}
+@media(max-width:1180px){
+  html[data-theme="mist"] .workspace-tabs{border-radius:24px;box-shadow:0 6px 24px hsl(220 12% 10%/.08)}
+  html[data-theme="mist"] .workspace-tab{border-radius:18px}
+  html[data-theme="mist"] .workspace-tab>span:last-child{font-size:11px}
+}
 /* 盈亏有自己的颜色变量，和报错的红、成功的绿分开，这样涨跌颜色可以单独切换。 */
 :root{--gain:var(--red);--loss:var(--green)}
 html[data-pl="intl"]{--gain:var(--green);--loss:var(--red)}
 .text-gain{color:var(--gain)!important}.text-loss{color:var(--loss)!important}
+.home-start{display:grid;gap:14px;justify-items:start;padding:6px 0 4px}
+.home-start p{margin:0;color:var(--muted);line-height:1.7}
 .home-account-list{display:grid}
 .home-account{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--border)}
 .home-account:first-child{border-top:0}
@@ -4524,7 +4554,11 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
       <div class="overview-wealth">
         <div class="home-hero">
           <p class="overview-balance-label">{{ entries.length?'到今天，你一共'+(homeProfit>=0?'赚了':'亏了'):'记下第一笔，就能看到赚了还是亏了' }}</p>
-          <p :class="['overview-balance-value','privacy-number',entries.length?(homeProfit>=0?'text-gain':'text-loss'):'']">{{ (homeProfit>=0?'+':'−')+fmt(Math.abs(homeProfit)) }} <small>元</small></p>
+          <div v-if="!entries.length" class="home-start">
+            <p>投了多少、取回多少、现在值多少，记下来就知道。不用注册，账本保存在这台设备上。</p>
+            <button type="button" class="btn btn-primary" @click="setActiveTab('quick')">记第一笔</button>
+          </div>
+          <p v-else :class="['overview-balance-value','privacy-number',homeProfit>=0?'text-gain':'text-loss']">{{ (homeProfit>=0?'+':'−')+fmt(Math.abs(homeProfit)) }} <small>元</small></p>
           <p class="overview-return" v-if="totalIn>0">
             <strong :class="['privacy-number',homeProfit>=0?'text-gain':'text-loss']">{{ fmtPct(homeROI*100,1) }}</strong>
             <span>相对总投入</span>
@@ -4544,7 +4578,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <div class="capital-curve" v-if="capitalCurve.length>1">
           <canvas ref="capitalChart"></canvas>
         </div>
-        <div class="capital-equation">
+        <div class="capital-equation" v-if="entries.length">
           <div class="capital-equation-head"><span>怎么算的</span><code>现在值 + 已取出 − 总投入</code></div>
           <div class="capital-equation-grid">
             <div><span>现在值</span><strong class="privacy-number">{{ fmt(homeValue) }}</strong></div>
@@ -4605,7 +4639,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
       </div>
       <div class="overview-rows">
         <button class="overview-row" @click="setActiveTab('debts')">
-          <span class="asset-mark">{{ debtSummary.nextEvent?debtSummary.nextEvent.date.slice(5):'—' }}</span>
+          <span class="asset-mark date-mark">{{ debtSummary.nextEvent?debtSummary.nextEvent.date.slice(5).replace('-','/'):'—' }}</span>
           <span class="overview-row-main"><strong>{{ debtSummary.nextEvent?'要付 '+fmt(debtSummary.nextEvent.amount)+' 元':'近期没有要付的' }}</strong><small>最晚 {{ debtSummary.lastMaturity||'—' }} 到期</small></span>
           <span class="overview-row-value"><strong class="privacy-number">{{ fmt(debtSummary.totalOwed) }}</strong><small>还欠</small></span>
         </button>
@@ -4839,11 +4873,11 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
     <header class="position-page-head">
       <div>
         <h2>借款</h2>
-        <p class="hint">借来的钱单独记账：每期该还多少、每笔到期还差多少，以及借来的钱有多少进了投资账户。</p>
+        <p class="hint">还欠多少、接下来要付什么、按现在的速度到期时够不够。</p>
       </div>
       <div class="position-head-actions">
-        <button class="btn btn-ghost btn-sm" @click="toggleDebtPlanForm">{{ debtPlanForm.open?'收起设置':'还债设置' }}</button>
-        <button class="btn btn-primary btn-sm" @click="openLoanForm()">登记贷款</button>
+        <button class="btn btn-ghost btn-sm" @click="toggleDebtPlanForm">{{ debtPlanForm.open?'收起':'还款计划' }}</button>
+        <button class="btn btn-primary btn-sm" @click="openLoanForm()">添加借款</button>
       </div>
     </header>
 
@@ -4856,7 +4890,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
 
     <div v-show="debtPlanForm.open" class="position-create-block debt-plan-form">
       <div class="position-create-title">
-        <h3>还债设置</h3>
+        <h3>还款计划</h3>
         <span>发薪日用来算每期该拿多少；「每月能拿出多少」用来推到每个到期日还差多少。</span>
       </div>
       <div class="debt-form-grid">
@@ -4868,7 +4902,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
 
     <div v-show="debtLoanForm.open" class="position-create-block">
       <div class="position-create-title">
-        <h3>{{ debtLoanForm.id?'编辑贷款':'登记贷款' }}</h3>
+        <h3>{{ debtLoanForm.id?'编辑借款':'添加借款' }}</h3>
         <span>本金填借到手的原始金额；之后的还款单独记，剩余本金会自动算。利息按银行惯例：本金 × 年化 ÷ 360 × 实际天数。</span>
       </div>
       <div class="debt-form-grid">
@@ -4890,7 +4924,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
     </div>
 
     <div v-if="!loanList.length&&!debtLoanForm.open" class="position-list-empty debt-empty">
-      <strong>还没有登记贷款</strong>
+      <strong>还没有借款</strong>
       <span>登记后这里会算出每期该还多少、到期还差多少。也可以在「同步数据 → 导入 JSON」导入迁移文件。</span>
       <button class="btn btn-primary btn-sm" @click="openLoanForm()">登记第一笔贷款</button>
     </div>
@@ -4918,7 +4952,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
         <p class="debt-plan-note" v-if="debtPayday.monthlyPlan&&debtPayday.monthlyPlan<debtPayday.needPerPayday">
           全靠工资还清每期要 {{ fmt(debtPayday.needPerPayday) }}（含每月利息 {{ fmt(debtPayday.monthlyInterest) }}），你设的 {{ fmt(debtPayday.monthlyPlan) }} 不够 —— 差的部分只能续贷或另找来源，要续贷就提前问银行。
         </p>
-        <p class="debt-plan-note" v-else-if="!debtPayday.monthlyPlan">在「还债设置」里填每月能拿出多少，下面会算出到每个到期日还差多少。</p>
+        <p class="debt-plan-note" v-else-if="!debtPayday.monthlyPlan">在「还款计划」里填每月能拿出多少，下面会算出到每个到期日还差多少。</p>
         <div class="debt-steps">
           <div class="debt-step-head"><span>到期日</span><span>贷款</span><span>之前的发薪日</span><span>到这天累计要还</span><span>按计划能还</span><span>还差</span></div>
           <div v-for="st in debtPayday.steps" :key="st.loanId" class="debt-step">
@@ -4948,7 +4982,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
 
       <section class="debt-block debt-loans">
         <header class="debt-block-head">
-          <h3>贷款明细</h3>
+          <h3>每笔借款</h3>
           <span>{{ debtSummary.openCount }} 笔未结清 · 本金合计 {{ fmt(debtSummary.principal) }}</span>
         </header>
         <article v-for="l in debtViews" :key="l.id" :class="['debt-loan',{closed:l.closed}]">
@@ -5166,7 +5200,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <span>{{ needsIntent?'要继续，先说清这笔钱的打算':'这笔钱的打算（可选）' }}</span>
           <button v-for="i in DEPOSIT_INTENTS" :key="i" type="button" :class="['chip',{active:form.intent===i}]" @click="form.intent=form.intent===i?'':i">{{ i }}</button>
         </div>
-        <button v-if="debtSummary.openCount" type="button" class="entry-calm-link" @click="setActiveTab('debts')">去看还债计划 →</button>
+        <button v-if="debtSummary.openCount" type="button" class="entry-calm-link" @click="setActiveTab('debts')">去看还款计划 →</button>
       </div>
 
       <button class="entry-more-toggle" @click="showQuickMore=!showQuickMore">
@@ -5260,6 +5294,13 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
           <div><strong>外观</strong></div>
           <div class="skin-toggle" role="radiogroup" aria-label="外观">
             <button v-for="item in THEMES" :key="item.key" type="button" role="radio" :aria-checked="theme===item.key" :class="{active:theme===item.key}" @click="setTheme(item.key)">{{ item.label }}</button>
+          </div>
+        </div>
+        <div class="me-row">
+          <div><strong>涨跌颜色</strong><small>赚 <b class="text-gain">+1,240</b> · 亏 <b class="text-loss">−860</b></small></div>
+          <div class="skin-toggle" role="radiogroup" aria-label="涨跌颜色">
+            <button type="button" role="radio" :aria-checked="plColors==='cn'" :class="{active:plColors==='cn'}" @click="setPlColors('cn')">红涨绿跌</button>
+            <button type="button" role="radio" :aria-checked="plColors==='intl'" :class="{active:plColors==='intl'}" @click="setPlColors('intl')">绿涨红跌</button>
           </div>
         </div>
       </section>
@@ -5688,7 +5729,7 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
   <!-- ===== PERIOD STATS ===== -->
   <section class="panel section-stats section-not-records section-not-data" v-show="activeTab==='records'">
     <div class="panel-header">
-      <h2>盈亏统计</h2>
+      <h2>投入和取出统计</h2>
       <div class="panel-actions">
         <div class="inline-select"><span>{{ t('periodSwitch') }}</span><select class="form-input" v-model="period" style="min-width:100px"><option value="month">{{ t('periodMonth') }}</option><option value="week">{{ t('periodWeek') }}</option><option value="year">{{ t('periodYear') }}</option></select></div>
       </div>
@@ -6471,7 +6512,7 @@ const I18N={
     matchCount:'{match}/{total} 命中',
     totalIn:'总投入',
     totalOut:'已取出',
-    netPL:'净盈亏',
+    netPL:'净额（取出减投入）',
     roi:'回本比例',
     holdingsValue:'持仓市值',
     trueReturn:'真实收益',
@@ -6481,12 +6522,12 @@ const I18N={
     periodWeek:'周',
     periodYear:'年度',
     periodLabel:{month:'月份',week:'周',year:'年份'},
-    periodTitle:{month:'月度盈亏',week:'周度盈亏',year:'年度盈亏'},
-    cumPL:'累计盈亏',
+    periodTitle:{month:'每月进出',week:'每周进出',year:'每年进出'},
+    cumPL:'累计净额',
     inTotal:'投入合计',
     outTotal:'取出合计',
-    curPeriodNet:'当前周期净盈亏',
-    lastPeriod:'上个周期净盈亏',
+    curPeriodNet:'这一期净额（取出减投入）',
+    lastPeriod:'上一期净额',
     compareChange:'环比变化',
     exchangeStats:'账户统计',
     assetStats:'资产类型统计',
@@ -6537,7 +6578,7 @@ const I18N={
     importImpact:'导入后',
     importAfterIn:'合并后总投入',
     importAfterOut:'合并后总取出',
-    importAfterNet:'合并后净盈亏',
+    importAfterNet:'合并后净额',
     importAfterCount:'合并后记录数',
     importHistory:'导入历史',
     clearImportHistory:'清空导入历史',
@@ -6662,8 +6703,8 @@ const I18N={
     clearAllRecords:'清空记录',
     confirmClear:'确认清空所有记录？',
     detailRelated:'相关记录',
-    detailSamePlatform:'同账户净盈亏',
-    detailSameAsset:'同资产净盈亏',
+    detailSamePlatform:'这个账户的净额',
+    detailSameAsset:'同类资产的净额',
     detailHistory:'历史记录',
     detailSummary:'记录详情',
     importNone:'没有待导入的记录',
@@ -7006,7 +7047,7 @@ function t(key,params){
 
 createApp({
 setup(){
-  const APP_VERSION='v2026.11.21-2'
+  const APP_VERSION='v2026.11.21-3'
   const entries=ref([])
   const deletedIds=ref({}) // 墓碑：{已删除记录id: 删除时间ms}，用于让删除能跨同步生效
   const deletedPositionIds=ref({})
@@ -7024,7 +7065,7 @@ setup(){
   function saveDashboard(){writeStorageJSON(DASH_K,dashPanels.value,'看板设置')}
   const dashPanels=ref(loadDashboard())
   const showDashCfg=ref(false)
-  const dashLabels={periodStats:'盈亏统计',positions:'持仓管理',insights:'建议 · 行为 · 复盘'}
+  const dashLabels={periodStats:'投入和取出统计',positions:'持仓管理',insights:'建议 · 行为 · 复盘'}
   function dashVisible(key){return dashPanels.value.includes(key)}
   function toggleDashPanel(key){
     const i=dashPanels.value.indexOf(key)
@@ -7140,6 +7181,15 @@ setup(){
     const item=THEMES.find(option=>option.key===name)||THEMES[0]
     document.documentElement.dataset.theme=item.key
     if(themeMeta)themeMeta.content=item.meta
+  }
+  // 涨跌颜色：默认红涨绿跌，可换成绿涨红跌。只影响盈亏数字，不影响报错和提示的颜色。
+  const PL_COLORS_K='touji_pl_colors_v1'
+  const plColors=ref(localStorage.getItem(PL_COLORS_K)==='intl'?'intl':'cn')
+  function setPlColors(mode){
+    plColors.value=mode==='intl'?'intl':'cn'
+    localStorage.setItem(PL_COLORS_K,plColors.value)
+    if(plColors.value==='intl')document.documentElement.dataset.pl='intl'
+    else delete document.documentElement.dataset.pl
   }
   function setTheme(name){
     const item=THEMES.find(option=>option.key===name)
@@ -10902,7 +10952,7 @@ setup(){
   })
 
   return{c2c,openC2C,closeC2C,c2cParse,c2cRelabel,c2cSelected,c2cSummary,c2cPickImages,c2cApply,PAY_CHANNELS,isFxCash,onFxInput,canOfferFx,switchToFx,fxOf,channelLabel,editFxRate,editFxOn,editFxOff,typeTone,typeTagClass,typeColor,debts,loanList,debtViews,openLoans,loanOptions,debtSummary,debtSchedule,debtPayday,debtFunding,depositRisk,needsIntent,quickSaveBlocker,FUND_SOURCES,DESTINATIONS,REPAY_TYPES,DEPOSIT_INTENTS,loanName,fundSourceLabel,destinationLabel,debtLoanForm,debtRepayForm,debtPlanForm,expandedLoanId,openLoanForm,saveLoan,deleteLoan,openRepayForm,saveRepayment,removeRepayment,toggleDebtEvent,toggleDebtPlanForm,saveDebtPlanSettings,
-    APP_VERSION,updateReady,reloadForUpdate,typeLabel,showAllActions,visibleQuickActions,recentAccounts,monthInvested,accountRows,accountSummary,useHoldingsValue,homeValue,homeProfit,homeROI,balanceForm,openBalance,saveBalance,featureOn,setFeature,mobileTabs,railTabs,navActive,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,guestMode,continueAsGuest,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
+    APP_VERSION,updateReady,reloadForUpdate,typeLabel,plColors,setPlColors,showAllActions,visibleQuickActions,recentAccounts,monthInvested,accountRows,accountSummary,useHoldingsValue,homeValue,homeProfit,homeROI,balanceForm,openBalance,saveBalance,featureOn,setFeature,mobileTabs,railTabs,navActive,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,guestMode,continueAsGuest,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,fmtQtyNum,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,capitalChart,capitalCurve,capitalCurveView,capitalRange,setCapitalRange,CAPITAL_RANGES,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
