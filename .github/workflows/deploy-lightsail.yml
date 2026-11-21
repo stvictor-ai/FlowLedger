@@ -14,7 +14,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Nothing ships unless both suites pass: the site is public now, so a broken
+  # push would be in front of every visitor within a minute.
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out selected revision
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Front-end tests
+        run: node --test tests/*.test.js
+
+      - name: Server tests
+        working-directory: server
+        run: |
+          npm ci
+          npm test
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -36,6 +62,14 @@ jobs:
           chmod 600 ~/.ssh/lightsail
           ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
 
+      - name: Read the version being shipped
+        run: |
+          set -euo pipefail
+          version="$(sed -n "s/.*const APP_VERSION='\([^']*\)'.*/\1/p" index.html | head -n 1)"
+          test -n "$version"
+          echo "APP_VERSION=$version" >> "$GITHUB_ENV"
+          echo "SW_CACHE=touji-$(printf '%s' "$version" | tr . -)" >> "$GITHUB_ENV"
+
       - name: Package static application
         run: |
           set -euo pipefail
@@ -49,7 +83,7 @@ jobs:
           scp -i ~/.ssh/lightsail /tmp/flowledger-static.tar.gz \
             "$DEPLOY_USER@$DEPLOY_HOST:/tmp/flowledger-static.tar.gz"
           ssh -i ~/.ssh/lightsail "$DEPLOY_USER@$DEPLOY_HOST" \
-            "DEPLOY_DIR='$DEPLOY_DIR' bash -s" <<'REMOTE'
+            "DEPLOY_DIR='$DEPLOY_DIR' APP_VERSION='$APP_VERSION' SW_CACHE='$SW_CACHE' bash -s" <<'REMOTE'
           set -euo pipefail
           stamp="$(date -u +%Y%m%dT%H%M%SZ)"
           backup_dir="/var/backups/flowledger/$stamp"
@@ -62,10 +96,10 @@ jobs:
           sudo tar -xzf /tmp/flowledger-static.tar.gz -C "$DEPLOY_DIR"
           sudo chown -R www-data:www-data "$DEPLOY_DIR"
           rm -f /tmp/flowledger-static.tar.gz
-          grep -q "v2026.11.21-3" "$DEPLOY_DIR/index.html"
-          grep -q "touji-v2026-11-21-3" "$DEPLOY_DIR/sw.js"
+          grep -qF "'$APP_VERSION'" "$DEPLOY_DIR/index.html"
+          grep -qF "'$SW_CACHE'" "$DEPLOY_DIR/sw.js"
           curl -fsS http://127.0.0.1:8787/api/v1/health/ready | grep -q '"status":"ready"'
-          echo "deployed_version=v2026.11.21-3"
+          echo "deployed_version=$APP_VERSION"
           echo "backup_dir=$backup_dir"
           REMOTE
 
