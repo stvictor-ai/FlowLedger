@@ -31,6 +31,7 @@
 <script src="js/server-sync.js"></script>
 <script src="js/debt-engine.js"></script>
 <script src="js/account-engine.js"></script>
+<script src="js/position-engine.js"></script>
 <script src="js/c2c-import.js"></script>
 <style>
 /* ===== RESET & BASE ===== */
@@ -8817,17 +8818,29 @@ setup(){
     if(!qty||!price||!target)return{ok:false,message:'这条交易缺少价格、数量或标的信息，无法自动回退持仓'}
     if(!p)return{ok:false,message:'找不到关联持仓，无法安全删除这条交易'}
     if(entry.type==='买入'){
-      const currentQty=Number(p.qty)||0
-      if(qty>currentQty)return{ok:false,message:'该买入之后已有卖出，无法直接删除；请先核对并手动调整持仓'}
-      const newQty=Number((currentQty-qty).toFixed(8))
-      if(newQty<=0&&p.origin==='trade'){
+      // 这笔买入之后如果卖过，不能拿现在的成本倒着减；把剩下的买卖重新走一遍（见 js/position-engine.js）。
+      const linked=entries.value.filter(x=>x.positionId===p.id||x.id===entry.id)
+      const rateOf=x=>(x.currency||'CNY')==='CNY'?1:(Number(x.rate)||fx(x.currency))
+      const next=window.ToujiPositions.removeBuy(p,linked,entry,rateOf)
+      if(!next.ok){
+        return{ok:false,message:next.reason==='manual'
+          ?'这个持仓的数量或成本手动改过，而且这笔买入之后还卖过，没法自动算出删除后的成本；请先核对并手动调整持仓'
+          :'删掉这笔买入后，后面的卖出就没有足够的持仓可卖了；请先删除或修改那笔卖出'}
+      }
+      if(next.empty&&next.qty<=0&&p.origin==='trade'){
         positions.value=positions.value.filter(x=>x.id!==p.id)
         recordDeletedPositions([p.id])
         return{ok:true}
       }
-      const currentCost=currentQty*(Number(p.avgCost)||0)
-      p.qty=Math.max(0,newQty)
-      p.avgCost=newQty?Math.max(0,Number(((currentCost-qty*price)/newQty).toFixed(8))):p.avgCost
+      p.qty=next.qty
+      if(next.avgCost!=null)p.avgCost=next.avgCost
+      if(next.mode==='replay'&&next.costRate)p.costRate=next.costRate
+      // 成本变了，之前卖出的已实现盈亏也跟着变。
+      const now=Date.now()
+      for(const x of linked){
+        if(x.type!=='卖出'||!(x.id in next.realized)||x.realizedPL===next.realized[x.id])continue
+        x.realizedPL=next.realized[x.id];x.updatedAt=now
+      }
     }else{
       p.qty=Number(((Number(p.qty)||0)+qty).toFixed(8))
     }
@@ -10429,26 +10442,19 @@ setup(){
     const outTotal=list.filter(e=>e.type==='出金').reduce((s,e)=>s+amountCNY(e),0)
     return{count:list.length,inTotal,outTotal,net:outTotal-inTotal}
   }
-  function importTextKey(v){return String(v||'').trim().toLowerCase()}
-  function importNumKey(v,scale=100){return String(Math.round(normNum(v)*scale)/scale)}
-  function importEntryKey(e){
-    return[
-      e.date,e.time||'',e.type,importTextKey(e.assetType),importTextKey(e.exchange),
-      String(e.currency||'CNY').toUpperCase(),importNumKey(e.amount),importNumKey(e.rate||'',10000),
-      importNumKey(e.sourceAmount||'',100),importTextKey(e.sourceCurrency),
-      importNumKey(e.targetAmount||'',100000000),importTextKey(e.targetCurrency),importNumKey(e.fxRate||'',10000),
-      importTextKey(e.note),parseTags(e.tags).join(','),
-      importTextKey(e.targetSymbol),importTextKey(e.targetName),
-      importNumKey(e.tradeQty||'',100000000),importNumKey(e.tradePrice||'',100000000),
-      importNumKey(e.realizedPL??'',100)
-    ].join('|')
-  }
+  // 判断「同一笔」的规则在 js/import-engine.js，可以单独测试。
+  const importEntryKey=e=>ToujiImport.entryKey(e)
   function normalizeImportRows(rawRows){
     const valid=[],invalid=[]
     rawRows.forEach((item,i)=>{
       const row=item.row||item
       const forcedType=item.type||row.type||row['类型']
       const entry=normRow({...row,type:forcedType})
+      // Excel 里写的是贷款名字，认回这本账里的那笔贷款，导出再导入才不会丢掉关联。
+      if(entry&&!entry.loanId&&row['关联贷款']&&(entry.fundSource==='loan'||entry.destination==='repay'||entry.destination==='interest')){
+        const loan=loanList.value.find(l=>l.name===String(row['关联贷款']).trim())
+        if(loan)entry.loanId=loan.id
+      }
       if(entry)valid.push(entry);else invalid.push({row,index:i+1})
     })
     return{valid,invalidCount:invalid.length}
@@ -10623,7 +10629,7 @@ setup(){
     const inR=[],outR=[],tradeR=[],flowR=[]
     sortedEntries.value.forEach(e=>{
       const base={'日期':e.date,'时间':e.time||'','资产类型':e.assetType||'','账户/平台':e.exchange,'货币':e.currency||'CNY','金额':e.amount,'汇率':e.rate||'','支付金额':e.sourceAmount||'','支付币种':e.sourceCurrency||'','到账金额':e.targetAmount||'','到账币种':e.targetCurrency||'','实际汇率':e.fxRate||'','折合CNY':amountCNY(e),'类型':e.type,'标签':tagsText(e.tags),'资金来源':fundSourceLabel(e.fundSource),'资金去向':destinationLabel(e.destination),'关联贷款':e.loanId?loanName(e.loanId):'','转入平台':e.toExchange||'','收付款渠道':channelLabel(e.channel),'交易对手':e.counterparty||''}
-      const tradeExtra={'标的代码':e.targetSymbol||'','成交数量':e.tradeQty||'','成交单价':e.tradePrice||'','已实现盈亏':e.realizedPL!=null?e.realizedPL:''}
+      const tradeExtra={'标的代码':e.targetSymbol||'','标的名称':e.targetName||'','标的市场':e.targetMarket||'','成交数量':e.tradeQty||'','成交单价':e.tradePrice||'','已实现盈亏':e.realizedPL!=null?e.realizedPL:''}
       flowR.push({...base,...tradeExtra,'备注':e.note,'月份(yyyy-MM)':e.date?e.date.slice(0,7):''})
       if(e.type==='入金')inR.push({...base,'投入理由':e.note})
       else if(e.type==='出金')outR.push({...base,'备注':e.note})

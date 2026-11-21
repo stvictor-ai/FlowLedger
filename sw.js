@@ -7,6 +7,7 @@ const APP_ASSETS = [
   './js/server-sync.js',
   './js/debt-engine.js',
   './js/account-engine.js',
+  './js/position-engine.js',
   './js/c2c-import.js'
 ];
 

@@ -47,5 +47,38 @@
     })
   }
 
-  return { classifyOccurrences }
+  function textKey(value) {
+    return String(value || '').trim().toLowerCase()
+  }
+
+  function numKey(value, scale) {
+    const n = Number(String(value == null ? '' : value).replace(/,/g, ''))
+    return String(Math.round((Number.isFinite(n) ? n : 0) * scale) / scale)
+  }
+
+  function tagsKey(tags) {
+    const list = Array.isArray(tags) ? tags : String(tags || '').split(/[,\uFF0C\u3001;；\s]+/)
+    return [...new Set(list.map(tag => String(tag || '').trim()).filter(Boolean))].slice(0, 8).join(',')
+  }
+
+  /**
+   * 两条记录算不算「同一笔」。只用导出文件里带得回来的字段：
+   * 标的名称、关联持仓、id 这些在 Excel 里走一圈可能丢，放进来会让导出再导入全变成新增。
+   * 一笔买卖由日期、时间、标的代码、数量、单价就能认出来。
+   */
+  function entryKey(entry) {
+    const e = entry || {}
+    return [
+      e.date, e.time || '', e.type, textKey(e.assetType), textKey(e.exchange),
+      String(e.currency || 'CNY').toUpperCase(), numKey(e.amount, 100), numKey(e.rate, 10000),
+      numKey(e.sourceAmount, 100), textKey(e.sourceCurrency),
+      numKey(e.targetAmount, 100000000), textKey(e.targetCurrency), numKey(e.fxRate, 10000),
+      textKey(e.note), tagsKey(e.tags),
+      textKey(e.targetSymbol),
+      numKey(e.tradeQty, 100000000), numKey(e.tradePrice, 100000000),
+      numKey(e.realizedPL, 100)
+    ].join('|')
+  }
+
+  return { classifyOccurrences, entryKey }
 })
