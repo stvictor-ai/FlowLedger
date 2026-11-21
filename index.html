@@ -340,7 +340,6 @@ html[data-pl="intl"]{--gain:var(--green);--loss:var(--red)}
 .me-actions>span{color:var(--muted);font-size:13px}
 .c2c-raw-toggle{justify-self:start;font-size:12px;margin:2px 0}
 .account-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.entry-action-more{opacity:.75}
 .month-cap{display:grid;gap:10px;padding:4px 0 2px}
 .month-cap-row{display:flex;justify-content:space-between;align-items:baseline}
 .month-cap-row strong{font-size:20px;font-weight:650}
@@ -3211,55 +3210,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .c2c-status.good{color:var(--accent)}
 .c2c-status.bad{color:var(--red);font-weight:700}
 .c2c-status button{display:block}
-.entry-action-bar{
-  display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  border-bottom:1px solid var(--border);
-  background:var(--surface-quiet);
-}
-.entry-action-button{
-  min-height:67px;
-  display:grid;
-  align-content:center;
-  gap:4px;
-  padding:10px 17px;
-  border-left:1px solid var(--border);
-  border-bottom:2px solid transparent;
-  color:var(--muted);
-  text-align:left;
-}
-.entry-action-button:first-child{border-left:0}
-.entry-action-button:hover{background:var(--overlay-hover);color:var(--text)}
-.entry-action-button.active{border-bottom-color:var(--accent);background:var(--panel);color:var(--text)}
-.entry-action-button strong{font-size:13px}
-.entry-action-button span{font-size:9px;color:var(--dim)}
-.entry-action-description{
-  display:flex;
-  align-items:baseline;
-  gap:12px;
-  min-height:46px;
-  padding:11px 28px;
-  border-bottom:1px solid var(--border);
-}
-.entry-action-description strong{color:var(--accent);font-size:10px;white-space:nowrap}
-.entry-action-description span{color:var(--muted);font-size:9px;line-height:1.55}
 .entry-form-shell{padding:22px 28px 24px}
-.entry-section-label{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-bottom:11px;
-  color:var(--muted);
-  font-size:9px;
-  font-weight:800;
-}
-.entry-section-label::before{content:'';width:16px;height:2px;background:var(--accent)}
-.entry-cash-grid{
-  display:grid;
-  grid-template-columns:140px minmax(180px,.75fr) minmax(190px,.85fr) minmax(250px,1fr);
-  gap:9px;
-  align-items:end;
-}
 .entry-trade-target{
   display:grid;
   grid-template-columns:155px minmax(220px,1fr) minmax(220px,1fr);
@@ -3341,14 +3292,6 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   font-size:10px;font-weight:500;letter-spacing:.04em
 }
 /* 资金来源 / 去向：一行选项，选借款或还贷时后面跟一个贷款选择。 */
-.entry-fund-row{
-  display:flex;
-  align-items:center;
-  gap:8px 12px;
-  flex-wrap:wrap;
-  margin-top:14px;
-}
-.entry-fund-label{min-width:84px;color:var(--muted);font-size:10px;font-weight:800}
 .entry-fund-options{display:flex;gap:6px;flex-wrap:wrap}
 /* 必选项选中要一眼看出来，主题里的 chip 选中态太淡。 */
 .entry-fund-options .chip.active,.entry-calm-intent .chip.active{background:var(--text);border-color:var(--text);color:var(--panel)}
@@ -3398,8 +3341,6 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   .position-workspace.has-selection{grid-template-columns:minmax(0,1fr) 330px}
   .position-column-head,
   .position-row{grid-template-columns:minmax(150px,1.2fr) 78px 100px 100px 112px 16px;gap:9px}
-  .entry-cash-grid{grid-template-columns:130px minmax(200px,1fr) minmax(170px,.8fr)}
-  .entry-cash-grid>.form-group:last-child{grid-column:1/-1}
   .entry-trade-execution{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:900px){
@@ -3446,14 +3387,8 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   .c2c-options{grid-template-columns:minmax(0,1fr)}
   .c2c-row{grid-template-columns:18px 62px 44px minmax(0,1fr);gap:6px 8px}
   .c2c-party,.c2c-status{grid-column:2/-1}
-  .entry-action-bar{grid-template-columns:repeat(5,minmax(0,1fr))}
-  .entry-action-button{min-height:56px;padding:7px 5px;text-align:center}
-  .entry-action-button strong{font-size:11px}
-  .entry-action-button span{display:none}
-  .entry-action-description{align-items:flex-start;padding:10px 14px}
   .entry-form-shell{padding:17px 14px 18px}
-  .entry-cash-grid,.entry-trade-target,.entry-trade-execution,.entry-optional-grid,.entry-note-grid{grid-template-columns:1fr}
-  .entry-cash-grid>.form-group:last-child,
+  .entry-trade-target,.entry-trade-execution,.entry-optional-grid,.entry-note-grid{grid-template-columns:1fr}
   .entry-trade-target>.form-group:last-child,
   .entry-optional-grid>.form-group:last-child{grid-column:auto}
   .entry-rate-row{grid-template-columns:1fr auto}
@@ -4259,17 +4194,6 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:not([tabin
    one control on the page where a misread produces bad data — so the selected
    tab is made unmistakable rather than merely tasteful. Same accent language
    as the rail's selected item. */
-.entry-action-bar{background:hsl(var(--muted-token)/.55)}
-.entry-action-button{border-bottom-width:3px;border-left-color:hsl(var(--border-token))}
-.entry-action-button strong{font-size:14px}
-.entry-action-button span{font-size:10px;line-height:1.4}
-.entry-action-button.active{
-  border-bottom-color:hsl(var(--secondary));
-  background:hsl(var(--card-token));
-  color:hsl(var(--foreground))
-}
-.entry-action-button.active strong{font-weight:700}
-.entry-action-button.active span{color:hsl(var(--muted-foreground))}
 .allocation-track{background:hsl(var(--muted-token))}
 .overview-grid{gap:calc(var(--spacing)*4)}
 .overview-row{border-color:hsl(var(--border-token));border-radius:5px}
@@ -4472,6 +4396,114 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
 .funding-note{margin:14px 0 0;color:hsl(var(--muted-foreground));font-size:11px;line-height:1.6}
 .text-flow-in{color:var(--flow-in)!important}.text-flow-out{color:var(--flow-out)!important}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+/* ===== 记一笔：一列表单 + 右侧说明。一行一件事，标签都在输入框上方，所以不会再对不齐。 ===== */
+.entry-page-head{align-items:center;padding:22px 28px 16px}
+.entry-page-head h2{margin:0}
+.entry-layout{
+  display:grid;
+  grid-template-columns:minmax(0,600px) minmax(220px,300px);
+  justify-content:start;
+  align-items:start;
+  gap:28px 48px;
+  padding:22px 28px 28px;
+}
+.entry-main{display:grid;gap:18px;min-width:0}
+.entry-main .form-group{margin:0;min-width:0}
+.entry-main .form-group>label,
+.entry-rate-row>span{
+  display:block;margin:0 0 7px;
+  color:var(--muted);font-size:13px;font-weight:600;letter-spacing:0;text-transform:none;
+}
+.entry-main .form-input{height:46px;font-size:15px}
+.entry-seg{
+  display:inline-flex;justify-self:start;gap:2px;padding:3px;
+  border:1px solid var(--border);border-radius:999px;background:var(--surface-quiet);
+}
+.entry-seg-btn{
+  min-height:36px;padding:0 20px;border-radius:999px;
+  color:var(--muted);font-size:14px;font-weight:600;white-space:nowrap;
+}
+.entry-seg-btn:hover{color:var(--text)}
+.entry-seg-btn.active{background:var(--text);color:var(--panel)}
+.entry-seg-more{font-weight:500}
+.entry-seg-hint{margin:-10px 0 0;color:var(--muted);font-size:13px}
+.entry-row{display:grid;gap:12px;align-items:start}
+.entry-row-amount{grid-template-columns:minmax(0,1fr) 132px}
+.entry-row-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.entry-main .entry-amount-input{height:56px}
+.entry-main input.entry-amount-input{font-size:24px!important;font-weight:650;letter-spacing:-.01em}
+.entry-main input.entry-amount-input::placeholder{color:var(--dim);font-weight:500}
+.entry-datetime-fields{grid-template-columns:minmax(0,1fr) 108px;gap:8px}
+.entry-main .account-chips{margin-top:8px}
+.entry-main .chip{min-height:34px;padding:0 14px;margin:0;font-size:13px}
+.entry-main .chip:not(.active){color:var(--text)}
+.entry-main .chip.active{background:var(--text);border-color:var(--text);color:var(--panel)}
+.entry-fund-options{align-items:center;gap:8px}
+.entry-main .entry-loan-select{height:34px;min-height:34px;padding-block:0;font-size:13px}
+.entry-fx-row,.entry-rate-row,.entry-calm-card{margin-top:0}
+.entry-rate-row{grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.entry-rate-row>span{grid-column:1/-1;margin:0}
+.entry-fx-hint,.entry-main .rate-hint{margin:0;color:var(--muted);font-size:12px;line-height:1.6}
+.entry-fund-hint{font-size:13px;font-weight:600;text-align:left}
+.entry-fx-offer{margin:-8px 0 0;justify-self:start}
+.entry-trade-target{grid-template-columns:150px minmax(0,1fr);gap:12px;margin:0}
+.entry-trade-target>.form-group:last-child{grid-column:1/-1}
+.entry-trade-execution{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.entry-total-readout{min-height:0;display:flex;align-items:baseline;justify-content:space-between;padding:12px 16px;border-radius:12px}
+.entry-total-readout span{font-size:13px;color:var(--muted)}
+.entry-total-readout strong{margin:0;font-size:18px;font-weight:650}
+.entry-calm-card ul{font-size:13px}
+.entry-calm-title{font-size:14px}
+.entry-calm-intent>span,.entry-calm-link{font-size:13px;font-weight:600}
+.entry-more-toggle{
+  width:auto;min-height:0;justify-self:start;margin:0;padding:4px 0;border:0;
+  color:var(--muted);font-size:13px;font-weight:600;
+}
+.entry-more-toggle .arrow{font-size:9px;transition:transform .2s}
+.entry-more-toggle .arrow.open{transform:rotate(90deg)}
+.entry-more-toggle small{color:var(--dim);font-size:13px;font-weight:500}
+.entry-optional{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding:0}
+.entry-optional-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.entry-optional-grid>.form-group:only-child{grid-column:1/-1}
+.entry-tag-options{margin-top:8px;gap:8px}
+.entry-ticket-foot{
+  display:flex;align-items:center;justify-content:flex-end;gap:12px 16px;flex-wrap:wrap;
+  margin:4px 0 0;padding-top:18px;border-top:1px solid var(--border);
+}
+.entry-ticket-foot p.entry-save-blocker{margin:0 auto 0 0;max-width:none;color:var(--red);font-size:13px;font-weight:600;text-align:left}
+.entry-save-actions{display:flex;gap:10px}
+.entry-save-actions .btn{min-height:46px;padding:0 22px;font-size:15px}
+.entry-save-actions .btn-primary{min-width:120px;justify-content:center}
+.entry-aside{display:grid;gap:22px;padding-top:4px}
+.entry-aside-block{display:grid;gap:8px}
+.entry-aside-block h3{margin:0;color:var(--text);font-size:13px;font-weight:650}
+.entry-aside-block p{margin:0;color:var(--muted);font-size:13px;line-height:1.75}
+.entry-recent{display:grid;margin:0;padding:0;list-style:none}
+.entry-recent li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--border);font-size:13px}
+.entry-recent li:first-child{border-top:0;padding-top:2px}
+.entry-recent-main{min-width:0}
+.entry-recent-main strong{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry-recent-main small{color:var(--muted);font-size:12px}
+.entry-aside-tools{display:grid;gap:8px;justify-items:start}
+.entry-aside-tools .text-command{min-height:0;padding:0;font-size:13px}
+.entry-aside-tools .entry-template-select{width:100%;font-size:13px}
+@media(max-width:1020px){
+  .entry-layout{grid-template-columns:minmax(0,600px)}
+  .entry-aside{padding-top:20px;border-top:1px solid var(--border)}
+  .entry-aside-block:first-child{display:none}
+}
+@media(max-width:760px){
+  .entry-page-head{display:flex;padding:15px 14px 12px}
+  .entry-head-actions{display:flex}
+  .entry-layout{padding:16px 14px 20px;gap:22px}
+  .entry-seg{display:flex;justify-self:stretch}
+  .entry-seg-btn{flex:1;padding:0 6px;min-height:40px}
+  .entry-row-2,.entry-trade-target,.entry-trade-execution,.entry-optional-grid,.entry-fx-row{grid-template-columns:minmax(0,1fr)}
+  .entry-trade-target>.form-group:last-child{grid-column:auto}
+  .entry-row-amount{grid-template-columns:minmax(0,1fr) 112px}
+  .entry-save-actions{flex:1 1 100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .entry-save-actions .btn{justify-content:center;padding:0 10px}
+}
 </style>
 </head>
 <body>
@@ -5042,16 +5074,9 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
 
   <section class="panel section-records section-not-stats section-not-data quick-add-panel entry-panel" v-show="activeTab==='quick'">
     <header class="entry-page-head">
-      <div>
-        <h2>记一笔</h2>
-        <p class="hint">金额、账户、钱从哪来，三样就够。其余都可以不填。</p>
-      </div>
+      <h2>记一笔</h2>
       <div class="entry-head-actions">
         <button type="button" class="btn btn-ghost btn-sm" @click="c2c.open?closeC2C():openC2C()">{{ c2c.open?'收起截图导入':'截图导入' }}</button>
-        <select v-if="quickTemplates.length" class="form-input entry-template-select" :value="''" @change="applyQuickTemplateKey($event.target.value);$event.target.value=''">
-          <option value="">套用常用模板</option>
-          <option v-for="tpl in quickTemplates" :key="tpl.key" :value="tpl.key">{{ tpl.label }}</option>
-        </select>
       </div>
     </header>
 
@@ -5101,140 +5126,159 @@ html[data-theme="sky"] .panel{border-radius:var(--radius-panel);box-shadow:var(-
       <p v-else-if="c2c.text.trim()&&!c2c.busy" class="debt-muted">没有读到完整的订单。确认是订单列表的截图，每笔要露出日期、价格和数量。</p>
     </div>
 
-    <div class="entry-action-bar">
-      <button v-for="a in visibleQuickActions" :key="a.key" :class="['entry-action-button',{active:quickAction===a.key}]" @click="setQuickAction(a.key)">
-        <strong>{{ a.label }}</strong><span>{{ a.short }}</span>
-      </button>
-      <button v-if="visibleQuickActions.length<quickActions.length" type="button" class="entry-action-button entry-action-more" @click="showAllActions=true">
-        <strong>更多</strong><span>转移、买入、卖出</span>
-      </button>
-    </div>
-    <div class="entry-action-description">
-      <strong>{{ quickActionInfo.title }}</strong>
-      <span>{{ quickActionInfo.desc }}</span>
-    </div>
+    <!-- 记一笔：一列，一行一件事。必填的只有金额、账户、钱从哪来；日期默认今天；其余收在「更多」里。 -->
+    <div class="entry-layout">
+      <div class="entry-main">
+        <div class="entry-seg" role="tablist" aria-label="记哪一种">
+          <button v-for="a in visibleQuickActions" :key="a.key" type="button" role="tab" :aria-selected="quickAction===a.key" :class="['entry-seg-btn',{active:quickAction===a.key}]" @click="setQuickAction(a.key)">{{ a.label }}</button>
+          <button v-if="visibleQuickActions.length<quickActions.length" type="button" class="entry-seg-btn entry-seg-more" @click="showAllActions=true" title="转移、买入、卖出">更多</button>
+        </div>
+        <p class="entry-seg-hint">{{ quickActionInfo.short }}</p>
 
-    <div class="entry-form-shell">
-      <p class="entry-section-label">{{ quickAction==='buy'||quickAction==='sell'?'成交信息':'资金信息' }}</p>
+        <template v-if="quickAction==='deposit'||quickAction==='withdraw'||quickAction==='transfer'">
+          <div class="entry-row entry-row-amount">
+            <div v-if="isFxCash" class="form-group"><label>{{ quickAction==='withdraw'?'到账人民币':'支付人民币' }}</label><input class="form-input entry-amount-input" type="number" step="0.01" v-model.number="form.sourceAmount" placeholder="0.00" inputmode="decimal" @input="onFxInput('cny')" @keyup.enter="addEntry(false)"></div>
+            <div v-else class="form-group"><label>{{ quickAmountLabel }}</label><input class="form-input entry-amount-input" type="number" step="0.01" v-model.number="form.amount" placeholder="0.00" inputmode="decimal" @keyup.enter="addEntry(false)"></div>
+            <div class="form-group"><label>{{ isFxCash?(quickAction==='withdraw'?'卖出币种':'到账币种'):'币种' }}</label><select class="form-input entry-amount-input" v-model="form.currency" @change="handleCashCurrencyChange"><option value="CNY">人民币</option><option value="USD">美元</option><option value="HKD">港币</option><option value="USDT">USDT</option></select></div>
+          </div>
 
-      <div v-if="quickAction==='deposit'||quickAction==='withdraw'||quickAction==='transfer'" class="entry-cash-grid">
-        <div class="form-group"><label>{{ isFxCash?(quickAction==='withdraw'?'卖出币种':'到账币种'):'币种' }}</label><select class="form-input" v-model="form.currency" @change="handleCashCurrencyChange"><option value="CNY">CNY 元</option><option value="USD">USD 美元</option><option value="HKD">HKD 港币</option><option value="USDT">USDT</option></select></div>
-        <div v-if="isFxCash" class="form-group"><label>{{ quickAction==='withdraw'?'到账人民币':'支付人民币' }}</label><input class="form-input" type="number" step="0.01" v-model.number="form.sourceAmount" placeholder="输入人民币金额" inputmode="decimal" @input="onFxInput('cny')" @keyup.enter="addEntry(true)"></div>
-        <div v-else class="form-group"><label>{{ quickAmountLabel }}</label><input class="form-input" type="number" step="0.01" v-model.number="form.amount" placeholder="输入金额" inputmode="decimal" @keyup.enter="addEntry(true)"></div>
-        <div class="form-group"><label>{{ quickAction==='transfer'?'从哪个账户转出':'账户' }}</label><input class="form-input" v-model="form.exchange" placeholder="例如：招商证券" list="dl-ex-focused"><div v-if="recentAccounts.length" class="account-chips"><button v-for="name in recentAccounts" :key="name" type="button" :class="['chip',{active:form.exchange===name}]" @click="form.exchange=name">{{ name }}</button></div></div>
-        <div class="form-group" v-if="quickAction==='transfer'"><label>转入哪个账户</label><input class="form-input" v-model="form.toExchange" placeholder="例如：币安" list="dl-ex-focused"></div>
-        <div class="form-group"><label>日期与时间</label><div class="entry-datetime-fields"><input class="form-input" type="date" v-model="form.date"><input class="form-input" type="time" v-model="form.time" aria-label="发生时间"></div></div>
-      </div>
+          <div v-if="isFxCash" class="entry-fx-row">
+            <div class="form-group">
+              <label>单价 · 1 {{ form.currency }} 多少人民币</label>
+              <div class="entry-fx-rate"><input class="form-input" type="number" step="0.0001" v-model="form.rate" :placeholder="form.currency==='HKD'?'0.92':'7.25'" inputmode="decimal" @input="onFxInput('rate')"><button class="rate-fetch-btn" @click="fetchRate(form.currency,'form')" :disabled="rateLoading">{{ rateLoading?'获取中…':'市价' }}</button></div>
+            </div>
+            <div class="form-group">
+              <label>{{ quickAction==='withdraw'?'卖出数量':'到账数量' }} · {{ form.currency }}</label>
+              <input class="form-input" type="number" step="any" v-model.number="form.fxUnits" placeholder="例如：74.85" inputmode="decimal" @input="onFxInput('units')" @keyup.enter="addEntry(false)">
+            </div>
+            <p class="entry-fx-hint">人民币金额、单价、数量填两个，第三个自动算。照着订单上的数字填就行。</p>
+          </div>
+          <div v-else-if="form.currency!=='CNY'" class="entry-rate-row">
+            <span>汇率 · 1 {{ form.currency }} 等于多少人民币</span>
+            <input class="form-input" type="number" step="0.0001" v-model="form.rate" :placeholder="form.currency==='HKD'?'0.92':'7.25'" inputmode="decimal">
+            <button class="rate-fetch-btn" @click="fetchRate(form.currency,'form')" :disabled="rateLoading">{{ rateLoading?'获取中…':'自动获取' }}</button>
+          </div>
+          <button v-if="canOfferFx" type="button" class="entry-fund-hint entry-fx-offer" @click="switchToFx">这是买卖 USDT？记下数量和单价 →</button>
+          <p class="rate-hint" v-if="!isFxCash&&form.currency!=='CNY'&&form.rate&&form.amount">折合人民币约 {{ fmt(form.amount*Number(form.rate)) }} 元</p>
 
-      <template v-else>
-        <div class="entry-trade-target">
-          <div class="form-group"><label>市场</label><select class="form-input" v-model="form.targetMarket" @change="resetQuickTargetSearch"><option v-for="m in quickTargetMarkets" :key="m.v" :value="m.v">{{ m.l }}</option></select></div>
-          <div class="form-group"><label>{{ quickAction==='buy'?'买入标的':'卖出标的' }}</label><input class="form-input" v-model="quickTargetQuery" @input="onQuickTargetInput" :placeholder="quickTargetPlaceholder"></div>
-          <div class="form-group"><label>匹配结果</label><select class="form-input" v-model="form.targetKey" @change="applyQuickTarget"><option value="">{{ quickTargetSearching?'搜索中…':'选择标的或现有持仓' }}</option><option v-for="item in quickTargetOptions" :key="item.key" :value="item.key">{{ item.label }}</option></select></div>
-        </div>
-        <div class="entry-trade-execution">
-          <div class="form-group"><label>{{ quickAction==='buy'?'买入价格':'卖出价格' }}</label><input class="form-input" type="number" step="any" v-model.number="form.tradePrice" :placeholder="(form.currency||'CNY')+' 单价'" inputmode="decimal" @input="syncTradeAmount"></div>
-          <div class="form-group"><label>{{ quickAction==='buy'?'买入数量 / 份额':'卖出数量 / 份额' }}</label><input class="form-input" type="number" step="any" v-model.number="form.tradeQty" placeholder="例如：100" inputmode="decimal" @input="syncTradeAmount"></div>
-          <div class="entry-total-readout"><span>成交总额</span><strong class="privacy-number">{{ tradeAmountPreview?fmt(tradeAmountPreview):'—' }} {{ form.currency||'CNY' }}</strong></div>
-          <div class="form-group"><label>账户</label><input class="form-input" v-model="form.exchange" placeholder="例如：招商证券" list="dl-ex-focused"></div>
-        </div>
-      </template>
-      <datalist id="dl-ex-focused"><option v-for="ex in platformSuggestions" :key="ex" :value="ex"></option></datalist>
+          <div class="entry-row entry-row-2">
+            <div class="form-group"><label>{{ quickAction==='transfer'?'从哪个账户转出':'账户' }}</label><input class="form-input" v-model="form.exchange" placeholder="例如：招商证券" list="dl-ex-focused"><div v-if="recentAccounts.length" class="account-chips"><button v-for="name in recentAccounts" :key="name" type="button" :class="['chip',{active:form.exchange===name}]" @click="form.exchange=name">{{ name }}</button></div></div>
+            <div class="form-group" v-if="quickAction==='transfer'"><label>转入哪个账户</label><input class="form-input" v-model="form.toExchange" placeholder="例如：币安" list="dl-ex-focused"></div>
+            <div class="form-group"><label>日期</label><div class="entry-datetime-fields"><input class="form-input" type="date" v-model="form.date" aria-label="日期"><input class="form-input" type="time" v-model="form.time" aria-label="发生时间"></div></div>
+          </div>
 
-      <div v-if="isFxCash" class="entry-fx-row">
-        <div class="form-group">
-          <label>单价 · 1 {{ form.currency }} 多少 CNY</label>
-          <div class="entry-fx-rate"><input class="form-input" type="number" step="0.0001" v-model="form.rate" :placeholder="form.currency==='HKD'?'0.92':'7.25'" inputmode="decimal" @input="onFxInput('rate')"><button class="rate-fetch-btn" @click="fetchRate(form.currency,'form')" :disabled="rateLoading">{{ rateLoading?'获取中…':'市价' }}</button></div>
-        </div>
-        <div class="form-group">
-          <label>{{ quickAction==='withdraw'?'卖出数量':'到账数量' }} · {{ form.currency }}</label>
-          <input class="form-input" type="number" step="any" v-model.number="form.fxUnits" placeholder="例如：74.85" inputmode="decimal" @input="onFxInput('units')" @keyup.enter="addEntry(true)">
-        </div>
-        <p class="entry-fx-hint">人民币金额、单价、数量填两个，第三个自动算。照着订单上的数字填就行。</p>
-      </div>
-      <div v-else-if="form.currency!=='CNY'" class="entry-rate-row">
-        <span>汇率 · 1 {{ form.currency }} 等于多少 CNY</span>
-        <input class="form-input" type="number" step="0.0001" v-model="form.rate" :placeholder="form.currency==='HKD'?'0.92':'7.25'" inputmode="decimal">
-        <button class="rate-fetch-btn" @click="fetchRate(form.currency,'form')" :disabled="rateLoading">{{ rateLoading?'获取中…':'自动获取' }}</button>
-      </div>
-      <button v-if="canOfferFx" type="button" class="entry-fund-hint entry-fx-offer" @click="switchToFx">这是买卖 USDT？记下数量和单价 →</button>
-      <p class="rate-hint" v-if="!isFxCash&&form.currency!=='CNY'&&form.rate&&form.amount">折合人民币约 {{ fmt(form.amount*Number(form.rate)) }} 元</p>
-
-      <div v-if="quickAction==='deposit'" class="entry-fund-row">
-        <span class="entry-fund-label">这笔钱从哪来</span>
-        <div class="entry-fund-options" role="radiogroup" aria-label="资金来源">
-          <button v-for="o in FUND_SOURCES" :key="o.key" type="button" role="radio" :aria-checked="form.fundSource===o.key" :class="['chip',{active:form.fundSource===o.key}]" @click="form.fundSource=o.key">{{ o.label }}</button>
-        </div>
-        <select v-if="form.fundSource==='loan'&&loanOptions.length" class="form-input entry-loan-select" v-model="form.loanId" aria-label="来自哪笔贷款">
-          <option value="">不指定哪笔贷款</option>
-          <option v-for="l in loanOptions" :key="l.id" :value="l.id">{{ l.name }}</option>
-        </select>
-      </div>
-      <div v-if="quickAction==='withdraw'" class="entry-fund-row">
-        <span class="entry-fund-label">钱去了哪</span>
-        <div class="entry-fund-options" role="radiogroup" aria-label="资金去向">
-          <button v-for="o in DESTINATIONS" :key="o.key" type="button" role="radio" :aria-checked="form.destination===o.key" :class="['chip',{active:form.destination===o.key}]" @click="form.destination=o.key">{{ o.label }}</button>
-        </div>
-        <template v-if="form.destination==='repay'||form.destination==='interest'">
-          <select v-if="loanOptions.length" class="form-input entry-loan-select" v-model="form.loanId" aria-label="还哪笔贷款">
-            <option value="">选择还哪笔贷款</option>
-            <option v-for="l in loanOptions" :key="l.id" :value="l.id">{{ l.name }}</option>
-          </select>
-          <button v-else type="button" class="entry-fund-hint" @click="setActiveTab('debts')">还没登记借款，去「借款」登记 →</button>
+          <div v-if="quickAction==='deposit'" class="form-group entry-choice">
+            <label>这笔钱从哪来</label>
+            <div class="entry-fund-options" role="radiogroup" aria-label="资金来源">
+              <button v-for="o in FUND_SOURCES" :key="o.key" type="button" role="radio" :aria-checked="form.fundSource===o.key" :class="['chip',{active:form.fundSource===o.key}]" @click="form.fundSource=o.key">{{ o.label }}</button>
+              <select v-if="form.fundSource==='loan'&&loanOptions.length" class="form-input entry-loan-select" v-model="form.loanId" aria-label="来自哪笔贷款">
+                <option value="">不指定哪笔贷款</option>
+                <option v-for="l in loanOptions" :key="l.id" :value="l.id">{{ l.name }}</option>
+              </select>
+            </div>
+          </div>
+          <div v-if="quickAction==='withdraw'" class="form-group entry-choice">
+            <label>钱去了哪</label>
+            <div class="entry-fund-options" role="radiogroup" aria-label="资金去向">
+              <button v-for="o in visibleDestinations" :key="o.key" type="button" role="radio" :aria-checked="form.destination===o.key" :class="['chip',{active:form.destination===o.key}]" @click="form.destination=o.key">{{ o.label }}</button>
+              <template v-if="form.destination==='repay'||form.destination==='interest'">
+                <select v-if="loanOptions.length" class="form-input entry-loan-select" v-model="form.loanId" aria-label="还哪笔贷款">
+                  <option value="">选择还哪笔贷款</option>
+                  <option v-for="l in loanOptions" :key="l.id" :value="l.id">{{ l.name }}</option>
+                </select>
+                <button v-else type="button" class="entry-fund-hint" @click="setActiveTab('debts')">还没登记借款，去「借款」登记 →</button>
+              </template>
+            </div>
+          </div>
         </template>
-      </div>
 
-      <div v-if="quickAction==='deposit'||quickAction==='withdraw'" class="entry-fund-row">
-        <span class="entry-fund-label">{{ quickAction==='withdraw'?'收款渠道':'付款渠道' }}</span>
-        <div class="entry-fund-options" role="radiogroup" :aria-label="quickAction==='withdraw'?'收款渠道':'付款渠道'">
-          <button v-for="o in PAY_CHANNELS" :key="o.key" type="button" role="radio" :aria-checked="form.channel===o.key" :class="['chip',{active:form.channel===o.key}]" @click="form.channel=form.channel===o.key?'':o.key">{{ o.label }}</button>
+        <template v-else>
+          <div class="entry-trade-target">
+            <div class="form-group"><label>市场</label><select class="form-input" v-model="form.targetMarket" @change="resetQuickTargetSearch"><option v-for="m in quickTargetMarkets" :key="m.v" :value="m.v">{{ m.l }}</option></select></div>
+            <div class="form-group"><label>{{ quickAction==='buy'?'买入标的':'卖出标的' }}</label><input class="form-input" v-model="quickTargetQuery" @input="onQuickTargetInput" :placeholder="quickTargetPlaceholder"></div>
+            <div class="form-group"><label>匹配结果</label><select class="form-input" v-model="form.targetKey" @change="applyQuickTarget"><option value="">{{ quickTargetSearching?'搜索中…':'选择标的或现有持仓' }}</option><option v-for="item in quickTargetOptions" :key="item.key" :value="item.key">{{ item.label }}</option></select></div>
+          </div>
+          <div class="entry-trade-execution">
+            <div class="form-group"><label>{{ quickAction==='buy'?'买入价格':'卖出价格' }}</label><input class="form-input" type="number" step="any" v-model.number="form.tradePrice" :placeholder="(form.currency||'CNY')+' 单价'" inputmode="decimal" @input="syncTradeAmount"></div>
+            <div class="form-group"><label>{{ quickAction==='buy'?'买入数量 / 份额':'卖出数量 / 份额' }}</label><input class="form-input" type="number" step="any" v-model.number="form.tradeQty" placeholder="例如：100" inputmode="decimal" @input="syncTradeAmount"></div>
+            <div class="form-group"><label>账户</label><input class="form-input" v-model="form.exchange" placeholder="例如：招商证券" list="dl-ex-focused"></div>
+            <div class="form-group"><label>日期</label><div class="entry-datetime-fields"><input class="form-input" type="date" v-model="form.date" aria-label="日期"><input class="form-input" type="time" v-model="form.time" aria-label="发生时间"></div></div>
+          </div>
+          <div class="entry-total-readout"><span>成交总额</span><strong class="privacy-number">{{ tradeAmountPreview?fmt(tradeAmountPreview):'—' }} {{ form.currency||'CNY' }}</strong></div>
+        </template>
+        <datalist id="dl-ex-focused"><option v-for="ex in platformSuggestions" :key="ex" :value="ex"></option></datalist>
+
+        <div v-if="quickAction==='deposit'&&depositRisk.warnings.length&&quickHasAmount" :class="['entry-calm-card','level-'+depositRisk.level]" role="status">
+          <p class="entry-calm-title">{{ depositRisk.level==='danger'?'先停一下':'留意一下' }}</p>
+          <ul>
+            <li v-for="w in depositRisk.warnings" :key="w.key">{{ w.text }}</li>
+          </ul>
+          <div class="entry-calm-intent">
+            <span>{{ needsIntent?'要继续，先说清这笔钱的打算':'这笔钱的打算（可选）' }}</span>
+            <button v-for="i in DEPOSIT_INTENTS" :key="i" type="button" :class="['chip',{active:form.intent===i}]" @click="form.intent=form.intent===i?'':i">{{ i }}</button>
+          </div>
+          <button v-if="debtSummary.openCount" type="button" class="entry-calm-link" @click="setActiveTab('debts')">去看还款计划 →</button>
         </div>
-      </div>
 
-      <div v-if="quickAction==='deposit'&&depositRisk.warnings.length" :class="['entry-calm-card','level-'+depositRisk.level]" role="status">
-        <p class="entry-calm-title">{{ depositRisk.level==='danger'?'先停一下':'留意一下' }}</p>
-        <ul>
-          <li v-for="w in depositRisk.warnings" :key="w.key">{{ w.text }}</li>
-        </ul>
-        <div class="entry-calm-intent">
-          <span>{{ needsIntent?'要继续，先说清这笔钱的打算':'这笔钱的打算（可选）' }}</span>
-          <button v-for="i in DEPOSIT_INTENTS" :key="i" type="button" :class="['chip',{active:form.intent===i}]" @click="form.intent=form.intent===i?'':i">{{ i }}</button>
-        </div>
-        <button v-if="debtSummary.openCount" type="button" class="entry-calm-link" @click="setActiveTab('debts')">去看还款计划 →</button>
-      </div>
+        <button type="button" class="entry-more-toggle" :aria-expanded="showQuickMore" @click="showQuickMore=!showQuickMore">
+          <span :class="['arrow',{open:showQuickMore}]">&#9654;</span>
+          {{ showQuickMore?'收起':'更多' }}
+          <small v-if="!showQuickMore">{{ quickMoreSummary }}</small>
+        </button>
 
-      <button class="entry-more-toggle" @click="showQuickMore=!showQuickMore">
-        <span :class="['arrow',{open:showQuickMore}]">&#9654;</span>
-        {{ showQuickMore?'收起补充信息':'补充资产类型、理由、标签与交易对手' }}
-        <span v-if="!showQuickMore&&(form.assetType||form.note||form.tagText||form.counterparty)" class="quick-more-hint">· 已填写</span>
-      </button>
-
-      <div v-show="showQuickMore" class="entry-optional">
-        <div class="entry-optional-grid">
-          <div class="form-group"><label>资产类型</label><select class="form-input" v-model="form.assetType"><option value="">未分类</option><option v-for="asset in ASSET_TYPES" :key="asset" :value="asset">{{ asset }}</option></select></div>
-          <div v-if="quickAction==='buy'||quickAction==='sell'" class="form-group"><label>日期与时间</label><div class="entry-datetime-fields"><input class="form-input" type="date" v-model="form.date"><input class="form-input" type="time" v-model="form.time" aria-label="发生时间"></div></div>
-          <div class="form-group"><label>标签</label><input class="form-input" v-model="form.tagText" list="dl-tags-focused" placeholder="可填写多个标签"></div>
-          <div v-if="quickAction==='deposit'||quickAction==='withdraw'" class="form-group"><label>交易对手 / 商家</label><input class="form-input" v-model="form.counterparty" placeholder="C2C 商家名，出问题时有据可查"></div>
-        </div>
-        <div class="entry-note-grid">
+        <div v-show="showQuickMore" class="entry-optional">
+          <div v-if="quickAction==='deposit'||quickAction==='withdraw'" class="form-group entry-choice">
+            <label>{{ quickAction==='withdraw'?'收款渠道':'付款渠道' }}</label>
+            <div class="entry-fund-options" role="radiogroup" :aria-label="quickAction==='withdraw'?'收款渠道':'付款渠道'">
+              <button v-for="o in PAY_CHANNELS" :key="o.key" type="button" role="radio" :aria-checked="form.channel===o.key" :class="['chip',{active:form.channel===o.key}]" @click="form.channel=form.channel===o.key?'':o.key">{{ o.label }}</button>
+            </div>
+          </div>
+          <div class="entry-optional-grid">
+            <div class="form-group"><label>资产类型</label><select class="form-input" v-model="form.assetType"><option value="">未分类</option><option v-for="asset in ASSET_TYPES" :key="asset" :value="asset">{{ asset }}</option></select></div>
+            <div v-if="quickAction==='deposit'||quickAction==='withdraw'" class="form-group"><label>交易对手 / 商家</label><input class="form-input" v-model="form.counterparty" placeholder="C2C 商家名，可不填"></div>
+          </div>
+          <div class="form-group">
+            <label>标签</label>
+            <input class="form-input" v-model="form.tagText" list="dl-tags-focused" placeholder="可填写多个标签">
+            <div class="entry-tag-options">
+              <button v-for="tag in quickTagOptions" :key="tag" type="button" :class="['chip',{active:quickTagActive(tag)}]" @click="toggleQuickTag(tag)">{{ tag }}</button>
+            </div>
+          </div>
           <div class="form-group"><label>{{ quickNoteLabel }}</label><input class="form-input" v-model="form.note" :placeholder="quickNotePlaceholder"></div>
+          <datalist id="dl-tags-focused"><option v-for="tag in allTags" :key="tag" :value="tag"></option></datalist>
         </div>
-        <datalist id="dl-tags-focused"><option v-for="tag in allTags" :key="tag" :value="tag"></option></datalist>
-        <div class="entry-tag-options">
-          <span>常用标签</span>
-          <button v-for="tag in quickTagOptions" :key="tag" :class="['chip',{active:quickTagActive(tag)}]" @click="toggleQuickTag(tag)">{{ tag }}</button>
-        </div>
+
+        <footer class="entry-ticket-foot">
+          <p v-if="quickSaveBlocker&&quickHasAmount" class="entry-save-blocker">{{ quickSaveBlocker }}</p>
+          <div class="entry-save-actions">
+            <button class="btn btn-ghost" @click="addEntry(true)" :disabled="!quickCanSave" title="保留账户、来源和标签，只清空金额和备注，适合连续补录">保存并再记一笔</button>
+            <button class="btn btn-primary" @click="addEntry(false)" :disabled="!quickCanSave">保存</button>
+          </div>
+        </footer>
       </div>
 
-      <footer class="entry-ticket-foot">
-        <button class="btn btn-ghost" @click="copyLast" :disabled="!entries.length">复制上一笔</button>
-        <p v-if="quickSaveBlocker" class="entry-save-blocker">{{ quickSaveBlocker }}</p>
-        <p v-else>保存并继续会保留动作、账户、资产、标签和资金来源，只清空金额和备注，适合连续补录。</p>
-        <div class="entry-save-actions">
-          <button class="btn btn-ghost" @click="addEntry(false)" :disabled="!quickCanSave">保存</button>
-          <button class="btn btn-primary" @click="addEntry(true)" :disabled="!quickCanSave">保存并继续</button>
+      <aside class="entry-aside" aria-label="说明与最近记录">
+        <div class="entry-aside-block">
+          <h3>{{ quickActionInfo.title }}</h3>
+          <p>{{ quickActionInfo.desc }}</p>
         </div>
-      </footer>
+        <div v-if="recentEntries.length" class="entry-aside-block">
+          <h3>最近记的</h3>
+          <ul class="entry-recent">
+            <li v-for="e in recentEntries" :key="e.id">
+              <span class="entry-recent-main"><strong>{{ typeLabel(e.type) }} · {{ e.exchange||'未填账户' }}</strong><small>{{ String(e.date||'').slice(5) }} {{ e.time||'' }}</small></span>
+              <span class="privacy-number">{{ fmt(amountCNY(e)) }}</span>
+            </li>
+          </ul>
+          <div class="entry-aside-tools">
+            <button type="button" class="text-command" @click="copyLast">照上一笔再记</button>
+            <select v-if="quickTemplates.length" class="form-input entry-template-select" :value="''" aria-label="套用常用模板" @change="applyQuickTemplateKey($event.target.value);$event.target.value=''">
+              <option value="">套用常用模板</option>
+              <option v-for="tpl in quickTemplates" :key="tpl.key" :value="tpl.key">{{ tpl.label }}</option>
+            </select>
+          </div>
+        </div>
+      </aside>
     </div>
   </section>
 
@@ -7283,6 +7327,21 @@ setup(){
     }
     return seen
   })
+  const quickHasAmount=computed(()=>Number(isFxCash.value?form.sourceAmount:form.amount)>0)
+  // 表单旁边列出刚记下的几笔：连续补录时能看到上一笔确实存进去了。
+  const recentEntries=computed(()=>[...entries.value].sort((x,y)=>(Number(y.updatedAt)||0)-(Number(x.updatedAt)||0)).slice(0,3))
+  // 「更多」收起时说明里面有什么；填过的东西直接显示出来，不用展开才知道。
+  const quickMoreSummary=computed(()=>{
+    const filled=[]
+    if(form.channel&&(quickAction.value==='deposit'||quickAction.value==='withdraw'))filled.push(channelLabel(form.channel))
+    if(form.assetType)filled.push(form.assetType)
+    const tags=parseTags(form.tagText).filter(t=>!['买入','卖出'].includes(t))
+    if(tags.length)filled.push(tags.join('、'))
+    if(String(form.counterparty||'').trim())filled.push(String(form.counterparty).trim())
+    if(String(form.note||'').trim())filled.push('有备注')
+    if(filled.length)return'· '+filled.join(' · ')
+    return quickAction.value==='deposit'||quickAction.value==='withdraw'?'· 渠道、分类、标签、备注':'· 分类、标签、备注'
+  })
   const monthInvested=computed(()=>{
     const month=debtToday.value.slice(0,7)
     return entries.value.filter(e=>e.type==='入金'&&String(e.date||'').slice(0,7)===month).reduce((sum,e)=>sum+amountCNY(e),0)
@@ -7593,6 +7652,8 @@ setup(){
   const debtViews=computed(()=>Debt.loanViews(debts.value,{today:debtToday.value,entries:entries.value,amountCNY}))
   const openLoans=computed(()=>debtViews.value.filter(v=>!v.closed))
   const loanOptions=computed(()=>openLoans.value.length?openLoans.value:debtViews.value)
+  // 没有借款的人不用看到「还贷款本金 / 付贷款利息」。
+  const visibleDestinations=computed(()=>DESTINATIONS.filter(o=>(o.key!=='repay'&&o.key!=='interest')||featureOn.value.loans||form.destination===o.key))
   const debtSummary=computed(()=>Debt.summary(debtViews.value,debtToday.value))
   const debtSchedule=computed(()=>Debt.schedule(debtViews.value,debtToday.value,8))
   const debtPayday=computed(()=>Debt.paydayPlan(debtViews.value,debtPlanSettings.value,debtToday.value))
@@ -10952,7 +11013,7 @@ setup(){
   })
 
   return{c2c,openC2C,closeC2C,c2cParse,c2cRelabel,c2cSelected,c2cSummary,c2cPickImages,c2cApply,PAY_CHANNELS,isFxCash,onFxInput,canOfferFx,switchToFx,fxOf,channelLabel,editFxRate,editFxOn,editFxOff,typeTone,typeTagClass,typeColor,debts,loanList,debtViews,openLoans,loanOptions,debtSummary,debtSchedule,debtPayday,debtFunding,depositRisk,needsIntent,quickSaveBlocker,FUND_SOURCES,DESTINATIONS,REPAY_TYPES,DEPOSIT_INTENTS,loanName,fundSourceLabel,destinationLabel,debtLoanForm,debtRepayForm,debtPlanForm,expandedLoanId,openLoanForm,saveLoan,deleteLoan,openRepayForm,saveRepayment,removeRepayment,toggleDebtEvent,toggleDebtPlanForm,saveDebtPlanSettings,
-    APP_VERSION,updateReady,reloadForUpdate,typeLabel,plColors,setPlColors,showAllActions,visibleQuickActions,recentAccounts,monthInvested,accountRows,accountSummary,useHoldingsValue,homeValue,homeProfit,homeROI,balanceForm,openBalance,saveBalance,featureOn,setFeature,mobileTabs,railTabs,navActive,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,guestMode,continueAsGuest,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
+    APP_VERSION,updateReady,reloadForUpdate,typeLabel,plColors,setPlColors,showAllActions,visibleQuickActions,recentAccounts,recentEntries,quickMoreSummary,quickHasAmount,visibleDestinations,monthInvested,accountRows,accountSummary,useHoldingsValue,homeValue,homeProfit,homeROI,balanceForm,openBalance,saveBalance,featureOn,setFeature,mobileTabs,railTabs,navActive,entries,sortedEntries,snapshots,importBatches,period,statTab,activeTab,workspaceTabs,setActiveTab,theme,themeLabel,THEMES,setTheme,showFilters,editingEntry,showSync,dataView,dataViews,showcaseMode,toggleShowcase,trendChart,posPieChart,assetColor,posPieColors,toast,form,filters,rules,syncCfg,syncStatus,syncProvider,serverAccount,serverAccountLabel,orbitAuthRequired,guestMode,continueAsGuest,accountReady,sessionGuardMessage,orbitLoginUrl,serverAdmin,serverRemote,serverLocalSummary,serverRemoteSummary,serverMigrationOpen,serverAutoSyncEnabled,cloudReady,cloudStatusLabel,submitServerAuth,openServerComparison,closeServerMigration,uploadLocalToServer,downloadServerToLocal,mergeServerAccounts,logoutServerAccount,loadServerAdmin,createServerInvitation,copyServerInvitation,toggleServerUser,revokeServerInvitation,formatAdminDate,adminInvitationStatus,reviewNote,reviewSavedAt,reviewChecklist,reviewDayNote,reviewDayNoteSavedAt,reviewView,reviewViews,
     importPreview,importPreviewRows,importMergeRows,importAfterStats,cancelImportPreview,confirmImportMerge,confirmImportOverwrite,
     syncPreview,syncPreviewRows,cancelSyncPreview,confirmSyncMerge,confirmSyncForcePush,syncing,lastSyncedAt,lastChangeAt,
     totalIn,totalOut,netPL,roi,fmtQtyNum,holdingsValue,realizedPL,trueReturn,trueROI,hasTrackedHoldings,netInvested,capitalChart,capitalCurve,capitalCurveView,capitalRange,setCapitalRange,CAPITAL_RANGES,allExchanges,allAssetTypes,allTags,allYears,allMonths,setFlowYear,quickAction,quickActions,quickActionInfo,quickAmountLabel,isFxDeposit,fxTargetAmount,tradeAmountPreview,quickCanSave,showQuickMore,quickNoteLabel,quickNotePlaceholder,quickTagOptions,quickTemplates,quickTargetMarkets,quickTargetOptions,quickTargetQuery,quickTargetSearching,quickTargetPlaceholder,quickTargetHint,setQuickAction,handleCashCurrencyChange,quickTagActive,toggleQuickTag,applyQuickTemplate,applyQuickTemplateKey,applyQuickPosition,applyQuickTarget,resetQuickTargetSearch,onQuickTargetInput,syncTradeAmount,matchedIds,matchCount,filteredStats,hasActiveFilter,activeFilterCount,periodRows,cashflowRows,cashflowOverview,exchangeRows,assetTypeRows,tagRows,periodCompare,REVIEW_RANGES,reviewRange,reviewYear,reviewYears,reviewRangeMeta,reviewScopeText,reviewSummary,recentReviewEntries,setReviewRange,setReviewYear,largeTxList,insightSummary,insightAdvice,reviewSignals,reviewCalendar,reviewCalendarMonth,reviewSelectedDate,reviewSelectedDateLabel,reviewCalendarAtStart,reviewCalendarAtEnd,selectedReviewEntries,selectedReviewSignals,reviewTimeline,changeReviewMonth,goReviewCurrentMonth,selectReviewDate,reviewTypeTone,reviewDayAmountTone,fmtCalendarAmount,saveReviewDayNote,
