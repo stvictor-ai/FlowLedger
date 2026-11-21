@@ -53,6 +53,9 @@ test('tags and the reason are one field, and the optional labels carry icons', (
   // 每个标签前都有小图标
   const labels = optional.match(/<label>[\s\S]*?<\/label>/g) || []
   assert.equal(labels.length, 4)
+  // 交易对手只在加密货币（或 USDT）时出现
+  assert.match(optional, /<div v-if="showCounterparty" class="form-group">/)
+  assert.match(html, /const showCounterparty=computed\(\(\)=>[^\n]*form\.assetType==='加密货币'\|\|form\.currency==='USDT'/)
   for (const label of labels) assert.match(label, /class="entry-label-icon"/)
 })
 
