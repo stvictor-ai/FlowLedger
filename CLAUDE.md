@@ -9,7 +9,8 @@
 - 数据存储：浏览器 localStorage
 - 云同步：GitHub Gist API（Bearer Token 认证，免费、带版本历史）
 - PWA：`manifest.json` + `sw.js` + 图标资源
-- 三主题现代财富工作台 UI，桌面端左侧工作台 + 平板横向 Tab + 手机端底部 Tab
+- 三套外观：经典（mist，默认）、霓虹（neon，直角）、晴空（sky）；桌面端左侧导航 + 手机端底部五个入口
+- 部署：push 到 main → GitHub Actions 先跑两套测试，再发静态文件；改了 server/ 要在服务器上手动重建
 
 ## 文件结构
 ```
@@ -23,11 +24,10 @@ touji/
 │   ├── debt-engine.js   # 负债：利息、待付日程、发薪日还债计划、入金冷静提醒（UMD）
 │   ├── c2c-import.js    # C2C 订单截图文字 → 订单 → 与已有流水配对（UMD）
 │   ├── account-engine.js # 账户现值与首页盈亏（UMD）
-│   └── position-engine.js # 持仓成本重算：删除买入后把剩下的买卖重走一遍（UMD）
+│   ├── position-engine.js # 持仓成本重算：删除买入后把剩下的买卖重走一遍（UMD）
+│   └── prefs-sync.js    # 复盘笔记、规矩、功能开关、外观 ↔ debts 集合里的 prefs / note 文档（UMD）
 ├── vendor/tesseract-6.0.1/ # 本地 OCR（按需加载，不进预缓存）；语言数据是 tessdata_fast 的 chi_sim
-├── tests/
-│   ├── entry-engine.test.js # 时间与换汇计算测试
-│   └── review-engine.test.js # Node 内置测试
+├── tests/            # node --test tests/*.test.js；server/ 里另有一套 npm test
 ├── docs/plans/     # 功能实施计划
 ├── manifest.json   # PWA 配置
 ├── sw.js           # Service Worker 离线缓存
@@ -73,7 +73,7 @@ touji/
 - [x] 复盘清单（checkbox）
 - [x] 周期复盘笔记
 - [x] 近期复盘窗口（近 30/90/180 天、今年）
-- [x] 雾白 / 岩灰 / 墨金主题切换并持久化
+- [x] 经典 / 霓虹 / 晴空外观切换，涨跌颜色可切换
 - [x] 现代财富工作台视觉系统（桌面侧栏、重点收益区、移动端底栏）
 - [x] 投记专属 SVG / PWA 图标与全端统一线性导航图标
 - [x] 桌面、平板和手机端紧凑主题菜单
@@ -145,6 +145,8 @@ touji/
 // 账户现值：{id:'balance:<账户名>', kind:'balance', account, value, asOf, history:[{date,value}]}，见 js/account-engine.js。
 // 首页盈亏 = 各账户现值之和 + 已取出 − 总投入；没填现值的账户按本金算。
 // 往这个集合加新的 kind 时，服务器 sync/service.js 的 DEBT_KINDS_SINCE 也要登记并升 schema。
+// kind:'prefs' / 'note'：规矩、功能开关、外观和复盘笔记的同步副本（js/prefs-sync.js）。页面仍读写原来的 localStorage key，
+// 改完调 pushPrefs()；从外面换掉 debts（同步、导入、恢复）后调 pullPrefs()。
 // 负债删除墓碑 key: touji_debt_deleted_v1
 // 同步：服务器 GET 快照里带 debts 才会上传负债（旧服务器的写接口是 strict 的）
 

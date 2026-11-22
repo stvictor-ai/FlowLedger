@@ -165,6 +165,7 @@
 - **GitHub Gist 云同步**：记录、持仓和删除记录存入你的 Private Gist，免费、带版本历史、多端共享
 - **个人站账号同步**：复用 Orbit 的邀请制账号与 HttpOnly Cookie，使用 PostgreSQL 持久化和 revision 并发保护
 - 个人站部署按 Orbit 用户隔离 localStorage；退出后立即锁定页面，切换账号不会显示上一位用户的本地记录
+- 复盘笔记、复盘清单、给自己定的规矩（每月上限等）、功能开关和外观跟着账本一起同步，也进 JSON 备份；换设备登录后都在
 - 首次关联只比较数据，不自动覆盖；可明确选择合并、上传本机或下载服务器
 - 首次迁移确认后自动保存：本机立即落盘，约 1.2 秒后上传服务器；断网期间继续记录，恢复联网后自动补传
 
@@ -224,7 +225,7 @@ docker compose up -d --build
 
 之后可点击「智能同步」先预览本地与云端差异，再确认双向合并。冲突使用每条数据的 `updatedAt` 时间戳判断，删除也会通过删除记录同步。
 
-> Token 只保存在配置它的浏览器 localStorage 中，不会写入代码仓库、导出文件或 Gist。复盘笔记、复盘清单和提醒规则目前只保存在各自浏览器本地。
+> Token 只保存在配置它的浏览器 localStorage 中，不会写入代码仓库、导出文件或 Gist。
 
 ## 只读接口（给交易台和 agent）
 
@@ -477,6 +478,9 @@ sudo systemctl reload caddy
 }
 // 还债计划（每个账本最多一条）
 { id: 'debt-plan', kind: 'plan', paydayDom, monthlyPlan, nudge, updatedAt }
+// 设置与复盘笔记（见 js/prefs-sync.js）
+{ id: 'prefs:rules' | 'prefs:features' | 'prefs:theme' | 'prefs:plColors', kind: 'prefs', name, value, updatedAt }
+{ id: 'note:day:<日期>' | 'note:period:<周期>' | 'note:checklist:<周期>', kind: 'note', scope, key, note | items, updatedAt }
 // 账户现在值（每个账户一条，和贷款存在同一个集合里一起同步）
 { id: 'balance:<账户名>', kind: 'balance', account, value, asOf, history: [{ date, value }], updatedAt }
 ```
@@ -536,6 +540,7 @@ FlowLedger/
 │   ├── position-engine.js # 持仓成本：删除买入后把剩下的买卖重走一遍
 │   ├── debt-engine.js     # 借款：利息、待付日程、还款计划、投入前的冷静提醒
 │   ├── import-engine.js   # 导入去重：什么算「同一笔」
+│   ├── prefs-sync.js      # 复盘笔记、规矩、功能开关和外观 ↔ 账本文档，跟着账号同步
 │   ├── c2c-import.js      # C2C 订单截图文字 → 订单 → 与已有流水配对
 │   ├── review-engine.js   # 复盘规则、日历与时间线
 │   └── server-sync.js     # 账号同步客户端
@@ -600,7 +605,7 @@ cd server && npm ci && npm test
 - 持仓成本重算、导入去重、账户盈亏和同步已有单元测试；下一步补端到端测试
 - 为 localStorage 数据模型增加显式版本号和可回滚迁移
 - 增加行情源健康检查、失败提示、缓存价格与备用报价源
-- 在已拆出的八个引擎基础上，继续把存储、同步、行情和界面从 `index.html` 里拆出来
+- 在已拆出的九个模块基础上，继续把存储、同步、行情和界面从 `index.html` 里拆出来
 
 ### P1 · 补齐专业投资指标
 
@@ -614,7 +619,6 @@ cd server && npm ci && npm test
 
 - 支持自定义复盘模板、投资规则与执行评分
 - 在现有五类规则信号上增加连续追高、计划偏离和仓位变化趋势
-- 将每日复盘笔记、清单和提醒规则纳入可选的多端同步与 JSON 备份
 - 提供隐私模式下可分享的只读复盘卡片
 
 ### P3 · 从个人工具走向公共产品
