@@ -194,3 +194,12 @@ test('being sent to a login page counts as signed out, not as a network failure'
   const found = createClient({ fetchImpl: async () => ({ ok: false, status: 302, headers: { get: () => null } }) })
   await assert.rejects(() => found.readSnapshot('ledger-1'), error => error.code === 'UNAUTHENTICATED')
 })
+
+test('a session check that hangs gives up, and is not mistaken for being signed out', async () => {
+  const hanging = createClient({
+    fetchImpl: (url, init) => new Promise((resolve, reject) => {
+      init.signal.addEventListener('abort', () => reject(new Error('aborted')))
+    })
+  })
+  await assert.rejects(() => hanging.me({ timeoutMs: 20 }), error => error.code === 'SERVER_TIMEOUT' && error.code !== 'UNAUTHENTICATED')
+})

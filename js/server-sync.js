@@ -39,14 +39,28 @@
     if (typeof fetchImpl !== 'function') throw new TypeError('fetchImpl is required')
 
     async function request(path, init) {
-      const response = await fetchImpl(`${baseUrl}${path}`, {
-        credentials: 'include',
-        // 没登录时，前面的代理会把请求 302 到登录页。跟着跳过去只会得到一个跨域错误，
-        // 和断网分不清 —— 所以不跟，直接把「被要求去登录」认作未登录。
-        redirect: 'manual',
-        ...init,
-        headers: { 'Content-Type': 'application/json', ...(init && init.headers) }
-      })
+      // timeoutMs：信号很差时请求会一直挂着不失败。给了时限的请求到点就按「连不上」处理，
+      // 页面才能照离线的办法打开本机账本，而不是一直停在「正在打开」。
+      const { timeoutMs, ...rest } = init || {}
+      const controller = timeoutMs && typeof AbortController === 'function' ? new AbortController() : null
+      const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null
+      let response
+      try {
+        response = await fetchImpl(`${baseUrl}${path}`, {
+          credentials: 'include',
+          // 没登录时，前面的代理会把请求 302 到登录页。跟着跳过去只会得到一个跨域错误，
+          // 和断网分不清 —— 所以不跟，直接把「被要求去登录」认作未登录。
+          redirect: 'manual',
+          ...rest,
+          ...(controller ? { signal: controller.signal } : {}),
+          headers: { 'Content-Type': 'application/json', ...rest.headers }
+        })
+      } catch (error) {
+        if (controller && controller.signal.aborted) throw new ServerSyncError('SERVER_TIMEOUT', 0)
+        throw error
+      } finally {
+        if (timer) clearTimeout(timer)
+      }
       if (response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400)) {
         throw new ServerSyncError('UNAUTHENTICATED', 401)
       }
@@ -77,8 +91,8 @@
       logout() {
         return request('/api/v1/auth/logout', { method: 'POST' })
       },
-      me() {
-        return request('/api/v1/auth/me', { method: 'GET' })
+      me(options) {
+        return request('/api/v1/auth/me', { method: 'GET', timeoutMs: (options && options.timeoutMs) || 8000 })
       },
       listApiTokens() {
         return request('/api/v1/tokens', { method: 'GET' })
