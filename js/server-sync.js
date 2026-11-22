@@ -8,7 +8,7 @@
   // 账本格式的版本号。写服务器时放在 X-Touji-Schema 里：流水每加一个字段就加一，
   // 并在 server/src/modules/sync/service.js 的 ENTRY_FIELDS_SINCE 里登记。
   // 服务器靠它认出还在跑旧代码的页面，不让它把自己不认识的字段抹掉。
-  const SCHEMA_VERSION = 4
+  const SCHEMA_VERSION = 5
 
   class ServerSyncError extends Error {
     constructor(code, status, details) {
@@ -171,7 +171,10 @@
     return {
       entries: entries.length,
       positions: positions.length,
-      debts: debts.length,
+      // 这个集合里除了贷款还有账户现值、笔记和设置；给人看的「几项借款」只数贷款。
+      debts: debts.filter(item => item && item.kind === 'loan').length,
+      // 外观、功能开关这类设置不算账本内容：只改过它们的设备仍然是「空的」。
+      extras: debts.filter(item => item && item.kind !== 'loan' && item.kind !== 'prefs').length,
       totalIn,
       totalOut,
       deleted: Object.keys(data.deletedIds || {}).length +
@@ -182,7 +185,7 @@
 
   function hasSnapshotData(snapshot) {
     const summary = summarizeSnapshot(snapshot)
-    return summary.entries + summary.positions + summary.debts + summary.deleted > 0
+    return summary.entries + summary.positions + summary.debts + summary.extras + summary.deleted > 0
   }
 
   function createAutoSyncCoordinator(options) {

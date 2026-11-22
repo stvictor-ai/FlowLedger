@@ -1,6 +1,7 @@
 const MAX_ITEMS_PER_COLLECTION = 10000
-// A household has a handful of loans; this only bounds a runaway client.
-const MAX_DEBTS = 2000
+// A household has a handful of loans, but the collection also holds one
+// document per day that has a review note; this only bounds a runaway client.
+const MAX_DEBTS = 10000
 
 // What the client's ledger format knows about. A page left open (or a PWA
 // resumed from memory) keeps running old code long after a release: it drops
@@ -8,7 +9,7 @@ const MAX_DEBTS = 2000
 // whole thing back. Clients state their version in X-Touji-Schema; the two
 // generations that predate the header are told apart by whether they send
 // debts. Bump this, and list the new fields below, whenever entries gain one.
-export const SYNC_SCHEMA = 4
+export const SYNC_SCHEMA = 5
 const ENTRY_FIELDS_SINCE = {
   2: ['fundSource', 'destination', 'loanId', 'toExchange'],
   3: ['channel', 'counterparty']
@@ -17,7 +18,9 @@ const ENTRY_FIELDS_SINCE = {
 // `kind`. A client drops the kinds it has never heard of when it reads them,
 // so the same reasoning applies to whole documents here as to fields above.
 const DEBT_KINDS_SINCE = {
-  4: ['balance']
+  4: ['balance'],
+  // Rules, feature switches, appearance and review notes (js/prefs-sync.js).
+  5: ['prefs', 'note']
 }
 
 export function clientSchemaOf(declared, snapshot) {

@@ -83,7 +83,7 @@ test('snapshot summary converts foreign currencies and counts tombstones', () =>
       { type: '出金', amount: 200, currency: 'CNY' }
     ],
     positions: [{ id: 'position-1' }],
-    debts: [{ id: 'loan-1', kind: 'loan' }],
+    debts: [{ id: 'loan-1', kind: 'loan' }, { id: 'balance:甲', kind: 'balance' }, { id: 'prefs:theme', kind: 'prefs' }],
     deletedIds: { old: 1 },
     deletedPositionIds: { gone: 2 },
     deletedDebtIds: { paid: 3 }
@@ -93,6 +93,7 @@ test('snapshot summary converts foreign currencies and counts tombstones', () =>
     entries: 2,
     positions: 1,
     debts: 1,
+    extras: 1,
     totalIn: 500,
     totalOut: 200,
     deleted: 3
@@ -101,6 +102,9 @@ test('snapshot summary converts foreign currencies and counts tombstones', () =>
   assert.equal(hasSnapshotData({ entries: [{ id: 'entry-1' }] }), true)
   // 只登记了贷款的账本也算有数据，首次同步不能被当成空账本直接覆盖。
   assert.equal(hasSnapshotData({ entries: [], positions: [], debts: [{ id: 'loan-1', kind: 'loan' }] }), true)
+  // 账户现值和复盘笔记是账本内容；只换过外观的设备仍算空的，登录时可以直接取回账号里的账本。
+  assert.equal(hasSnapshotData({ debts: [{ id: 'note:day:2026-11-20', kind: 'note' }] }), true)
+  assert.equal(hasSnapshotData({ debts: [{ id: 'prefs:theme', kind: 'prefs' }] }), false)
 })
 
 test('auto sync coordinator debounces changes into one flush', async () => {

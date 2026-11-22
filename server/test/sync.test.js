@@ -291,7 +291,7 @@ test('sync rejects duplicate, colliding and excess debts', async () => {
     error => error instanceof SyncError && error.code === 'ACTIVE_DELETED_COLLISION'
   )
   // Tombstones count towards the limit, as they do for entries.
-  const debts = Array.from({ length: 1500 }, (_, index) => ({ id: `loan-${index}` }))
+  const debts = Array.from({ length: 9500 }, (_, index) => ({ id: `loan-${index}` }))
   const deletedDebtIds = Object.fromEntries(Array.from({ length: 501 }, (_, index) => [`gone-${index}`, 1]))
   await assert.rejects(
     () => write({ debts, deletedDebtIds }),
@@ -516,4 +516,31 @@ test('a page from before account values cannot drop them along with its debts', 
   assert.equal(current.status, 200)
   debts = (await client.read()).debts
   assert.deepEqual(debts.map(item => item.id).sort(), ['balance:基金账户', 'loan-1'].sort())
+})
+
+test('a page from before notes and settings synced cannot drop them', async t => {
+  const memory = memorySyncRepository()
+  const syncService = createSyncService({ repository: memory.repository })
+  const running = await startApp({ authService, syncService })
+  t.after(running.close)
+  const client = syncClient(running.baseUrl)
+
+  const loan = { id: 'loan-1', kind: 'loan', principal: 50000, updatedAt: 10 }
+  const worth = { id: 'balance:基金账户', kind: 'balance', account: '基金账户', value: 8420, asOf: '2026-11-18', updatedAt: 20 }
+  const rules = { id: 'prefs:rules', kind: 'prefs', name: 'rules', value: { monthlyCap: 5000 }, updatedAt: 30 }
+  const note = { id: 'note:day:2026-11-20', kind: 'note', scope: 'day', key: '2026-11-20', note: '追高了', updatedAt: 30 }
+  await client.write({ baseRevision: 0, ...emptySnapshot(), debts: [loan, worth, rules, note], deletedDebtIds: {} }, CURRENT)
+
+  // Schema 4 knows loans, the plan and account values, and nothing else.
+  const older = await client.write({
+    baseRevision: 1,
+    ...emptySnapshot(),
+    debts: [loan, { ...worth, value: 9000, updatedAt: 40 }],
+    deletedDebtIds: {}
+  }, { 'X-Touji-Schema': '4' })
+  assert.equal(older.status, 200)
+  assert.equal((await older.json()).clientOutdated, true)
+  const debts = (await client.read()).debts
+  assert.deepEqual(debts.map(item => item.id).sort(), ['balance:基金账户', 'loan-1', 'note:day:2026-11-20', 'prefs:rules'].sort())
+  assert.equal(debts.find(item => item.id === 'balance:基金账户').value, 9000)
 })

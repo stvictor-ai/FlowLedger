@@ -32,6 +32,7 @@
 <script src="js/debt-engine.js"></script>
 <script src="js/account-engine.js"></script>
 <script src="js/position-engine.js"></script>
+<script src="js/prefs-sync.js"></script>
 <script src="js/c2c-import.js"></script>
 <style>
 /* ===== RESET & BASE ===== */
@@ -6440,7 +6441,8 @@ function normDestination(v){
 function normalizeDebt(item){
   if(!item||typeof item!=='object'||!item.id)return null
   // balance：某个账户现在值多少（见 js/account-engine.js），和贷款放在同一个集合里一起同步。
-  if(item.kind!=='loan'&&item.kind!=='plan'&&item.kind!=='balance')return null
+  // prefs / note：规矩、功能开关、外观和复盘笔记（见 js/prefs-sync.js），放进来才会跟着账号同步、进备份。
+  if(item.kind!=='loan'&&item.kind!=='plan'&&item.kind!=='balance'&&item.kind!=='prefs'&&item.kind!=='note')return null
   return{...item,id:String(item.id),updatedAt:Number(item.updatedAt)||0}
 }
 function normalizeDebtList(list){return(Array.isArray(list)?list:[]).map(normalizeDebt).filter(Boolean)}
@@ -7238,12 +7240,13 @@ setup(){
   // 涨跌颜色：默认红涨绿跌，可换成绿涨红跌。只影响盈亏数字，不影响报错和提示的颜色。
   const PL_COLORS_K='touji_pl_colors_v1'
   const plColors=ref(localStorage.getItem(PL_COLORS_K)==='intl'?'intl':'cn')
-  function setPlColors(mode){
+  function applyPlColors(mode){
     plColors.value=mode==='intl'?'intl':'cn'
     localStorage.setItem(PL_COLORS_K,plColors.value)
     if(plColors.value==='intl')document.documentElement.dataset.pl='intl'
     else delete document.documentElement.dataset.pl
   }
+  function setPlColors(mode){applyPlColors(mode);pushPrefs()}
   function setTheme(name){
     const item=THEMES.find(option=>option.key===name)
     if(!item)return
@@ -7252,6 +7255,7 @@ setup(){
     theme.value=item.key
     applyTheme(item.key)
     try{localStorage.setItem(THEME_K,item.key)}catch(e){}
+    pushPrefs()
     Vue.nextTick(()=>{renderChart();renderPosPieChart();renderCapitalChart()})
     showToast(`已切换为${item.label}皮肤`,'info')
   }
@@ -7289,6 +7293,7 @@ setup(){
   function setFeature(key,on){
     featurePrefs[key]=!!on
     localStorage.setItem(FEATURES_K,JSON.stringify(featurePrefs))
+    pushPrefs()
   }
   const mobileTabs=workspaceTabs.filter(tab=>tab.nav)
   const railTabs=computed(()=>workspaceTabs.filter(tab=>!tab.add&&(tab.nav||featureOn.value[tab.feature])))
@@ -7627,6 +7632,7 @@ setup(){
     deletedDebtIds.value=readStorageJSON(DEBT_DEL_K,'借款删除记录',{})||{}
     loadReview()
     loadReviewDayNotes()
+    pullPrefs()
   }
   function save(){const ok=writeStorageJSON(SK,entries.value,'账本记录');if(ok&&typeof scheduleAutoPush==='function')scheduleAutoPush();return ok}
   function saveDeleted(){writeStorageJSON(DEL_K,deletedIds.value,'删除记录')}
@@ -7637,6 +7643,75 @@ setup(){
   function saveDebts({sync=true}={}){const ok=writeStorageJSON(DEBT_K,debts.value,'借款数据');if(ok&&sync&&typeof scheduleAutoPush==='function')scheduleAutoPush();return ok}
   function saveDeletedDebts(){writeStorageJSON(DEBT_DEL_K,deletedDebtIds.value,'借款删除记录')}
   function recordDeletedDebts(ids){const now=Date.now();ids.forEach(id=>{deletedDebtIds.value[id]=now});saveDeletedDebts()}
+  // ===== 规矩、功能开关、外观和复盘笔记跟着账本走（js/prefs-sync.js）=====
+  // 页面仍然读写浏览器里原来那几份；这里让账本里的文档和它们保持一致。
+  const Prefs=window.ToujiPrefs
+  function readStoredObject(key){try{const v=JSON.parse(localStorage.getItem(key)||'null');return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}catch(e){return{}}}
+  function readLocalPrefs(){
+    const storedRules=localStorage.getItem(RULES_K)?readStoredObject(RULES_K):null
+    const storedTheme=localStorage.getItem(THEME_K)
+    const storedColors=localStorage.getItem(PL_COLORS_K)
+    return{
+      rules:storedRules&&Object.keys(storedRules).length?storedRules:undefined,
+      features:{...featurePrefs},
+      theme:THEMES.some(item=>item.key===storedTheme)?storedTheme:undefined,
+      plColors:storedColors==='intl'||storedColors==='cn'?storedColors:undefined,
+      dayNotes:readStoredObject(DAY_REVIEW_K),
+      periodNotes:readStoredObject(REVIEW_K),
+      checklists:readStoredObject(CHECKLIST_K)
+    }
+  }
+  function writeLocalPrefs(next){
+    if(next.rules&&typeof next.rules==='object'){
+      localStorage.setItem(RULES_K,JSON.stringify(next.rules))
+      Object.assign(rules,{...defRules(),...next.rules})
+    }
+    if(next.features&&typeof next.features==='object'){
+      for(const key of Object.keys(featurePrefs))delete featurePrefs[key]
+      Object.assign(featurePrefs,next.features)
+      localStorage.setItem(FEATURES_K,JSON.stringify(featurePrefs))
+    }
+    if(THEMES.some(item=>item.key===next.theme)&&next.theme!==theme.value){
+      theme.value=next.theme
+      applyTheme(next.theme)
+      try{localStorage.setItem(THEME_K,next.theme)}catch(e){}
+      Vue.nextTick(()=>{renderChart();renderPosPieChart();renderCapitalChart()})
+    }
+    if((next.plColors==='intl'||next.plColors==='cn')&&next.plColors!==plColors.value)applyPlColors(next.plColors)
+    localStorage.setItem(DAY_REVIEW_K,JSON.stringify(next.dayNotes||{}))
+    localStorage.setItem(REVIEW_K,JSON.stringify(next.periodNotes||{}))
+    localStorage.setItem(CHECKLIST_K,JSON.stringify(next.checklists||{}))
+    reviewDayNotes.value=next.dayNotes||{}
+    loadSelectedReviewDay()
+    loadReview()
+  }
+  // 这台设备上刚改了规矩 / 外观 / 笔记：写进账本文档，随下一次同步带走。
+  function pushPrefs(){
+    if(!Prefs)return
+    const result=Prefs.push(debts.value,readLocalPrefs(),Date.now())
+    if(!result.upserts.length&&!result.removeIds.length)return
+    const replaced=new Set([...result.upserts.map(doc=>doc.id),...result.removeIds])
+    debts.value=[...debts.value.filter(doc=>!replaced.has(doc.id)),...result.upserts]
+    const revived=result.upserts.filter(doc=>deletedDebtIds.value[doc.id])
+    if(revived.length){const rest={...deletedDebtIds.value};revived.forEach(doc=>delete rest[doc.id]);deletedDebtIds.value=rest;saveDeletedDebts()}
+    if(result.removeIds.length)recordDeletedDebts(result.removeIds)
+    saveDebts()
+  }
+  // 账本文档变了（打开页面、同步回来、导入备份、恢复快照）：浏览器里那几份照文档对齐。
+  let pullingPrefs=false
+  function pullPrefs(){
+    if(!Prefs||pullingPrefs)return
+    pullingPrefs=true
+    try{
+      const result=Prefs.pull(debts.value,readLocalPrefs(),deletedDebtIds.value)
+      if(result.changed)writeLocalPrefs(result.local)
+      if(result.seeds.length){
+        debts.value=[...debts.value,...result.seeds]
+        saveDebts({sync:false})
+      }
+    }catch(e){console.warn('prefs sync',e)}
+    finally{pullingPrefs=false}
+  }
   function snap(){
     const s={
       at:new Date().toISOString(),
@@ -9260,6 +9335,7 @@ setup(){
     }
     if(!writeStorageJSON(DAY_REVIEW_K,next,'每日复盘笔记'))return
     reviewDayNotes.value=next
+    pushPrefs()
     loadSelectedReviewDay()
     showToast(note?'当日复盘已保存':'当日复盘已清除','success')
   }
@@ -9426,9 +9502,9 @@ setup(){
     try{const r=localStorage.getItem(REVIEW_K);const d=r?JSON.parse(r):{};const v=d[pk];reviewNote.value=v?.note||'';reviewSavedAt.value=v?.savedAt||''}catch(e){}
     try{const r=localStorage.getItem(CHECKLIST_K);const d=r?JSON.parse(r):{};const v=d[pk];reviewChecklist.value=v||defaultCL.map(t=>({text:t,checked:false}))}catch(e){reviewChecklist.value=defaultCL.map(t=>({text:t,checked:false}))}
   }
-  function saveChecklist(){const pk=reviewStorageKey();try{const r=localStorage.getItem(CHECKLIST_K);const d=r?JSON.parse(r):{};d[pk]=clone(reviewChecklist.value);writeStorageJSON(CHECKLIST_K,d,'复盘清单')}catch(e){showToast('复盘清单保存失败','error')}}
-  function saveReviewNote(){const pk=reviewStorageKey();try{const r=localStorage.getItem(REVIEW_K);const d=r?JSON.parse(r):{};d[pk]={note:reviewNote.value,savedAt:new Date().toLocaleString(lang==='zh'?'zh-CN':'en-US')};if(writeStorageJSON(REVIEW_K,d,'复盘笔记')){reviewSavedAt.value=d[pk].savedAt;showToast('笔记已保存','success')}}catch(e){showToast('复盘笔记保存失败','error')}}
-  function saveRules(){if(writeStorageJSON(RULES_K,{monthlyCap:Math.max(0,Number(rules.monthlyCap)||0),lossWarn:rules.lossWarn,lossCritical:rules.lossCritical,roiWarn:rules.roiWarn,inflowRatio:rules.inflowRatio,largeTx:rules.largeTx,lossStreak:rules.lossStreak,denseBuyCount:rules.denseBuyCount,denseBuyDays:rules.denseBuyDays,concentrationPct:rules.concentrationPct},'复盘规则'))showToast('规则已保存','success')}
+  function saveChecklist(){const pk=reviewStorageKey();try{const r=localStorage.getItem(CHECKLIST_K);const d=r?JSON.parse(r):{};d[pk]=clone(reviewChecklist.value);if(writeStorageJSON(CHECKLIST_K,d,'复盘清单'))pushPrefs()}catch(e){showToast('复盘清单保存失败','error')}}
+  function saveReviewNote(){const pk=reviewStorageKey();try{const r=localStorage.getItem(REVIEW_K);const d=r?JSON.parse(r):{};d[pk]={note:reviewNote.value,savedAt:new Date().toLocaleString(lang==='zh'?'zh-CN':'en-US')};if(writeStorageJSON(REVIEW_K,d,'复盘笔记')){reviewSavedAt.value=d[pk].savedAt;pushPrefs();showToast('笔记已保存','success')}}catch(e){showToast('复盘笔记保存失败','error')}}
+  function saveRules(){if(writeStorageJSON(RULES_K,{monthlyCap:Math.max(0,Number(rules.monthlyCap)||0),lossWarn:rules.lossWarn,lossCritical:rules.lossCritical,roiWarn:rules.roiWarn,inflowRatio:rules.inflowRatio,largeTx:rules.largeTx,lossStreak:rules.lossStreak,denseBuyCount:rules.denseBuyCount,denseBuyDays:rules.denseBuyDays,concentrationPct:rules.concentrationPct},'复盘规则')){pushPrefs();showToast('规则已保存','success')}}
 
   // Snapshots
   function createSnap(){snap();showToast('快照已创建','success')}
@@ -9451,7 +9527,8 @@ setup(){
       savePositions({sync:false})
     }
     if(Array.isArray(s.debts)){
-      const nextDebts=normalizeDebtList(clone(s.debts)).map(d=>({...d,updatedAt:now}))
+      // 快照恢复的是账目（贷款、账户现值）；笔记和设置保持现在的样子，否则恢复一份旧快照会把之后写的笔记一起抹掉。
+      const nextDebts=[...normalizeDebtList(clone(s.debts)).filter(d=>!Prefs?.isSynced(d)).map(d=>({...d,updatedAt:now})),...debts.value.filter(d=>Prefs?.isSynced(d))]
       const nextDebtIds=new Set(nextDebts.map(d=>d.id))
       recordDeletedDebts(debts.value.filter(d=>!nextDebtIds.has(d.id)).map(d=>d.id))
       nextDebts.forEach(d=>delete deletedDebtIds.value[d.id])
@@ -9765,6 +9842,7 @@ setup(){
     if(debtsChanged){
       debts.value=mergedDebts
       saveDebts({sync:false})
+      pullPrefs()
     }
     return{entriesChanged,positionsChanged,debtsChanged,changed:entriesChanged||positionsChanged||debtsChanged}
   }
@@ -10116,6 +10194,7 @@ setup(){
         debts.value=normalizeDebtList(remote.debts)
         deletedDebtIds.value=normalizeDeletedMap(remote.deletedDebtIds)
         saveDebts({sync:false});saveDeletedDebts()
+        pullPrefs()
       }
       writeStorageJSON(SK,entries.value,'账本记录')
       savePositions({sync:false})
@@ -10727,7 +10806,12 @@ setup(){
   function importDebtRows(rows,fileName){
     const loanCount=rows.filter(d=>d.kind==='loan').length
     const hasPlan=rows.some(d=>d.kind==='plan')
-    if(!confirm(`${fileName} 里有 ${loanCount} 笔贷款${hasPlan?'和还债计划':''}。合并到借款吗？同一笔会以文件为准。`))return
+    const balanceCount=rows.filter(d=>d.kind==='balance').length
+    const noteCount=rows.filter(d=>d.kind==='note').length
+    const hasPrefs=rows.some(d=>d.kind==='prefs')
+    const parts=[loanCount?`${loanCount} 笔贷款`:'',hasPlan?'还债计划':'',balanceCount?`${balanceCount} 个账户的现值`:'',noteCount?`${noteCount} 条复盘笔记`:'',hasPrefs?'规矩和外观设置':''].filter(Boolean)
+    if(!parts.length)return
+    if(!confirm(`${fileName} 里有${parts.join('、')}。合并进来吗？同一项会以文件为准。`))return
     snap()
     const now=Date.now()
     const incoming=new Map(rows.map(d=>[d.id,{...d,updatedAt:now}]))
@@ -10735,7 +10819,8 @@ setup(){
     incoming.forEach((_,id)=>delete deletedDebtIds.value[id])
     saveDeletedDebts()
     saveDebts()
-    showToast(`已导入 ${loanCount} 笔贷款`,'success')
+    pullPrefs()
+    showToast(loanCount?`已导入 ${loanCount} 笔贷款`:'已导入','success')
   }
   function importJSON(ev){
     const f=ev.target.files[0];if(!f)return;const rd=new FileReader()
