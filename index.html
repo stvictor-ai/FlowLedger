@@ -4425,6 +4425,23 @@ html[data-theme="sky"] .modal-box{border-radius:22px}
 html[data-theme="sky"] .overview-grid{gap:12px;border:0;background:transparent}
 html[data-theme="sky"] .overview-grid>.overview-module,
 html[data-theme="sky"] :is(.overview-wealth,.overview-allocation,.me-group,.guest-note,.responsive-head){border-radius:16px!important}
+/* ===== 手感：能点的东西用同一种节奏 =====
+   以前各处的过渡从 .15s 到 .3s 都有，是几轮改版叠出来的。这里统一成：
+   颜色变化 .12s、按下 .08s、大块内容出现 .36s 缓出。按下去要看得出来。 */
+:root{--tap:.12s;--press:.08s;--ease-settle:cubic-bezier(.22,1,.36,1)}
+#app :is(button,a,select,summary,[role="button"],[role="radio"],[role="tab"],.chip,.btn){
+  transition:background-color var(--tap) ease-out,border-color var(--tap) ease-out,color var(--tap) ease-out,box-shadow var(--tap) ease-out,opacity var(--tap) ease-out,transform var(--press) ease-out,filter var(--press) ease-out;
+}
+#app :is(input,textarea,select){transition:border-color var(--tap) ease-out,box-shadow var(--tap) ease-out,background-color var(--tap) ease-out}
+/* 小的按钮和选项：按下缩一点。 */
+#app :is(.btn,.chip,.entry-seg-btn,.rail-entry-btn,.workspace-tab,.text-command,.skin-toggle button,.me-switch):not(:disabled):active{transform:scale(.96)}
+#app .btn:hover{transform:none}
+#app .btn-primary:not(:disabled):hover{filter:brightness(1.12)}
+/* 大的可点区域（一行记录、日历格子、页签）：缩放会晃，改成压暗一点。 */
+#app button:not(:disabled):not(.btn):not(.chip):not(.entry-seg-btn):not(.rail-entry-btn):not(.workspace-tab):not(.text-command):not(.me-switch):active{filter:brightness(.94)}
+/* 选中状态切换时底色滑过去，不是跳过去。 */
+#app :is(.chip,.entry-seg-btn,.workspace-tab){will-change:transform}
+@media(prefers-reduced-motion:reduce){#app *{transition-duration:.01ms!important}}
 /* ===== 记一笔：一列表单 + 右侧说明。一行一件事，标签都在输入框上方，所以不会再对不齐。 ===== */
 .entry-page-head{align-items:center;padding:22px 28px 16px}
 .entry-page-head h2{margin:0}
